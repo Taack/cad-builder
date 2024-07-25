@@ -37,27 +37,24 @@ java {
 
 application {
     mainClass = 'org.taack.Main'
-    String nativeLibPath=file("${buildDir}/libs/nativeLib/shared").absolutePath
-    println "Be sure to set LD_LIBRARY_PATH=$nativeLibPath"
-    applicationDefaultJvmArgs = ["-Djava.library.path=" + nativeLibPath, "--enable-preview","--enable-native-access=ALL-UNNAMED"]
+    String nativeLibPath = file("${project.parent.projectDir}/cad-dsl/libs/nativeLib/shared").absolutePath
+    String nativeLibPath2 = file("${project.parent.projectDir}/cad-dsl-native/build/lib/main/release").absolutePath
+    println "Be sure to set LD_LIBRARY_PATH=$nativeLibPath;$nativeLibPath2;"
+    applicationDefaultJvmArgs = ["-Djava.library.path=" + nativeLibPath + ":" + nativeLibPath2, "--enable-preview", "--enable-native-access=ALL-UNNAMED"]
 }
 
 jextract {
-        // The header file from which we want to generate the bindings
-	header("${project.projectDir}/src/main/c/native.h") {
-	// The library name (don't worry about this for now)
-	libraries = [ 'nativeLib' ]
+    // The header file from which we want to generate the bindings
+    header("${project.projectDir}/src/main/c/native.h") {
+        // The library name (don't worry about this for now)
+        libraries = ['nativeLib','cad-dsl-native']
         // The package under which all source files will be generated
         targetPackage = 'org.nativelib'
         // The generated class name
         className = 'NativeLib'
-        }
+    }
 }
 
 dependencies {
     implementation 'org.apache.groovy:groovy:5.0.0-alpha-9'
-}
-
-test {
-    useJUnitPlatform()
 }
