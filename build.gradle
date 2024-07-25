@@ -1,0 +1,63 @@
+plugins {
+    id 'c'
+    id 'groovy'
+    id 'application'
+    id 'io.github.krakowski.jextract' version '0.5.0'
+}
+
+group = 'org.taack'
+version = '1.0-SNAPSHOT'
+
+model {
+    components {
+        nativeLib(NativeLibrarySpec) {
+            sources {
+                c {
+                    source {
+                        srcDir 'src/main/c' // Path to your C source files
+                    }
+                }
+            }
+        }
+    }
+}
+
+// Tells gradle to wait for our native library to compile before we can run our java application
+run.dependsOn 'nativeLibSharedLibrary'
+
+repositories {
+    mavenCentral()
+}
+
+java {
+    toolchain {
+        languageVersion.set(JavaLanguageVersion.of(22))
+    }
+}
+
+application {
+    mainClass = 'org.taack.Main'
+    String nativeLibPath=file("${buildDir}/libs/nativeLib/shared").absolutePath
+    println "Be sure to set LD_LIBRARY_PATH=$nativeLibPath"
+    applicationDefaultJvmArgs = ["-Djava.library.path=" + nativeLibPath, "--enable-preview","--enable-native-access=ALL-UNNAMED"]
+}
+
+jextract {
+        // The header file from which we want to generate the bindings
+	header("${project.projectDir}/src/main/c/native.h") {
+	// The library name (don't worry about this for now)
+	libraries = [ 'nativeLib' ]
+        // The package under which all source files will be generated
+        targetPackage = 'org.nativelib'
+        // The generated class name
+        className = 'NativeLib'
+        }
+}
+
+dependencies {
+    implementation 'org.apache.groovy:groovy:5.0.0-alpha-9'
+}
+
+test {
+    useJUnitPlatform()
+}
