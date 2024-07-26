@@ -8,6 +8,9 @@ plugins {
 group = 'org.taack'
 version = '1.0-SNAPSHOT'
 
+String nativeLibPath = file("${project.parent.projectDir}/cad-dsl/build/libs/nativeLib/shared").absolutePath
+String nativeLibPath2 = file("${project.parent.projectDir}/cad-dsl-native/build/lib/main/release").absolutePath
+
 model {
     components {
         nativeLib(NativeLibrarySpec) {
@@ -17,6 +20,24 @@ model {
                         srcDir 'src/main/c' // Path to your C source files
                     }
                 }
+            }
+        }
+    }
+    binaries {
+        all {
+
+            // Define a preprocessor macro for every binary
+            cppCompiler.define "NDEBUG"
+
+            // Define toolchain-specific compiler and linker options
+            if (toolChain in Gcc) {
+                println "Linking with Gcc"
+                cppCompiler.args "-O2", "-fno-access-control"
+                linker.args "-Xlinker", "-S", "-L", nativeLibPath2, "-l", "cad-dsl-native", "-B", "direct"
+            }
+            if (toolChain in VisualCpp) {
+                cppCompiler.args "/Zi"
+                linker.args "/DEBUG"
             }
         }
     }
@@ -37,9 +58,7 @@ java {
 
 application {
     mainClass = 'org.taack.Main'
-    String nativeLibPath = file("${project.parent.projectDir}/cad-dsl/libs/nativeLib/shared").absolutePath
-    String nativeLibPath2 = file("${project.parent.projectDir}/cad-dsl-native/build/lib/main/release").absolutePath
-    println "Be sure to set LD_LIBRARY_PATH=$nativeLibPath;$nativeLibPath2;"
+    println "Be sure to set LD_LIBRARY_PATH=$nativeLibPath:$nativeLibPath2;"
     applicationDefaultJvmArgs = ["-Djava.library.path=" + nativeLibPath + ":" + nativeLibPath2, "--enable-preview", "--enable-native-access=ALL-UNNAMED"]
 }
 
@@ -47,7 +66,7 @@ jextract {
     // The header file from which we want to generate the bindings
     header("${project.projectDir}/src/main/c/native.h") {
         // The library name (don't worry about this for now)
-        libraries = ['nativeLib','cad-dsl-native']
+        libraries = ['nativeLib']
         // The package under which all source files will be generated
         targetPackage = 'org.nativelib'
         // The generated class name
@@ -57,4 +76,5 @@ jextract {
 
 dependencies {
     implementation 'org.apache.groovy:groovy:5.0.0-alpha-9'
+//    implementation project(':cad-dsl-native')
 }
