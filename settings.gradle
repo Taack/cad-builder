@@ -1,7 +1,6 @@
 rootProject.name = 'cad-builder'
 
-include 'cad-dsl'
-include 'cad-dsl-native'
+include 'cad-dsl-native', 'cad-dsl'
 //include ':cad-dsl-native'
 //project(':cad-dsl-native').projectDir = file('./cad-dsl-native')
 //include ':cad-dsl'

@@ -1,9 +1,10 @@
 plugins {
     id 'cpp-library'
+    id 'java'
 }
-//
-//group = 'org.taack'
-//version = '1.0-SNAPSHOT'
+
+group = 'org.taack'
+version = '1.0-SNAPSHOT'
 
 library {
     linkage = [Linkage.SHARED]

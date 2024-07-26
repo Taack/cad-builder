@@ -45,6 +45,7 @@ model {
 
 // Tells gradle to wait for our native library to compile before we can run our java application
 run.dependsOn 'nativeLibSharedLibrary'
+run.dependsOn ':cad-dsl-native:linkRelease'
 
 repositories {
     mavenCentral()
@@ -58,7 +59,6 @@ java {
 
 application {
     mainClass = 'org.taack.Main'
-    println "Be sure to set LD_LIBRARY_PATH=$nativeLibPath:$nativeLibPath2;"
     applicationDefaultJvmArgs = ["-Djava.library.path=" + nativeLibPath + ":" + nativeLibPath2, "--enable-preview", "--enable-native-access=ALL-UNNAMED"]
 }
 
@@ -74,7 +74,12 @@ jextract {
     }
 }
 
+run  {
+    println "Setting LD_LIBRARY_PATH=$nativeLibPath:$nativeLibPath2;"
+    environment('LD_LIBRARY_PATH', "$nativeLibPath:$nativeLibPath2")
+}
+
 dependencies {
     implementation 'org.apache.groovy:groovy:5.0.0-alpha-9'
-//    implementation project(':cad-dsl-native')
+    implementation project(':cad-dsl-native')
 }
