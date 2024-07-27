@@ -26,11 +26,16 @@
 #include <Geom_Plane.hxx>
 #include <BRepLib.hxx>
 #include <StdFail_NotDone.hxx>
+#include <V3d_Viewer.hxx>
+#include <AIS_InteractiveContext.hxx>
+#include <AIS_Shape.hxx>
+#include <OpenGl_GraphicDriver.hxx>
+
+#include "GlfwOcctView.h"
 
 
 TopoDS_Shape MakeBottle(const Standard_Real myWidth, const Standard_Real myHeight,
-                        const Standard_Real myThickness)
-{
+                        const Standard_Real myThickness) {
     gp_Pnt aPnt1(-myWidth / 2., 0, 0);
     gp_Pnt aPnt2(-myWidth / 2., -myThickness / 4., 0);
     gp_Pnt aPnt3(0, -myThickness / 2., 0);
@@ -39,7 +44,7 @@ TopoDS_Shape MakeBottle(const Standard_Real myWidth, const Standard_Real myHeigh
 
     std::cout << "aPnt1: " << aPnt1.X() << std::endl;
 
-    Handle(Geom_TrimmedCurve) anArcOfCircle = GC_MakeArcOfCircle(aPnt2,aPnt3,aPnt4);
+    Handle(Geom_TrimmedCurve) anArcOfCircle = GC_MakeArcOfCircle(aPnt2, aPnt3, aPnt4);
     std::cout << "aSegment1:" << std::endl;
     Handle(Geom_TrimmedCurve) aSegment1 = GC_MakeSegment(aPnt1, aPnt2);
     std::cout << "aSegment2:" << std::endl;
@@ -51,7 +56,7 @@ TopoDS_Shape MakeBottle(const Standard_Real myWidth, const Standard_Real myHeigh
     std::cout << "aSegment4:" << std::endl;
     TopoDS_Edge anEdge2 = BRepBuilderAPI_MakeEdge(anArcOfCircle);
     TopoDS_Edge anEdge3 = BRepBuilderAPI_MakeEdge(aSegment2);
-    TopoDS_Wire aWire  = BRepBuilderAPI_MakeWire(anEdge1, anEdge2, anEdge3);
+    TopoDS_Wire aWire = BRepBuilderAPI_MakeWire(anEdge1, anEdge2, anEdge3);
 
     // Complete Profile
     gp_Ax1 xAxis = gp::OX();
@@ -75,7 +80,7 @@ TopoDS_Shape MakeBottle(const Standard_Real myWidth, const Standard_Real myHeigh
     // Body: Apply Fillets
     BRepFilletAPI_MakeFillet mkFillet(myBody);
     TopExp_Explorer anEdgeExplorer(myBody, TopAbs_EDGE);
-    while(anEdgeExplorer.More()){
+    while (anEdgeExplorer.More()) {
         TopoDS_Edge anEdge = TopoDS::Edge(anEdgeExplorer.Current());
         //Add edge to fillet algorithm
         mkFillet.Add(myThickness / 12., anEdge);
@@ -98,18 +103,18 @@ TopoDS_Shape MakeBottle(const Standard_Real myWidth, const Standard_Real myHeigh
     myBody = BRepAlgoAPI_Fuse(myBody, myNeck);
 
     // Body: Create a Hollowed Solid
-    TopoDS_Face   faceToRemove;
+    TopoDS_Face faceToRemove;
     Standard_Real zMax = -1;
 
-    for(TopExp_Explorer aFaceExplorer(myBody, TopAbs_FACE); aFaceExplorer.More(); aFaceExplorer.Next()){
+    for (TopExp_Explorer aFaceExplorer(myBody, TopAbs_FACE); aFaceExplorer.More(); aFaceExplorer.Next()) {
         TopoDS_Face aFace = TopoDS::Face(aFaceExplorer.Current());
         // Check if <aFace> is the top face of the bottle's neck
         Handle(Geom_Surface) aSurface = BRep_Tool::Surface(aFace);
-        if(aSurface->DynamicType() == STANDARD_TYPE(Geom_Plane)){
+        if (aSurface->DynamicType() == STANDARD_TYPE(Geom_Plane)) {
             Handle(Geom_Plane) aPlane = Handle(Geom_Plane)::DownCast(aSurface);
             gp_Pnt aPnt = aPlane->Location();
-            Standard_Real aZ   = aPnt.Z();
-            if(aZ > zMax){
+            Standard_Real aZ = aPnt.Z();
+            if (aZ > zMax) {
                 zMax = aZ;
                 faceToRemove = aFace;
             }
@@ -162,15 +167,32 @@ TopoDS_Shape MakeBottle(const Standard_Real myWidth, const Standard_Real myHeigh
     // Building the Resulting Compound
     TopoDS_Compound aRes;
     BRep_Builder aBuilder;
-    aBuilder.MakeCompound (aRes);
-    aBuilder.Add (aRes, myBody);
-    aBuilder.Add (aRes, myThreading);
+    aBuilder.MakeCompound(aRes);
+    aBuilder.Add(aRes, myBody);
+    aBuilder.Add(aRes, myThreading);
 
     return aRes;
 }
 
-extern "C" void* cMakeBottle(const Standard_Real myWidth, const Standard_Real myHeight,
-                        const Standard_Real myThickness) {
+void ShowBottle(TopoDS_Shape aShape) {
+    Handle(V3d_Viewer) theViewer;
+    Handle(AIS_InteractiveContext) aContext = new AIS_InteractiveContext(theViewer);
+    Handle(AIS_Shape) aShapePrs = new AIS_Shape(aShape); // creation of the presentable object
+    aContext->Display(aShapePrs, AIS_Shaded, 0, true); // display the presentable object and redraw 3d viewer
+}
+
+void ShowBottle2(TopoDS_Shape& aShape, Handle(V3d_Viewer)& theViewer) {
+    const Handle(V3d_View) myView = theViewer->CreateView();
+    theViewer->SetViewOn(myView);
+//    myView->SetWindow(myOcctWindow, myOcctWindow->NativeGlContext());
+
+    Handle(AIS_InteractiveContext) aContext = new AIS_InteractiveContext(theViewer);
+    Handle(AIS_Shape) aShapePrs = new AIS_Shape(aShape); // creation of the presentable object
+    aContext->Display(aShapePrs, AIS_Shaded, 0, true); // display the presentable object and redraw 3d viewer
+}
+
+extern "C" void *cMakeBottle(const Standard_Real myWidth, const Standard_Real myHeight,
+                             const Standard_Real myThickness) {
     try {
         TopoDS_Shape shape = MakeBottle(myWidth, myHeight, myThickness);
         return &shape;
@@ -178,4 +200,44 @@ extern "C" void* cMakeBottle(const Standard_Real myWidth, const Standard_Real my
         std::cout << e << std::endl;
     }
     return NULL;
+}
+
+extern "C" void cShowBottle(void *aShape) {
+    ShowBottle(reinterpret_cast<TopoDS_Shape &>(aShape));
+}
+
+extern "C" void cShowBottle2(void *aShape, void* a3DViewer) {
+    ShowBottle2(reinterpret_cast<TopoDS_Shape &>(aShape), reinterpret_cast<Handle(V3d_Viewer) &>(a3DViewer));
+}
+
+extern "C" void* cCreate3DViewer() {
+    // create a graphic driver
+    Handle(OpenGl_GraphicDriver) aGraphicDriver = new OpenGl_GraphicDriver(Handle(Aspect_DisplayConnection)());
+    // create a viewer
+    auto* a3DViewer = new V3d_Viewer(aGraphicDriver);
+    // set parameters for V3d_Viewer
+    // defines default lights -
+    //   positional-light 0.3 0.0 0.0
+    //   directional-light V3d_XnegYposZpos
+    //   directional-light V3d_XnegYneg
+    //   ambient-light
+    a3DViewer->SetDefaultLights();
+    // activates all the lights defined in this viewer
+    a3DViewer->SetLightOn();
+    // set background color to black
+    a3DViewer->SetDefaultBackgroundColor(Quantity_NOC_BLACK);
+    return a3DViewer;
+}
+
+extern "C" int cCreateWindow() {
+    GlfwOcctView anApp;
+
+    try {
+        anApp.run();
+    } catch (const std::runtime_error& theError) {
+        std::cerr << theError.what() << std::endl;
+        return EXIT_FAILURE;
+    }
+
+    return EXIT_SUCCESS;
 }

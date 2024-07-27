@@ -6,9 +6,12 @@ set(CMAKE_CXX_STANDARD 14)
 #INCLUDE(cmake/CreateLibrary.cmake)
 
 add_library(cad_dsl_native SHARED
-    src/main/cpp/HelloWorld.cpp
-        src/main/cpp/MakeBottle.cpp
-        src/main/cpp/MakeBottle.h)
+        src/main/cpp/GlfwOcctView.cpp
+        src/main/cpp/GlfwOcctView.h
+        src/main/cpp/GlfwOcctWindow.cpp
+        src/main/cpp/GlfwOcctWindow.h
+        src/main/cpp/HelloWorld.cpp
+        src/main/cpp/MakeBottle.cpp)
 
 find_package(OpenCASCADE COMPONENTS FoundationClasses REQUIRED)
 find_package(OpenCASCADE COMPONENTS ApplicationFramework REQUIRED)
@@ -27,7 +30,7 @@ link_libraries(${OpenCASCADE_LIBRARIES})
 MESSAGE("OCC-Libs: ${OpenCASCADE_LIBRARIES}")
 
 set (LIBS ${LIBS} ${OpenCASCADE_LIBRARY_DIR})
-target_link_libraries(cad_dsl_native ${LIBS})
+#target_link_libraries(cad_dsl_native ${LIBS})
 
 # Find freetype libraries on Linux (don't know why the one provided by the static occt dep doesn't work on Linux)
 IF(UNIX AND NOT APPLE)
