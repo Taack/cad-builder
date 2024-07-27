@@ -75,7 +75,7 @@ jextract {
 }
 
 run  {
-    println "Setting LD_LIBRARY_PATH=$nativeLibPath:$nativeLibPath2;"
+    println "Setting LD_LIBRARY_PATH=$nativeLibPath:$nativeLibPath2"
     environment('LD_LIBRARY_PATH', "$nativeLibPath:$nativeLibPath2")
 }
 
