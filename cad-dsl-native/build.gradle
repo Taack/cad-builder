@@ -16,8 +16,8 @@ def libs = "TKBO TKBRep TKBin TKBinL TKBinTObj TKBinXCAF TKBool TKCAF TKCDF TKDC
 
 def linkerLibs = []
 
-libs.each {
-    linkerLibs << "--library=$it"
+libs.split(' ').each {
+    linkerLibs << "-l$it"
 }
 
 
@@ -35,9 +35,6 @@ tasks.withType(CppCompile).configureEach {
 
 tasks.withType(LinkSharedLibrary).configureEach {
     // Define toolchain-specific compiler and linker options
-    if (toolChain in Gcc) {
-        println "Linking with Gcc"
-        linkerArgs = ["-Xlinker", "-S", "-B", "direct"] + linkerLibs
-    }
+    linkerArgs = ["-Xlinker", "-S", "-B", "direct"] + linkerLibs
 }
 

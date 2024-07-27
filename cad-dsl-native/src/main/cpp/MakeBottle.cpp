@@ -2,7 +2,6 @@
 // Created by auo on 27/07/24.
 //
 
-#include "MakeBottle.h"
 #include <TopoDS.hxx>
 #include <TopoDS_Shape.hxx>
 #include <TopoDS_Edge.hxx>
@@ -26,6 +25,8 @@
 #include <BRepOffsetAPI_ThruSections.hxx>
 #include <Geom_Plane.hxx>
 #include <BRepLib.hxx>
+#include <StdFail_NotDone.hxx>
+
 
 TopoDS_Shape MakeBottle(const Standard_Real myWidth, const Standard_Real myHeight,
                         const Standard_Real myThickness)
@@ -36,12 +37,18 @@ TopoDS_Shape MakeBottle(const Standard_Real myWidth, const Standard_Real myHeigh
     gp_Pnt aPnt4(myWidth / 2., -myThickness / 4., 0);
     gp_Pnt aPnt5(myWidth / 2., 0, 0);
 
+    std::cout << "aPnt1: " << aPnt1.X() << std::endl;
+
     Handle(Geom_TrimmedCurve) anArcOfCircle = GC_MakeArcOfCircle(aPnt2,aPnt3,aPnt4);
+    std::cout << "aSegment1:" << std::endl;
     Handle(Geom_TrimmedCurve) aSegment1 = GC_MakeSegment(aPnt1, aPnt2);
+    std::cout << "aSegment2:" << std::endl;
     Handle(Geom_TrimmedCurve) aSegment2 = GC_MakeSegment(aPnt4, aPnt5);
 
+    std::cout << "aSegment3:" << std::endl;
     // Profile: Define the Topology
     TopoDS_Edge anEdge1 = BRepBuilderAPI_MakeEdge(aSegment1);
+    std::cout << "aSegment4:" << std::endl;
     TopoDS_Edge anEdge2 = BRepBuilderAPI_MakeEdge(anArcOfCircle);
     TopoDS_Edge anEdge3 = BRepBuilderAPI_MakeEdge(aSegment2);
     TopoDS_Wire aWire  = BRepBuilderAPI_MakeWire(anEdge1, anEdge2, anEdge3);
@@ -160,4 +167,15 @@ TopoDS_Shape MakeBottle(const Standard_Real myWidth, const Standard_Real myHeigh
     aBuilder.Add (aRes, myThreading);
 
     return aRes;
+}
+
+extern "C" void* cMakeBottle(const Standard_Real myWidth, const Standard_Real myHeight,
+                        const Standard_Real myThickness) {
+    try {
+        TopoDS_Shape shape = MakeBottle(myWidth, myHeight, myThickness);
+        return &shape;
+    } catch (StdFail_NotDone &e) {
+        std::cout << e << std::endl;
+    }
+    return NULL;
 }
