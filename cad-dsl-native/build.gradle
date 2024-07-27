@@ -1,16 +1,43 @@
 plugins {
     id 'cpp-library'
-    id 'java'
 }
 
 group = 'org.taack'
 version = '1.0-SNAPSHOT'
 
+def libs = "TKBO TKBRep TKBin TKBinL TKBinTObj TKBinXCAF TKBool TKCAF TKCDF TKDCAF\
+ TKDraw TKExpress TKFeat TKFillet TKG2d TKG3d TKGeomAlgo TKGeomBase TKHLR\
+ TKIGES TKIVtk TKIVtkDraw TKLCAF TKMath TKMesh TKMeshVS TKOffset TKOpenGl\
+ TKOpenGlTest TKPrim TKQADraw TKRWMesh TKSTEP TKSTEP209 TKSTEPAttr TKSTEPBase\
+ TKSTL TKService TKShHealing TKStd TKStdL TKTObj TKTObjDRAW TKTopAlgo\
+ TKTopTest TKV3d TKVCAF TKVRML TKViewerTest TKXCAF TKXDE TKXDECascade\
+ TKXDEDRAW TKXDEIGES TKXDESTEP TKXMesh TKXSBase TKXSDRAW TKXml\
+ TKXmlL TKXmlTObj TKXmlXCAF TKernel"
+
+def linkerLibs = []
+
+libs.each {
+    linkerLibs << "--library=$it"
+}
+
+
 library {
     linkage = [Linkage.SHARED]
-    dependencies {
-//        implementation ""
+    targetMachines = [
+            machines.linux.x86_64,
+    ]
+}
+
+tasks.withType(CppCompile).configureEach {
+    optimized = false
+    includes.from new File("/usr/include/opencascade/").path
+}
+
+tasks.withType(LinkSharedLibrary).configureEach {
+    // Define toolchain-specific compiler and linker options
+    if (toolChain in Gcc) {
+        println "Linking with Gcc"
+        linkerArgs = ["-Xlinker", "-S", "-B", "direct"] + linkerLibs
     }
 }
 
-defaultTasks('linkRelease')

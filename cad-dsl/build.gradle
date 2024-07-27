@@ -45,7 +45,6 @@ model {
 
 // Tells gradle to wait for our native library to compile before we can run our java application
 run.dependsOn 'nativeLibSharedLibrary'
-run.dependsOn ':cad-dsl-native:linkRelease'
 
 repositories {
     mavenCentral()
@@ -81,5 +80,4 @@ run  {
 
 dependencies {
     implementation 'org.apache.groovy:groovy:5.0.0-alpha-9'
-    implementation project(':cad-dsl-native')
 }
