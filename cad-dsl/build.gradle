@@ -27,13 +27,13 @@ model {
         all {
 
             // Define a preprocessor macro for every binary
-            cppCompiler.define "NDEBUG"
+            cppCompiler.define "DEBUG"
 
             // Define toolchain-specific compiler and linker options
             if (toolChain in Gcc) {
                 println "Linking with Gcc"
-                cppCompiler.args "-O2", "-fno-access-control"
-                linker.args "-Xlinker", "-S", "-L", nativeLibPath2, "-l", "cad-dsl-native", "-B", "direct"
+                cppCompiler.args "-g", "-fno-access-control"
+                linker.args "-Xlinker", "-S", "-L", nativeLibPath2, "-l", "cad-dsl-native", "-l", "GL", "-l", "GLU", "-l", "GLX", "-l", "GLEW", "-l", "glfw", "-B", "direct"
             }
             if (toolChain in VisualCpp) {
                 cppCompiler.args "/Zi"
