@@ -30,10 +30,10 @@
     #define GLFW_EXPOSE_NATIVE_WIN32
     #define GLFW_EXPOSE_NATIVE_WGL
 #else
-    #define GLFW_EXPOSE_NATIVE_X11
-    #define GLFW_EXPOSE_NATIVE_GLX
-    // #define GLFW_EXPOSE_NATIVE_WAYLAND
-    // #define GLFW_EXPOSE_NATIVE_EGL
+#define GLFW_EXPOSE_NATIVE_X11
+#define GLFW_EXPOSE_NATIVE_GLX
+// #define GLFW_EXPOSE_NATIVE_WAYLAND
+// #define GLFW_EXPOSE_NATIVE_EGL
 #endif
 
 #include <GLFW/glfw3.h>
@@ -43,15 +43,13 @@
 // Function : GlfwOcctWindow
 // Purpose  :
 // ================================================================
-GlfwOcctWindow::GlfwOcctWindow(int theWidth, int theHeight, const TCollection_AsciiString& theTitle)
+GlfwOcctWindow::GlfwOcctWindow(int theWidth, int theHeight, const TCollection_AsciiString &theTitle)
     : myGlfwWindow(glfwCreateWindow(theWidth, theHeight, theTitle.ToCString(), NULL, NULL)),
-    myXLeft(0),
-    myYTop(0),
-    myXRight(0),
-    myYBottom(0)
-{
-    if (myGlfwWindow != nullptr)
-    {
+      myXLeft(0),
+      myYTop(0),
+      myXRight(0),
+      myYBottom(0) {
+    if (myGlfwWindow != nullptr) {
         int aWidth = 0, aHeight = 0;
 #if defined(GLFW_EXPOSE_NATIVE_X11) && !defined(GLFW_EXPOSE_NATIVE_WAYLAND)
         glfwGetWindowPos(myGlfwWindow, &myXLeft, &myYTop);
@@ -62,7 +60,7 @@ GlfwOcctWindow::GlfwOcctWindow(int theWidth, int theHeight, const TCollection_As
         myYBottom = myYTop + aHeight;
 
 #if defined(GLFW_EXPOSE_NATIVE_X11) && !defined(GLFW_EXPOSE_NATIVE_WAYLAND)
-        myDisplay = new Aspect_DisplayConnection((Aspect_XDisplay*)glfwGetX11Display());
+        myDisplay = new Aspect_DisplayConnection((Aspect_XDisplay *) glfwGetX11Display());
 #elif defined(GLFW_EXPOSE_NATIVE_WAYLAND)
         myDisplay = new Aspect_DisplayConnection(reinterpret_cast<Aspect_XDisplay *>(glfwGetWaylandDisplay()));
 #endif
@@ -73,10 +71,8 @@ GlfwOcctWindow::GlfwOcctWindow(int theWidth, int theHeight, const TCollection_As
 // Function : Close
 // Purpose  :
 // ================================================================
-void GlfwOcctWindow::Close()
-{
-    if (myGlfwWindow != nullptr)
-    {
+void GlfwOcctWindow::Close() {
+    if (myGlfwWindow != nullptr) {
         glfwDestroyWindow(myGlfwWindow);
         myGlfwWindow = nullptr;
     }
@@ -86,14 +82,13 @@ void GlfwOcctWindow::Close()
 // Function : NativeHandle
 // Purpose  :
 // ================================================================
-Aspect_Drawable GlfwOcctWindow::NativeHandle() const
-{
+Aspect_Drawable GlfwOcctWindow::NativeHandle() const {
 #if defined (__APPLE__)
     return (Aspect_Drawable)glfwGetCocoaWindow(myGlfwWindow);
 #elif defined (_WIN32)
     return (Aspect_Drawable)glfwGetWin32Window(myGlfwWindow);
 #elif ! defined (GLFW_EXPOSE_NATIVE_WAYLAND)
-    return (Aspect_Drawable)glfwGetX11Window(myGlfwWindow);
+    return (Aspect_Drawable) glfwGetX11Window(myGlfwWindow);
 #else
     return (Aspect_Drawable)glfwGetWaylandWindow(myGlfwWindow);
 #endif
@@ -103,8 +98,7 @@ Aspect_Drawable GlfwOcctWindow::NativeHandle() const
 // Function : NativeGlContext
 // Purpose  :
 // ================================================================
-Aspect_RenderingContext GlfwOcctWindow::NativeGlContext() const
-{
+Aspect_RenderingContext GlfwOcctWindow::NativeGlContext() const {
 #if defined (__APPLE__)
     return (NSOpenGLContext*)glfwGetNSGLContext(myGlfwWindow);
 #elif defined (_WIN32)
@@ -120,8 +114,7 @@ Aspect_RenderingContext GlfwOcctWindow::NativeGlContext() const
 // Function : IsMapped
 // Purpose  :
 // ================================================================
-Standard_Boolean GlfwOcctWindow::IsMapped() const
-{
+Standard_Boolean GlfwOcctWindow::IsMapped() const {
     return glfwGetWindowAttrib(myGlfwWindow, GLFW_VISIBLE) != 0;
 }
 
@@ -129,8 +122,7 @@ Standard_Boolean GlfwOcctWindow::IsMapped() const
 // Function : Map
 // Purpose  :
 // ================================================================
-void GlfwOcctWindow::Map() const
-{
+void GlfwOcctWindow::Map() const {
     glfwShowWindow(myGlfwWindow);
 }
 
@@ -138,8 +130,7 @@ void GlfwOcctWindow::Map() const
 // Function : Unmap
 // Purpose  :
 // ================================================================
-void GlfwOcctWindow::Unmap() const
-{
+void GlfwOcctWindow::Unmap() const {
     glfwHideWindow(myGlfwWindow);
 }
 
@@ -147,10 +138,8 @@ void GlfwOcctWindow::Unmap() const
 // Function : DoResize
 // Purpose  :
 // ================================================================
-Aspect_TypeOfResize GlfwOcctWindow::DoResize()
-{
-    if (glfwGetWindowAttrib(myGlfwWindow, GLFW_VISIBLE) == 1)
-    {
+Aspect_TypeOfResize GlfwOcctWindow::DoResize() {
+    if (glfwGetWindowAttrib(myGlfwWindow, GLFW_VISIBLE) == 1) {
         int anXPos = 0, anYPos = 0, aWidth = 0, aHeight = 0;
         glfwGetWindowPos(myGlfwWindow, &anXPos, &anYPos);
         glfwGetWindowSize(myGlfwWindow, &aWidth, &aHeight);
@@ -166,9 +155,8 @@ Aspect_TypeOfResize GlfwOcctWindow::DoResize()
 // Function : CursorPosition
 // Purpose  :
 // ================================================================
-Graphic3d_Vec2i GlfwOcctWindow::CursorPosition() const
-{
+Graphic3d_Vec2i GlfwOcctWindow::CursorPosition() const {
     Graphic3d_Vec2d aPos;
     glfwGetCursorPos(myGlfwWindow, &aPos.x(), &aPos.y());
-    return Graphic3d_Vec2i((int)aPos.x(), (int)aPos.y());
+    return Graphic3d_Vec2i((int) aPos.x(), (int) aPos.y());
 }

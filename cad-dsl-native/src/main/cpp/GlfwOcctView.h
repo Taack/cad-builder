@@ -30,8 +30,7 @@
 #include <V3d_View.hxx>
 
 //! Sample class creating 3D Viewer within GLFW window.
-class GlfwOcctView : protected AIS_ViewController
-{
+class GlfwOcctView : protected AIS_ViewController {
 public:
     //! Default constructor.
     GlfwOcctView();
@@ -43,21 +42,11 @@ public:
     void run();
 
 public:
-
     //! Create GLFW window.
-    void initWindow(int theWidth, int theHeight, const char* theTitle);
+    void initWindow(int theWidth, int theHeight, const char *theTitle);
 
     //! Create 3D Viewer.
     void initViewer();
-
-    //! Init ImGui.
-    void initGui() const;
-
-    //! Render ImGUI.
-    void renderGui() const;
-
-    //! Fill 3D Viewer with a DEMO items.
-    void initDemoScene() const;
 
     //! Application event loop.
     void mainloop();
@@ -81,49 +70,41 @@ private:
 
     //! @name GLWF callbacks (static functions)
 private:
-
     //! GLFW callback redirecting messages into Message::DefaultMessenger().
-    static void errorCallback(int theError, const char* theDescription);
+    static void errorCallback(int theError, const char *theDescription);
 
     //! Wrapper for glfwGetWindowUserPointer() returning this class instance.
-    static GlfwOcctView* toView(GLFWwindow* theWin);
+    static GlfwOcctView *toView(GLFWwindow *theWin);
 
     //! Window resize callback.
-    static void onResizeCallback(GLFWwindow* theWin, int theWidth, int theHeight)
-    {
+    static void onResizeCallback(GLFWwindow *theWin, int theWidth, int theHeight) {
         toView(theWin)->onResize(theWidth, theHeight);
     }
 
     //! Frame-buffer resize callback.
-    static void onFBResizeCallback(GLFWwindow* theWin, int theWidth, int theHeight)
-    {
+    static void onFBResizeCallback(GLFWwindow *theWin, int theWidth, int theHeight) {
         toView(theWin)->onResize(theWidth, theHeight);
     }
 
     //! Mouse scroll callback.
-    static void onMouseScrollCallback(GLFWwindow* theWin, double theOffsetX, double theOffsetY)
-    {
+    static void onMouseScrollCallback(GLFWwindow *theWin, double theOffsetX, double theOffsetY) {
         toView(theWin)->onMouseScroll(theOffsetX, theOffsetY);
     }
 
     //! Mouse click callback.
-    static void onMouseButtonCallback(GLFWwindow* theWin, int theButton, int theAction, int theMods)
-    {
+    static void onMouseButtonCallback(GLFWwindow *theWin, int theButton, int theAction, int theMods) {
         toView(theWin)->onMouseButton(theButton, theAction, theMods);
     }
 
     //! Mouse move callback.
-    static void onMouseMoveCallback(GLFWwindow* theWin, double thePosX, double thePosY)
-    {
-        toView(theWin)->onMouseMove((int)thePosX, (int)thePosY);
+    static void onMouseMoveCallback(GLFWwindow *theWin, double thePosX, double thePosY) {
+        toView(theWin)->onMouseMove((int) thePosX, (int) thePosY);
     }
 
 public:
-
     Handle(GlfwOcctWindow) myOcctWindow;
     Handle(V3d_View) myView;
     Handle(AIS_InteractiveContext) myContext;
-
 };
 
 #endif // _GlfwOcctView_Header

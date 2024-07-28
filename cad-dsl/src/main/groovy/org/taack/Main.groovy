@@ -12,10 +12,9 @@ static void main(String[] args) {
         MemorySegment t = arena.allocateFrom('Test');
         def w = NativeLib.GlfwOcctView_initWindow(640, 640, t)
         NativeLib.GlfwOcctView_initViewer(w)
-        NativeLib.GlfwOcctView_initDemoScene(w)
         NativeLib.GlfwOcctView_initGui(w)
         def b = NativeLib.cMakeBottle(1.0, 1.0, 0.1)
-        //NativeLib.GlfwOcctView_displayInContext(w, b)
+        NativeLib.GlfwOcctView_displayInContext(w, b)
         NativeLib.GlfwOcctView_mainloop(w)
         NativeLib.GlfwOcctView_cleanup(w)
     }
