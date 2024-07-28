@@ -42,7 +42,7 @@ public:
     //! Main application entry point.
     void run();
 
-private:
+public:
 
     //! Create GLFW window.
     void initWindow(int theWidth, int theHeight, const char* theTitle);
@@ -118,7 +118,7 @@ private:
         toView(theWin)->onMouseMove((int)thePosX, (int)thePosY);
     }
 
-private:
+public:
 
     Handle(GlfwOcctWindow) myOcctWindow;
     Handle(V3d_View) myView;

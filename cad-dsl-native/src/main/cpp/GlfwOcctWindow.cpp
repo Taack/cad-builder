@@ -32,6 +32,8 @@
 #else
     #define GLFW_EXPOSE_NATIVE_X11
     #define GLFW_EXPOSE_NATIVE_GLX
+    // #define GLFW_EXPOSE_NATIVE_WAYLAND
+    // #define GLFW_EXPOSE_NATIVE_EGL
 #endif
 
 #include <GLFW/glfw3.h>
@@ -51,13 +53,18 @@ GlfwOcctWindow::GlfwOcctWindow(int theWidth, int theHeight, const TCollection_As
     if (myGlfwWindow != nullptr)
     {
         int aWidth = 0, aHeight = 0;
+#if defined(GLFW_EXPOSE_NATIVE_X11) && !defined(GLFW_EXPOSE_NATIVE_WAYLAND)
         glfwGetWindowPos(myGlfwWindow, &myXLeft, &myYTop);
+#endif
+
         glfwGetWindowSize(myGlfwWindow, &aWidth, &aHeight);
         myXRight = myXLeft + aWidth;
         myYBottom = myYTop + aHeight;
 
-#if !defined(_WIN32) && !defined(__APPLE__)
+#if defined(GLFW_EXPOSE_NATIVE_X11) && !defined(GLFW_EXPOSE_NATIVE_WAYLAND)
         myDisplay = new Aspect_DisplayConnection((Aspect_XDisplay*)glfwGetX11Display());
+#elif defined(GLFW_EXPOSE_NATIVE_WAYLAND)
+        myDisplay = new Aspect_DisplayConnection(reinterpret_cast<Aspect_XDisplay *>(glfwGetWaylandDisplay()));
 #endif
     }
 }
@@ -85,8 +92,10 @@ Aspect_Drawable GlfwOcctWindow::NativeHandle() const
     return (Aspect_Drawable)glfwGetCocoaWindow(myGlfwWindow);
 #elif defined (_WIN32)
     return (Aspect_Drawable)glfwGetWin32Window(myGlfwWindow);
-#else
+#elif ! defined (GLFW_EXPOSE_NATIVE_WAYLAND)
     return (Aspect_Drawable)glfwGetX11Window(myGlfwWindow);
+#else
+    return (Aspect_Drawable)glfwGetWaylandWindow(myGlfwWindow);
 #endif
 }
 
@@ -100,8 +109,10 @@ Aspect_RenderingContext GlfwOcctWindow::NativeGlContext() const
     return (NSOpenGLContext*)glfwGetNSGLContext(myGlfwWindow);
 #elif defined (_WIN32)
     return glfwGetWGLContext(myGlfwWindow);
-#else
+#elif !defined (GLFW_EXPOSE_NATIVE_EGL)
     return glfwGetGLXContext(myGlfwWindow);
+#else
+    return glfwGetEGLContext(myGlfwWindow);
 #endif
 }
 

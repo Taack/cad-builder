@@ -19,7 +19,7 @@ void print_hello() {
     void* v = cCreate3DViewer();
     printf("CV ---\n");
     fflush(stdout);
-    cCreateWindow();
+//    cCreateWindow();
 //    cShowBottle2(b, v);
     printf("SB ---\n");
 }

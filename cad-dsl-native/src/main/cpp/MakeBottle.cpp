@@ -229,6 +229,7 @@ extern "C" void* cCreate3DViewer() {
     return a3DViewer;
 }
 
+
 extern "C" int cCreateWindow() {
     GlfwOcctView anApp;
 

@@ -32,6 +32,7 @@
 #include <Message_Messenger.hxx>
 #include <OpenGl_GraphicDriver.hxx>
 
+// #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 
 namespace
@@ -135,8 +136,13 @@ void GlfwOcctView::initWindow(int theWidth, int theHeight, const char* theTitle)
 {
     glfwSetErrorCallback(GlfwOcctView::errorCallback);
     glfwInitHint(GLFW_PLATFORM, GLFW_PLATFORM_X11);
+    // glfwInitHint(GLFW_PLATFORM, GLFW_PLATFORM_WAYLAND);
     glfwInit();
+    if (glfwVulkanSupported()) {
+        std::cout << "GLFW Vulkan supported" << std::endl;
+    }
     const bool toAskCoreProfile = true;
+    const bool glEs = false;
     if (toAskCoreProfile)
     {
         glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
@@ -148,7 +154,13 @@ void GlfwOcctView::initWindow(int theWidth, int theHeight, const char* theTitle)
         //glfwWindowHint(GLFW_TRANSPARENT_FRAMEBUFFER, true);
         //glfwWindowHint(GLFW_DECORATED, GL_FALSE);
         glfwWindowHint(GLFW_FOCUSED, GLFW_FALSE);
+    } else if(glEs) {
+        glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_ES_API);
+        // glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+        // glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+        // glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_ANY_PROFILE);
     }
+
     myOcctWindow = new GlfwOcctWindow(theWidth, theHeight, theTitle);
     glfwSetWindowUserPointer(myOcctWindow->getGlfwWindow(), this);
 
@@ -381,4 +393,46 @@ void GlfwOcctView::onMouseMove(int thePosX, int thePosY)
         const Graphic3d_Vec2i aNewPos(thePosX, thePosY);
         UpdateMousePosition(aNewPos, PressedMouseButtons(), LastMouseFlags(), Standard_False);
     }
+}
+
+extern "C" void* GlfwOcctView_initWindow(const int theWidth, const int theHeight, const char* theTitle) {
+    std::cout << "GlfwOcctView_initWindow" << std::endl;
+    auto anOcctView = new GlfwOcctView();
+
+    anOcctView->initWindow(theWidth, theHeight, theTitle);
+
+    return anOcctView;
+}
+
+extern "C" void GlfwOcctView_initViewer(void* occtView) {
+    std::cout << "GlfwOcctView_initViewer" << std::endl;
+    static_cast<GlfwOcctView *>(occtView)->initViewer();
+}
+
+extern "C" void GlfwOcctView_initDemoScene(void* occtView) {
+    std::cout << "GlfwOcctView_initDemoScene" << std::endl;
+    static_cast<GlfwOcctView *>(occtView)->initDemoScene();
+}
+
+extern "C" void GlfwOcctView_initGui(void* occtView) {
+    std::cout << "GlfwOcctView_initGui" << std::endl;
+    static_cast<GlfwOcctView *>(occtView)->myView->MustBeResized();
+    static_cast<GlfwOcctView *>(occtView)->myOcctWindow->Map();
+    static_cast<GlfwOcctView *>(occtView)->initGui();
+}
+
+extern "C" void GlfwOcctView_mainloop(void* occtView) {
+    std::cout << "GlfwOcctView_mainloop" << std::endl;
+    static_cast<GlfwOcctView *>(occtView)->mainloop();
+}
+
+extern "C" void GlfwOcctView_displayInContext(void* occtView, void* aShape) {
+    std::cout << "GlfwOcctView_displayInContext" << std::endl;
+    Handle(AIS_Shape) aShapePrs = new AIS_Shape((TopoDS_Shape&)aShape);
+    static_cast<GlfwOcctView *>(occtView)->myContext->Display(aShapePrs, AIS_Shaded, 0, true);
+}
+
+extern "C" void GlfwOcctView_cleanup(void* occtView) {
+    std::cout << "GlfwOcctView_cleanup" << std::endl;
+    static_cast<GlfwOcctView *>(occtView)->cleanup();
 }
