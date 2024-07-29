@@ -32,8 +32,6 @@
 #include <OpenGl_GraphicDriver.hxx>
 #include <BRepPrimAPI_MakeBox.hxx>
 
-#include "GlfwOcctView.h"
-
 
 TopoDS_Shape MakeBottle(const Standard_Real myWidth, const Standard_Real myHeight,
                         const Standard_Real myThickness) {
@@ -173,25 +171,6 @@ TopoDS_Shape MakeBottle(const Standard_Real myWidth, const Standard_Real myHeigh
     aBuilder.Add(aRes, myThreading);
 
     return aRes;
-
-//return BRepPrimAPI_MakeBox(100, 100, 100).Solid();
-}
-
-void ShowBottle(TopoDS_Shape aShape) {
-    Handle(V3d_Viewer) theViewer;
-    Handle(AIS_InteractiveContext) aContext = new AIS_InteractiveContext(theViewer);
-    Handle(AIS_Shape) aShapePrs = new AIS_Shape(aShape); // creation of the presentable object
-    aContext->Display(aShapePrs, AIS_Shaded, 0, true); // display the presentable object and redraw 3d viewer
-}
-
-void ShowBottle2(TopoDS_Shape& aShape, Handle(V3d_Viewer)& theViewer) {
-    const Handle(V3d_View) myView = theViewer->CreateView();
-    theViewer->SetViewOn(myView);
-//    myView->SetWindow(myOcctWindow, myOcctWindow->NativeGlContext());
-
-    Handle(AIS_InteractiveContext) aContext = new AIS_InteractiveContext(theViewer);
-    Handle(AIS_Shape) aShapePrs = new AIS_Shape(aShape); // creation of the presentable object
-    aContext->Display(aShapePrs, AIS_Shaded, 0, true); // display the presentable object and redraw 3d viewer
 }
 
 extern "C" TopoDS_Shape* cMakeBottle(const Standard_Real myWidth, const Standard_Real myHeight,
@@ -202,45 +181,4 @@ extern "C" TopoDS_Shape* cMakeBottle(const Standard_Real myWidth, const Standard
     } catch (StdFail_NotDone &e) {
         std::cout << e << std::endl;
     }
-}
-
-extern "C" void cShowBottle(void *aShape) {
-    ShowBottle(reinterpret_cast<TopoDS_Shape &>(aShape));
-}
-
-extern "C" void cShowBottle2(void *aShape, void* a3DViewer) {
-    ShowBottle2(reinterpret_cast<TopoDS_Shape &>(aShape), reinterpret_cast<Handle(V3d_Viewer) &>(a3DViewer));
-}
-
-extern "C" void* cCreate3DViewer() {
-    // create a graphic driver
-    Handle(OpenGl_GraphicDriver) aGraphicDriver = new OpenGl_GraphicDriver(Handle(Aspect_DisplayConnection)());
-    // create a viewer
-    auto* a3DViewer = new V3d_Viewer(aGraphicDriver);
-    // set parameters for V3d_Viewer
-    // defines default lights -
-    //   positional-light 0.3 0.0 0.0
-    //   directional-light V3d_XnegYposZpos
-    //   directional-light V3d_XnegYneg
-    //   ambient-light
-    a3DViewer->SetDefaultLights();
-    // activates all the lights defined in this viewer
-    a3DViewer->SetLightOn();
-    // set background color to black
-    a3DViewer->SetDefaultBackgroundColor(Quantity_NOC_BLACK);
-    return a3DViewer;
-}
-
-
-extern "C" int cCreateWindow() {
-    GlfwOcctView anApp;
-
-    try {
-        anApp.run();
-    } catch (const std::runtime_error& theError) {
-        std::cerr << theError.what() << std::endl;
-        return EXIT_FAILURE;
-    }
-
-    return EXIT_SUCCESS;
 }
