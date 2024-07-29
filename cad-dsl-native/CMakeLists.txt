@@ -6,13 +6,10 @@ set(CMAKE_CXX_STANDARD 14)
 #INCLUDE(cmake/CreateLibrary.cmake)
 
 add_library(cad_dsl_native SHARED
-        src/main/cpp/GlfwOcctView.cpp
-        src/main/cpp/GlfwOcctView.h
-        src/main/cpp/GlfwOcctWindow.cpp
-        src/main/cpp/GlfwOcctWindow.h
-        src/main/cpp/HelloWorld.cpp
         src/main/cpp/MakeBottle.cpp
-        src/main/cpp/OcctAisHello.cpp)
+        src/main/cpp/OcctAisHello.cpp
+        src/main/cpp/OcctExternSym.cpp
+        src/main/cpp/OcctExternSym.cpp)
 
 find_package(OpenCASCADE COMPONENTS FoundationClasses REQUIRED)
 find_package(OpenCASCADE COMPONENTS ApplicationFramework REQUIRED)
