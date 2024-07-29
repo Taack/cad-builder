@@ -188,8 +188,8 @@ void GlfwOcctView::mainloop() {
     while (!glfwWindowShouldClose(myOcctWindow->getGlfwWindow())) {
         // glfwPollEvents() for continuous rendering (immediate return if there are no new events)
         // and glfwWaitEvents() for rendering on demand (something actually happened in the viewer)
-        //glfwPollEvents();
-        glfwWaitEvents();
+        glfwPollEvents();
+        //glfwWaitEvents();
         if (!myView.IsNull()) {
             FlushViewEvents(myContext, myView, Standard_True);
         }
@@ -269,13 +269,26 @@ extern "C" void GlfwOcctView_initGui(void *occtView) {
 
 extern "C" void GlfwOcctView_mainloop(void *occtView) {
     std::cout << "GlfwOcctView_mainloop" << std::endl;
+    std::cout << std::flush;
+
     static_cast<GlfwOcctView *>(occtView)->mainloop();
 }
 
-extern "C" void GlfwOcctView_displayInContext(void *occtView, void *aShape) {
-    std::cout << "GlfwOcctView_displayInContext" << std::endl;
-    Handle(AIS_Shape) aShapePrs = new AIS_Shape((TopoDS_Shape &) aShape);
+extern "C" void GlfwOcctView_displaySomething(void *occtView) {
+    std::cout << "GlfwOcctView_displayInContext 1" << std::endl;
+    TopoDS_Shape aShape = BRepPrimAPI_MakeBox (100, 100, 100).Solid();
+    Handle(AIS_Shape) aShapePrs = new AIS_Shape(aShape);
+    std::cout << "GlfwOcctView_displayInContext 2" << std::endl;
     static_cast<GlfwOcctView *>(occtView)->myContext->Display(aShapePrs, AIS_Shaded, 0, true);
+    std::cout << "GlfwOcctView_displayInContext 3" << std::endl;
+}
+
+extern "C" void GlfwOcctView_displayInContext(void *occtView, void *aShape) {
+    std::cout << "GlfwOcctView_displayInContext 1" << std::endl;
+    Handle(AIS_Shape) aShapePrs = new AIS_Shape((TopoDS_Shape &) aShape);
+    std::cout << "GlfwOcctView_displayInContext 2" << std::endl;
+    static_cast<GlfwOcctView *>(occtView)->myContext->Display(aShapePrs, AIS_Shaded, 0, true);
+    std::cout << "GlfwOcctView_displayInContext 3" << std::endl;
 }
 
 extern "C" void GlfwOcctView_cleanup(void *occtView) {

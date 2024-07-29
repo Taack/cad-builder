@@ -20,7 +20,6 @@ libs.split(' ').each {
     linkerLibs << "-l$it"
 }
 
-
 library {
     linkage = [Linkage.SHARED]
     targetMachines = [
@@ -37,4 +36,3 @@ tasks.withType(LinkSharedLibrary).configureEach {
     // Define toolchain-specific compiler and linker options
     linkerArgs = ["-Xlinker", "-S", "-B", "direct"] + linkerLibs
 }
-

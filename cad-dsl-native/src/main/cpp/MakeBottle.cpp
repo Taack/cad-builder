@@ -30,6 +30,7 @@
 #include <AIS_InteractiveContext.hxx>
 #include <AIS_Shape.hxx>
 #include <OpenGl_GraphicDriver.hxx>
+#include <BRepPrimAPI_MakeBox.hxx>
 
 #include "GlfwOcctView.h"
 
@@ -172,6 +173,8 @@ TopoDS_Shape MakeBottle(const Standard_Real myWidth, const Standard_Real myHeigh
     aBuilder.Add(aRes, myThreading);
 
     return aRes;
+
+//return BRepPrimAPI_MakeBox(100, 100, 100).Solid();
 }
 
 void ShowBottle(TopoDS_Shape aShape) {
@@ -191,15 +194,14 @@ void ShowBottle2(TopoDS_Shape& aShape, Handle(V3d_Viewer)& theViewer) {
     aContext->Display(aShapePrs, AIS_Shaded, 0, true); // display the presentable object and redraw 3d viewer
 }
 
-extern "C" void *cMakeBottle(const Standard_Real myWidth, const Standard_Real myHeight,
+extern "C" TopoDS_Shape* cMakeBottle(const Standard_Real myWidth, const Standard_Real myHeight,
                              const Standard_Real myThickness) {
     try {
         TopoDS_Shape shape = MakeBottle(myWidth, myHeight, myThickness);
-        return &shape;
+        return new TopoDS_Shape(shape);
     } catch (StdFail_NotDone &e) {
         std::cout << e << std::endl;
     }
-    return NULL;
 }
 
 extern "C" void cShowBottle(void *aShape) {
