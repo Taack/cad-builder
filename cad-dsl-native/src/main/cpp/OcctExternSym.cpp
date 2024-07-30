@@ -115,7 +115,7 @@ extern "C" TopoDS_Shape* brep_primapi_make_prism(TopoDS_Face& face, gp_Vec& norm
 }
 
 
-extern "C" BRepFilletAPI_MakeFillet* brep_builderapi_make_fillet(TopoDS_Shape& body) {
+extern "C" BRepFilletAPI_MakeFillet* brep_filletapi_make_fillet(TopoDS_Shape& body) {
     return new BRepFilletAPI_MakeFillet(body);
 }
 
@@ -127,6 +127,10 @@ extern "C" bool top_exp_explorer_more(TopExp_Explorer& explorer) {
     return explorer.More();
 }
 
+extern "C" TopoDS_Shape* top_exp_explorer_current(TopExp_Explorer& explorer) {
+    return new TopoDS_Shape(explorer.Current());
+}
+
 extern "C" void top_exp_explorer_next(TopExp_Explorer& explorer) {
     return explorer.Next();
 }
@@ -135,11 +139,11 @@ extern "C" TopoDS_Edge& topo_ds_edge(TopoDS_Shape& shape) {
     return TopoDS::Edge(shape);
 }
 
-extern "C" void brep_builderapi_make_fillet_add(BRepFilletAPI_MakeFillet& make_fillet, Standard_Real r, TopoDS_Edge& edge) {
+extern "C" void brep_filletapi_make_fillet_add(BRepFilletAPI_MakeFillet& make_fillet, Standard_Real r, TopoDS_Edge& edge) {
     return make_fillet.Add(r, edge);
 }
 
-extern "C" TopoDS_Shape* brep_builderapi_make_fillet_shape(BRepFilletAPI_MakeFillet& make_fillet) {
+extern "C" TopoDS_Shape* brep_filletapi_make_fillet_shape(BRepFilletAPI_MakeFillet& make_fillet) {
     return new TopoDS_Shape(make_fillet.Shape());
 }
 
@@ -147,7 +151,7 @@ extern "C" const gp_Dir& gp_dz() {
     return gp::DZ();
 }
 
-extern "C" const gp_Ax2* gp_ax2(gp_Pnt loc, gp_Dir& dir) {
+extern "C" const gp_Ax2* gp_ax2(gp_Pnt& loc, gp_Dir& dir) {
     return new gp_Ax2(loc, dir);
 }
 
@@ -227,16 +231,16 @@ extern "C" BRepOffsetAPI_ThruSections* brep_tool_thru_sections(const Standard_Bo
     return new BRepOffsetAPI_ThruSections(isSolid, ruled, pres3d);
 }
 
-extern "C" void brep_tool_thru_sections_add_wire(BRepOffsetAPI_ThruSections thru_sections, const TopoDS_Wire w) {
-    thru_sections.AddWire(w);
+extern "C" void brep_tool_thru_sections_add_wire(BRepOffsetAPI_ThruSections* thru_sections, const TopoDS_Wire& w) {
+    thru_sections->AddWire(w);
 }
 
-extern "C" void brep_tool_thru_sections_check_compatilibty(BRepOffsetAPI_ThruSections thru_sections, const Standard_Boolean b) {
-    thru_sections.CheckCompatibility(b);
+extern "C" void brep_tool_thru_sections_check_compatibility(BRepOffsetAPI_ThruSections* thru_sections, const Standard_Boolean b) {
+    thru_sections->CheckCompatibility(b);
 }
 
-extern "C" TopoDS_Shape* brep_tool_thru_sections_shape(BRepOffsetAPI_ThruSections thru_sections) {
-    return new TopoDS_Shape(thru_sections.Shape());
+extern "C" TopoDS_Shape* brep_tool_thru_sections_shape(BRepOffsetAPI_ThruSections* thru_sections) {
+    return new TopoDS_Shape(thru_sections->Shape());
 }
 
 extern "C" TopoDS_Compound* topods_compound_create() {
