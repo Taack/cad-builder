@@ -147,8 +147,8 @@ extern "C" TopoDS_Shape* brep_filletapi_make_fillet_shape(BRepFilletAPI_MakeFill
     return new TopoDS_Shape(make_fillet.Shape());
 }
 
-extern "C" const gp_Dir& gp_dz() {
-    return gp::DZ();
+extern "C" const gp_Dir* gp_dz() {
+    return new gp_Dir(gp::DZ());
 }
 
 extern "C" const gp_Ax2* gp_ax2(gp_Pnt& loc, gp_Dir& dir) {

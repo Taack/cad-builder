@@ -1,7 +1,7 @@
 
 
 void* cMakeBottle(const double, const double, const double);
-int pfff(void*);
+int visualize(void*);
 
 #define gp_Pnt void
 #define gp_Vec void
@@ -80,7 +80,7 @@ void brep_filletapi_make_fillet_add(BRepFilletAPI_MakeFillet* make_fillet, Stand
 
 TopoDS_Shape* brep_filletapi_make_fillet_shape(BRepFilletAPI_MakeFillet* make_fillet);
 
-const gp_Dir* gp_dz();
+const gp_Dir* gp_dz(void);
 
 const gp_Ax2* gp_ax2(gp_Pnt* loc, gp_Dir* dir);
 
@@ -98,7 +98,7 @@ Handle(Geom_Plane)* downcast_geom_plane(Handle(Geom_Surface)*surface);
 
 gp_Pnt* geom_plane_location(Handle(Geom_Plane)*plane);
 
-BRepOffsetAPI_MakeThickSolid* brep_offset_api_make_thick_solid();
+BRepOffsetAPI_MakeThickSolid* brep_offset_api_make_thick_solid(void);
 
 void brep_offset_api_make_thick_solid_join(BRepOffsetAPI_MakeThickSolid* thick_solid, TopTools_ListOfShape* face_to_remove, TopoDS_Shape* shape, Standard_Real thickness, Standard_Real tol);
 
@@ -118,7 +118,7 @@ BRepOffsetAPI_ThruSections* brep_tool_thru_sections(const Standard_Boolean isSol
 void brep_tool_thru_sections_add_wire(BRepOffsetAPI_ThruSections* thru_sections, const TopoDS_Wire* w);
 void brep_tool_thru_sections_check_compatibility(BRepOffsetAPI_ThruSections* thru_sections, const Standard_Boolean b);
 TopoDS_Shape* brep_tool_thru_sections_shape(BRepOffsetAPI_ThruSections* thru_sections);
-TopoDS_Compound* topods_compound_create();
-BRep_Builder* brep_builder_create();
+TopoDS_Compound* topods_compound_create(void);
+BRep_Builder* brep_builder_create(void);
 void brep_builder_make_compound(BRep_Builder* b, TopoDS_Compound* c);
 void brep_builder_add(BRep_Builder* b, TopoDS_Compound* c, TopoDS_Shape* s);

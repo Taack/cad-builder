@@ -140,7 +140,7 @@ private:
   Handle(V3d_View) myView;
 };
 
-extern "C" int pfff(TopoDS_Shape* truc) {
+extern "C" int visualize(TopoDS_Shape* truc) {
   OSD::SetSignal(false);
 
   std::cout << "truc1" << std::endl << std::flush;
