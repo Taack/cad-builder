@@ -3,6 +3,8 @@ package org.taack
 import groovy.transform.CompileStatic
 import org.nativelib.NativeLib as nl
 
+import java.lang.foreign.MemorySegment
+
 enum TopAbs_ShapeEnum {
     TopAbs_COMPOUND,
     TopAbs_COMPSOLID,
@@ -61,7 +63,7 @@ static void main(String[] args) {
 
     println "Body: Prism the Profile"
 
-    def myFaceProfile = nl.brep_builderapi_make_face(myWireProfile)
+    def myFaceProfile = nl.brep_builderapi_make_face_from_wire(myWireProfile)
     def aPrismVec = nl.make_gp_vec(0d, 0d, myHeight)
     def myBody = nl.brep_primapi_make_prism(myFaceProfile, aPrismVec)
 
@@ -91,6 +93,36 @@ static void main(String[] args) {
     def myNeck = nl.brep_primapi_make_cylinder_shape(MKCylinder)
 
     myBody = nl.brep_algoapi_fuse(myBody, myNeck)
+
+    println "Body: Create a Hollowed Solid"
+
+    double zMax = -1
+    def faceToRemove
+
+    for (def aFaceExplorer = nl.top_exp_explorer(myBody, TopAbs_ShapeEnum.TopAbs_FACE.ordinal(), TopAbs_ShapeEnum.TopAbs_SHAPE.ordinal()); nl.top_exp_explorer_more(aFaceExplorer); nl.top_exp_explorer_next(aFaceExplorer)) {
+        println "AUO111 ${TopAbs_ShapeEnum.TopAbs_FACE.ordinal()}"
+        def aFace = nl.brep_builderapi_make_face_from_face(nl.top_exp_explorer_current(aFaceExplorer))
+        println "AUO1111"
+        def aSurface = nl.brep_tool_surface(aFace)
+        println "AUO112"
+        if (nl.geom_surface_is_geom_plane(aSurface)) {
+            println "AUO113"
+            def aPlan = nl.downcast_geom_plane(aSurface)
+            def aPnt = nl.geom_plane_location(aPlan)
+            double aZ = nl.gp_pnt_z(aPnt)
+            if (aZ > zMax) {
+                zMax = aZ
+                faceToRemove = aFace
+            }
+        }
+    }
+println "AUO222"
+    def facesToRemove = nl.top_tools_list_of_shape()
+    nl.top_tools_list_of_shape_append(facesToRemove, faceToRemove as MemorySegment)
+    def aSolidMaker = nl.brep_offset_api_make_thick_solid()
+    nl.brep_offset_api_make_thick_solid_join(aSolidMaker, myBody, facesToRemove, -myThickness/50d, 0.001d)
+
+    myBody = nl.brep_offset_api_make_thick_solid_shape(aSolidMaker)
 
     nl.visualize(myBody)
 }

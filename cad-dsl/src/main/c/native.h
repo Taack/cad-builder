@@ -35,7 +35,8 @@ void gp_trsf_set_mirror(gp_Trsf* trsf, gp_Ax1* ax1);
 BRepBuilderAPI_Transform* brep_builderapi_transform(const TopoDS_Wire* w, gp_Trsf* trsf);
 const TopoDS_Shape* brep_builderapi_transform_shape(BRepBuilderAPI_Transform *b_rep_transform);
 TopoDS_Wire* topo_ds_wire(TopoDS_Shape* shape);
-TopoDS_Face* brep_builderapi_make_face(TopoDS_Wire* wire);
+TopoDS_Face* brep_builderapi_make_face_from_wire(TopoDS_Wire* wire);
+TopoDS_Face* brep_builderapi_make_face_from_face(TopoDS_Face* face);
 TopoDS_Shape* brep_primapi_make_prism(TopoDS_Face* face, gp_Vec* normal);
 
 #define BRepFilletAPI_MakeFillet void
@@ -66,7 +67,7 @@ TopoDS_Shape* brep_primapi_make_prism(TopoDS_Face* face, gp_Vec* normal);
 
 BRepFilletAPI_MakeFillet* brep_filletapi_make_fillet(TopoDS_Shape* body);
 
-TopExp_Explorer* top_exp_explorer(const TopoDS_Shape* S, const TopAbs_ShapeEnum ToFind, const TopAbs_ShapeEnum ToAvoid);
+TopExp_Explorer* top_exp_explorer(const TopoDS_Shape* S, int ToFind, int ToAvoid);
 
 bool top_exp_explorer_more(TopExp_Explorer* explorer);
 
@@ -97,6 +98,10 @@ bool geom_surface_is_geom_plane(Handle(Geom_Surface)*surface);
 Handle(Geom_Plane)* downcast_geom_plane(Handle(Geom_Surface)*surface);
 
 gp_Pnt* geom_plane_location(Handle(Geom_Plane)*plane);
+
+
+TopTools_ListOfShape* top_tools_list_of_shape(void);
+void top_tools_list_of_shape_append(TopTools_ListOfShape* l, TopoDS_Face* face);
 
 BRepOffsetAPI_MakeThickSolid* brep_offset_api_make_thick_solid(void);
 

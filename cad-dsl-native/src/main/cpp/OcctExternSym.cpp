@@ -106,8 +106,12 @@ extern "C" TopoDS_Wire& topo_ds_wire(TopoDS_Shape& shape) {
     return TopoDS::Wire(shape);
 }
 
-extern "C" TopoDS_Face* brep_builderapi_make_face(TopoDS_Wire& wire) {
+extern "C" TopoDS_Face* brep_builderapi_make_face_from_wire(TopoDS_Wire& wire) {
     return new TopoDS_Face(BRepBuilderAPI_MakeFace(wire));
+}
+
+extern "C" TopoDS_Face* brep_builderapi_make_face_from_face(TopoDS_Face& face) {
+    return new TopoDS_Face(BRepBuilderAPI_MakeFace(face));
 }
 
 extern "C" TopoDS_Shape* brep_primapi_make_prism(TopoDS_Face& face, gp_Vec& normal) {
@@ -119,8 +123,23 @@ extern "C" BRepFilletAPI_MakeFillet* brep_filletapi_make_fillet(TopoDS_Shape& bo
     return new BRepFilletAPI_MakeFillet(body);
 }
 
-extern "C" TopExp_Explorer* top_exp_explorer(const TopoDS_Shape& S, const TopAbs_ShapeEnum ToFind, const TopAbs_ShapeEnum ToAvoid = TopAbs_SHAPE) {
-    return new TopExp_Explorer(S, ToFind, ToAvoid);
+TopAbs_ShapeEnum TopAbs_ShapeEnumFromOrdinal(int ordinal) {
+    switch (ordinal) {
+        case 0: return TopAbs_COMPOUND;
+        case 1: return TopAbs_COMPSOLID;
+        case 2: return TopAbs_SOLID;
+        case 3: return TopAbs_SHELL;
+        case 4: return TopAbs_FACE;
+        case 5: return TopAbs_WIRE;
+        case 6: return TopAbs_EDGE;
+        case 7: return TopAbs_VERTEX;
+        case 8: return TopAbs_SHAPE;
+        default: return TopAbs_SHAPE;
+    }
+}
+
+extern "C" TopExp_Explorer* top_exp_explorer(const TopoDS_Shape& S, const /*TopAbs_ShapeEnum*/int ToFind, const int ToAvoid = TopAbs_SHAPE) {
+    return new TopExp_Explorer(S, TopAbs_ShapeEnumFromOrdinal(ToFind), TopAbs_ShapeEnumFromOrdinal(ToAvoid));
 }
 
 extern "C" bool top_exp_explorer_more(TopExp_Explorer& explorer) {
@@ -181,6 +200,14 @@ extern "C" Handle(Geom_Plane)* downcast_geom_plane(Handle(Geom_Surface)&surface)
 
 extern "C" gp_Pnt* geom_plane_location(Handle(Geom_Plane)&plane) {
     return new gp_Pnt(plane->Location());
+}
+
+extern "C" TopTools_ListOfShape* top_tools_list_of_shape() {
+    return new TopTools_ListOfShape();
+}
+
+extern "C" void top_tools_list_of_shape_append(TopTools_ListOfShape* l, TopoDS_Face& face) {
+    l->Append(face);
 }
 
 extern "C" BRepOffsetAPI_MakeThickSolid* brep_offset_api_make_thick_solid() {
