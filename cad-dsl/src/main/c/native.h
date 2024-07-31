@@ -73,6 +73,8 @@ bool top_exp_explorer_more(TopExp_Explorer* explorer);
 
 TopoDS_Shape* top_exp_explorer_current(TopExp_Explorer* explorer);
 
+TopoDS_Shape* top_exp_explorer_current_face(TopExp_Explorer* explorer);
+
 void top_exp_explorer_next(TopExp_Explorer* explorer);
 
 TopoDS_Edge* topo_ds_edge(TopoDS_Shape* shape);
@@ -93,7 +95,7 @@ TopoDS_Shape* brep_algoapi_fuse(TopoDS_Shape* s1, TopoDS_Shape* s2);
 
 Handle(Geom_Surface)* brep_tool_surface(TopoDS_Face* face);
 
-bool geom_surface_is_geom_plane(Handle(Geom_Surface)*surface);
+int geom_surface_is_geom_plane(Handle(Geom_Surface)*surface);
 
 Handle(Geom_Plane)* downcast_geom_plane(Handle(Geom_Surface)*surface);
 
@@ -127,3 +129,5 @@ TopoDS_Compound* topods_compound_create(void);
 BRep_Builder* brep_builder_create(void);
 void brep_builder_make_compound(BRep_Builder* b, TopoDS_Compound* c);
 void brep_builder_add(BRep_Builder* b, TopoDS_Compound* c, TopoDS_Shape* s);
+TopoDS_Face* topods_face_new(void);
+void topods_shape_assignment_operator(TopoDS_Shape** left, TopoDS_Shape* right);

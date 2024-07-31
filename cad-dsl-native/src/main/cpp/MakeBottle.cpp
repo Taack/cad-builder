@@ -124,7 +124,11 @@ TopoDS_Shape MakeBottle(const Standard_Real myWidth, const Standard_Real myHeigh
     facesToRemove.Append(faceToRemove);
     BRepOffsetAPI_MakeThickSolid aSolidMaker;
     aSolidMaker.MakeThickSolidByJoin(myBody, facesToRemove, -myThickness / 50, 1.e-3);
+    std::cout << "face_to_remove.Closed()" << faceToRemove.Closed() << std::endl;
     myBody = aSolidMaker.Shape();
+
+
+    return myBody;
     // Threading: Create Surfaces
     Handle(Geom_CylindricalSurface) aCyl1 = new Geom_CylindricalSurface(neckAx2, myNeckRadius * 0.99);
     Handle(Geom_CylindricalSurface) aCyl2 = new Geom_CylindricalSurface(neckAx2, myNeckRadius * 1.05);

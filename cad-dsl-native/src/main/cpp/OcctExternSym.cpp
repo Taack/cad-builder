@@ -111,13 +111,16 @@ extern "C" TopoDS_Face* brep_builderapi_make_face_from_wire(TopoDS_Wire& wire) {
 }
 
 extern "C" TopoDS_Face* brep_builderapi_make_face_from_face(TopoDS_Face& face) {
-    return new TopoDS_Face(BRepBuilderAPI_MakeFace(face));
+    return new TopoDS_Face(BRepBuilderAPI_MakeFace(face).Face());
+}
+
+extern "C" TopoDS_Face* topods_face_new() {
+    return new TopoDS_Face();
 }
 
 extern "C" TopoDS_Shape* brep_primapi_make_prism(TopoDS_Face& face, gp_Vec& normal) {
     return new TopoDS_Shape(BRepPrimAPI_MakePrism(face, normal));
 }
-
 
 extern "C" BRepFilletAPI_MakeFillet* brep_filletapi_make_fillet(TopoDS_Shape& body) {
     return new BRepFilletAPI_MakeFillet(body);
@@ -148,6 +151,10 @@ extern "C" bool top_exp_explorer_more(TopExp_Explorer& explorer) {
 
 extern "C" TopoDS_Shape* top_exp_explorer_current(TopExp_Explorer& explorer) {
     return new TopoDS_Shape(explorer.Current());
+}
+
+extern "C" TopoDS_Shape* top_exp_explorer_current_face(TopExp_Explorer& explorer) {
+    return new TopoDS_Face(TopoDS::Face(explorer.Current()));
 }
 
 extern "C" void top_exp_explorer_next(TopExp_Explorer& explorer) {
@@ -190,8 +197,8 @@ extern "C" Handle(Geom_Surface)* brep_tool_surface(TopoDS_Face& face) {
     return new Handle(Geom_Surface)(BRep_Tool::Surface(face));
 }
 
-extern "C" bool geom_surface_is_geom_plane(Handle(Geom_Surface)&surface) {
-    return surface->DynamicType() == STANDARD_TYPE(Geom_Plane);
+extern "C" int geom_surface_is_geom_plane(Handle(Geom_Surface)&surface) {
+    return surface->DynamicType() == STANDARD_TYPE(Geom_Plane) ? 1 : 0;
 }
 
 extern "C" Handle(Geom_Plane)* downcast_geom_plane(Handle(Geom_Surface)&surface) {
@@ -214,12 +221,12 @@ extern "C" BRepOffsetAPI_MakeThickSolid* brep_offset_api_make_thick_solid() {
     return new BRepOffsetAPI_MakeThickSolid();
 }
 
-extern "C" void brep_offset_api_make_thick_solid_join(BRepOffsetAPI_MakeThickSolid& thick_solid, TopTools_ListOfShape& face_to_remove, TopoDS_Shape& shape, Standard_Real thickness, Standard_Real tol) {
-    thick_solid.MakeThickSolidByJoin(shape, face_to_remove, thickness, tol);
+extern "C" void brep_offset_api_make_thick_solid_join(BRepOffsetAPI_MakeThickSolid* thick_solid, TopoDS_Shape* shape, const TopTools_ListOfShape* face_to_remove, Standard_Real thickness, Standard_Real tol) {
+    thick_solid->MakeThickSolidByJoin(*shape, *face_to_remove, thickness, tol);
 }
 
-extern "C" TopoDS_Shape* brep_offset_api_make_thick_solid_shape(BRepOffsetAPI_MakeThickSolid& thick_solid) {
-    return new TopoDS_Shape(thick_solid.Shape());
+extern "C" TopoDS_Shape* brep_offset_api_make_thick_solid_shape(BRepOffsetAPI_MakeThickSolid* thick_solid) {
+    return new TopoDS_Shape(thick_solid->Shape());
 }
 
 extern "C" Handle(Geom_CylindricalSurface)* geom_cylindrical_surface_create(const gp_Ax3& ax2, const Standard_Real radius) {

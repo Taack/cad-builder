@@ -3,8 +3,6 @@ package org.taack
 import groovy.transform.CompileStatic
 import org.nativelib.NativeLib as nl
 
-import java.lang.foreign.MemorySegment
-
 enum TopAbs_ShapeEnum {
     TopAbs_COMPOUND,
     TopAbs_COMPSOLID,
@@ -22,13 +20,11 @@ enum TopAbs_ShapeEnum {
 }
 
 
-
-
 @CompileStatic
 static void main(String[] args) {
-    double myWidth = 1.0
-    double myHeight = 1.0
-    double myThickness = 0.1
+    double myWidth = 50.0
+    double myHeight = 70.0
+    double myThickness = 30.0
     def aPnt1 = nl.make_gp_pnt(-myWidth / 2d, 0, 0)
     def aPnt2 = nl.make_gp_pnt(-myWidth / 2d, -myThickness / 4d, 0)
     def aPnt3 = nl.make_gp_pnt(0, -myThickness / 2d, 0)
@@ -97,16 +93,12 @@ static void main(String[] args) {
     println "Body: Create a Hollowed Solid"
 
     double zMax = -1
-    def faceToRemove
+    def faceToRemove = nl.topods_face_new()
 
     for (def aFaceExplorer = nl.top_exp_explorer(myBody, TopAbs_ShapeEnum.TopAbs_FACE.ordinal(), TopAbs_ShapeEnum.TopAbs_SHAPE.ordinal()); nl.top_exp_explorer_more(aFaceExplorer); nl.top_exp_explorer_next(aFaceExplorer)) {
-        println "AUO111 ${TopAbs_ShapeEnum.TopAbs_FACE.ordinal()}"
-        def aFace = nl.brep_builderapi_make_face_from_face(nl.top_exp_explorer_current(aFaceExplorer))
-        println "AUO1111"
+        def aFace = nl.top_exp_explorer_current_face(aFaceExplorer)
         def aSurface = nl.brep_tool_surface(aFace)
-        println "AUO112"
-        if (nl.geom_surface_is_geom_plane(aSurface)) {
-            println "AUO113"
+        if (nl.geom_surface_is_geom_plane(aSurface) == 1) {
             def aPlan = nl.downcast_geom_plane(aSurface)
             def aPnt = nl.geom_plane_location(aPlan)
             double aZ = nl.gp_pnt_z(aPnt)
@@ -116,11 +108,11 @@ static void main(String[] args) {
             }
         }
     }
-println "AUO222"
+
     def facesToRemove = nl.top_tools_list_of_shape()
-    nl.top_tools_list_of_shape_append(facesToRemove, faceToRemove as MemorySegment)
+    nl.top_tools_list_of_shape_append(facesToRemove, faceToRemove)
     def aSolidMaker = nl.brep_offset_api_make_thick_solid()
-    nl.brep_offset_api_make_thick_solid_join(aSolidMaker, myBody, facesToRemove, -myThickness/50d, 0.001d)
+    nl.brep_offset_api_make_thick_solid_join(aSolidMaker, myBody, facesToRemove, -myThickness / 50d, 0.001d)
 
     myBody = nl.brep_offset_api_make_thick_solid_shape(aSolidMaker)
 
