@@ -3,6 +3,9 @@ package org.taack
 import groovy.transform.CompileStatic
 import org.nativelib.NativeLib as nl
 
+import java.lang.foreign.Arena
+import java.lang.foreign.MemorySegment
+
 enum TopAbs_ShapeEnum {
     TopAbs_COMPOUND,
     TopAbs_COMPSOLID,
@@ -115,6 +118,11 @@ static void main(String[] args) {
     nl.brep_offset_api_make_thick_solid_join(aSolidMaker, myBody, facesToRemove, -myThickness / 50d, 0.001d)
 
     myBody = nl.brep_offset_api_make_thick_solid_shape(aSolidMaker)
+
+    try (Arena arena = Arena.ofConfined()) {
+        MemorySegment t = arena.allocateFrom('Test.png');
+        nl.dumpShape(myBody, 512, 512, t)
+    }
 
     nl.visualize(myBody)
 }

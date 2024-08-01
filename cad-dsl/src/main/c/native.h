@@ -131,3 +131,8 @@ void brep_builder_make_compound(BRep_Builder* b, TopoDS_Compound* c);
 void brep_builder_add(BRep_Builder* b, TopoDS_Compound* c, TopoDS_Shape* s);
 TopoDS_Face* topods_face_new(void);
 void topods_shape_assignment_operator(TopoDS_Shape** left, TopoDS_Shape* right);
+
+#define Standard_Integer int
+
+int dumpShape(const TopoDS_Shape* shape, const Standard_Integer width, const Standard_Integer height,
+  const char* fileName);
