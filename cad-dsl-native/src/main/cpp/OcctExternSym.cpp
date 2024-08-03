@@ -390,6 +390,6 @@ extern "C" bool dumpShape(const TopoDS_Shape &shape, const Standard_Integer widt
     _context->Display(_shapePrs, false);
     _view->FitAll(0.1, true);
 
-    bool isOk = _view->ToPixMap(*pixmap, width, height);
-    return isOk ? pixmap->Save(fileName) : nullptr;
+    _view->ToPixMap(*pixmap, width, height);
+    return pixmap->Save(fileName);
 }
