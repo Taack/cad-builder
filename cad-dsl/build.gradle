@@ -85,5 +85,7 @@ dependencies {
 }
 
 test {
+    println "Setting LD_LIBRARY_PATH=$nativeLibPath:$nativeLibPath2"
+    environment('LD_LIBRARY_PATH', "$nativeLibPath:$nativeLibPath2")
     useJUnitPlatform()
 }
