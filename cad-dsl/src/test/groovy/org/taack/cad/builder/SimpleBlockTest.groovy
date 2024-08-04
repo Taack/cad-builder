@@ -35,10 +35,13 @@ class SimpleBlockTest {
         cb()
                 .box(length, height, thickness)
                 .topZ {
-                    hole(this.centerHoleDia)
-                    rect(this.length - this.cboreInset, this.width - this.cboreInset)
+                    // Chamfer
+                    hole(centerHoleDia)
+                    rect(length - cboreInset, width - cboreInset).edges {
+                        vertices {
+                            counterboredHole()
+                        }
+                    }
                 }
-
-
     }
 }

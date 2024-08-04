@@ -71,7 +71,7 @@ trait Selector {
         LINEAR, NOT_LINEAR
     }
 
-    Face topZ(@DelegatesTo(value = Face, strategy = Closure.DELEGATE_ONLY) c = null) {
+    Face topZ(@DelegatesTo(value = Face, strategy = Closure.DELEGATE_FIRST) c = null) {
         face(Axe.Z, Qty.max, c)
     }
 

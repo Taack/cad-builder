@@ -147,3 +147,5 @@ gp_Ax1* gp_ax1_new(const gp_Pnt *theP, const gp_Dir *theV);
 gp_Dir* gp_dir_new(const Standard_Real theXv, const Standard_Real theYv, const Standard_Real theZv);
 
 gp_Dir* gp_dir_normal_to_face(const TopoDS_Face* aCurrentFace);
+
+gp_Pnt* gp_pnt_center_of_mass(const TopoDS_Shape* myShape);
