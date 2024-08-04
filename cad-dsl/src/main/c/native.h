@@ -33,7 +33,7 @@ const gp_Ax1* gp_ox(void);
 gp_Trsf* gp_trsf(void);
 void gp_trsf_set_mirror(gp_Trsf* trsf, gp_Ax1* ax1);
 BRepBuilderAPI_Transform* brep_builderapi_transform(const TopoDS_Wire* w, gp_Trsf* trsf);
-const TopoDS_Shape* brep_builderapi_transform_shape(BRepBuilderAPI_Transform *b_rep_transform);
+//const TopoDS_Shape* brep_builderapi_transform_shape(BRepBuilderAPI_Transform *b_rep_transform);
 TopoDS_Wire* topo_ds_wire(TopoDS_Shape* shape);
 TopoDS_Face* brep_builderapi_make_face_from_wire(TopoDS_Wire* wire);
 TopoDS_Face* brep_builderapi_make_face_from_face(TopoDS_Face* face);
@@ -64,6 +64,8 @@ TopoDS_Shape* brep_primapi_make_prism(TopoDS_Face* face, gp_Vec* normal);
 #define BRepOffsetAPI_ThruSections void
 #define TopoDS_Compound void
 #define BRep_Builder void
+#define BRepPrimAPI_MakeBox void
+#define BRepPrimAPI_MakeShape void
 
 BRepFilletAPI_MakeFillet* brep_filletapi_make_fillet(TopoDS_Shape* body);
 
@@ -81,15 +83,16 @@ TopoDS_Edge* topo_ds_edge(TopoDS_Shape* shape);
 
 void brep_filletapi_make_fillet_add(BRepFilletAPI_MakeFillet* make_fillet, Standard_Real r, TopoDS_Edge* edge);
 
-TopoDS_Shape* brep_filletapi_make_fillet_shape(BRepFilletAPI_MakeFillet* make_fillet);
+//TopoDS_Shape* brep_filletapi_make_fillet_shape(BRepFilletAPI_MakeFillet* make_fillet);
 
 const gp_Dir* gp_dz(void);
 
 const gp_Ax2* gp_ax2(gp_Pnt* loc, gp_Dir* dir);
 
 BRepPrimAPI_MakeCylinder* brep_primapi_make_cylinder(const gp_Ax2* Axes, const Standard_Real R, const Standard_Real H);
-
-TopoDS_Shape* brep_primapi_make_cylinder_shape(BRepPrimAPI_MakeCylinder* mk);
+BRepPrimAPI_MakeBox *brep_primapi_make_box(const Standard_Real x, const Standard_Real y,
+                                                                const Standard_Real z);
+TopoDS_Shape* brep_builderapi_make_shape(BRepPrimAPI_MakeShape* mk);
 
 TopoDS_Shape* brep_algoapi_fuse(TopoDS_Shape* s1, TopoDS_Shape* s2);
 
@@ -109,7 +112,7 @@ BRepOffsetAPI_MakeThickSolid* brep_offset_api_make_thick_solid(void);
 
 void brep_offset_api_make_thick_solid_join(BRepOffsetAPI_MakeThickSolid* thick_solid, TopTools_ListOfShape* face_to_remove, TopoDS_Shape* shape, Standard_Real thickness, Standard_Real tol);
 
-TopoDS_Shape* brep_offset_api_make_thick_solid_shape(BRepOffsetAPI_MakeThickSolid* thick_solid);
+//TopoDS_Shape* brep_offset_api_make_thick_solid_shape(BRepOffsetAPI_MakeThickSolid* thick_solid);
 
 Handle(Geom_CylindricalSurface)* geom_cylindrical_surface_create(const gp_Ax3* ax2, const Standard_Real radius);
 
@@ -124,7 +127,7 @@ void brep_lib_build_curves_3d(TopoDS_Wire* w1);
 BRepOffsetAPI_ThruSections* brep_tool_thru_sections(const Standard_Boolean isSolid, const Standard_Boolean ruled, const Standard_Real pres3d);
 void brep_tool_thru_sections_add_wire(BRepOffsetAPI_ThruSections* thru_sections, const TopoDS_Wire* w);
 void brep_tool_thru_sections_check_compatibility(BRepOffsetAPI_ThruSections* thru_sections, const Standard_Boolean b);
-TopoDS_Shape* brep_tool_thru_sections_shape(BRepOffsetAPI_ThruSections* thru_sections);
+//TopoDS_Shape* brep_tool_thru_sections_shape(BRepOffsetAPI_ThruSections* thru_sections);
 TopoDS_Compound* topods_compound_create(void);
 BRep_Builder* brep_builder_create(void);
 void brep_builder_make_compound(BRep_Builder* b, TopoDS_Compound* c);

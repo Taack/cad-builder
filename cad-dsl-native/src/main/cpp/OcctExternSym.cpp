@@ -34,6 +34,7 @@
 #include <TopoDS_Edge.hxx>
 #include <V3d_Viewer.hxx>
 #include <Aspect_NeutralWindow.hxx>
+#include <BRepPrimAPI_MakeBox.hxx>
 #include <Image_AlienPixMap.hxx>
 #include <V3d_View.hxx>
 #include <Xw_Window.hxx>
@@ -106,9 +107,9 @@ extern "C" BRepBuilderAPI_Transform *brep_builderapi_transform(const TopoDS_Wire
 }
 
 
-extern "C" const TopoDS_Shape &brep_builderapi_transform_shape(BRepBuilderAPI_Transform *b_rep_transform) {
-    return b_rep_transform->Shape();
-}
+// extern "C" const TopoDS_Shape &brep_builderapi_transform_shape(BRepBuilderAPI_Transform *b_rep_transform) {
+//     return b_rep_transform->Shape();
+// }
 
 extern "C" TopoDS_Wire &topo_ds_wire(TopoDS_Shape &shape) {
     return TopoDS::Wire(shape);
@@ -179,9 +180,9 @@ extern "C" void brep_filletapi_make_fillet_add(BRepFilletAPI_MakeFillet &make_fi
     return make_fillet.Add(r, edge);
 }
 
-extern "C" TopoDS_Shape *brep_filletapi_make_fillet_shape(BRepFilletAPI_MakeFillet &make_fillet) {
-    return new TopoDS_Shape(make_fillet.Shape());
-}
+// extern "C" TopoDS_Shape *brep_filletapi_make_fillet_shape(BRepFilletAPI_MakeFillet &make_fillet) {
+//     return new TopoDS_Shape(make_fillet.Shape());
+// }
 
 extern "C" const gp_Dir *gp_dz() {
     return new gp_Dir(gp::DZ());
@@ -196,7 +197,12 @@ extern "C" BRepPrimAPI_MakeCylinder *brep_primapi_make_cylinder(const gp_Ax2 &Ax
     return new BRepPrimAPI_MakeCylinder(Axes, R, H);
 }
 
-extern "C" TopoDS_Shape *brep_primapi_make_cylinder_shape(BRepPrimAPI_MakeCylinder &mk) {
+extern "C" BRepPrimAPI_MakeBox *brep_primapi_make_box(const Standard_Real x, const Standard_Real y,
+                                                                const Standard_Real z) {
+    return new BRepPrimAPI_MakeBox(x, y, z);
+}
+
+extern "C" TopoDS_Shape *brep_builderapi_make_shape(BRepBuilderAPI_MakeShape &mk) {
     return new TopoDS_Shape(mk.Shape());
 }
 
@@ -237,10 +243,10 @@ extern "C" void brep_offset_api_make_thick_solid_join(BRepOffsetAPI_MakeThickSol
                                                       Standard_Real thickness, Standard_Real tol) {
     thick_solid->MakeThickSolidByJoin(*shape, *face_to_remove, thickness, tol);
 }
-
-extern "C" TopoDS_Shape *brep_offset_api_make_thick_solid_shape(BRepOffsetAPI_MakeThickSolid *thick_solid) {
-    return new TopoDS_Shape(thick_solid->Shape());
-}
+//
+// extern "C" TopoDS_Shape *brep_offset_api_make_thick_solid_shape(BRepOffsetAPI_MakeThickSolid *thick_solid) {
+//     return new TopoDS_Shape(thick_solid->Shape());
+// }
 
 extern "C" Handle(Geom_CylindricalSurface) *geom_cylindrical_surface_create(
     const gp_Ax3 &ax2, const Standard_Real radius) {
@@ -296,9 +302,9 @@ extern "C" void brep_tool_thru_sections_check_compatibility(BRepOffsetAPI_ThruSe
     thru_sections->CheckCompatibility(b);
 }
 
-extern "C" TopoDS_Shape *brep_tool_thru_sections_shape(BRepOffsetAPI_ThruSections *thru_sections) {
-    return new TopoDS_Shape(thru_sections->Shape());
-}
+// extern "C" TopoDS_Shape *brep_tool_thru_sections_shape(BRepOffsetAPI_ThruSections *thru_sections) {
+//     return new TopoDS_Shape(thru_sections->Shape());
+// }
 
 extern "C" TopoDS_Compound *topods_compound_create() {
     return new TopoDS_Compound();

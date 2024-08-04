@@ -36,3 +36,15 @@ tasks.withType(LinkSharedLibrary).configureEach {
     // Define toolchain-specific compiler and linker options
     linkerArgs = ["-Xlinker", "-S", "-B", "direct"] + linkerLibs
 }
+
+task('listSymsPerLib') {
+    doLast {
+        println "AUO ++++++++++++++++++++++++++ $libs"
+        libs.split(' ').each { libName ->
+            "nm -gDC /lib/lib${libName}.so".execute().text.eachLine { symbole ->
+                println "$libName: $symbole"
+            }
+        }
+        println "AUO --------------------------"
+    }
+}

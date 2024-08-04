@@ -52,7 +52,7 @@ static void main(String[] args) {
 
     nl.gp_trsf_set_mirror(aTrsf, xAxis)
     def aBRepTrsf = nl.brep_builderapi_transform(aWire, aTrsf)
-    def aMirroredShape = nl.brep_builderapi_transform_shape(aBRepTrsf)
+    def aMirroredShape = nl.brep_builderapi_make_shape(aBRepTrsf)
     def aMirroredWire = nl.topo_ds_wire(aMirroredShape)
 
     def mkWire = nl.brep_builderapi_make_wire_new()
@@ -77,7 +77,7 @@ static void main(String[] args) {
         nl.top_exp_explorer_next(anEdgeExplorer)
     }
 
-    myBody = nl.brep_filletapi_make_fillet_shape(mkFillet)
+    myBody = nl.brep_builderapi_make_shape(mkFillet)
 
     println "Body: Add the Neck"
 
@@ -89,7 +89,7 @@ static void main(String[] args) {
     double myNeckHeight = myHeight / 10
 
     def MKCylinder = nl.brep_primapi_make_cylinder(neckAx2, myNeckRadius, myNeckHeight)
-    def myNeck = nl.brep_primapi_make_cylinder_shape(MKCylinder)
+    def myNeck = nl.brep_builderapi_make_shape(MKCylinder)
 
     myBody = nl.brep_algoapi_fuse(myBody, myNeck)
 
@@ -117,7 +117,7 @@ static void main(String[] args) {
     def aSolidMaker = nl.brep_offset_api_make_thick_solid()
     nl.brep_offset_api_make_thick_solid_join(aSolidMaker, myBody, facesToRemove, -myThickness / 50d, 0.001d)
 
-    myBody = nl.brep_offset_api_make_thick_solid_shape(aSolidMaker)
+    myBody = nl.brep_builderapi_make_shape(aSolidMaker)
 
     try (Arena arena = Arena.ofConfined()) {
         MemorySegment t = arena.allocateFrom('Test.png');
