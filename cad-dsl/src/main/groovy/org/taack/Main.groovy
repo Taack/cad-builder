@@ -2,25 +2,10 @@ package org.taack
 
 import groovy.transform.CompileStatic
 import org.nativelib.NativeLib as nl
+import org.taack.cad.dsl.ShapeEnum
 
 import java.lang.foreign.Arena
 import java.lang.foreign.MemorySegment
-
-enum TopAbs_ShapeEnum {
-    TopAbs_COMPOUND,
-    TopAbs_COMPSOLID,
-    TopAbs_SOLID,
-    TopAbs_SHELL,
-    TopAbs_FACE,
-    TopAbs_WIRE,
-    TopAbs_EDGE,
-    TopAbs_VERTEX,
-    TopAbs_SHAPE
-
-    int getIndex() {
-        ordinal()
-    }
-}
 
 
 @CompileStatic
@@ -69,7 +54,7 @@ static void main(String[] args) {
     println "Body: Apply Fillets"
 
     def mkFillet = nl.brep_filletapi_make_fillet(myBody)
-    def anEdgeExplorer = nl.top_exp_explorer(myBody, TopAbs_ShapeEnum.TopAbs_EDGE.index, TopAbs_ShapeEnum.TopAbs_SHAPE.index)
+    def anEdgeExplorer = nl.top_exp_explorer(myBody, ShapeEnum.TopAbs_EDGE.index, ShapeEnum.TopAbs_SHAPE.index)
     while (nl.top_exp_explorer_more(anEdgeExplorer)) {
         def anEdge = nl.topo_ds_edge(nl.top_exp_explorer_current(anEdgeExplorer))
         //Add edge to fillet algorithm
@@ -98,7 +83,7 @@ static void main(String[] args) {
     double zMax = -1
     def faceToRemove = nl.topods_face_new()
 
-    for (def aFaceExplorer = nl.top_exp_explorer(myBody, TopAbs_ShapeEnum.TopAbs_FACE.ordinal(), TopAbs_ShapeEnum.TopAbs_SHAPE.ordinal()); nl.top_exp_explorer_more(aFaceExplorer); nl.top_exp_explorer_next(aFaceExplorer)) {
+    for (def aFaceExplorer = nl.top_exp_explorer(myBody, ShapeEnum.TopAbs_FACE.ordinal(), ShapeEnum.TopAbs_SHAPE.ordinal()); nl.top_exp_explorer_more(aFaceExplorer); nl.top_exp_explorer_next(aFaceExplorer)) {
         def aFace = nl.top_exp_explorer_current_face(aFaceExplorer)
         def aSurface = nl.brep_tool_surface(aFace)
         if (nl.geom_surface_is_geom_plane(aSurface) == 1) {

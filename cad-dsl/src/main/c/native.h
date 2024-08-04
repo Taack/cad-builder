@@ -139,3 +139,11 @@ void topods_shape_assignment_operator(TopoDS_Shape** left, TopoDS_Shape* right);
 
 int dumpShape(const TopoDS_Shape* shape, const Standard_Integer width, const Standard_Integer height,
   const char* fileName);
+
+TopoDS_Shape* make_hole(const TopoDS_Shape* shape, const gp_Ax1* ax1, const Standard_Real Radius);
+
+gp_Ax1* gp_ax1_new(const gp_Pnt *theP, const gp_Dir *theV);
+
+gp_Dir* gp_dir_new(const Standard_Real theXv, const Standard_Real theYv, const Standard_Real theZv);
+
+gp_Dir* gp_dir_normal_to_face(const TopoDS_Face* aCurrentFace);

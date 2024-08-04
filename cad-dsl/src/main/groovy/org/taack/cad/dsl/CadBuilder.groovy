@@ -1,25 +1,21 @@
 package org.taack.cad.dsl
 
+import groovy.transform.CompileStatic
 import org.nativelib.NativeLib as nl
 
 import java.lang.foreign.Arena
 import java.lang.foreign.MemorySegment
 
-class CadBuilder {
-
-    MemorySegment currentShape
+@CompileStatic
+class CadBuilder extends Face {
 
     static CadBuilder cb() {
         new CadBuilder()
     }
 
     CadBuilder box(BigDecimal x, BigDecimal y, BigDecimal z) {
-        currentShape = nl.brep_builderapi_make_shape(nl.brep_primapi_make_box(x, y, z))
+        currentShape = nl.brep_builderapi_make_shape(nl.brep_primapi_make_box(x.doubleValue(), y.doubleValue(), z.doubleValue()))
         return this
-    }
-
-    Face topZ(@DelegatesTo(value = Face, strategy = Closure.DELEGATE_ONLY) c = null) {
-
     }
 
     void display(String fileName = null, int w = 640, int h = 480) {

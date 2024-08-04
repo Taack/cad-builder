@@ -38,6 +38,9 @@
 #include <Image_AlienPixMap.hxx>
 #include <V3d_View.hxx>
 #include <Xw_Window.hxx>
+#include <BRepFeat_MakeCylindricalHole.hxx>
+#include <BRepTools.hxx>
+#include <GeomLProp_SLProps.hxx>
 
 OcctExternSym::OcctExternSym() {
 }
@@ -398,4 +401,29 @@ extern "C" bool dumpShape(const TopoDS_Shape &shape, const Standard_Integer widt
 
     _view->ToPixMap(*pixmap, width, height);
     return pixmap->Save(fileName);
+}
+
+extern "C" TopoDS_Shape* make_hole(const TopoDS_Shape& shape, const gp_Ax1& ax1, const Standard_Real Radius) {
+    BRepFeat_MakeCylindricalHole makeCylindrical;
+    makeCylindrical.Init(shape, ax1);
+    makeCylindrical.Perform(Radius);
+    return new TopoDS_Shape(makeCylindrical.Shape());
+}
+
+extern "C" gp_Ax1* gp_ax1_new(const gp_Pnt &theP, const gp_Dir &theV) {
+    return new gp_Ax1(theP, theV);
+}
+
+extern "C" gp_Dir* gp_dir_new(const Standard_Real theXv, const Standard_Real theYv, const Standard_Real theZv) {
+    return new gp_Dir(theXv, theYv, theZv);
+}
+
+extern "C" gp_Dir* gp_dir_normal_to_face(const TopoDS_Face& aCurrentFace) {
+    Standard_Real umin, umax, vmin, vmax;
+    BRepTools::UVBounds(aCurrentFace,umin, umax, vmin, vmax);
+    Handle(Geom_Surface) aSurface = BRep_Tool::Surface(aCurrentFace);
+    GeomLProp_SLProps props(aSurface, umin, vmin,1, 0.01);
+    gp_Dir n = props.Normal();
+    std::cout << "gp_dir_normal_to_face: umin = " << umin << " umax = " << umax << " vmin = " << vmin << " vmax = " << vmax << " n.X " << n.X() << " n.Y " << n.Y() << " n.Z " << n.Z() << std::endl;
+    return new gp_Dir(n);
 }
