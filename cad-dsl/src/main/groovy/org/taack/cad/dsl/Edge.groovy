@@ -28,12 +28,12 @@ class Edge extends Vertice implements Selector {
         def centerOfFace = Loc.fromAPnt(NativeLib.gp_pnt_center_of_mass(currentFace))
         def faceDir = Loc.fromADir(NativeLib.gp_dir_normal_to_face(currentFace))
         println "rect ($sx, $sy), faceDir = ${faceDir}, centerOfFace = ${centerOfFace}"
-        def gCoords1 = Loc.globalLocFromLocal(centerOfFace, faceDir, new Loc2d(0.0,0.0))
-        def gCoords2 = Loc.globalLocFromLocal(centerOfFace, faceDir, new Loc2d(sx,0.0))
-        def gCoords3 = Loc.globalLocFromLocal(centerOfFace, faceDir, new Loc2d(sx,sy))
-        def gCoords4 = Loc.globalLocFromLocal(centerOfFace, faceDir, new Loc2d(0.0,sy))
+        def gCoords1 = Loc.globalLocFromLocal(centerOfFace, faceDir, new Loc2d(-sx/2.0,-sy/2.0))
+        def gCoords2 = Loc.globalLocFromLocal(centerOfFace, faceDir, new Loc2d(sx/2.0,-sy/2.0))
+        def gCoords3 = Loc.globalLocFromLocal(centerOfFace, faceDir, new Loc2d(sx/2.0,sy/2.0))
+        def gCoords4 = Loc.globalLocFromLocal(centerOfFace, faceDir, new Loc2d(-sx/2.0,sy/2.0))
 
-        clockwiseLoc = [gCoords1, gCoords4, gCoords3, gCoords2]
+        clockwiseLoc = [gCoords1, gCoords2, gCoords3, gCoords4]
         println "rect $clockwiseLoc"
         operations.delegate = this
         operations.call()

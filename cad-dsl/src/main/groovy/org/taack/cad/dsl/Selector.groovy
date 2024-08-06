@@ -38,19 +38,28 @@ trait Selector {
         }
 
         Loc div(Loc other) {
-            new Loc(y * other.z - z * other.y, x * other.z - z * other.x, x * other.y - y * other.x)
+            new Loc(y * other.z - z * other.y, z * other.x - x * other.z, x * other.y - y * other.x)
         }
 
         Loc plus(Loc other) {
             new Loc(x + other.x, y + other.y, z + other.z)
         }
 
-        Loc mult(Loc other) {
+        Loc multiply(Loc other) {
             new Loc(x * other.x, y * other.y, z * other.z)
         }
 
+        static Loc dirXToGlobal(Loc dir) {
+            new Loc(0.0, 1.0, 0.0)/dir
+        }
+
+        static Loc dirYToGlobal(Loc dir) {
+            new Loc(1.0, 0.0, 0.0)/dir
+        }
+
         static Loc globalLocFromLocal(Loc center, Loc dir, Loc2d coords) {
-            Loc vectorProd = new Loc(coords)/dir
+            Loc coords3d = new Loc(coords)
+            Loc vectorProd = dirXToGlobal(dir) * coords3d + dirYToGlobal(dir) * coords3d + dir * coords3d
             center + vectorProd
         }
 
