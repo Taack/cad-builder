@@ -1,0 +1,22 @@
+= DSL for CAD Bodies and Assemblies
+:icons: font
+
+Get inspiration from CAD Query, but using Groovy DSL.
+
+.Sample Code
+[source,groovy]
+----
+@Test
+void "Pillow Block With Counterbored Holes"() {
+    cb().box(length, height, thickness).topZ()
+        .rect(length - diameter, height - diameter) {
+            hole(diameter)
+    }.display("test3.png", 640, 480)
+}
+----
+
+
+WARNING: ATM `counterboredHole` is implemented as a simple `hole`
+
+.Render
+image::https://github.com/Taack/cad-builder/blob/main/test3.png?raw=true[]
