@@ -1,4 +1,6 @@
-DSL for CAD Bodies and Assemblies
+= DSL for CAD Bodies and Assemblies
+
+Get inspiratoin from CAD Query, but using Groovy DSL.
 
 ```groovy
     @Test
@@ -9,3 +11,5 @@ DSL for CAD Bodies and Assemblies
     }
 
 ```
+
+![test](https://github.com/Taack/cad-builder/blob/main/test3.png?raw=true)
