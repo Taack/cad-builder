@@ -25,7 +25,7 @@ class Face extends Edge implements Selector {
             if (nl.geom_surface_is_geom_plane(aSurface) == 1) {
                 def aPlan = nl.downcast_geom_plane(aSurface)
                 def aPnt = nl.geom_plane_location(aPlan)
-                currentLoc = Loc.fromAPnt(aPnt)
+                currentLoc = Vec.fromAPnt(aPnt)
                 double aZ = currentLoc.cord(axe)
                 println "COUCOU $aZ $positionMax"
                 if (aZ > positionMax) {

@@ -140,7 +140,8 @@ void topods_shape_assignment_operator(TopoDS_Shape** left, TopoDS_Shape* right);
 int dumpShape(const TopoDS_Shape* shape, const Standard_Integer width, const Standard_Integer height,
   const char* fileName);
 
-TopoDS_Shape* make_hole(const TopoDS_Shape* shape, const gp_Ax1* ax1, const Standard_Real Radius);
+TopoDS_Shape* make_hole(const TopoDS_Shape* shape, const gp_Ax1* ax1, const Standard_Real Radius, const Standard_Real PFrom, const Standard_Real PTo);
+TopoDS_Shape* make_hole_blind(const TopoDS_Shape* shape, const gp_Ax1* ax1, const Standard_Real Radius, const Standard_Real Length);
 
 gp_Ax1* gp_ax1_new(const gp_Pnt *theP, const gp_Dir *theV);
 

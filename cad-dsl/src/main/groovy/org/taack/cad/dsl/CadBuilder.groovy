@@ -27,4 +27,7 @@ class CadBuilder extends Face {
         } else nl.visualize(currentShape)
     }
 
+    CadBuilder sketch(@DelegatesTo(value = Sketch, strategy = Closure.DELEGATE_FIRST) sketch) {
+        this
+    }
 }

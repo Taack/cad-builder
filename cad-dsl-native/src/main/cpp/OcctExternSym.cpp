@@ -405,10 +405,20 @@ extern "C" bool dumpShape(const TopoDS_Shape &shape, const Standard_Integer widt
     return pixmap->Save(fileName);
 }
 
-extern "C" TopoDS_Shape* make_hole(const TopoDS_Shape& shape, const gp_Ax1& ax1, const Standard_Real Radius) {
+extern "C" TopoDS_Shape* make_hole(const TopoDS_Shape& shape, const gp_Ax1& ax1, const Standard_Real Radius, const Standard_Real PFrom, const Standard_Real PTo) {
+    std::cout << "PFrom = " << PFrom << "PTo = " << PTo << " " << (PFrom > PTo) << std::endl;
     BRepFeat_MakeCylindricalHole makeCylindrical;
     makeCylindrical.Init(shape, ax1);
-    makeCylindrical.Perform(Radius);
+    if (PFrom > PTo) makeCylindrical.Perform(Radius);
+    else makeCylindrical.Perform(Radius, PFrom, PTo);
+    return new TopoDS_Shape(makeCylindrical.Shape());
+}
+
+extern "C" TopoDS_Shape* make_hole_blind(const TopoDS_Shape& shape, const gp_Ax1& ax1, const Standard_Real Radius, const Standard_Real Length) {
+    std::cout << "Length = " << Length << std::endl;
+    BRepFeat_MakeCylindricalHole makeCylindrical;
+    makeCylindrical.Init(shape, ax1);
+    makeCylindrical.PerformBlind(Radius, Length);
     return new TopoDS_Shape(makeCylindrical.Shape());
 }
 

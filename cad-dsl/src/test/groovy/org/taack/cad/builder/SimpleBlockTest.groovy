@@ -8,7 +8,6 @@ import static org.taack.cad.dsl.CadBuilder.cb
 class SimpleBlockTest {
 
     BigDecimal length = 80.0
-    BigDecimal width = 100.0
     BigDecimal height = 60.0
     BigDecimal thickness = 10.0
     BigDecimal centerHoleDia = 22.0
@@ -32,7 +31,9 @@ class SimpleBlockTest {
     @Test
     void "Pillow Block With Counterbored Holes"() {
         cb().box(length, height, thickness).topZ().rect(length - cboreInset, height - cboreInset) {
-            counterboredHole(cboreHoleDiameter, cboreDiameter, cboreDepth)
-        }.display("test3.png", 640, 480)
+            hole(4.4)
+        }.center {
+            hole(3.0, 0.0, 1.1)
+        }.display()
     }
 }
