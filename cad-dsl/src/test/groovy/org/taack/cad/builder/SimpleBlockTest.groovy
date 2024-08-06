@@ -24,24 +24,15 @@ class SimpleBlockTest {
 
     @Test
     void "Block With Bored Center Hole"() {
-        cb()
-                .box(length, height, thickness)
-                .topZ().hole(centerHoleDia)
-                .display()
+        cb().box(length, height, thickness).topZ().center {
+            hole(centerHoleDia)
+        }.display()
     }
 
     @Test
     void "Pillow Block With Counterbored Holes"() {
-        cb()
-                .box(length, height, thickness)
-                .topZ {
-                    // Chamfer
-                    hole(centerHoleDia)
-                    rect(length - cboreInset, width - cboreInset).edges {
-                        vertices {
-                            counterboredHole()
-                        }
-                    }
-                }
+        cb().box(length, height, thickness).topZ().rect(length - cboreInset, width - cboreInset) {
+            counterboredHole(cboreHoleDiameter, cboreDiameter, cboreDepth)
+        }.display()
     }
 }

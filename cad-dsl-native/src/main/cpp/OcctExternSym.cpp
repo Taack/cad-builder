@@ -424,7 +424,7 @@ extern "C" gp_Dir* gp_dir_normal_to_face(const TopoDS_Face& aCurrentFace) {
     Standard_Real umin, umax, vmin, vmax;
     BRepTools::UVBounds(aCurrentFace,umin, umax, vmin, vmax);
     Handle(Geom_Surface) aSurface = BRep_Tool::Surface(aCurrentFace);
-    GeomLProp_SLProps props(aSurface, umin, vmin,1, 0.01);
+    GeomLProp_SLProps props(aSurface, (umin + umax)/2, (vmin + vmax)/2, 1, 0.01);
     gp_Dir n = props.Normal();
     std::cout << "gp_dir_normal_to_face: umin = " << umin << " umax = " << umax << " vmin = " << vmin << " vmax = " << vmax << " n.X " << n.X() << " n.Y " << n.Y() << " n.Z " << n.Z() << std::endl;
     return new gp_Dir(n);
@@ -434,4 +434,17 @@ extern "C" gp_Pnt* gp_pnt_center_of_mass(const TopoDS_Shape& myShape) {
     GProp_GProps massProps;
     BRepGProp::SurfaceProperties(myShape, massProps);
     return new gp_Pnt(massProps.CentreOfMass());
+}
+
+
+extern "C" Standard_Real gp_dir_x(gp_Dir *dir) {
+    return dir->X();
+}
+
+extern "C" Standard_Real gp_dir_y(gp_Dir *dir) {
+    return dir->Y();
+}
+
+extern "C" Standard_Real gp_dir_z(gp_Pnt *dir) {
+    return dir->Z();
 }

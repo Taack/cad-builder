@@ -31,10 +31,12 @@
 #include <AIS_Shape.hxx>
 #include <OpenGl_GraphicDriver.hxx>
 #include <BRepPrimAPI_MakeBox.hxx>
+#include <Geom_RectangularTrimmedSurface.hxx>
 
 
 TopoDS_Shape MakeBottle(const Standard_Real myWidth, const Standard_Real myHeight,
-                        const Standard_Real myThickness) {
+                        const Standard_Real myThickness)
+{
     gp_Pnt aPnt1(-myWidth / 2., 0, 0);
     gp_Pnt aPnt2(-myWidth / 2., -myThickness / 4., 0);
     gp_Pnt aPnt3(0, -myThickness / 2., 0);
@@ -79,7 +81,8 @@ TopoDS_Shape MakeBottle(const Standard_Real myWidth, const Standard_Real myHeigh
     // Body: Apply Fillets
     BRepFilletAPI_MakeFillet mkFillet(myBody);
     TopExp_Explorer anEdgeExplorer(myBody, TopAbs_EDGE);
-    while (anEdgeExplorer.More()) {
+    while (anEdgeExplorer.More())
+    {
         TopoDS_Edge anEdge = TopoDS::Edge(anEdgeExplorer.Current());
         //Add edge to fillet algorithm
         mkFillet.Add(myThickness / 12., anEdge);
@@ -105,15 +108,18 @@ TopoDS_Shape MakeBottle(const Standard_Real myWidth, const Standard_Real myHeigh
     TopoDS_Face faceToRemove;
     Standard_Real zMax = -1;
 
-    for (TopExp_Explorer aFaceExplorer(myBody, TopAbs_FACE); aFaceExplorer.More(); aFaceExplorer.Next()) {
+    for (TopExp_Explorer aFaceExplorer(myBody, TopAbs_FACE); aFaceExplorer.More(); aFaceExplorer.Next())
+    {
         TopoDS_Face aFace = TopoDS::Face(aFaceExplorer.Current());
         // Check if <aFace> is the top face of the bottle's neck
         Handle(Geom_Surface) aSurface = BRep_Tool::Surface(aFace);
-        if (aSurface->DynamicType() == STANDARD_TYPE(Geom_Plane)) {
+        if (aSurface->DynamicType() == STANDARD_TYPE(Geom_Plane))
+        {
             Handle(Geom_Plane) aPlane = Handle(Geom_Plane)::DownCast(aSurface);
             gp_Pnt aPnt = aPlane->Location();
             Standard_Real aZ = aPnt.Z();
-            if (aZ > zMax) {
+            if (aZ > zMax)
+            {
                 zMax = aZ;
                 faceToRemove = aFace;
             }
@@ -178,11 +184,15 @@ TopoDS_Shape MakeBottle(const Standard_Real myWidth, const Standard_Real myHeigh
 }
 
 extern "C" TopoDS_Shape* cMakeBottle(const Standard_Real myWidth, const Standard_Real myHeight,
-                             const Standard_Real myThickness) {
-    try {
+                                     const Standard_Real myThickness)
+{
+    try
+    {
         TopoDS_Shape shape = MakeBottle(myWidth, myHeight, myThickness);
         return new TopoDS_Shape(shape);
-    } catch (StdFail_NotDone &e) {
+    }
+    catch (StdFail_NotDone& e)
+    {
         std::cout << e << std::endl;
     }
 }

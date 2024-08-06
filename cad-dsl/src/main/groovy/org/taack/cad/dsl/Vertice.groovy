@@ -1,14 +1,6 @@
 package org.taack.cad.dsl
 
-import org.codehaus.groovy.runtime.powerassert.Value
+class Vertice implements Selector {
 
-class Vertice {
-
-    void counterboredHole() {
-
-    }
-
-    void countersunkHole() {
-
-    }
+    static List<Loc> clockwiseLoc = []
 }

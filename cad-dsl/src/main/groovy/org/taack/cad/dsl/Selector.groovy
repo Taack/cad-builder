@@ -8,19 +8,50 @@ import java.lang.foreign.MemorySegment
 @CompileStatic
 trait Selector {
 
-    MemorySegment currentShape
-    MemorySegment currentFace
+    static MemorySegment currentShape
+    static MemorySegment currentFace
+
 
     @CompileStatic
-    static final class Loc {
+    static class Loc2d {
         final BigDecimal x
         final BigDecimal y
+
+        Loc2d(BigDecimal x, BigDecimal y) {
+            this.x = x
+            this.y = y
+        }
+    }
+
+    @CompileStatic
+    static final class Loc extends Loc2d {
         final BigDecimal z
 
         Loc(BigDecimal x, BigDecimal y, BigDecimal z) {
-            this.x = x
-            this.y = y
+            super(x, y)
             this.z = z
+        }
+
+        Loc(Loc2d loc2d) {
+            super(loc2d.x, loc2d.y)
+            z = 0
+        }
+
+        Loc div(Loc other) {
+            new Loc(y * other.z - z * other.y, x * other.z - z * other.x, x * other.y - y * other.x)
+        }
+
+        Loc plus(Loc other) {
+            new Loc(x + other.x, y + other.y, z + other.z)
+        }
+
+        Loc mult(Loc other) {
+            new Loc(x * other.x, y * other.y, z * other.z)
+        }
+
+        static Loc globalLocFromLocal(Loc center, Loc dir, Loc2d coords) {
+            Loc vectorProd = new Loc(coords)/dir
+            center + vectorProd
         }
 
         static Loc fromAPnt(MemorySegment aPnt) {
@@ -29,7 +60,22 @@ trait Selector {
                     nl.gp_pnt_y(aPnt).toBigDecimal(),
                     nl.gp_pnt_z(aPnt).toBigDecimal()
             )
+        }
 
+        static Loc fromADir(MemorySegment aDir) {
+            new Loc(
+                    nl.gp_dir_x(aDir).toBigDecimal(),
+                    nl.gp_dir_y(aDir).toBigDecimal(),
+                    nl.gp_dir_z(aDir).toBigDecimal()
+            )
+        }
+
+        MemorySegment toGpDir() {
+            nl.gp_dir_new(x.doubleValue(), y.doubleValue(), z.doubleValue())
+        }
+
+        MemorySegment toGpPnt() {
+            nl.make_gp_pnt(x.doubleValue(), y.doubleValue(), z.doubleValue())
         }
 
         BigDecimal cord(Axe axe) {
@@ -69,34 +115,6 @@ trait Selector {
 
     enum EdgeType {
         LINEAR, NOT_LINEAR
-    }
-
-    Face topZ(@DelegatesTo(value = Face, strategy = Closure.DELEGATE_FIRST) c = null) {
-        face(Axe.Z, Qty.max, c)
-    }
-
-    Face face(Axe axe, Qty qty, @DelegatesTo(value = Face, strategy = Closure.DELEGATE_ONLY) operations = null) {
-        double positionMax = -1
-
-        for (def aFaceExplorer = nl.top_exp_explorer(currentShape, ShapeEnum.TopAbs_FACE.ordinal(), ShapeEnum.TopAbs_SHAPE.ordinal());
-             nl.top_exp_explorer_more(aFaceExplorer);
-             nl.top_exp_explorer_next(aFaceExplorer)) {
-            def aFace = nl.top_exp_explorer_current_face(aFaceExplorer)
-            def aSurface = nl.brep_tool_surface(aFace)
-            if (nl.geom_surface_is_geom_plane(aSurface) == 1) {
-                def aPlan = nl.downcast_geom_plane(aSurface)
-                def aPnt = nl.geom_plane_location(aPlan)
-                currentLoc = Loc.fromAPnt(aPnt)
-                double aZ = currentLoc.cord(axe)
-                println "COUCOU $aZ $positionMax"
-                if (aZ > positionMax) {
-                    positionMax = aZ
-                    currentFace = aFace
-                    println "KIKI $currentFace"
-                }
-            }
-        }
-        return this as Face
     }
 
     Selector edge(Axe axe, Dir dir, Qty qty, int v = 0, @DelegatesTo(value = Edge, strategy = Closure.DELEGATE_ONLY) operations = null) {

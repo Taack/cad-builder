@@ -9,20 +9,32 @@ class Face extends Edge implements Selector {
     Face() {
     }
 
-    CadBuilder hole(BigDecimal diameter) {
-        currentShape = nl.make_hole(currentShape,
-                nl.gp_ax1_new(
-                        nl.gp_pnt_center_of_mass(currentFace),
-                        nl.gp_dir_normal_to_face(currentFace)
-                ), diameter.doubleValue())
-        this as CadBuilder
+
+    Face topZ(@DelegatesTo(value = Face, strategy = Closure.DELEGATE_FIRST) c = null) {
+        face(Axe.Z, Qty.max, c)
     }
 
-    Face rect(BigDecimal x, BigDecimal y, boolean forConstruction = false) {
+    Face face(Axe axe, Qty qty, @DelegatesTo(value = Face, strategy = Closure.DELEGATE_ONLY) operations = null) {
+        double positionMax = -1
 
-    }
-
-    Face edges(@DelegatesTo(value = Edge, strategy = Closure.DELEGATE_ONLY) operations) {
-
+        for (def aFaceExplorer = nl.top_exp_explorer(currentShape, ShapeEnum.TopAbs_FACE.ordinal(), ShapeEnum.TopAbs_SHAPE.ordinal());
+             nl.top_exp_explorer_more(aFaceExplorer);
+             nl.top_exp_explorer_next(aFaceExplorer)) {
+            def aFace = nl.top_exp_explorer_current_face(aFaceExplorer)
+            def aSurface = nl.brep_tool_surface(aFace)
+            if (nl.geom_surface_is_geom_plane(aSurface) == 1) {
+                def aPlan = nl.downcast_geom_plane(aSurface)
+                def aPnt = nl.geom_plane_location(aPlan)
+                currentLoc = Loc.fromAPnt(aPnt)
+                double aZ = currentLoc.cord(axe)
+                println "COUCOU $aZ $positionMax"
+                if (aZ > positionMax) {
+                    positionMax = aZ
+                    currentFace = aFace
+                    println "KIKI $currentFace"
+                }
+            }
+        }
+        return this as Face
     }
 }
