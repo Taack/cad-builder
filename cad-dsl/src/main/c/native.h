@@ -156,3 +156,12 @@ Standard_Real gp_dir_x(gp_Dir *dir);
 Standard_Real gp_dir_y(gp_Dir *dir);
 
 Standard_Real gp_dir_z(gp_Pnt *dir);
+
+TopoDS_Shape* brep_builderapi_make_shere(const gp_Ax2* origin, const Standard_Real radius, const Standard_Real angle1, const Standard_Real angle2);
+TopoDS_Shape* brep_builderapi_make_cylinder(const gp_Ax2* origin, const Standard_Real radius, const Standard_Real height);
+gp_Trsf* gp_trsf_new();
+void gp_trsf_set_translation(gp_Trsf* gp_trsf, const gp_Vec* translation);
+TopoDS_Shape* brep_builderapi_transform_shape(const TopoDS_Shape* shape, const gp_Trsf* gp_trsf, const Standard_Boolean theCopyGeom);
+TopoDS_Shape* brep_algoapi_cut(TopoDS_Shape* result, const TopoDS_Shape* cutter);
+TopoDS_Shape* brep_primapi_make_thorus(const gp_Ax2* origin, const Standard_Real radius1, const Standard_Real radius2);
+gp_Ax2* gp_ax2_dz(void);

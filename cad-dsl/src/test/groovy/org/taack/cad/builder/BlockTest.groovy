@@ -5,7 +5,7 @@ import org.junit.jupiter.api.Test
 import static org.taack.cad.dsl.CadBuilder.cb
 
 @CompileStatic
-class SimpleBlockTest {
+class BlockTest {
 
     BigDecimal length = 80.0
     BigDecimal height = 60.0

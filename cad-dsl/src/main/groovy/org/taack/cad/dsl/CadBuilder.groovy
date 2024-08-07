@@ -13,6 +13,14 @@ class CadBuilder extends Face {
         new CadBuilder()
     }
 
+    Vec loc = new Vec(0.0, 0.0, 0.0)
+
+    CadBuilder sphere(BigDecimal radius, Vec dir = new Vec(1.0), BigDecimal angle1 = null, BigDecimal angle2 = null) {
+        def ax2 = nl.gp_ax2(loc.toGpPnt(), dir.toGpDir())
+        currentShape = nl.brep_builderapi_make_shere(ax2, radius.toDouble(), angle1?.toDouble(), angle2?.toDouble())
+        return this
+    }
+
     CadBuilder box(BigDecimal x, BigDecimal y, BigDecimal z) {
         currentShape = nl.brep_builderapi_make_shape(nl.brep_primapi_make_box(x.doubleValue(), y.doubleValue(), z.doubleValue()))
         return this
