@@ -13,11 +13,31 @@ class CadBuilder extends Face {
         new CadBuilder()
     }
 
-    Vec loc = new Vec(0.0, 0.0, 0.0)
+    private Vec loc = new Vec(0.0, 0.0, 0.0)
+    private final MemorySegment trsf = nl.gp_trsf()
+
+    CadBuilder move(Vec p) {
+        loc = p
+        nl.gp_trsf_set_translation(trsf, loc.toGpVec())
+        currentShape = nl.brep_builderapi_transform_shape(currentShape, trsf, 1)
+        this
+    }
+
+    CadBuilder cut(CadBuilder other) {
+        def res = nl.brep_algoapi_cut(other.currentShape, currentShape)
+        other.currentShape = res
+        this
+    }
 
     CadBuilder sphere(BigDecimal radius, Vec dir = new Vec(1.0), BigDecimal angle1 = null, BigDecimal angle2 = null) {
         def ax2 = nl.gp_ax2(loc.toGpPnt(), dir.toGpDir())
         currentShape = nl.brep_builderapi_make_shere(ax2, radius.toDouble(), angle1?.toDouble(), angle2?.toDouble())
+        return this
+    }
+
+    CadBuilder cylinder(BigDecimal radius, BigDecimal height, Vec dir = new Vec(1.0)) {
+        def ax2 = nl.gp_ax2(loc.toGpPnt(), dir.toGpDir())
+        currentShape = nl.brep_builderapi_make_cylinder(ax2, radius.toDouble(), height.toDouble())
         return this
     }
 
@@ -36,6 +56,11 @@ class CadBuilder extends Face {
     }
 
     CadBuilder sketch(@DelegatesTo(value = Sketch, strategy = Closure.DELEGATE_FIRST) sketch) {
+        this
+    }
+
+    CadBuilder isValid() {
+        nl.analyze(currentShape)
         this
     }
 }

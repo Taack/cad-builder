@@ -35,6 +35,11 @@ class Vec2d {
         this.x = x
         this.y = y
     }
+
+    Vec2d(double x, double y) {
+        this.x = x
+        this.y = y
+    }
 }
 
 @CompileStatic
@@ -43,6 +48,11 @@ final class Vec extends Vec2d {
 
     Vec(BigDecimal z) {
         super(0.0, 0.0)
+        this.z = z
+    }
+
+    Vec(double x, double y, BigDecimal z) {
+        super(x, y)
         this.z = z
     }
 
@@ -106,6 +116,10 @@ final class Vec extends Vec2d {
         nl.make_gp_pnt(x.doubleValue(), y.doubleValue(), z.doubleValue())
     }
 
+    MemorySegment toGpVec() {
+        nl.make_gp_vec(x.doubleValue(), y.doubleValue(), z.doubleValue())
+    }
+
     BigDecimal cord(Axe axe) {
         switch (axe) {
             case Axe.X:
@@ -127,8 +141,8 @@ final class Vec extends Vec2d {
 @CompileStatic
 trait Selector {
 
-    static MemorySegment currentShape
-    static MemorySegment currentFace
+    MemorySegment currentShape
+    MemorySegment currentFace
 
 
     Vec currentLoc
