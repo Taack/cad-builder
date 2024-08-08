@@ -586,3 +586,11 @@ extern "C" void analyze(const TopoDS_Shape &myShape) {
     //     std::cout << "Shape " << it.Index() << std::endl;
     // }
 }
+
+extern "C" TopTools_ListOfShape* toptools_listofshape_new() {
+    new TopTools_ListOfShape();
+}
+
+extern "C" void toptools_listofshape_append(TopTools_ListOfShape& ls, const TopoDS_Shape &myShape) {
+    ls.Append(myShape);
+}

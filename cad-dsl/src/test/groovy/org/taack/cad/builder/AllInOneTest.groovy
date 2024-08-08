@@ -25,26 +25,15 @@ class AllInOneTest {
         BigDecimal radius = 0.25
         BigDecimal height = 2.0
 
-        other.isValid()
-
-        other.display()
         def c = cb().cylinder(radius, height).move(new Vec(-height/2.0))
-        c.isValid()
-        c.display()
 
-        c.cut(other).display()
-        c.isValid()
-        other.display()
-        other.isValid()
-        c.display()
-//        for (i in 0..<7) {
-//            double angle = i * Math.PI / 4.0
-//            double cloneRadius = 1.0
-//            c.move(new Vec(Math.cos(angle) * cloneRadius, Math.sin(angle) * cloneRadius, 0.0)).transform().cut(other).display()
-//            c.display()
-//            other.display()
-////            c.move(new Vec(Math.cos(angle) * cloneRadius, Math.sin(angle) * cloneRadius, 0.0)).transform().display()
-//        }
+        for (i in 0..<7) {
+            double angle = i * Math.PI / 4.0
+            double cloneRadius = 1.0
+            c.move(new Vec(Math.cos(angle) * cloneRadius, Math.sin(angle) * cloneRadius, 0.0)).cut(other)
+            other.display()
+//            c.move(new Vec(Math.cos(angle) * cloneRadius, Math.sin(angle) * cloneRadius, 0.0)).transform().display()
+        }
         return other
     }
 

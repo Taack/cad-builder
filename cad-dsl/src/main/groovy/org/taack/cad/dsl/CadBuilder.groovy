@@ -25,6 +25,7 @@ class CadBuilder extends Face {
 
     CadBuilder cut(CadBuilder other) {
         def res = nl.brep_algoapi_cut(other.currentShape, currentShape)
+        println "other.currentShape == res = ${other.currentShape == res}"
         other.currentShape = res
         this
     }
@@ -63,4 +64,5 @@ class CadBuilder extends Face {
         nl.analyze(currentShape)
         this
     }
+
 }

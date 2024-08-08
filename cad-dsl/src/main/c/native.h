@@ -166,3 +166,8 @@ TopoDS_Shape* brep_algoapi_cut(TopoDS_Shape* result, const TopoDS_Shape* cutter)
 TopoDS_Shape* brep_primapi_make_thorus(const gp_Ax2* origin, const Standard_Real radius1, const Standard_Real radius2);
 gp_Ax2* gp_ax2_dz(void);
 void analyze(const TopoDS_Shape* myShape);
+
+#define TopTools_ListOfShape void
+
+TopTools_ListOfShape* toptools_listofshape_new(void);
+void toptools_listofshape_append(TopTools_ListOfShape* ls, const TopoDS_Shape* myShape);
