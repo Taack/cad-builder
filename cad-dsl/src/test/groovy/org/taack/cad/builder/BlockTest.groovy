@@ -33,7 +33,7 @@ class BlockTest {
         cb().box(length, height, thickness).topZ().rect(length - cboreInset, height - cboreInset) {
             hole(4.4)
         }.center {
-            hole(3.0, 0.0, 1.1)
+            hole(1.0, 1.0)
         }.display()
     }
 }

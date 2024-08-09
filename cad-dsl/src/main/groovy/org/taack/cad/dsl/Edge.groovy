@@ -54,15 +54,6 @@ class Edge extends Vertice implements Selector {
         this as CadBuilder
     }
 
-    void hole(BigDecimal diameter, BigDecimal from, BigDecimal to) {
-        def gpDir = NativeLib.gp_dir_normal_to_face(currentFace)
-        println "hole $diameter Dir: ${Vec.fromADir(gpDir)}"
-        clockwiseLoc.each {
-            println "holeHelper $diameter, Loc: $it, Dir: ${Vec.fromADir(gpDir)}"
-            holeHelper(it, gpDir, diameter, from, to)
-        }
-    }
-
     void hole(BigDecimal diameter, BigDecimal length) {
         def gpDir = NativeLib.gp_dir_normal_to_face(currentFace)
         println "hole $diameter Dir: ${Vec.fromADir(gpDir)}"

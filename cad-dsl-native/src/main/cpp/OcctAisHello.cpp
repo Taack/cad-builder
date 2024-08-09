@@ -9,7 +9,6 @@
 #include <BRepPrimAPI_MakeSphere.hxx>
 #include <OpenGl_GraphicDriver.hxx>
 #include <OSD.hxx>
-#include <TopoDS.hxx>
 #include <V3d_View.hxx>
 #include <V3d_Viewer.hxx>
 
@@ -38,21 +37,16 @@ public:
   //! Main constructor.
   OcctAisHello(TopoDS_Shape *aShape) {
     // graphic driver setup
-    std::cout << "OcctAisHello0" << std::endl << std::flush;
-
     Handle(Aspect_DisplayConnection) aDisplay = new Aspect_DisplayConnection();
     Handle(Graphic3d_GraphicDriver) aDriver = new OpenGl_GraphicDriver(aDisplay);
-    std::cout << "OcctAisHello1" << std::endl << std::flush;
 
     // viewer setup
     Handle(V3d_Viewer) aViewer = new V3d_Viewer(aDriver);
     aViewer->SetDefaultLights();
     aViewer->SetLightOn();
-    std::cout << "OcctAisHello2" << std::endl << std::flush;
 
     // view setup
     myView = new V3d_View(aViewer);
-    std::cout << "OcctAisHello3" << std::endl << std::flush;
 #ifdef _WIN32
     const TCollection_AsciiString aClassName ("MyWinClass");
     Handle(WNT_WClass) aWinClass = new WNT_WClass (aClassName.ToCString(), &windowProcWrapper,
@@ -64,13 +58,11 @@ public:
 #else
     Handle(Xw_Window) aWindow = new Xw_Window(aDisplay, "OCCT Viewer", 100, 100, 512, 512);
     Display *anXDisplay = (Display *) aDisplay->GetDisplayAspect();
-    std::cout << "OcctAisHello4" << std::endl << std::flush;
     XSelectInput(anXDisplay, (Window) aWindow->NativeHandle(),
                  ExposureMask | KeyPressMask | KeyReleaseMask | FocusChangeMask | StructureNotifyMask
                  | ButtonPressMask | ButtonReleaseMask | PointerMotionMask | Button1MotionMask | Button2MotionMask |
                  Button3MotionMask);
     Atom aDelWinAtom = aDisplay->GetAtom(Aspect_XA_DELETE_WINDOW);
-    std::cout << "OcctAisHello5" << std::endl << std::flush;
     XSetWMProtocols(anXDisplay, (Window) aWindow->NativeHandle(), &aDelWinAtom, 1);
 #endif
     myView->SetWindow(aWindow);
@@ -78,32 +70,17 @@ public:
     myView->TriedronDisplay(Aspect_TOTP_LEFT_LOWER, Quantity_NOC_WHITE, 0.1);
     myView->ChangeRenderingParams().RenderResolutionScale = 2.0f;
 
-    std::cout << "OcctAisHello6" << std::endl << std::flush;
     // interactive context and demo scene
     myContext = new AIS_InteractiveContext(aViewer);
-    std::cout << "OcctAisHello7" << std::endl << std::flush;
 
-    // TopoDS_Solid aSolid = BRepPrimAPI_MakeBox(100, 100, 100).Solid();
-    // Standard_Real sphere_radius = 1.0;
-    // Standard_Real sphere_angle = atan(0.5);
-    //
-    // gp_Ax2 sphere_origin = gp_Ax2(gp_Pnt(0,0,0), gp_Dir(0,0,1));
-    // TopoDS_Shape sphere = BRepPrimAPI_MakeSphere(sphere_origin,
-    //                                              sphere_radius,
-    //                                             -sphere_angle,
-    //                                              sphere_angle).Shape();
     TopoDS_Shape bShape(*aShape);
-    std::cout << "OcctAisHello7111" << std::endl << std::flush;
 
     Handle(AIS_InteractiveObject) aShapePrs = new AIS_Shape(bShape);
-    std::cout << "OcctAisHello71" << std::endl << std::flush;
     myContext->Display(aShapePrs, AIS_Shaded, 0, false);
-    std::cout << "OcctAisHello8" << std::endl << std::flush;
     myView->FitAll(0.01, false);
 
     aWindow->Map();
     myView->Redraw();
-    std::cout << "OcctAisHello9" << std::endl << std::flush;
   }
 
   //! Return context.
@@ -166,12 +143,9 @@ private:
 };
 
 extern "C" int visualize(TopoDS_Shape* truc) {
-  std::cout << "visualize0" << std::endl << std::flush;
   OSD::SetSignal(false);
 
-  std::cout << "visualize1" << std::endl << std::flush;
   OcctAisHello aViewer(truc);
-  std::cout << "visualize2" << std::endl << std::flush;
 #ifdef _WIN32
   // WinAPI message loop
   for (;;)
@@ -187,10 +161,8 @@ extern "C" int visualize(TopoDS_Shape* truc) {
 #else
   // X11 event loop
   Handle(Xw_Window) aWindow = Handle(Xw_Window)::DownCast(aViewer.View()->Window());
-  std::cout << "visualize3" << std::endl << std::flush;
   Handle(Aspect_DisplayConnection) aDispConn = aViewer.View()->Viewer()->Driver()->GetDisplayConnection();
   Display *anXDisplay = (Display *) aDispConn->GetDisplayAspect();
-  std::cout << "visualize4" << std::endl << std::flush;
   for (;;) {
     XEvent anXEvent;
     XNextEvent(anXDisplay, &anXEvent);

@@ -19,14 +19,24 @@ class CadBuilder extends Face {
     CadBuilder move(Vec p) {
         loc = p
         nl.gp_trsf_set_translation(trsf, loc.toGpVec())
-        currentShape = nl.brep_builderapi_transform_shape(currentShape, trsf, 1)
+        currentShape = nl.brep_builderapi_transform_shape(currentShape, trsf, 0)
         this
     }
 
     CadBuilder cut(CadBuilder other) {
-        def res = nl.brep_algoapi_cut(other.currentShape, currentShape)
+        def res = nl.brep_algoapi_cut_ds_shape(currentShape, other.currentShape)
         println "other.currentShape == res = ${other.currentShape == res}"
-        other.currentShape = res
+        currentShape = res
+        this
+    }
+
+    CadBuilder cut(List<CadBuilder> others) {
+        def tools = nl.top_tools_list_of_shape()
+        others.each {
+            nl.top_tools_list_of_shape_append(tools, it.currentShape)
+        }
+        def res = nl.brep_algoapi_cut(currentShape, tools)
+        currentShape = res
         this
     }
 

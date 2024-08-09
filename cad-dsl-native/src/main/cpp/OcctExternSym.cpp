@@ -442,6 +442,7 @@ extern "C" TopoDS_Shape *make_hole_blind(const TopoDS_Shape &shape, const gp_Ax1
     BRepFeat_MakeCylindricalHole makeCylindrical;
     makeCylindrical.Init(shape, ax1);
     makeCylindrical.PerformBlind(Radius, Length);
+    makeCylindrical.Build();
     return new TopoDS_Shape(makeCylindrical.Shape());
 }
 
@@ -509,18 +510,23 @@ extern "C" void gp_trsf_set_translation(gp_Trsf &gp_trsf, const gp_Vec &translat
 
 extern "C" TopoDS_Shape *brep_builderapi_transform_shape(const TopoDS_Shape &shape, const gp_Trsf &gp_trsf,
                                                          const Standard_Boolean theCopyGeom) {
-    return new TopoDS_Shape(BRepBuilderAPI_Transform(shape, gp_trsf, Standard_True).Shape());
+    return new TopoDS_Shape(BRepBuilderAPI_Transform(shape, gp_trsf, theCopyGeom).Shape());
 }
 
-extern "C" TopoDS_Shape *brep_algoapi_cut(TopoDS_Shape &result, const TopoDS_Shape &cutter) {
+extern "C" TopoDS_Shape *brep_algoapi_cut_ds_shape(TopoDS_Shape &result, TopoDS_Shape &tool) {
+    const auto cut = new BRepAlgoAPI_Cut(result, tool);
+    cut->Build();
+    cut->SimplifyResult();
+    return new TopoDS_Shape(cut->Shape());
+}
+
+extern "C" TopoDS_Shape *brep_algoapi_cut(TopoDS_Shape &result, TopTools_ListOfShape &aLT) {
     Standard_Boolean bRunParallel;
     Standard_Real aFuzzyValue;
     BRepAlgoAPI_Cut aBuilder;
     // perpare the arguments
     TopTools_ListOfShape aLS;
     aLS.Append(result);
-    TopTools_ListOfShape aLT;
-    aLT.Append(cutter);
     //
     bRunParallel = Standard_False;
     aFuzzyValue = 2.1e-5;
@@ -587,10 +593,10 @@ extern "C" void analyze(const TopoDS_Shape &myShape) {
     // }
 }
 
-extern "C" TopTools_ListOfShape* toptools_listofshape_new() {
-    new TopTools_ListOfShape();
+extern "C" TopTools_ListOfShape *toptools_listofshape_new() {
+    return new TopTools_ListOfShape();
 }
 
-extern "C" void toptools_listofshape_append(TopTools_ListOfShape& ls, const TopoDS_Shape &myShape) {
+extern "C" void toptools_listofshape_append(TopTools_ListOfShape &ls, const TopoDS_Shape &myShape) {
     ls.Append(myShape);
 }
