@@ -13,7 +13,7 @@ class AllInOneTest {
 
     static CadBuilder generateSphere() {
         BigDecimal radius = 5.0
-        BigDecimal angle = Math.atan(0.5d)
+        BigDecimal angle = Math.atan(0.2d)
         BigDecimal featureDiameter = 0.3
 
         cb().sphere(radius, new Vec(1.0), -angle, angle).topZ().center {
@@ -52,4 +52,11 @@ class AllInOneTest {
     void "Build Basic Shape"() {
         cylindersCut2(generateSphere()).display()
     }
+
+
+    @Test
+    void "Build Basic Shape List"() {
+        cylindersCut(generateSphere()).display()
+    }
+
 }
