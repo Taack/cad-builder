@@ -5,7 +5,7 @@ plugins {
 group = 'org.taack'
 version = '1.0-SNAPSHOT'
 
-def libs = "TKBO TKBRep TKBin TKBinL TKBinTObj TKBinXCAF TKBool TKCAF TKCDF TKDCAF\
+def libs77 = "TKBO TKBRep TKBin TKBinL TKBinTObj TKBinXCAF TKBool TKCAF TKCDF TKDCAF\
  TKDraw TKExpress TKFeat TKFillet TKG2d TKG3d TKGeomAlgo TKGeomBase TKHLR\
  TKIGES TKIVtk TKIVtkDraw TKLCAF TKMath TKMesh TKMeshVS TKOffset TKOpenGl\
  TKOpenGlTest TKPrim TKQADraw TKRWMesh TKSTEP TKSTEP209 TKSTEPAttr TKSTEPBase\
@@ -14,8 +14,16 @@ def libs = "TKBO TKBRep TKBin TKBinL TKBinTObj TKBinXCAF TKBool TKCAF TKCDF TKDC
  TKXDEDRAW TKXDEIGES TKXDESTEP TKXMesh TKXSBase TKXSDRAW TKXml\
  TKXmlL TKXmlTObj TKXmlXCAF TKernel "
 
+def libs78 = "TKBinL TKBin TKBinTObj TKBinXCAF TKBool TKBO TKBRep TKCAF TKCDF TKDCAF TKDECascade\
+ TKDEGLTF TKDEIGES TKDEOBJ TKDEPLY TKDE TKDESTEP TKDESTL TKDEVRML TKDraw TKernel TKExpress TKFeat\
+ TKFillet TKG2d TKG3d TKGeomAlgo TKGeomBase TKHLR TKLCAF TKMath TKMesh TKMeshVS TKOffset TKOpenGl\
+ TKOpenGlTest TKPrim TKQADraw TKRWMesh TKService TKShHealing TKStdL TKStd TKTObjDRAW TKTObj TKTopAlgo\
+ TKTopTest TKV3d TKVCAF TKViewerTest TKXCAF TKXDEDRAW TKXMesh TKXmlL TKXml TKXmlTObj TKXmlXCAF TKXSBase\
+ TKXSDRAWDE TKXSDRAWGLTF TKXSDRAWIGES TKXSDRAWOBJ TKXSDRAWPLY TKXSDRAW TKXSDRAWSTEP TKXSDRAWSTL TKXSDRAWVRML"
+
 def linkerLibs = []
 
+def libs = libs78
 libs.split(' ').each {
     linkerLibs << "-l$it"
 }
@@ -29,12 +37,12 @@ library {
 
 tasks.withType(CppCompile).configureEach {
     optimized = false
-    includes.from new File("/usr/include/opencascade/").path
+    includes.from new File("/usr/local/include/opencascade/").path
 }
 
 tasks.withType(LinkSharedLibrary).configureEach {
     // Define toolchain-specific compiler and linker options
-    linkerArgs = ["-Xlinker", "-S", "-B", "direct"] + linkerLibs
+    linkerArgs = ["-Xlinker", "-S", "-Bdirect", "-L/usr/local/lib/"] + linkerLibs
 }
 
 task('listSymsPerLib') {

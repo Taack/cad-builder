@@ -8,6 +8,7 @@ plugins {
 group = 'org.taack'
 version = '1.0-SNAPSHOT'
 
+String OCCT78 = file("/usr/local/lib").absolutePath
 String nativeLibPath = file("${project.parent.projectDir}/cad-dsl/build/libs/nativeLib/shared").absolutePath
 String nativeLibPath2 = file("${project.parent.projectDir}/cad-dsl-native/build/lib/main/release").absolutePath
 
@@ -33,7 +34,7 @@ model {
             if (toolChain in Gcc) {
                 println "Linking with Gcc"
                 cppCompiler.args "-g", "-fno-access-control"
-                linker.args "-Xlinker", "-S", "-L", nativeLibPath2, "-l", "cad-dsl-native", "-l", "GL", "-l", "GLU", "-l", "GLX", "-l", "GLEW", "-l", "glfw", "-B", "direct"
+                linker.args "-Xlinker", "-S", "-B", "direct", "-L", nativeLibPath2, "-L", OCCT78, "-l", "cad-dsl-native", "-l", "GL", "-l", "GLU", "-l", "GLX", "-l", "GLEW", "-l", "glfw"
             }
             if (toolChain in VisualCpp) {
                 cppCompiler.args "/Zi"
@@ -58,7 +59,7 @@ java {
 
 application {
     mainClass = 'org.taack.Main'
-    applicationDefaultJvmArgs = ["-Djava.library.path=" + nativeLibPath + ":" + nativeLibPath2, "--enable-preview", "--enable-native-access=ALL-UNNAMED"]
+    applicationDefaultJvmArgs = ["-Djava.library.path=" + OCCT78 + ":" + nativeLibPath2 + ":" + nativeLibPath2, "--enable-preview", "--enable-native-access=ALL-UNNAMED"]
 }
 
 jextract {
@@ -74,8 +75,8 @@ jextract {
 }
 
 run  {
-    println "Setting LD_LIBRARY_PATH=$nativeLibPath:$nativeLibPath2"
-    environment('LD_LIBRARY_PATH', "$nativeLibPath:$nativeLibPath2")
+    println "Setting LD_LIBRARY_PATH=$OCCT78:$nativeLibPath2:$nativeLibPath"
+    environment('LD_LIBRARY_PATH', "$OCCT78:$nativeLibPath2:$nativeLibPath")
 }
 
 dependencies {
@@ -85,7 +86,7 @@ dependencies {
 }
 
 test {
-    println "Setting LD_LIBRARY_PATH=$nativeLibPath:$nativeLibPath2"
-    environment('LD_LIBRARY_PATH', "$nativeLibPath:$nativeLibPath2")
+    println "Setting LD_LIBRARY_PATH=$OCCT78:$nativeLibPath2:$nativeLibPath"
+    environment('LD_LIBRARY_PATH', "$OCCT78:$nativeLibPath2:$nativeLibPath")
     useJUnitPlatform()
 }
