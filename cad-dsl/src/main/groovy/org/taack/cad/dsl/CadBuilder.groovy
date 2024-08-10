@@ -76,6 +76,11 @@ class CadBuilder extends Face {
         if (fileName) {
             try (Arena arena = Arena.ofConfined()) {
                 MemorySegment t = arena.allocateFrom(fileName)
+                if (fileName.endsWith(".step")) {
+                    nl.write_step(this.currentShape, t)
+                } else if (fileName.endsWith(".stl")) {
+                    nl.write_stl(this.currentShape, t)
+                } else
                 nl.dumpShape(currentShape, w, h, t)
             }
         } else nl.visualize(currentShape)

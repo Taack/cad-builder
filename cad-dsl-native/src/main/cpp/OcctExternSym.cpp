@@ -47,6 +47,12 @@
 #include <BRepAlgoAPI_Cut.hxx>
 #include <BRepPrimAPI_MakeTorus.hxx>
 #include <BRepCheck_Analyzer.hxx>
+#include <TDocStd_Document.hxx>
+#include <XCAFApp_Application.hxx>
+#include <XCAFDoc_ShapeTool.hxx>
+#include <XCAFDoc_DocumentTool.hxx>
+#include <STEPCAFControl_Writer.hxx>
+#include <StlAPI_Writer.hxx>
 
 OcctExternSym::OcctExternSym() {
 }
@@ -603,4 +609,31 @@ extern "C" TopTools_ListOfShape *toptools_listofshape_new() {
 
 extern "C" void toptools_listofshape_append(TopTools_ListOfShape &ls, const TopoDS_Shape &myShape) {
     ls.Append(myShape);
+}
+
+extern "C" void write_step(const TopoDS_Shape& shape, const char *fileName)
+{
+    // Create document
+    Handle(TDocStd_Document) aDoc;
+    Handle(XCAFApp_Application) anApp = XCAFApp_Application::GetApplication();
+    anApp->NewDocument("MDTV-XCAF",aDoc);
+
+    // Create label and add our shape
+    Handle (XCAFDoc_ShapeTool) myShapeTool =
+            XCAFDoc_DocumentTool::ShapeTool(aDoc->Main());
+    TDF_Label aLabel = myShapeTool->NewShape();
+    myShapeTool->SetShape(aLabel, shape);
+
+    // Write as STEP file
+    STEPCAFControl_Writer *myWriter = new STEPCAFControl_Writer();
+    myWriter->Perform(aDoc, fileName);
+}
+
+extern "C" void write_stl(const TopoDS_Shape& shape, const char *fileName)
+{
+    // Write as STL
+    StlAPI_Writer stl_writer;
+    // stl_writer.SetDeflection(0.001);
+    // stl_writer.RelativeMode() = false;
+    stl_writer.Write(shape, fileName);
 }

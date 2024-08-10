@@ -173,3 +173,7 @@ TopTools_ListOfShape* toptools_listofshape_new(void);
 void toptools_listofshape_append(TopTools_ListOfShape* ls, const TopoDS_Shape* myShape);
 
 TopoDS_Shape *brep_algoapi_cut_ds_shape(TopoDS_Shape* result, TopoDS_Shape* tool);
+
+void write_step(const TopoDS_Shape* shape, const char *fileName);
+
+void write_stl(const TopoDS_Shape* shape, const char *fileName);

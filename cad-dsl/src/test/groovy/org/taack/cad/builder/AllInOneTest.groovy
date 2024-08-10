@@ -70,4 +70,9 @@ class AllInOneTest {
     void "Build Basic Shape Fuse"() {
         fuseTorus(cylindersCut2(generateSphere())).display()
     }
+
+    @Test
+    void "Build Basic Shape STEP"() {
+        fuseTorus(cylindersCut2(generateSphere())).display("test.step")
+    }
 }
