@@ -32,6 +32,12 @@ class CadBuilder extends Face {
         this
     }
 
+    CadBuilder fuse(CadBuilder other) {
+        def res = nl.brep_algoapi_fuse(currentShape, other.currentShape)
+        currentShape = res
+        this
+    }
+
     CadBuilder cut(List<CadBuilder> others) {
         def tools = nl.top_tools_list_of_shape()
         others.each {
@@ -58,6 +64,13 @@ class CadBuilder extends Face {
         currentShape = nl.brep_builderapi_make_shape(nl.brep_primapi_make_box(x.doubleValue(), y.doubleValue(), z.doubleValue()))
         return this
     }
+
+    CadBuilder torus(BigDecimal outerRadius, BigDecimal innerRadius, Vec dir = new Vec(1.0)) {
+        def ax2 = nl.gp_ax2(loc.toGpPnt(), dir.toGpDir())
+        currentShape = nl.brep_primapi_make_thorus(ax2, outerRadius.toDouble(), innerRadius.toDouble())
+        this
+    }
+
 
     void display(String fileName = null, int w = 640, int h = 480) {
         if (fileName) {

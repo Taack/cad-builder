@@ -46,15 +46,28 @@ class AllInOneTest {
         return other
     }
 
+    static CadBuilder fuseTorus(CadBuilder other) {
+        BigDecimal ringRadius = 1.0
+        BigDecimal torusRadius = 4.0 - ringRadius
+        def t = cb().torus(torusRadius, ringRadius)
+        t.display()
+        other.fuse(t)
+        return other
+    }
+
     @Test
-    void "Build Basic Shape"() {
+    void "Build Basic Shape Cut"() {
         cylindersCut2(generateSphere()).display()
     }
 
 
     @Test
-    void "Build Basic Shape List"() {
+    void "Build Basic Shape Cut2"() {
         cylindersCut(generateSphere()).display()
     }
 
+    @Test
+    void "Build Basic Shape Fuse"() {
+        fuseTorus(cylindersCut2(generateSphere())).display()
+    }
 }

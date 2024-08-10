@@ -229,10 +229,6 @@ extern "C" TopoDS_Shape *brep_builderapi_make_shape(BRepBuilderAPI_MakeShape &mk
     return new TopoDS_Shape(mk.Shape());
 }
 
-extern "C" TopoDS_Shape *brep_algoapi_fuse(TopoDS_Shape &s1, TopoDS_Shape &s2) {
-    return new TopoDS_Shape(BRepAlgoAPI_Fuse(s1, s2).Shape());
-}
-
 extern "C" Handle(Geom_Surface) *brep_tool_surface(TopoDS_Face &face) {
     return new Handle(Geom_Surface)(BRep_Tool::Surface(face));
 }
@@ -518,6 +514,13 @@ extern "C" TopoDS_Shape *brep_algoapi_cut_ds_shape(TopoDS_Shape &result, TopoDS_
     cut->Build();
     cut->SimplifyResult();
     return new TopoDS_Shape(cut->Shape());
+}
+
+extern "C" TopoDS_Shape *brep_algoapi_fuse(TopoDS_Shape &s1, TopoDS_Shape &s2) {
+    const auto fuse = new BRepAlgoAPI_Fuse(s1, s2);
+    fuse->Build();
+    fuse->SimplifyResult();
+    return new TopoDS_Shape(fuse->Shape());
 }
 
 extern "C" TopoDS_Shape *brep_algoapi_cut(TopoDS_Shape &result, TopTools_ListOfShape &aLT) {
