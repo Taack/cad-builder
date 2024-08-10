@@ -177,3 +177,9 @@ TopoDS_Shape *brep_algoapi_cut_ds_shape(TopoDS_Shape* result, TopoDS_Shape* tool
 void write_step(const TopoDS_Shape* shape, const char *fileName);
 
 void write_stl(const TopoDS_Shape* shape, const char *fileName);
+
+#define BRepBuilderAPI_MakeEdge void
+
+const BRepBuilderAPI_MakeEdge *brep_builderapi_make_edge_from_pts(gp_Pnt* from, gp_Pnt* to);
+const BRepBuilderAPI_MakeWire *brep_builderapi_make_wire(void);
+void brep_builderapi_make_wire_add(BRepBuilderAPI_MakeWire* wireMaker, BRepBuilderAPI_MakeEdge* edge);

@@ -89,6 +89,18 @@ extern "C" const TopoDS_Edge *brep_builderapi_make_edge(Handle(Geom_TrimmedCurve
     return new TopoDS_Edge(BRepBuilderAPI_MakeEdge(segment).Edge());
 }
 
+extern "C" const BRepBuilderAPI_MakeEdge *brep_builderapi_make_edge_from_pts(gp_Pnt& from, gp_Pnt& to) {
+    return new BRepBuilderAPI_MakeEdge(from, to);
+}
+
+extern "C" const BRepBuilderAPI_MakeWire *brep_builderapi_make_wire() {
+    return new BRepBuilderAPI_MakeWire();
+}
+
+extern "C" void brep_builderapi_make_wire_add(BRepBuilderAPI_MakeWire& wireMaker, BRepBuilderAPI_MakeEdge& edge) {
+    wireMaker.Add(edge);
+}
+
 extern "C" const TopoDS_Wire *brep_builderapi_make_wire_topo_ds_wire(TopoDS_Edge e1, TopoDS_Edge e2, TopoDS_Edge e3) {
     return new TopoDS_Wire(BRepBuilderAPI_MakeWire(e1, e2, e3).Wire());
 }

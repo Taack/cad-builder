@@ -55,6 +55,14 @@ class AllInOneTest {
         return other
     }
 
+    static CadBuilder revolvedCut(CadBuilder other) {
+        // Create a hexagonal face. Use this face to create a solid by revolving
+        // it around an axis. Subtract the generated shape (shown on the right) from
+        // the input shape.
+
+
+    }
+
     @Test
     void "Build Basic Shape Cut"() {
         cylindersCut2(generateSphere()).display()

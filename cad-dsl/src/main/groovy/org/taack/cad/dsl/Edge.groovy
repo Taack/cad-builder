@@ -1,13 +1,43 @@
 package org.taack.cad.dsl
 
-import org.nativelib.NativeLib
+import org.nativelib.NativeLib as nl
 
 import java.lang.foreign.MemorySegment
 
 class Edge extends Vertice implements Selector {
 
+    private Vec origin = new Vec(0.0)
+    private MemorySegment wire = nl.brep_builderapi_make_wire()
+
+    /**
+     * Initial position of a new wire
+     *
+     * @param newOrigin
+     * @return
+     */
+    CadBuilder from(Vec newOrigin) {
+        wire = nl.brep_builderapi_make_wire()
+        origin = newOrigin
+        this as CadBuilder
+    }
+
+    /**
+     * Add an Edge to the current wire
+     * @param to
+     * @return
+     */
+    CadBuilder edge(Vec to) {
+        nl.brep_builderapi_wire_add(wire, nl.brep_builderapi_make_edge_from_pts(origin.toGpPnt(), to.toGpPnt()))
+        this as CadBuilder
+    }
+
+    /**
+     * Center of current face
+     * @param operations
+     * @return
+     */
     CadBuilder center(@DelegatesTo(value = Edge, strategy = Closure.DELEGATE_FIRST) operations) {
-        clockwiseLoc = [Vec.fromAPnt(NativeLib.gp_pnt_center_of_mass(currentFace))]
+        clockwiseLoc = [Vec.fromAPnt(nl.gp_pnt_center_of_mass(currentFace))]
         operations.delegate = this
         operations.call()
         this as CadBuilder
@@ -21,8 +51,8 @@ class Edge extends Vertice implements Selector {
      * @return Face
      */
     CadBuilder rect(BigDecimal sx, BigDecimal sy, @DelegatesTo(value = Edge, strategy = Closure.DELEGATE_FIRST) operations) {
-        def centerOfFace = Vec.fromAPnt(NativeLib.gp_pnt_center_of_mass(currentFace))
-        def faceDir = Vec.fromADir(NativeLib.gp_dir_normal_to_face(currentFace))
+        def centerOfFace = Vec.fromAPnt(nl.gp_pnt_center_of_mass(currentFace))
+        def faceDir = Vec.fromADir(nl.gp_dir_normal_to_face(currentFace))
         println "rect ($sx, $sy), faceDir = ${faceDir}, centerOfFace = ${centerOfFace}"
         def gCoords1 = Vec.globalLocFromLocal(centerOfFace, faceDir, new Vec2d(-sx/2.0,-sy/2.0))
         def gCoords2 = Vec.globalLocFromLocal(centerOfFace, faceDir, new Vec2d(sx/2.0,-sy/2.0))
@@ -37,8 +67,8 @@ class Edge extends Vertice implements Selector {
     }
 
     private void holeHelper(Vec loc, MemorySegment dir, BigDecimal diameter, BigDecimal from, BigDecimal to) {
-        currentShape = NativeLib.make_hole(currentShape,
-                NativeLib.gp_ax1_new(
+        currentShape = nl.make_hole(currentShape,
+                nl.gp_ax1_new(
                         loc.toGpPnt(),
                         dir
                 ), diameter.doubleValue(), from.doubleValue(), to.doubleValue())
@@ -46,8 +76,8 @@ class Edge extends Vertice implements Selector {
     }
 
     private void holeHelper(Vec loc, MemorySegment dir, BigDecimal diameter, BigDecimal length) {
-        currentShape = NativeLib.make_hole_blind(currentShape,
-                NativeLib.gp_ax1_new(
+        currentShape = nl.make_hole_blind(currentShape,
+                nl.gp_ax1_new(
                         loc.toGpPnt(),
                         dir
                 ), diameter.doubleValue(), length.doubleValue())
@@ -55,7 +85,7 @@ class Edge extends Vertice implements Selector {
     }
 
     void hole(BigDecimal diameter, BigDecimal length) {
-        def gpDir = NativeLib.gp_dir_normal_to_face(currentFace)
+        def gpDir = nl.gp_dir_normal_to_face(currentFace)
         println "hole $diameter Dir: ${Vec.fromADir(gpDir)}"
         clockwiseLoc.each {
             println "holeHelper $diameter, Loc: $it, Dir: ${Vec.fromADir(gpDir)}"
@@ -64,7 +94,7 @@ class Edge extends Vertice implements Selector {
     }
 
     void hole(BigDecimal diameter) {
-        def gpDir = NativeLib.gp_dir_normal_to_face(currentFace)
+        def gpDir = nl.gp_dir_normal_to_face(currentFace)
         println "hole $diameter Dir: ${Vec.fromADir(gpDir)}"
         clockwiseLoc.each {
             println "holeHelper $diameter, Loc: $it, Dir: ${Vec.fromADir(gpDir)}"
