@@ -6,6 +6,9 @@ import org.nativelib.NativeLib as nl
 import java.lang.foreign.Arena
 import java.lang.foreign.MemorySegment
 
+/*
+ * Todo: realise one move instead of many
+ */
 @CompileStatic
 class CadBuilder extends Face {
 

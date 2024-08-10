@@ -559,6 +559,7 @@ extern "C" TopoDS_Shape *brep_algoapi_cut(TopoDS_Shape &result, TopTools_ListOfS
 
     // run the algorithm
     aBuilder.Build();
+    aBuilder.SimplifyResult();
     //
     // result of the operation aR
     const TopoDS_Shape &aR = aBuilder.Shape();
