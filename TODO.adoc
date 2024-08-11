@@ -1,0 +1,14 @@
+= Todo
+
+* Visitor Pattern
+** Validate call stack
+** Trace what's happen
+** Build an AST to optimize native calls
+*** Use a list of objects when possible
+*** Use BigDecimal the most we can
+* Use consistent naming convention for extern symbols
+* Restrict symbols scoping
+* replace all make_... by ..._new
+* call delete when possible (the sooner)
+* Extract Wire class from Edge (between Edge and Face)
+* make_edge to makeedge are 2 different things

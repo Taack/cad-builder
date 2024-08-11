@@ -60,7 +60,17 @@ class AllInOneTest {
         // it around an axis. Subtract the generated shape (shown on the right) from
         // the input shape.
 
+        BigDecimal face_inner_radius = 0.6
 
+        cb().from(new Vec(face_inner_radius - 0.05, 0.0, -0.05))
+                .edge(new Vec(face_inner_radius - 0.10, 0.0, -0.025))
+                .edge(new Vec(face_inner_radius - 0.10, 0.0,  0.025))
+                .edge(new Vec(face_inner_radius + 0.10, 0.0,  0.025))
+                .edge(new Vec(face_inner_radius + 0.10, 0.0, -0.025))
+                .edge(new Vec(face_inner_radius + 0.05, 0.0, -0.05))
+                .edge(new Vec(face_inner_radius - 0.05, 0.0, -0.05))
+        .toWire().toFace().from(new Vec(0.0)).revolution().display()
+        return other
     }
 
     @Test
@@ -82,5 +92,10 @@ class AllInOneTest {
     @Test
     void "Build Basic Shape STEP"() {
         fuseTorus(cylindersCut2(generateSphere())).display("test.step")
+    }
+
+    @Test
+    void "Build Basic Shape Revolution"() {
+        revolvedCut(generateSphere()).display()
     }
 }

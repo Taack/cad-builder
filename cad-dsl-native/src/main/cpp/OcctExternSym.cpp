@@ -53,16 +53,25 @@
 #include <XCAFDoc_DocumentTool.hxx>
 #include <STEPCAFControl_Writer.hxx>
 #include <StlAPI_Writer.hxx>
+#include <BRepPrimAPI_MakeRevol.hxx>
 
 OcctExternSym::OcctExternSym() {
 }
 
-extern "C" gp_Pnt *make_gp_pnt(const Standard_Real theXp, const Standard_Real theYp, const Standard_Real theZp) {
+extern "C" gp_Pnt *gp_pnt_new(const Standard_Real theXp, const Standard_Real theYp, const Standard_Real theZp) {
     return new gp_Pnt(theXp, theYp, theZp);
 }
 
-extern "C" gp_Vec *make_gp_vec(const Standard_Real theXp, const Standard_Real theYp, const Standard_Real theZp) {
+extern "C" void gp_pnt_delete(gp_Pnt *pnt) {
+    delete pnt;
+}
+
+extern "C" gp_Vec *gp_vec_new(const Standard_Real theXp, const Standard_Real theYp, const Standard_Real theZp) {
     return new gp_Vec(theXp, theYp, theZp);
+}
+
+extern "C" void gp_vec_delete(gp_Vec *pnt) {
+    delete pnt;
 }
 
 extern "C" Standard_Real gp_pnt_x(gp_Pnt *pnt) {
@@ -81,12 +90,24 @@ extern "C" Handle(Geom_TrimmedCurve) *gc_make_arc_of_circle(gp_Pnt *pnt1, gp_Pnt
     return new Handle(Geom_TrimmedCurve)(GC_MakeArcOfCircle(*pnt1, *pnt2, *pnt3).Value());
 }
 
+extern "C" void gc_delete_arc_of_circle(Handle(Geom_TrimmedCurve)* ptr) {
+    delete ptr;
+}
+
 extern "C" Handle(Geom_TrimmedCurve) *gc_make_segment(gp_Pnt *pnt1, gp_Pnt *pnt2) {
     return new Handle(Geom_TrimmedCurve)(GC_MakeSegment(*pnt1, *pnt2).Value());
 }
 
+extern "C" void gc_delete_segment(Handle(Geom_TrimmedCurve)* ptr) {
+    delete ptr;
+}
+
 extern "C" const TopoDS_Edge *brep_builderapi_make_edge(Handle(Geom_TrimmedCurve) &segment) {
     return new TopoDS_Edge(BRepBuilderAPI_MakeEdge(segment).Edge());
+}
+
+extern "C" void brep_builderapi_delete_edge(TopoDS_Edge *ptr) {
+    delete ptr;
 }
 
 extern "C" const BRepBuilderAPI_MakeEdge *brep_builderapi_make_edge_from_pts(gp_Pnt& from, gp_Pnt& to) {
@@ -114,7 +135,19 @@ extern "C" const BRepBuilderAPI_MakeWire *brep_builderapi_make_wire_new() {
 }
 
 extern "C" void brep_builderapi_wire_add(BRepBuilderAPI_MakeWire &mw, TopoDS_Wire &wire) {
-    return mw.Add(wire);
+    mw.Add(wire);
+}
+
+extern "C" void brep_builderapi_wire_add_edge(BRepBuilderAPI_MakeWire &mw, TopoDS_Edge &edge) {
+    mw.Add(edge);
+}
+
+extern "C" void brep_builderapi_wire_add_makeedge(BRepBuilderAPI_MakeWire &mw, BRepBuilderAPI_MakeEdge &edge) {
+    mw.Add(edge);
+}
+
+extern "C" void brep_builderapi_wire_add_Listofshape(BRepBuilderAPI_MakeWire &mw, TopTools_ListOfShape &listOfShape) {
+    mw.Add(listOfShape);
 }
 
 extern "C" const gp_Ax1 &gp_ox() {
@@ -267,7 +300,19 @@ extern "C" TopTools_ListOfShape *top_tools_list_of_shape() {
     return new TopTools_ListOfShape();
 }
 
-extern "C" void top_tools_list_of_shape_append(TopTools_ListOfShape *l, TopoDS_Face &face) {
+extern "C" void top_tools_list_of_shape_delete(TopTools_ListOfShape* ptr) {
+    delete ptr;
+}
+
+extern "C" void top_tools_list_of_shape_append(TopTools_ListOfShape *l, TopoDS_Shape &face) {
+    l->Append(face);
+}
+
+extern "C" void top_tools_list_of_shape_append_edge(TopTools_ListOfShape *l, TopoDS_Edge &face) {
+    l->Append(face);
+}
+
+extern "C" void top_tools_list_of_shape_append_makeedge(TopTools_ListOfShape *l, BRepBuilderAPI_MakeEdge &face) {
     l->Append(face);
 }
 
@@ -614,14 +659,14 @@ extern "C" void analyze(const TopoDS_Shape &myShape) {
     //     std::cout << "Shape " << it.Index() << std::endl;
     // }
 }
-
-extern "C" TopTools_ListOfShape *toptools_listofshape_new() {
-    return new TopTools_ListOfShape();
-}
-
-extern "C" void toptools_listofshape_append(TopTools_ListOfShape &ls, const TopoDS_Shape &myShape) {
-    ls.Append(myShape);
-}
+//
+// extern "C" TopTools_ListOfShape *toptools_listofshape_new() {
+//     return new TopTools_ListOfShape();
+// }
+//
+// extern "C" void toptools_listofshape_append(TopTools_ListOfShape &ls, const TopoDS_Shape &myShape) {
+//     ls.Append(myShape);
+// }
 
 extern "C" void write_step(const TopoDS_Shape& shape, const char *fileName)
 {
@@ -648,4 +693,9 @@ extern "C" void write_stl(const TopoDS_Shape& shape, const char *fileName)
     // stl_writer.SetDeflection(0.001);
     // stl_writer.RelativeMode() = false;
     stl_writer.Write(shape, fileName);
+}
+
+
+extern "C" TopoDS_Shape* brep_primapi_makerevol(TopoDS_Face& face, gp_Ax1& ax1) {
+    return new TopoDS_Shape(BRepPrimAPI_MakeRevol(face, ax1).Shape());
 }

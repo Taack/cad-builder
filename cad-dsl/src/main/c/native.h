@@ -17,8 +17,8 @@ int visualize(void*);
 #define BRepBuilderAPI_Transform void
 #define Standard_Real double
 
-gp_Pnt *make_gp_pnt(const Standard_Real theXp, const Standard_Real theYp, const Standard_Real theZp);
-gp_Vec *make_gp_vec(const Standard_Real theXp, const Standard_Real theYp, const Standard_Real theZp);
+gp_Pnt *gp_pnt_new(const Standard_Real theXp, const Standard_Real theYp, const Standard_Real theZp);
+gp_Vec *gp_vec_new(const Standard_Real theXp, const Standard_Real theYp, const Standard_Real theZp);
 Standard_Real gp_pnt_x(gp_Pnt *pnt);
 Standard_Real gp_pnt_y(gp_Pnt *pnt);
 Standard_Real gp_pnt_z(gp_Pnt *pnt);
@@ -107,7 +107,11 @@ gp_Pnt* geom_plane_location(Handle(Geom_Plane)*plane);
 
 TopTools_ListOfShape* top_tools_list_of_shape(void);
 void top_tools_list_of_shape_append(TopTools_ListOfShape* l, TopoDS_Face* face);
+void top_tools_list_of_shape_append_edge(TopTools_ListOfShape* l, TopoDS_Edge* edge);
 
+#define BRepBuilderAPI_MakeEdge void
+
+void top_tools_list_of_shape_append_makeedge(TopTools_ListOfShape *l, BRepBuilderAPI_MakeEdge *makeEdge);
 BRepOffsetAPI_MakeThickSolid* brep_offset_api_make_thick_solid(void);
 
 void brep_offset_api_make_thick_solid_join(BRepOffsetAPI_MakeThickSolid* thick_solid, TopTools_ListOfShape* face_to_remove, TopoDS_Shape* shape, Standard_Real thickness, Standard_Real tol);
@@ -169,8 +173,8 @@ void analyze(const TopoDS_Shape* myShape);
 
 #define TopTools_ListOfShape void
 
-TopTools_ListOfShape* toptools_listofshape_new(void);
-void toptools_listofshape_append(TopTools_ListOfShape* ls, const TopoDS_Shape* myShape);
+//TopTools_ListOfShape* toptools_listofshape_new(void);
+//void toptools_listofshape_append(TopTools_ListOfShape* ls, const TopoDS_Shape* myShape);
 
 TopoDS_Shape *brep_algoapi_cut_ds_shape(TopoDS_Shape* result, TopoDS_Shape* tool);
 
@@ -183,3 +187,16 @@ void write_stl(const TopoDS_Shape* shape, const char *fileName);
 const BRepBuilderAPI_MakeEdge *brep_builderapi_make_edge_from_pts(gp_Pnt* from, gp_Pnt* to);
 const BRepBuilderAPI_MakeWire *brep_builderapi_make_wire(void);
 void brep_builderapi_make_wire_add(BRepBuilderAPI_MakeWire* wireMaker, BRepBuilderAPI_MakeEdge* edge);
+
+TopoDS_Shape* brep_primapi_makerevol(TopoDS_Face* face, gp_Ax1* ax1);
+
+void brep_builderapi_wire_add_edge(BRepBuilderAPI_MakeWire* mw, TopoDS_Edge* edge);
+void brep_builderapi_wire_add_Listofshape(BRepBuilderAPI_MakeWire* mw, TopTools_ListOfShape* listOfShape);
+
+
+void gp_pnt_delete(gp_Pnt *pnt);
+void gp_vec_delete(gp_Vec *pnt);
+void brep_builderapi_delete_edge(TopoDS_Edge *ptr);
+void top_tools_list_of_shape_delete(TopTools_ListOfShape* ptr);
+
+void brep_builderapi_wire_add_makeedge(BRepBuilderAPI_MakeWire* mw, BRepBuilderAPI_MakeEdge* edge);

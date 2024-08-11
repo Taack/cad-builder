@@ -13,11 +13,11 @@ static void main(String[] args) {
     double myWidth = 50.0
     double myHeight = 70.0
     double myThickness = 30.0
-    def aPnt1 = nl.make_gp_pnt(-myWidth / 2d, 0, 0)
-    def aPnt2 = nl.make_gp_pnt(-myWidth / 2d, -myThickness / 4d, 0)
-    def aPnt3 = nl.make_gp_pnt(0, -myThickness / 2d, 0)
-    def aPnt4 = nl.make_gp_pnt(myWidth / 2d, -myThickness / 4d, 0)
-    def aPnt5 = nl.make_gp_pnt(myWidth / 2d, 0, 0)
+    def aPnt1 = nl.gp_pnt_new(-myWidth / 2d, 0, 0)
+    def aPnt2 = nl.gp_pnt_new(-myWidth / 2d, -myThickness / 4d, 0)
+    def aPnt3 = nl.gp_pnt_new(0, -myThickness / 2d, 0)
+    def aPnt4 = nl.gp_pnt_new(myWidth / 2d, -myThickness / 4d, 0)
+    def aPnt5 = nl.gp_pnt_new(myWidth / 2d, 0, 0)
 
     def anArcOfCircle = nl.gc_make_arc_of_circle(aPnt2, aPnt3, aPnt4)
     def aSegment1 = nl.gc_make_segment(aPnt1, aPnt2)
@@ -48,7 +48,7 @@ static void main(String[] args) {
     println "Body: Prism the Profile"
 
     def myFaceProfile = nl.brep_builderapi_make_face_from_wire(myWireProfile)
-    def aPrismVec = nl.make_gp_vec(0d, 0d, myHeight)
+    def aPrismVec = nl.gp_vec_new(0d, 0d, myHeight)
     def myBody = nl.brep_primapi_make_prism(myFaceProfile, aPrismVec)
 
     println "Body: Apply Fillets"
@@ -66,7 +66,7 @@ static void main(String[] args) {
 
     println "Body: Add the Neck"
 
-    def neckLocation = nl.make_gp_pnt(0d, 0d, myHeight)
+    def neckLocation = nl.gp_pnt_new(0d, 0d, myHeight)
     def neckAxis = nl.gp_dz()
     def neckAx2 = nl.gp_ax2(neckLocation, neckAxis)
 

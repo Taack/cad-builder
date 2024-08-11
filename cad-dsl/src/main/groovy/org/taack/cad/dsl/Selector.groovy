@@ -113,11 +113,11 @@ final class Vec extends Vec2d {
     }
 
     MemorySegment toGpPnt() {
-        nl.make_gp_pnt(x.doubleValue(), y.doubleValue(), z.doubleValue())
+        nl.gp_pnt_new(x.doubleValue(), y.doubleValue(), z.doubleValue())
     }
 
     MemorySegment toGpVec() {
-        nl.make_gp_vec(x.doubleValue(), y.doubleValue(), z.doubleValue())
+        nl.gp_vec_new(x.doubleValue(), y.doubleValue(), z.doubleValue())
     }
 
     BigDecimal cord(Axe axe) {
@@ -132,7 +132,7 @@ final class Vec extends Vec2d {
     }
 
     @Override
-    public String toString() {
+    String toString() {
         return "Loc{" + "x=" + x + ", y=" + y + ", z=" + z + '}';
     }
 }
@@ -141,14 +141,11 @@ final class Vec extends Vec2d {
 @CompileStatic
 trait Selector {
 
-    MemorySegment currentShape
-    MemorySegment currentFace
+    MemorySegment currentShapeNative
+    MemorySegment currentFaceNative
 
 
     Vec currentLoc
 
-    Selector edge(Axe axe, Dir dir, Qty qty, int v = 0, @DelegatesTo(value = Edge, strategy = Closure.DELEGATE_ONLY) operations = null) {
-
-    }
 
 }

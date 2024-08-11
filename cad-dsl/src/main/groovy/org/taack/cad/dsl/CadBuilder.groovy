@@ -22,52 +22,52 @@ class CadBuilder extends Face {
     CadBuilder move(Vec p) {
         loc = p
         nl.gp_trsf_set_translation(trsf, loc.toGpVec())
-        currentShape = nl.brep_builderapi_transform_shape(currentShape, trsf, 1)
+        currentShapeNative = nl.brep_builderapi_transform_shape(currentShapeNative, trsf, 1)
         this
     }
 
     CadBuilder cut(CadBuilder other) {
-        def res = nl.brep_algoapi_cut_ds_shape(currentShape, other.currentShape)
-        currentShape = res
+        def res = nl.brep_algoapi_cut_ds_shape(currentShapeNative, other.currentShapeNative)
+        currentShapeNative = res
         this
     }
 
     CadBuilder fuse(CadBuilder other) {
-        def res = nl.brep_algoapi_fuse(currentShape, other.currentShape)
-        currentShape = res
+        def res = nl.brep_algoapi_fuse(currentShapeNative, other.currentShapeNative)
+        currentShapeNative = res
         this
     }
 
     CadBuilder cut(List<CadBuilder> others) {
         def tools = nl.top_tools_list_of_shape()
         others.each {
-            nl.top_tools_list_of_shape_append(tools, it.currentShape)
+            nl.top_tools_list_of_shape_append(tools, it.currentShapeNative)
         }
-        def res = nl.brep_algoapi_cut(currentShape, tools)
-        currentShape = res
+        def res = nl.brep_algoapi_cut(currentShapeNative, tools)
+        currentShapeNative = res
         this
     }
 
     CadBuilder sphere(BigDecimal radius, Vec dir = new Vec(1.0), BigDecimal angle1 = null, BigDecimal angle2 = null) {
         def ax2 = nl.gp_ax2(loc.toGpPnt(), dir.toGpDir())
-        currentShape = nl.brep_builderapi_make_shere(ax2, radius.toDouble(), angle1?.toDouble(), angle2?.toDouble())
+        currentShapeNative = nl.brep_builderapi_make_shere(ax2, radius.toDouble(), angle1?.toDouble(), angle2?.toDouble())
         return this
     }
 
     CadBuilder cylinder(BigDecimal radius, BigDecimal height, Vec dir = new Vec(1.0)) {
         def ax2 = nl.gp_ax2(loc.toGpPnt(), dir.toGpDir())
-        currentShape = nl.brep_builderapi_make_cylinder(ax2, radius.toDouble(), height.toDouble())
+        currentShapeNative = nl.brep_builderapi_make_cylinder(ax2, radius.toDouble(), height.toDouble())
         return this
     }
 
     CadBuilder box(BigDecimal x, BigDecimal y, BigDecimal z) {
-        currentShape = nl.brep_builderapi_make_shape(nl.brep_primapi_make_box(x.doubleValue(), y.doubleValue(), z.doubleValue()))
+        currentShapeNative = nl.brep_builderapi_make_shape(nl.brep_primapi_make_box(x.doubleValue(), y.doubleValue(), z.doubleValue()))
         return this
     }
 
     CadBuilder torus(BigDecimal outerRadius, BigDecimal innerRadius, Vec dir = new Vec(1.0)) {
         def ax2 = nl.gp_ax2(loc.toGpPnt(), dir.toGpDir())
-        currentShape = nl.brep_primapi_make_thorus(ax2, outerRadius.toDouble(), innerRadius.toDouble())
+        currentShapeNative = nl.brep_primapi_make_thorus(ax2, outerRadius.toDouble(), innerRadius.toDouble())
         this
     }
 
@@ -77,13 +77,13 @@ class CadBuilder extends Face {
             try (Arena arena = Arena.ofConfined()) {
                 MemorySegment t = arena.allocateFrom(fileName)
                 if (fileName.endsWith(".step")) {
-                    nl.write_step(this.currentShape, t)
+                    nl.write_step(this.currentShapeNative, t)
                 } else if (fileName.endsWith(".stl")) {
-                    nl.write_stl(this.currentShape, t)
+                    nl.write_stl(this.currentShapeNative, t)
                 } else
-                nl.dumpShape(currentShape, w, h, t)
+                nl.dumpShape(currentShapeNative, w, h, t)
             }
-        } else nl.visualize(currentShape)
+        } else nl.visualize(currentShapeNative)
     }
 
     CadBuilder sketch(@DelegatesTo(value = Sketch, strategy = Closure.DELEGATE_FIRST) sketch) {
@@ -91,7 +91,7 @@ class CadBuilder extends Face {
     }
 
     CadBuilder isValid() {
-        nl.analyze(currentShape)
+        nl.analyze(currentShapeNative)
         this
     }
 
