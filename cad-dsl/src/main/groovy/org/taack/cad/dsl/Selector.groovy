@@ -74,6 +74,10 @@ final class Vec extends Vec2d {
         new Vec(x + other.x, y + other.y, z + other.z)
     }
 
+    Vec minus(Vec other) {
+        new Vec(x - other.x, y - other.y, z - other.z)
+    }
+
     Vec multiply(Vec other) {
         new Vec(x * other.x, y * other.y, z * other.z)
     }

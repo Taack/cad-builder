@@ -10,8 +10,8 @@ class Face extends Edge implements Selector {
     }
 
 
-    Face topZ(@DelegatesTo(value = Face, strategy = Closure.DELEGATE_FIRST) c = null) {
-        face(Axe.Z, Qty.max, c)
+    CadBuilder topZ(@DelegatesTo(value = Face, strategy = Closure.DELEGATE_FIRST) c = null) {
+        face(Axe.Z, Qty.max, c) as CadBuilder
     }
 
     Face face(Axe axe, Qty qty, @DelegatesTo(value = Face, strategy = Closure.DELEGATE_ONLY) operations = null) {

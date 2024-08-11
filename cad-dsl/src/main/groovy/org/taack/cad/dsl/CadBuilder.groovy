@@ -26,12 +26,6 @@ class CadBuilder extends Face {
         this
     }
 
-    CadBuilder cut(CadBuilder other) {
-        def res = nl.brep_algoapi_cut_ds_shape(currentShapeNative, other.currentShapeNative)
-        currentShapeNative = res
-        this
-    }
-
     CadBuilder fuse(CadBuilder other) {
         def res = nl.brep_algoapi_fuse(currentShapeNative, other.currentShapeNative)
         currentShapeNative = res

@@ -123,4 +123,15 @@ class Edge extends Vertice implements Selector {
             holeHelper(it, gpDir, diameter, 0.1, 0.0)
         }
     }
+
+    CadBuilder cut(CadBuilder other) {
+        MemorySegment trsf = nl.gp_trsf()
+        println "cut currentLoc = $currentLoc, other.currentLoc = ${other.currentLoc}"
+        nl.gp_trsf_set_translation(trsf, (new Vec(0.0) - currentLoc).toGpVec())
+        def toolNative = nl.brep_builderapi_transform_shape(other.currentShapeNative, trsf, 1)
+        def cutNative = nl.brep_algoapi_cut_ds_shape(currentShapeNative, toolNative)
+        currentShapeNative = cutNative
+        this as CadBuilder
+    }
+
 }
