@@ -12,3 +12,4 @@
 * call delete when possible (the sooner)
 * Extract Wire class from Edge (between Edge and Face)
 * make_edge to makeedge are 2 different things
+* Add a logging system with indent

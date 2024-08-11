@@ -114,7 +114,7 @@ extern "C" const BRepBuilderAPI_MakeEdge *brep_builderapi_make_edge_from_pts(gp_
     return new BRepBuilderAPI_MakeEdge(from, to);
 }
 
-extern "C" const BRepBuilderAPI_MakeWire *brep_builderapi_make_wire() {
+extern "C" const BRepBuilderAPI_MakeWire *brep_builderapi_makewire_new() {
     return new BRepBuilderAPI_MakeWire();
 }
 
@@ -176,7 +176,11 @@ extern "C" TopoDS_Wire &topo_ds_wire(TopoDS_Shape &shape) {
 }
 
 extern "C" TopoDS_Face *brep_builderapi_make_face_from_wire(TopoDS_Wire &wire) {
-    return new TopoDS_Face(BRepBuilderAPI_MakeFace(wire));
+    return new TopoDS_Face(BRepBuilderAPI_MakeFace(wire).Face());
+}
+
+extern "C" TopoDS_Face *brep_builderapi_make_face_from_makewire(BRepBuilderAPI_MakeWire &wire) {
+    return new TopoDS_Face(BRepBuilderAPI_MakeFace(wire).Face());
 }
 
 extern "C" TopoDS_Face *brep_builderapi_make_face_from_face(TopoDS_Face &face) {

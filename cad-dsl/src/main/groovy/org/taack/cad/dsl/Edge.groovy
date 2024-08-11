@@ -6,7 +6,6 @@ import java.lang.foreign.MemorySegment
 
 class Edge extends Vertice implements Selector {
 
-    private Vec positionOfOperation = new Vec(0.0)
     private List<Vec> edges = []
     private MemorySegment wireNative
 
@@ -18,7 +17,7 @@ class Edge extends Vertice implements Selector {
      */
     CadBuilder from(Vec newOrigin) {
         edges = []
-        positionOfOperation = newOrigin
+        currentLoc = newOrigin
         this as CadBuilder
     }
 
@@ -34,20 +33,15 @@ class Edge extends Vertice implements Selector {
 
     CadBuilder toWire() {
 //        def listOfShapeNative = nl.top_tools_list_of_shape()
-        Vec fromLocal = positionOfOperation
-        wireNative = nl.brep_builderapi_make_wire()
+        Vec fromLocal = currentLoc
+        wireNative = nl.brep_builderapi_makewire_new()
 
         for (Vec to : edges) {
             println "Edge from: $fromLocal, to: $to"
             def edgeNative = nl.brep_builderapi_make_edge_from_pts(fromLocal.toGpPnt(), to.toGpPnt())
-            println "AUO1"
             fromLocal = to
-            println "AUO11"
-//            nl.top_tools_list_of_shape_append_makeedge(listOfShapeNative, edgeNative)
             nl.brep_builderapi_wire_add_makeedge(wireNative, edgeNative)
-            println "AUO2"
         }
-//        nl.brep_builderapi_wire_add_Listofshape(wireNative, listOfShapeNative)
         this as CadBuilder
     }
 
@@ -56,7 +50,7 @@ class Edge extends Vertice implements Selector {
      * @return
      */
     CadBuilder toFace() {
-        currentFaceNative = nl.brep_builderapi_make_face_from_wire(wireNative)
+        currentFaceNative = nl.brep_builderapi_make_face_from_makewire(wireNative)
         this as CadBuilder
     }
     /**
