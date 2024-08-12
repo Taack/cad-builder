@@ -80,7 +80,7 @@ class CadBuilder extends Face {
         } else nl.visualize(currentShapeNative)
     }
 
-    CadBuilder sketch(@DelegatesTo(value = Sketch, strategy = Closure.DELEGATE_FIRST) sketch) {
+    CadBuilder sketch(@DelegatesTo(value = Sketch, strategy = Closure.DELEGATE_ONLY) sketch) {
         this
     }
 

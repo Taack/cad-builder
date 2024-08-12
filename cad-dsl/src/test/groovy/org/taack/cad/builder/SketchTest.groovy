@@ -8,8 +8,7 @@ import org.taack.cad.dsl.Vec2d
 import static org.taack.cad.dsl.CadBuilder.cb
 
 @CompileStatic
-class ExtrudeTest {
-
+class SketchTest {
 
     @Test
     void "Extruded Cylindrical Plate"() {

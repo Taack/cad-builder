@@ -2,13 +2,15 @@ package org.taack.cad.dsl
 
 class Sketch {
 
-    private Vec2d p = new Vec2d(0.0, 0.0)
+    private Vec2d sketchPos = new Vec2d(0.0, 0.0)
 
-    Sketch origin() {
+    Sketch origin(Vec2d sketchPos = new Vec2d(0.0, 0.0)) {
+        this.sketchPos = sketchPos
         this
     }
 
     Sketch lineTo(BigDecimal sx, BigDecimal sy) {
+
         this
     }
 

@@ -3,6 +3,7 @@ package org.taack.cad.builder
 import org.junit.jupiter.api.Test
 import org.taack.cad.dsl.CadBuilder
 import org.taack.cad.dsl.Vec
+import org.taack.cad.dsl.Vec2d
 
 import static org.taack.cad.dsl.CadBuilder.cb
 
@@ -53,6 +54,41 @@ class SprocketTest {
 /*
  * Build a single tooth
  */
+CadBuilder buildTooth() {
+    // Create a 2D arc to form the base of the tooth
+    cb().sketch {
+    }
+    // Determine the center of the profile circle
+
+    // Construct the profile circle
+
+    // Construct the outer circle
+
+    // Calculate the intersection point(s) of the profile circle
+    // and the outer circle.  If there are two points, pick the one closest
+    // to the center of the profile circle
+
+    // Trim the profile circle and mirror
+
+    // Calculate the outermost point
+
+    // and use it to create the third arc
+
+    // Mirror and reverse the three arcs
+
+    // Replace the two outer arcs with a single one
+
+    // Create an arc for the inside of the wedge
+
+    //Convert the 2D arcs and two extra lines to 3D edges
+
+    // Combine the edges in a wire
+
+    // Convert the wire into a face
+
+    // Finally, extrude the face
+
+}
 
     @Test
     void "Build Tooth"() {

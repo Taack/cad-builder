@@ -703,3 +703,7 @@ extern "C" void write_stl(const TopoDS_Shape& shape, const char *fileName)
 extern "C" TopoDS_Shape* brep_primapi_makerevol(TopoDS_Face& face, gp_Ax1& ax1) {
     return new TopoDS_Shape(BRepPrimAPI_MakeRevol(face, ax1).Shape());
 }
+
+extern "C" void deleteVoid(void *ptr) {
+    delete ptr;
+}

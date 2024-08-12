@@ -1,5 +1,6 @@
 plugins {
     id 'cpp-library'
+    id 'cpp-unit-test'
 }
 
 group = 'org.taack'
@@ -21,9 +22,11 @@ def libs78 = "TKBinL TKBin TKBinTObj TKBinXCAF TKBool TKBO TKBRep TKCAF TKCDF TK
  TKTopTest TKV3d TKVCAF TKViewerTest TKXCAF TKXDEDRAW TKXMesh TKXmlL TKXml TKXmlTObj TKXmlXCAF TKXSBase\
  TKXSDRAWDE TKXSDRAWGLTF TKXSDRAWIGES TKXSDRAWOBJ TKXSDRAWPLY TKXSDRAW TKXSDRAWSTEP TKXSDRAWSTL TKXSDRAWVRML"
 
+def otherLibs = " GL GLU GLX GLEW X11 xcb Xau Xdmcp"
+
 def linkerLibs = []
 
-def libs = libs78
+def libs = libs78 + otherLibs
 libs.split(' ').each {
     linkerLibs << "-l$it"
 }
@@ -41,6 +44,11 @@ tasks.withType(CppCompile).configureEach {
 }
 
 tasks.withType(LinkSharedLibrary).configureEach {
+    // Define toolchain-specific compiler and linker options
+    linkerArgs = ["-Xlinker", "-S", "-Bdirect", "-L/usr/local/lib/"] + linkerLibs
+}
+
+tasks.withType(LinkExecutable).configureEach {
     // Define toolchain-specific compiler and linker options
     linkerArgs = ["-Xlinker", "-S", "-Bdirect", "-L/usr/local/lib/"] + linkerLibs
 }
