@@ -729,7 +729,7 @@ extern "C" Standard_Integer geom2dapi_intercurvecurve_nbpoints(const Geom2dAPI_I
     return inter_curve_curve.NbPoints();
 }
 
-extern "C" Handle(Geom2d_TrimmedCurve)* gce2d_makearcofcircle(gp_Circ2d circ2d, gp_Pnt2d p1, gp_Pnt2d p2) {
+extern "C" Handle(Geom2d_TrimmedCurve)* gce2d_makearcofcircle(gp_Circ2d& circ2d, gp_Pnt2d& p1, gp_Pnt2d& p2) {
     return new Handle(Geom2d_TrimmedCurve)(GCE2d_MakeArcOfCircle(circ2d, p1, p2));
 }
 

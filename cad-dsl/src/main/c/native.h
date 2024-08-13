@@ -201,3 +201,17 @@ void top_tools_list_of_shape_delete(TopTools_ListOfShape* ptr);
 
 void brep_builderapi_wire_add_makeedge(BRepBuilderAPI_MakeWire* mw, BRepBuilderAPI_MakeEdge* edge);
 TopoDS_Face *brep_builderapi_make_face_from_makewire(BRepBuilderAPI_MakeWire *wire);
+
+#define gp_Circ2d void
+#define Geom2d_Circle void
+#define Geom2dAPI_InterCurveCurve void
+
+gp_Circ2d* gp_circ2d_new(gp_Ax2d *ax2d, Standard_Real theRadius);
+Handle(Geom2d_Circle)* gce2d_makecircle(gp_Circ2d *ptr);
+Geom2dAPI_InterCurveCurve* geom2dapi_intercurvecurve_new(const Handle(Geom2d_Curve)* C1, const Handle(Geom2d_Curve)* C2);
+Standard_Integer geom2dapi_intercurvecurve_nbpoints(const Geom2dAPI_InterCurveCurve *inter_curve_curve);
+Handle(Geom2d_TrimmedCurve)* gce2d_makearcofcircle(gp_Circ2d* circ2d, gp_Pnt2d* p1, gp_Pnt2d* p2);
+void geom2d_trimmedcurve_mirror(Geom2d_TrimmedCurve* curve, gp_Ax2d* ax2d);
+void geom2d_trimmedcurve_reverse(Geom2d_TrimmedCurve* curve);
+gp_Pnt2d* geom2d_trimmedcurve_endpoint(Geom2d_TrimmedCurve* curve);
+gp_Pnt2d* geom2d_trimmedcurve_startpoint(Geom2d_TrimmedCurve* curve);
