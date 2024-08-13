@@ -7,53 +7,57 @@
 #include <AIS_InteractiveContext.hxx>
 #include <AIS_Shape.hxx>
 #include <Aspect_DisplayConnection.hxx>
+#include <Aspect_NeutralWindow.hxx>
+#include <BRepAlgoAPI_Cut.hxx>
 #include <BRepAlgoAPI_Fuse.hxx>
 #include <BRepBuilderAPI_MakeEdge.hxx>
 #include <BRepBuilderAPI_MakeFace.hxx>
 #include <BRepBuilderAPI_MakeWire.hxx>
 #include <BRepBuilderAPI_Transform.hxx>
+#include <BRepCheck_Analyzer.hxx>
+#include <BRepFeat_MakeCylindricalHole.hxx>
 #include <BRepFilletAPI_MakeFillet.hxx>
+#include <BRepGProp.hxx>
 #include <BRepLib.hxx>
 #include <BRepOffsetAPI_MakeThickSolid.hxx>
 #include <BRepOffsetAPI_ThruSections.hxx>
+#include <BRepPrimAPI_MakeBox.hxx>
 #include <BRepPrimAPI_MakeCylinder.hxx>
 #include <BRepPrimAPI_MakePrism.hxx>
+#include <BRepPrimAPI_MakeRevol.hxx>
+#include <BRepPrimAPI_MakeSphere.hxx>
+#include <BRepPrimAPI_MakeTorus.hxx>
+#include <BRepTools.hxx>
+#include <GCE2d_MakeArcOfCircle.hxx>
+#include <GCE2d_MakeCircle.hxx>
 #include <GCE2d_MakeSegment.hxx>
 #include <GC_MakeArcOfCircle.hxx>
 #include <GC_MakeSegment.hxx>
+#include <GProp_GProps.hxx>
+#include <Geom2dAPI_InterCurveCurve.hxx>
+#include <Geom2d_Circle.hxx>
 #include <Geom2d_Ellipse.hxx>
 #include <Geom2d_TrimmedCurve.hxx>
+#include <GeomLProp_SLProps.hxx>
 #include <Geom_CylindricalSurface.hxx>
 #include <Geom_Plane.hxx>
 #include <Geom_TrimmedCurve.hxx>
-#include <Standard_Handle.hxx>
-#include <gp_Pnt.hxx>
+#include <Image_AlienPixMap.hxx>
 #include <OpenGl_GraphicDriver.hxx>
+#include <STEPCAFControl_Writer.hxx>
+#include <Standard_Handle.hxx>
+#include <StlAPI_Writer.hxx>
+#include <TDocStd_Document.hxx>
 #include <TopExp_Explorer.hxx>
 #include <TopoDS.hxx>
 #include <TopoDS_Edge.hxx>
-#include <V3d_Viewer.hxx>
-#include <Aspect_NeutralWindow.hxx>
-#include <BRepPrimAPI_MakeBox.hxx>
-#include <Image_AlienPixMap.hxx>
 #include <V3d_View.hxx>
-#include <Xw_Window.hxx>
-#include <BRepFeat_MakeCylindricalHole.hxx>
-#include <BRepTools.hxx>
-#include <GeomLProp_SLProps.hxx>
-#include <GProp_GProps.hxx>
-#include <BRepGProp.hxx>
-#include <BRepPrimAPI_MakeSphere.hxx>
-#include <BRepAlgoAPI_Cut.hxx>
-#include <BRepPrimAPI_MakeTorus.hxx>
-#include <BRepCheck_Analyzer.hxx>
-#include <TDocStd_Document.hxx>
+#include <V3d_Viewer.hxx>
 #include <XCAFApp_Application.hxx>
-#include <XCAFDoc_ShapeTool.hxx>
 #include <XCAFDoc_DocumentTool.hxx>
-#include <STEPCAFControl_Writer.hxx>
-#include <StlAPI_Writer.hxx>
-#include <BRepPrimAPI_MakeRevol.hxx>
+#include <XCAFDoc_ShapeTool.hxx>
+#include <Xw_Window.hxx>
+#include <gp_Pnt.hxx>
 
 OcctExternSym::OcctExternSym() {
 }
@@ -706,4 +710,41 @@ extern "C" TopoDS_Shape* brep_primapi_makerevol(TopoDS_Face& face, gp_Ax1& ax1) 
 
 extern "C" void deleteVoid(void *ptr) {
     delete ptr;
+}
+
+
+extern "C" gp_Circ2d* gp_circ2d_new(gp_Ax2d &ax2d, Standard_Real theRadius) {
+    return new gp_Circ2d(ax2d, theRadius);
+}
+
+extern "C" Handle(Geom2d_Circle)* gce2d_makecircle(gp_Circ2d &ptr) {
+    return new Handle(Geom2d_Circle)(GCE2d_MakeCircle(ptr));
+}
+
+extern "C" Geom2dAPI_InterCurveCurve* geom2dapi_intercurvecurve_new(const Handle(Geom2d_Curve)& C1, const Handle(Geom2d_Curve)& C2) {
+    return new Geom2dAPI_InterCurveCurve(C1, C2);
+}
+
+extern "C" Standard_Integer geom2dapi_intercurvecurve_nbpoints(const Geom2dAPI_InterCurveCurve &inter_curve_curve) {
+    return inter_curve_curve.NbPoints();
+}
+
+extern "C" Handle(Geom2d_TrimmedCurve)* gce2d_makearcofcircle(gp_Circ2d circ2d, gp_Pnt2d p1, gp_Pnt2d p2) {
+    return new Handle(Geom2d_TrimmedCurve)(GCE2d_MakeArcOfCircle(circ2d, p1, p2));
+}
+
+extern "C" void geom2d_trimmedcurve_mirror(Geom2d_TrimmedCurve& curve, gp_Ax2d& ax2d) {
+    curve.Mirror(ax2d);
+}
+
+extern "C" void geom2d_trimmedcurve_reverse(Geom2d_TrimmedCurve& curve) {
+    curve.Reverse();
+}
+
+extern "C" gp_Pnt2d* geom2d_trimmedcurve_endpoint(Geom2d_TrimmedCurve& curve) {
+    return new gp_Pnt2d(curve.EndPoint());
+}
+
+extern "C" gp_Pnt2d* geom2d_trimmedcurve_startpoint(Geom2d_TrimmedCurve& curve) {
+    return new gp_Pnt2d(curve.StartPoint());
 }
