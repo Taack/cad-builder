@@ -34,7 +34,7 @@ model {
             if (toolChain in Gcc) {
                 println "Linking with Gcc"
                 cppCompiler.args "-g", "-fno-access-control"
-                linker.args "-Xlinker", "-S", "-B", "direct", "-L", nativeLibPath2, "-L", OCCT78, "-l", "cad-dsl-native", "-l", "GL", "-l", "GLU", "-l", "GLX", "-l", "GLEW", "-l", "glfw"
+                linker.args "-Xlinker", "-S", "-B", "direct", "-L", nativeLibPath2, "-L", OCCT78, "-l", "cad-dsl-native", "-l", "GL", "-l", "GLU", "-l", "GLX", "-l", "GLEW"
             }
             if (toolChain in VisualCpp) {
                 cppCompiler.args "/Zi"
