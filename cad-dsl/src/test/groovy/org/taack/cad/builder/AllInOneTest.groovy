@@ -17,9 +17,12 @@ class AllInOneTest {
         BigDecimal angle = Math.atan(radianSphere)
         BigDecimal featureDiameter = 0.5
 
-        cb().sphere(radius, new Vec(1.0), -angle, angle).topZ().center {
+        def c = cb().sphere(radius, new Vec(1.0), -angle, angle).topZ().center {
             hole featureDiameter
         }
+
+        c.display()
+        c
     }
 
     final static BigDecimal cylinderRadius = 1.2

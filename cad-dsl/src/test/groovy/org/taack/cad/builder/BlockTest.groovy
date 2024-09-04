@@ -10,7 +10,7 @@ class BlockTest {
     BigDecimal length = 80.0
     BigDecimal height = 60.0
     BigDecimal thickness = 10.0
-    BigDecimal centerHoleDia = 22.0
+    BigDecimal centerHoleDia = 4.0
     BigDecimal cboreHoleDiameter = 2.4
     BigDecimal cboreInset = 12.0
     BigDecimal cboreDiameter = 4.4
@@ -31,9 +31,9 @@ class BlockTest {
     @Test
     void "Pillow Block With Counterbored Holes"() {
         cb().box(length, height, thickness).topZ().rect(length - cboreInset, height - cboreInset) {
-            hole(4.4)
+            hole(cboreHoleDiameter)
         }.center {
-            hole(1.0, 1.0)
+            hole(centerHoleDia)
         }.display()
     }
 }
