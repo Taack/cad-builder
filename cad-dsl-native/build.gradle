@@ -13,7 +13,7 @@ def libs77 = "TKBO TKBRep TKBin TKBinL TKBinTObj TKBinXCAF TKBool TKCAF TKCDF TK
  TKSTL TKService TKShHealing TKStd TKStdL TKTObj TKTObjDRAW TKTopAlgo\
  TKTopTest TKV3d TKVCAF TKVRML TKViewerTest TKXCAF TKXDE TKXDECascade\
  TKXDEDRAW TKXDEIGES TKXDESTEP TKXMesh TKXSBase TKXSDRAW TKXml\
- TKXmlL TKXmlTObj TKXmlXCAF TKernel "
+ TKXmlL TKXmlTObj TKXmlXCAF TKernel"
 
 def libs78 = "TKBinL TKBin TKBinTObj TKBinXCAF TKBool TKBO TKBRep TKCAF TKCDF TKDCAF TKDECascade\
  TKDEGLTF TKDEIGES TKDEOBJ TKDEPLY TKDE TKDESTEP TKDESTL TKDEVRML TKDraw TKernel TKExpress TKFeat\
@@ -26,7 +26,7 @@ def otherLibs = " GL GLU GLX GLEW X11 xcb Xau Xdmcp"
 
 def linkerLibs = []
 
-def libs = libs78 + otherLibs
+def libs = libs77 + otherLibs
 libs.split(' ').each {
     linkerLibs << "-l$it"
 }
@@ -40,7 +40,7 @@ library {
 
 tasks.withType(CppCompile).configureEach {
     optimized = false
-    includes.from new File("/usr/local/include/opencascade/").path
+    includes.from new File("/usr/include/opencascade/").path
 }
 
 tasks.withType(LinkSharedLibrary).configureEach {
