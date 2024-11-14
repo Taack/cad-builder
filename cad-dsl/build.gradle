@@ -8,7 +8,7 @@ plugins {
 group = 'org.taack'
 version = '1.0-SNAPSHOT'
 
-String OCCT78 = file("/usr/local/lib").absolutePath
+String OCCT78 = file("/usr/lib").absolutePath
 String nativeLibPath = file("${project.parent.projectDir}/cad-dsl/build/libs/nativeLib/shared").absolutePath
 String nativeLibPath2 = file("${project.parent.projectDir}/cad-dsl-native/build/lib/main/release").absolutePath
 
@@ -34,7 +34,7 @@ model {
             if (toolChain in Gcc) {
                 println "Linking with Gcc"
                 cppCompiler.args "-g", "-fno-access-control"
-                linker.args "-Xlinker", "-S", "-B", "direct", "-L", nativeLibPath2, "-L", OCCT78, "-l", "cad-dsl-native", "-l", "GL", "-l", "GLU", "-l", "GLX", "-l", "GLEW"
+                linker.args "-Xlinker", "-S", "-B", "direct", "-L", nativeLibPath, "-L", nativeLibPath2, "-L", OCCT78, "-l", "cad-dsl-native", "-l", "GL", "-l", "GLU", "-l", "GLX", "-l", "GLEW"
             }
             if (toolChain in VisualCpp) {
                 cppCompiler.args "/Zi"
@@ -59,7 +59,7 @@ java {
 
 application {
     mainClass = 'org.taack.Main'
-    applicationDefaultJvmArgs = ["-Djava.library.path=" + OCCT78 + ":" + nativeLibPath2 + ":" + nativeLibPath2, "--enable-preview", "--enable-native-access=ALL-UNNAMED"]
+    applicationDefaultJvmArgs = ["-Djava.library.path=" + OCCT78 + ":" + nativeLibPath + ":" + nativeLibPath2, "--enable-preview", "--enable-native-access=ALL-UNNAMED"]
 }
 
 jextract {
