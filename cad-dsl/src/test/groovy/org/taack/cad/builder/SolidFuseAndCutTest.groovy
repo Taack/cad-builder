@@ -9,7 +9,7 @@ import static org.taack.cad.dsl.CadBuilder.cb
 import groovy.transform.CompileStatic
 
 @CompileStatic
-class AllInOneTest {
+class SolidFuseAndCutTest {
     static final Double radianSphere = 0.5
     static final BigDecimal radius = 4.0
 
