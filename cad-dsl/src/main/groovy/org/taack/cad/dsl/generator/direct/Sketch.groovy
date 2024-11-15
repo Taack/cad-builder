@@ -1,4 +1,6 @@
-package org.taack.cad.dsl
+package org.taack.cad.dsl.generator.direct
+
+import org.taack.cad.dsl.Vec2d
 
 class Sketch {
 

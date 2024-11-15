@@ -2,7 +2,7 @@ package org.taack
 
 import groovy.transform.CompileStatic
 import org.nativelib.NativeLib as nl
-import org.taack.cad.dsl.ShapeEnum
+import org.taack.cad.dsl.generator.direct.ShapeEnum
 
 import java.lang.foreign.Arena
 import java.lang.foreign.MemorySegment

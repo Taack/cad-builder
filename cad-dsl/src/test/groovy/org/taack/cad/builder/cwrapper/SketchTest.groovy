@@ -1,11 +1,11 @@
-package org.taack.cad.builder
+package org.taack.cad.builder.cwrapper
 
 import groovy.transform.CompileStatic
 import org.junit.jupiter.api.Test
 import org.taack.cad.dsl.Vec
 import org.taack.cad.dsl.Vec2d
 
-import static org.taack.cad.dsl.CadBuilder.cb
+import static org.taack.cad.dsl.generator.direct.CadBuilder.cb
 
 @CompileStatic
 class SketchTest {

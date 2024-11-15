@@ -1,12 +1,7 @@
-package org.taack.cad.builder
+package org.taack.cad.builder.cwrapper
 
 import org.junit.jupiter.api.Test
-import org.taack.cad.dsl.CadBuilder
-import org.taack.cad.dsl.Vec
-import org.taack.cad.dsl.Vec2d
-
-import static org.taack.cad.dsl.CadBuilder.cb
-
+import org.taack.cad.dsl.generator.direct.CadBuilder
 import groovy.transform.CompileStatic
 
 @CompileStatic

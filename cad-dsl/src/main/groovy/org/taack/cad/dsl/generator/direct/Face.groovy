@@ -1,7 +1,11 @@
-package org.taack.cad.dsl
+package org.taack.cad.dsl.generator.direct
 
 import groovy.transform.CompileStatic
 import org.nativelib.NativeLib as nl
+import org.taack.cad.dsl.Axe
+import org.taack.cad.dsl.Qty
+import org.taack.cad.dsl.Selector
+import org.taack.cad.dsl.Vec
 
 @CompileStatic
 class Face extends Edge implements Selector {

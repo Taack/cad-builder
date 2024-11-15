@@ -1,6 +1,9 @@
-package org.taack.cad.dsl
+package org.taack.cad.dsl.generator.direct
 
 import org.nativelib.NativeLib as nl
+import org.taack.cad.dsl.Selector
+import org.taack.cad.dsl.Vec
+import org.taack.cad.dsl.Vec2d
 
 import java.lang.foreign.MemorySegment
 

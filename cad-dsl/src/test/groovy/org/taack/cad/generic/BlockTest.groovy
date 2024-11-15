@@ -1,8 +1,9 @@
-package org.taack.cad.builder
+package org.taack.cad.generic
 
 import groovy.transform.CompileStatic
 import org.junit.jupiter.api.Test
-import static org.taack.cad.dsl.CadBuilder.cb
+
+import static org.taack.cad.dsl.generator.direct.CadBuilder.cb
 
 @CompileStatic
 class BlockTest {
