@@ -54,8 +54,8 @@ class SprocketTest {
 
     CadBuilder buildTooth() {
         // Create a 2D arc to form the base of the tooth
-        cb().sketch {
-        }
+//        cb().extrude(Vec()sketch {
+//        }
         // Determine the center of the profile circle
 
         // Construct the profile circle

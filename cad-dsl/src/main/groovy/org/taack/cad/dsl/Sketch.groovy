@@ -43,7 +43,4 @@ class Sketch {
         this
     }
 
-    Sketch extrude(Vec vect) {
-        this
-    }
 }

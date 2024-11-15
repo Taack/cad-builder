@@ -17,11 +17,10 @@ class SketchTest {
         BigDecimal rectWidth = 13.0
         BigDecimal rectLength = 19.0
 
-        cb().sketch {
+        cb().extrude(new Vec(thickness), cb().sketch {
             circle circleRadius
             rect rectWidth, rectLength
-            extrude new Vec(thickness)
-        }.display()
+        }).display()
     }
 
     @Test
@@ -29,15 +28,14 @@ class SketchTest {
         BigDecimal width = 2.0  // Overall width of the plate
         BigDecimal thickness = 0.25  // Thickness of the plate
 
-        cb().sketch {
+        cb().extrude(new Vec(thickness), cb().sketch {
             origin()
                     .lineTo(width, 1.0)
                     .threePointArc(new Vec2d(1.0, 1.5), new Vec2d(0.0, 1.0))
                     .sagittaArc(new Vec2d(-0.5, 1.0), 0.2)
                     .radiusArc(new Vec2d(-0.7, -0.2), -1.5)
                     .close()
-            extrude new Vec(thickness)
-        }.display()
+        }).display()
     }
 
 }
