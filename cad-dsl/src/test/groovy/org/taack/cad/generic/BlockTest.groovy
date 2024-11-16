@@ -4,6 +4,8 @@ import groovy.transform.CompileStatic
 import org.junit.jupiter.api.Test
 
 import static org.taack.cad.dsl.generator.direct.CadBuilder.cb
+import static org.taack.cad.dsl.generator.direct.CadBuilder.cb
+import static org.taack.cad.dsl.generator.tcltk.CadBuilder.cb
 
 @CompileStatic
 class BlockTest {
@@ -37,4 +39,5 @@ class BlockTest {
             hole(centerHoleDia)
         }.display()
     }
+
 }

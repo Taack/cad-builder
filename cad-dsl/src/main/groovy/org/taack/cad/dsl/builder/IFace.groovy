@@ -4,7 +4,7 @@ import org.taack.cad.dsl.Vec
 
 interface IFace {
     IFace make(IWire wire)
-    ISolid prism(IPrismOp<Vec> prismOp)
+    ISolid prism(IKinematicModelingOp<Vec> prismOp)
 
     /**
      * Handle(Geom_Surface) aSurface = BRep_Tool::Surface(aFace);

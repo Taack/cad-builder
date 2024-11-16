@@ -12,9 +12,9 @@ interface IProfile {
 
     IProfile origin(Vec2d sketchPos)
 
-    IProfile lineTo(BigDecimal sx, BigDecimal sy)
+    IProfile lineTo(Vec2d to)
 
-    IProfile threePointArc(Vec2d sx, Vec2d sy)
+    IProfile threePointArc(Vec2d p2, Vec2d p3)
 
     IProfile radiusArc(Vec2d sx, BigDecimal radius)
 
@@ -25,5 +25,7 @@ interface IProfile {
     IProfile circle(BigDecimal radius)
 
     IProfile pos(Vec2d pos)
+
+    IWire toWire()
 
 }
