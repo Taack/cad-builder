@@ -1,6 +1,10 @@
 package org.taack.cad.dsl.builder
 
 interface IKinematicModelingOp<IVec> {
-    IKinematicModelingOp<IVec> makePrism(IVec vec)
-    IKinematicModelingOp<IVec> makeRevolution(IVec vec)
+    ICad pad(IVec vec)
+    ICad pad(BigDecimal length)
+    ICad revolution(IVec vec)
+    ICad pocket(BigDecimal length)
+    ICad hole()
+
 }

@@ -7,6 +7,9 @@ import org.taack.cad.dsl.Vec2d
  *  GC_MakeArcOfCircle
  *  GC_MakeSegment
  *  ...
+ *
+ *  Default centered
+ *  Check if face is plane
  */
 interface IProfile {
 
@@ -22,6 +25,9 @@ interface IProfile {
 
     IProfile rect(BigDecimal sx, BigDecimal sy)
 
+    IProfile vertex()
+    IProfile center()
+    IProfile union(IProfile... profiles)
     IProfile circle(BigDecimal radius)
 
     IProfile pos(Vec2d pos)

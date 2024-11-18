@@ -2,13 +2,12 @@ package org.taack.cad.generic
 
 import groovy.transform.CompileStatic
 import org.junit.jupiter.api.Test
-
-import static org.taack.cad.dsl.generator.direct.CadBuilder.cb
-import static org.taack.cad.dsl.generator.direct.CadBuilder.cb
-import static org.taack.cad.dsl.generator.tcltk.CadBuilder.cb
+import org.taack.cad.dsl.builder.ICad
 
 @CompileStatic
 class BlockTest {
+
+    ICad cad
 
     BigDecimal length = 80.0
     BigDecimal height = 60.0
@@ -21,23 +20,26 @@ class BlockTest {
 
     @Test
     void "Basic Box on XY"() {
-        cb().box(length, height, thickness).display()
+        cad.box(length, height, thickness).display()
     }
 
     @Test
     void "Block With Bored Center Hole"() {
-        cb().box(length, height, thickness).topZ().center {
-            hole(centerHoleDia)
-        }.display()
+        cad.box(length, height, thickness).topZ().toPlane().profile {
+            circle(centerHoleDia)
+        }.hole().display()
     }
+
 
     @Test
     void "Pillow Block With Counterbored Holes"() {
-        cb().box(length, height, thickness).topZ().rect(length - cboreInset, height - cboreInset) {
-            hole(cboreHoleDiameter)
-        }.center {
-            hole(centerHoleDia)
-        }.display()
+        cad.box(length, height, thickness).topZ().profile {
+            final borders = rect(length - cboreInset, height - cboreInset).circle(cboreHoleDiameter)
+            final center = circle(centerHoleDia)
+            union borders, center
+        }.hole().profile {
+            rect(length - cboreInset, height - cboreInset).circle(cboreDiameter)
+        }.pocket(cboreDepth).display()
     }
 
 }

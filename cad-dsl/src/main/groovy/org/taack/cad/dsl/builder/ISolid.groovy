@@ -8,5 +8,5 @@ interface ISolid {
 
     IFace[] getFaces()
 
-    IFace topZ()
+    ICad topZ()
 }

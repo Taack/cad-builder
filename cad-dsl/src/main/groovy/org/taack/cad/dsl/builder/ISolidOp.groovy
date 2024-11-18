@@ -1,6 +1,6 @@
 package org.taack.cad.dsl.builder
 
-interface ISolidOp {
+interface ISolidOp extends ITransform<Vec> {
     ISolid fuse(ISolid... solid)
 
     ISolid cut(ISolid... solid)

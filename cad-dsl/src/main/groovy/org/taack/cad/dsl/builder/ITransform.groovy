@@ -5,7 +5,7 @@ package org.taack.cad.dsl.builder
  * @param <IVec>
  */
 interface ITransform<IVec> {
-    ITransform<IVec> move(IVec p)
-    ITransform<IVec> rotate(IVec p)
-    ITransform<IVec> mirror(IVec axis)
+    ICad move(IVec p)
+    ICad rotate(IVec p)
+    ICad mirror(IVec axis)
 }

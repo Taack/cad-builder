@@ -6,6 +6,7 @@ interface IFace {
     IFace make(IWire wire)
     ISolid prism(IKinematicModelingOp<Vec> prismOp)
 
+
     /**
      * Handle(Geom_Surface) aSurface = BRep_Tool::Surface(aFace);
      *
@@ -18,4 +19,5 @@ interface IFace {
      * @return Handle(Geom_Plane) aPlane = Handle(Geom_Plane)::DownCast(aSurface);
      */
     IPlane toPlane()
+
 }
