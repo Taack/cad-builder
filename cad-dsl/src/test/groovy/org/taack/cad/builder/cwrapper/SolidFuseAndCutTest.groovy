@@ -1,10 +1,10 @@
 package org.taack.cad.builder.cwrapper
 
 import org.junit.jupiter.api.Test
-import org.taack.cad.dsl.generator.direct.CadBuilder
+import org.taack.cad.dsl.dump.direct.CadBuilder
 import org.taack.cad.dsl.Vec
 
-import static org.taack.cad.dsl.generator.direct.CadBuilder.cb
+import static org.taack.cad.dsl.dump.direct.CadBuilder.cb
 
 import groovy.transform.CompileStatic
 

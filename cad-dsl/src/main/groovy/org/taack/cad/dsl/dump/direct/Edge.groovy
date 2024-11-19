@@ -1,4 +1,4 @@
-package org.taack.cad.dsl.generator.direct
+package org.taack.cad.dsl.dump.direct
 
 import org.nativelib.NativeLib as nl
 import org.taack.cad.dsl.Selector

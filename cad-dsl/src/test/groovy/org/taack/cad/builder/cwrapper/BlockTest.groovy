@@ -2,7 +2,7 @@ package org.taack.cad.builder.cwrapper
 
 import groovy.transform.CompileStatic
 import org.junit.jupiter.api.Test
-import static org.taack.cad.dsl.generator.direct.CadBuilder.cb
+import static org.taack.cad.dsl.dump.direct.CadBuilder.cb
 
 @CompileStatic
 class BlockTest {

@@ -1,4 +1,4 @@
-package org.taack.cad.dsl.generator.tcltk
+package org.taack.cad.dsl.dump.tcltk
 
 import groovy.transform.CompileStatic
 import org.taack.cad.dsl.Vec

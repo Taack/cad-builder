@@ -1,7 +1,5 @@
 package org.taack.cad.dsl.builder
 
-import org.taack.cad.dsl.Vec
-
 interface IFace {
     IFace make(IWire wire)
     ISolid prism(IKinematicModelingOp<Vec> prismOp)

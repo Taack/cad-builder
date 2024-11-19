@@ -5,7 +5,7 @@ import org.junit.jupiter.api.Test
 import org.taack.cad.dsl.Vec
 import org.taack.cad.dsl.Vec2d
 
-import static org.taack.cad.dsl.generator.direct.CadBuilder.cb
+import static org.taack.cad.dsl.dump.direct.CadBuilder.cb
 
 @CompileStatic
 class SketchTest {
