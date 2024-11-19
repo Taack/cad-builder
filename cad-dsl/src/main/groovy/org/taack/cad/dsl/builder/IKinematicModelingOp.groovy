@@ -1,9 +1,9 @@
 package org.taack.cad.dsl.builder
 
-interface IKinematicModelingOp<IVec> {
-    ICad pad(IVec vec)
+interface IKinematicModelingOp {
+    ICad pad(Vec vec)
     ICad pad(BigDecimal length)
-    ICad revolution(IVec vec)
+    ICad revolution(Vec vec)
     ICad pocket(BigDecimal length)
     ICad hole()
 

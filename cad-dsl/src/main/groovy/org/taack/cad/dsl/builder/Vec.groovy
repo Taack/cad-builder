@@ -3,7 +3,7 @@ package org.taack.cad.dsl.builder
 import groovy.transform.CompileStatic
 
 @CompileStatic
-final class Vec extends Vec2d implements IVec<Vec> {
+final class Vec extends Vec2d {
 
     static final Vec vZ = new Vec(1.0)
 
@@ -31,22 +31,18 @@ final class Vec extends Vec2d implements IVec<Vec> {
     }
 
 
-    @Override
     Vec div(Vec other) {
         new Vec(y * other.z - z * other.y, z * other.x - x * other.z, x * other.y - y * other.x)
     }
 
-    @Override
     Vec plus(Vec other) {
         new Vec(x + other.x, y + other.y, z + other.z)
     }
 
-    @Override
     Vec minus(Vec other) {
         new Vec(x - other.x, y - other.y, z - other.z)
     }
 
-    @Override
     Vec multiply(Vec other) {
         new Vec(x * other.x, y * other.y, z * other.z)
     }
