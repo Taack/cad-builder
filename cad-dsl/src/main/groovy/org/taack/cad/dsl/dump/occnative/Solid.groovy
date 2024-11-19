@@ -2,17 +2,42 @@ package org.taack.cad.dsl.dump.occnative
 
 import groovy.transform.CompileStatic
 import org.nativelib.NativeLib
+import org.taack.cad.dsl.builder.Axe
 import org.taack.cad.dsl.builder.ICad
 import org.taack.cad.dsl.builder.IEdge
 import org.taack.cad.dsl.builder.IFace
 import org.taack.cad.dsl.builder.ISolid
 import org.taack.cad.dsl.builder.ISolidOp
 import org.taack.cad.dsl.builder.ISolidPrimitive
+import org.taack.cad.dsl.builder.Qty
 import org.taack.cad.dsl.builder.Vec
+import org.taack.cad.dsl.dump.direct.ShapeEnum
 
 @CompileStatic
 class Solid extends Plan implements ISolid, ISolidPrimitive, ISolidOp {
     private NVec loc = new NVec(new Vec(0.0, 0.0, 0.0))
+
+    double positionMax = -1
+
+    private ICad face(Axe axe, Qty qty) {
+        for (def aFaceExplorer = NativeLib.top_exp_explorer(currentShapeNative, ShapeEnum.TopAbs_FACE.ordinal(), ShapeEnum.TopAbs_SHAPE.ordinal());
+             NativeLib.top_exp_explorer_more(aFaceExplorer);
+             NativeLib.top_exp_explorer_next(aFaceExplorer)) {
+            def aFace = NativeLib.top_exp_explorer_current_face(aFaceExplorer)
+            def aSurface = NativeLib.brep_tool_surface(aFace)
+            if (NativeLib.geom_surface_is_geom_plane(aSurface) == 1) {
+                def aPlan = NativeLib.downcast_geom_plane(aSurface)
+                def aPnt = NativeLib.geom_plane_location(aPlan)
+                currentLoc = NVec.fromAPnt(aPnt)
+                double aZ = new NVec(currentLoc).cord(axe)
+                if (aZ > positionMax) {
+                    positionMax = aZ
+                    currentFaceNative = aFace
+                }
+            }
+        }
+        instance
+    }
 
     @Override
     IEdge[] getEdges() {
@@ -26,7 +51,7 @@ class Solid extends Plan implements ISolid, ISolidPrimitive, ISolidOp {
 
     @Override
     ICad topZ() {
-        return null
+        face(Axe.Z, Qty.max)
     }
 
     @Override

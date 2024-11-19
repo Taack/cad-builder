@@ -27,11 +27,9 @@ class Face extends Edge implements Selector {
                 def aPnt = nl.geom_plane_location(aPlan)
                 currentLoc = Vec.fromAPnt(aPnt)
                 double aZ = currentLoc.cord(axe)
-                println "COUCOU $aZ $positionMax"
                 if (aZ > positionMax) {
                     positionMax = aZ
                     currentFaceNative = aFace
-                    println "KIKI $currentFaceNative"
                 }
             }
         }

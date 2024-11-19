@@ -3,11 +3,12 @@ package org.taack.cad.generic
 import groovy.transform.CompileStatic
 import org.junit.jupiter.api.Test
 import org.taack.cad.dsl.builder.ICad
+import org.taack.cad.dsl.dump.occnative.CadNative
 
 @CompileStatic
 class BlockTest {
 
-    ICad cad
+    CadNative cad = new CadNative()
 
     BigDecimal length = 80.0
     BigDecimal height = 60.0

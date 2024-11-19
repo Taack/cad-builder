@@ -2,9 +2,12 @@ package org.taack.cad.dsl.builder
 
 import groovy.transform.CompileStatic
 
+
 @CompileStatic
 final class Vec extends Vec2d {
 
+    static final Vec vX = new Vec(1.0, 0.0, 0.0)
+    static final Vec vY = new Vec(0.0, 1.0, 0.0)
     static final Vec vZ = new Vec(1.0)
 
     BigDecimal z

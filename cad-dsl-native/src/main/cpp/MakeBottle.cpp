@@ -32,6 +32,7 @@
 #include <OpenGl_GraphicDriver.hxx>
 #include <BRepPrimAPI_MakeBox.hxx>
 #include <Geom_RectangularTrimmedSurface.hxx>
+#include <BRepTools.hxx>
 
 
 TopoDS_Shape MakeBottle(const Standard_Real myWidth, const Standard_Real myHeight,
@@ -196,3 +197,12 @@ extern "C" TopoDS_Shape* cMakeBottle(const Standard_Real myWidth, const Standard
         std::cout << e << std::endl;
     }
 }
+
+int main() {
+         BRepTools::Write(MakeBottle(3.0, 6.0, 4.2), "bottle.brep");
+}
+
+/*
+g++ -I /usr/include/opencascade/ -lTKBinL -lTKBin -lTKBinTObj -lTKBinXCAF -lTKBool -lTKBO -lTKBRep -lTKCAF -lTKCDF -lTKDCAF -lTKDECascade -lTKDEGLTF -lTKDEIGES -lTKDEOBJ -lTKDEPLY -lTKDE -lTKDESTEP -lTKDESTL -lTKDEVRML -lTKDraw -lTKernel -lTKExpress -lTKFeat -lTKFillet -lTKG2d -lTKG3d -lTKGeomAlgo -lTKGeomBase -lTKHLR -lTKLCAF -lTKMath -lTKMesh -lTKMeshVS -lTKOffset -lTKOpenGl -lTKOpenGlTest -lTKPrim -lTKQADraw -lTKRWMesh -lTKService -lTKShHealing -lTKStdL -lTKStd -lTKTObjDRAW -lTKTObj -lTKTopAlgo -lTKTopTest -lTKV3d -lTKVCAF -lTKViewerTest -lTKXCAF -lTKXDEDRAW -lTKXMesh -lTKXmlL -lTKXml -lTKXmlTObj -lTKXmlXCAF -lTKXSBase -lTKXSDRAWDE -lTKXSDRAWGLTF -lTKXSDRAWIGES -lTKXSDRAWOBJ -lTKXSDRAWPLY -lTKXSDRAW -lTKXSDRAWSTEP -lTKXSDRAWSTL -lTKXSDRAWVRML -lGL -lGLU -lGLX -lGLEW -lX11 -lxcb -lXau -lXdmcp MakeBottle.cpp
+
+*/

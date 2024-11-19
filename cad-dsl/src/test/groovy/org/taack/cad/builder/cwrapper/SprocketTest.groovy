@@ -3,7 +3,7 @@ package org.taack.cad.builder.cwrapper
 import org.junit.jupiter.api.Test
 import org.taack.cad.dsl.dump.direct.CadBuilder
 import groovy.transform.CompileStatic
-
+//https://algotopia.com/contents/opencascade/opencascade_sprocket
 @CompileStatic
 class SprocketTest {
 

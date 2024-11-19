@@ -10,7 +10,7 @@ import org.taack.cad.dsl.builder.Vec
 class Plan extends Profile implements IPlane {
     @Override
     IPlane profile(@DelegatesTo(value = IProfile, strategy = Closure.DELEGATE_FIRST) Object operations) {
-        return null
+        return this
     }
 
     @Override

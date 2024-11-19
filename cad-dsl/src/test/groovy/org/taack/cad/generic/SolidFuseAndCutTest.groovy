@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test
 import org.taack.cad.dsl.builder.ICad
 import org.taack.cad.dsl.builder.ISolid
 import org.taack.cad.dsl.builder.Vec
+import org.taack.cad.dsl.dump.occnative.CadNative
 
 import static java.lang.Math.cos
 import static java.lang.Math.sin
@@ -12,7 +13,7 @@ import static java.lang.Math.sin
 @CompileStatic
 class SolidFuseAndCutTest {
 
-    ICad cad
+    ICad cad = new CadNative()
 
     static final Double radianSphere = 0.5
     static final BigDecimal radius = 4.0
@@ -35,11 +36,11 @@ class SolidFuseAndCutTest {
 
     ICad cylindersCut(ICad other) {
 
-        ICad[] cylinders = []
+        ICad[] cylinders = new CadNative[8] as ICad[]
 
         for (i in 0..7) {
             double angle = i * Math.PI / 4.0
-            cylinders << cad.cylinder(cylinderRadius, height).move(Vec.vZ * (-height / 2.0)).move(new Vec(cos(angle) * cloneRadius, sin(angle) * cloneRadius, 0.0d))
+            cylinders[i] = cad.cylinder(cylinderRadius, height).move(Vec.vZ * (-height / 2.0)).move(new Vec(cos(angle) * cloneRadius, sin(angle) * cloneRadius, 0.0d))
         }
         other.cut(cylinders)
         return other

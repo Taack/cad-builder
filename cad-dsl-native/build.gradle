@@ -31,6 +31,8 @@ libs.split(' ').each {
     linkerLibs << "-l$it"
 }
 
+println "linkerLibs: ${linkerLibs.join(' ')}"
+
 library {
     linkage = [Linkage.SHARED]
     targetMachines = [

@@ -2,14 +2,10 @@ package org.taack.cad.dsl.dump.occnative
 
 import groovy.transform.CompileStatic
 import org.nativelib.NativeLib
+import org.taack.cad.dsl.builder.Axe
 import org.taack.cad.dsl.builder.Vec
 
 import java.lang.foreign.MemorySegment
-
-enum Axe {
-    X, Y, Z
-}
-
 
 @CompileStatic
 final class NVec {
