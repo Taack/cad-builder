@@ -54,4 +54,5 @@ final class Vec extends Vec2d implements IVec<Vec> {
     Vec multiply(BigDecimal other) {
         new Vec(x * other, y * other, z * other)
     }
+
 }

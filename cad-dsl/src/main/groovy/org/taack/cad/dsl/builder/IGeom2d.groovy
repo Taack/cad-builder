@@ -1,6 +1,6 @@
 package org.taack.cad.dsl.builder
 
-import org.taack.cad.dsl.Vec
+import org.taack.cad.dsl.dump.direct.Vec
 
 /**
  * Parametric Geometry UV Curve

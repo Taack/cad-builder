@@ -1,8 +1,8 @@
 package org.taack.cad.dsl.dump.tcltk
 
 import groovy.transform.CompileStatic
-import org.taack.cad.dsl.Vec
-import org.taack.cad.dsl.Vec2d
+import org.taack.cad.dsl.dump.direct.Vec
+import org.taack.cad.dsl.dump.direct.Vec2d
 import org.taack.cad.dsl.builder.ICad
 import org.taack.cad.dsl.builder.IEdge
 import org.taack.cad.dsl.builder.IFace

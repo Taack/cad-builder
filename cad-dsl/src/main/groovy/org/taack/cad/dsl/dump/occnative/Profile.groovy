@@ -5,7 +5,7 @@ import org.taack.cad.dsl.builder.IProfile
 import org.taack.cad.dsl.builder.IWire
 import org.taack.cad.dsl.builder.Vec2d
 
-class Profile implements IProfile {
+class Profile implements Selector, IProfile {
     @Override
     IProfile move(BigDecimal x, BigDecimal y) {
         return null

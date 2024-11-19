@@ -1,7 +1,5 @@
 package org.taack.cad.dsl.dump.direct
 
-import org.taack.cad.dsl.Vec2d
-
 class Sketch {
 
     private Vec2d sketchPos = new Vec2d(0.0, 0.0)

@@ -2,7 +2,7 @@ package org.taack.cad.builder.cwrapper
 
 import org.junit.jupiter.api.Test
 import org.taack.cad.dsl.dump.direct.CadBuilder
-import org.taack.cad.dsl.Vec
+import org.taack.cad.dsl.dump.direct.Vec
 
 import static org.taack.cad.dsl.dump.direct.CadBuilder.cb
 

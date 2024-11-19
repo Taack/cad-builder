@@ -2,7 +2,6 @@ package org.taack.cad.dsl.dump.direct
 
 import groovy.transform.CompileStatic
 import org.nativelib.NativeLib as nl
-import org.taack.cad.dsl.Vec
 
 import java.lang.foreign.Arena
 import java.lang.foreign.MemorySegment
