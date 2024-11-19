@@ -1,13 +1,13 @@
 package org.taack.cad.dsl.builder
 
 interface ISolidOp extends ITransform<Vec> {
-    ISolid fuse(ISolid... solid)
+    ICad fuse(ISolid... solid)
 
-    ISolid cut(ISolid... solid)
+    ICad cut(ISolid... solid)
 
-    ISolid fillet(BigDecimal radius)
+    ICad fillet(BigDecimal radius)
 
-    ISolid fillet(IEdge edge, BigDecimal radius)
+    ICad fillet(IEdge edge, BigDecimal radius)
 
-    ISolid makeThickSolidByJoin(BigDecimal thickness, BigDecimal tol, IFace... faceToRemove)
+    ICad makeThickSolidByJoin(BigDecimal thickness, BigDecimal tol, IFace... faceToRemove)
 }

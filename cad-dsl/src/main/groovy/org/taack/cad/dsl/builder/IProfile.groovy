@@ -1,6 +1,5 @@
 package org.taack.cad.dsl.builder
 
-import org.taack.cad.dsl.Vec2d
 
 /**
  * Manipulate Geom_TrimmedCurve to create support Geometry:
@@ -13,8 +12,10 @@ import org.taack.cad.dsl.Vec2d
  */
 interface IProfile {
 
-    IProfile origin(Vec2d sketchPos)
+    IProfile origin(BigDecimal x, BigDecimal y)
+    IProfile origin(Vec2d from)
 
+    IProfile lineTo(BigDecimal toX, BigDecimal toY)
     IProfile lineTo(Vec2d to)
 
     IProfile threePointArc(Vec2d p2, Vec2d p3)

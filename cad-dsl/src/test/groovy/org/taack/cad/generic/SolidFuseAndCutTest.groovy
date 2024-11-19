@@ -2,9 +2,9 @@ package org.taack.cad.generic
 
 import groovy.transform.CompileStatic
 import org.junit.jupiter.api.Test
-import org.taack.cad.dsl.builder.Vec
 import org.taack.cad.dsl.builder.ICad
-
+import org.taack.cad.dsl.builder.ISolid
+import org.taack.cad.dsl.builder.Vec
 
 @CompileStatic
 class SolidFuseAndCutTest {
@@ -32,13 +32,13 @@ class SolidFuseAndCutTest {
 
     ICad cylindersCut(ICad other) {
 
-        ICad[] cyls //TODO init
+        ICad[] cylinders = []
 
         for (i in 0..7) {
             double angle = i * Math.PI / 4.0
-            cyls << cad.cylinder(cylinderRadius, height).move(new Vec(-height / 2.0)).move(new Vec(Math.cos(angle) * cloneRadius, Math.sin(angle) * cloneRadius, 0.0d))
+            cylinders << cad.cylinder(cylinderRadius, height).move(new Vec(-height / 2.0)).move(new Vec(Math.cos(angle) * cloneRadius, Math.sin(angle) * cloneRadius, 0.0d))
         }
-        other.cut(cyls)
+        other.cut(cylinders)
         return other
     }
 
@@ -51,7 +51,7 @@ class SolidFuseAndCutTest {
         return other
     }
 
-    static ICad fuseTorus(ICad other) {
+    ICad fuseTorus(ICad other) {
         BigDecimal ringRadius = 1.0
         BigDecimal torusRadius = 4.0 - ringRadius
         def t = cad.torus(torusRadius, ringRadius)
@@ -59,26 +59,25 @@ class SolidFuseAndCutTest {
         return other
     }
 
-    static ICad revolvedCut(ICad other) {
+    ICad revolvedCut(ICad other) {
         // Create a hexagonal face. Use this face to create a solid by revolving
         // it around an axis. Subtract the generated shape (shown on the right) from
         // the input shape.
-        BigDecimal face_inner_radius = 0.8
+        BigDecimal faceInnerRadius = 0.8
 
-        other.topZ().center {
-            cut(
-                    cad.from(new Vec(face_inner_radius - 0.05, 0.0, -0.05))
-                            .edge(new Vec(face_inner_radius - 0.10, 0.0, -0.025))
-                            .edge(new Vec(face_inner_radius - 0.10, 0.0, 0.025))
-                            .edge(new Vec(face_inner_radius + 0.10, 0.0, 0.025))
-                            .edge(new Vec(face_inner_radius + 0.10, 0.0, -0.025))
-                            .edge(new Vec(face_inner_radius + 0.05, 0.0, -0.05))
-                            .edge(new Vec(face_inner_radius - 0.05, 0.0, -0.05))
-                            .toWire().toFace().from(new Vec(0.0)).revolution()
-            )
-        }
+        ISolid ring = cad.profile {
+            origin faceInnerRadius - 0.05, -0.05
+            lineTo faceInnerRadius - 0.10, -0.025
+            lineTo faceInnerRadius - 0.10, 0.025
+            lineTo faceInnerRadius + 0.10, 0.025
+            lineTo faceInnerRadius + 0.10, -0.025
+            lineTo faceInnerRadius + 0.05, -0.05
+            lineTo faceInnerRadius - 0.05, -0.05
+        }.revolution(new Vec(0.1))
 
-        return other
+        other.topZ().cut(ring)
+
+        return other.topZ().cut(ring)
     }
 
     @Test
