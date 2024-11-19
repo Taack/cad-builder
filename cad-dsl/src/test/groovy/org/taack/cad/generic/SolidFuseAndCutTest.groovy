@@ -6,10 +6,13 @@ import org.taack.cad.dsl.builder.ICad
 import org.taack.cad.dsl.builder.ISolid
 import org.taack.cad.dsl.builder.Vec
 
+import static java.lang.Math.cos
+import static java.lang.Math.sin
+
 @CompileStatic
 class SolidFuseAndCutTest {
 
-    ICad cad //TODO init
+    ICad cad
 
     static final Double radianSphere = 0.5
     static final BigDecimal radius = 4.0
@@ -18,7 +21,7 @@ class SolidFuseAndCutTest {
         BigDecimal angle = Math.atan(radianSphere)
         BigDecimal featureDiameter = 0.5
 
-        def c = cad.sphere(radius, new Vec(1.0d), -angle, angle).topZ().profile {
+        def c = cad.sphere(radius, Vec.vZ, -angle, angle).topZ().profile {
             circle featureDiameter
         }.hole()
 
@@ -36,7 +39,7 @@ class SolidFuseAndCutTest {
 
         for (i in 0..7) {
             double angle = i * Math.PI / 4.0
-            cylinders << cad.cylinder(cylinderRadius, height).move(new Vec(-height / 2.0)).move(new Vec(Math.cos(angle) * cloneRadius, Math.sin(angle) * cloneRadius, 0.0d))
+            cylinders << cad.cylinder(cylinderRadius, height).move(Vec.vZ * (-height / 2.0)).move(new Vec(cos(angle) * cloneRadius, sin(angle) * cloneRadius, 0.0d))
         }
         other.cut(cylinders)
         return other
@@ -46,7 +49,7 @@ class SolidFuseAndCutTest {
 
         for (i in 0..7) {
             double angle = i * Math.PI / 4.0
-            other.cut(cad.cylinder(cylinderRadius, height).move(new Vec(-height / 2.0)).move(new Vec(Math.cos(angle) * cloneRadius, Math.sin(angle) * cloneRadius, 0.0d)))
+            other.cut(cad.cylinder(cylinderRadius, height).move(Vec.vZ *(-height / 2.0)).move(new Vec(cos(angle) * cloneRadius, sin(angle) * cloneRadius, 0.0d)))
         }
         return other
     }
@@ -65,19 +68,18 @@ class SolidFuseAndCutTest {
         // the input shape.
         BigDecimal faceInnerRadius = 0.8
 
-        ISolid ring = cad.profile {
-            origin faceInnerRadius - 0.05, -0.05
+        ISolid hexagonal = cad.profile {
+            move faceInnerRadius - 0.05, -0.05
             lineTo faceInnerRadius - 0.10, -0.025
             lineTo faceInnerRadius - 0.10, 0.025
             lineTo faceInnerRadius + 0.10, 0.025
             lineTo faceInnerRadius + 0.10, -0.025
             lineTo faceInnerRadius + 0.05, -0.05
             lineTo faceInnerRadius - 0.05, -0.05
-        }.revolution(new Vec(0.1))
+            close()
+        }.revolution(Vec.vZ)
 
-        other.topZ().cut(ring)
-
-        return other.topZ().cut(ring)
+        return other.topZ().cut(hexagonal)
     }
 
     @Test

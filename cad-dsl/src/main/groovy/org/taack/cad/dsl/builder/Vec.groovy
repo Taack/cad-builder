@@ -1,6 +1,12 @@
 package org.taack.cad.dsl.builder
 
+import groovy.transform.CompileStatic
+
+@CompileStatic
 final class Vec extends Vec2d implements IVec<Vec> {
+
+    static final Vec vZ = new Vec(1.0)
+
     BigDecimal z
 
     Vec(BigDecimal x, BigDecimal y, BigDecimal z) {
@@ -43,5 +49,9 @@ final class Vec extends Vec2d implements IVec<Vec> {
     @Override
     Vec multiply(Vec other) {
         new Vec(x * other.x, y * other.y, z * other.z)
+    }
+
+    Vec multiply(BigDecimal other) {
+        new Vec(x * other, y * other, z * other)
     }
 }

@@ -7,7 +7,7 @@ interface ISolidOp extends ITransform<Vec> {
 
     ICad fillet(BigDecimal radius)
 
-    ICad fillet(IEdge edge, BigDecimal radius)
+    ICad fillet(BigDecimal radius, IEdge... edge)
 
     ICad makeThickSolidByJoin(BigDecimal thickness, BigDecimal tol, IFace... faceToRemove)
 }

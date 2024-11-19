@@ -25,8 +25,8 @@ class BlockTest {
 
     @Test
     void "Block With Bored Center Hole"() {
-        cad.box(length, height, thickness).topZ().toPlane().profile {
-            circle(centerHoleDia)
+        cad.box(length, height, thickness).topZ().profile {
+            circle centerHoleDia
         }.hole().display()
     }
 
@@ -35,7 +35,7 @@ class BlockTest {
     void "Pillow Block With Counterbored Holes"() {
         cad.box(length, height, thickness).topZ().profile {
             final borders = rect(length - cboreInset, height - cboreInset).circle(cboreHoleDiameter)
-            final center = circle(centerHoleDia)
+            final center = circle centerHoleDia
             union borders, center
         }.hole().profile {
             rect(length - cboreInset, height - cboreInset).circle(cboreDiameter)
