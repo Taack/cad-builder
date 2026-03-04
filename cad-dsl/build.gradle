@@ -2,15 +2,15 @@ plugins {
     id 'c'
     id 'groovy'
     id 'application'
-    id 'io.github.krakowski.jextract' version '0.5.0'
+    id 'de.infolektuell.jextract' version '1.3.0'
 }
 
 group = 'org.taack'
 version = '1.0-SNAPSHOT'
 
-String OCCT78 = file("/usr/lib").absolutePath
-String nativeLibPath = file("${project.parent.projectDir}/cad-dsl/build/libs/nativeLib/shared").absolutePath
-String nativeLibPath2 = file("${project.parent.projectDir}/cad-dsl-native/build/lib/main/release").absolutePath
+def OCCT78 = file("/usr/lib").absolutePath
+def nativeLibPath = file("${project.parent.projectDir}/cad-dsl/build/libs/nativeLib/shared").absolutePath
+def nativeLibPath2 = file("${project.parent.projectDir}/cad-dsl-native/build/lib/main/release").absolutePath
 
 model {
     components {
@@ -53,7 +53,7 @@ repositories {
 
 java {
     toolchain {
-        languageVersion.set(JavaLanguageVersion.of(22))
+        languageVersion = JavaLanguageVersion.of 25
     }
 }
 
@@ -62,15 +62,16 @@ application {
     applicationDefaultJvmArgs = ["-Djava.library.path=" + OCCT78 + ":" + nativeLibPath + ":" + nativeLibPath2, "--enable-preview", "--enable-native-access=ALL-UNNAMED"]
 }
 
-jextract {
-    // The header file from which we want to generate the bindings
-    header("${project.projectDir}/src/main/c/native.h") {
-        // The library name (don't worry about this for now)
-        libraries = ['nativeLib']
-        // The package under which all source files will be generated
-        targetPackage = 'org.nativelib'
-        // The generated class name
-        className = 'NativeLib'
+jextract.libraries {
+    def occt = register('occt') {
+        header = layout.projectDirectory.file("src/main/c/native.h")
+        headerClassName = "NativeLib"
+        targetPackage = "org.taack.occt"
+        useSystemLoadLibrary = true
+        libraries.add("nativeLib")
+    }
+    sourceSets.named("main") {
+        jextract.libraries.addLater(occt)
     }
 }
 
@@ -80,8 +81,8 @@ run  {
 }
 
 dependencies {
-    implementation 'org.apache.groovy:groovy:5.0.0-alpha-11'
-    testImplementation platform('org.junit:junit-bom:5.10.0')
+    implementation 'org.apache.groovy:groovy:5.0.4'
+    testImplementation platform('org.junit:junit-bom:6.0.3')
     testImplementation 'org.junit.jupiter:junit-jupiter'
 }
 
