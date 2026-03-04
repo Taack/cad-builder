@@ -45,8 +45,8 @@ model {
 }
 
 // Tells gradle to wait for our native library to compile before we can run our java application
-run.dependsOn 'nativeLibSharedLibrary'
-
+run.dependsOn ':cad-dsl-native:linkRelease'
+//nativeLibSharedLibrary.dependsOn ':cad-dsl-native:linkDebug'
 repositories {
     mavenCentral()
 }
@@ -63,12 +63,12 @@ application {
 }
 
 jextract.libraries {
-    def occt = register('occt') {
+    def occt = register('cad-dsl-native') {
         header = layout.projectDirectory.file("src/main/c/native.h")
         headerClassName = "NativeLib"
         targetPackage = "org.taack.occt"
         useSystemLoadLibrary = true
-        libraries.add("nativeLib")
+        libraries.add("cad-dsl-native")
     }
     sourceSets.named("main") {
         jextract.libraries.addLater(occt)
@@ -84,6 +84,7 @@ dependencies {
     implementation 'org.apache.groovy:groovy:5.0.4'
     testImplementation platform('org.junit:junit-bom:6.0.3')
     testImplementation 'org.junit.jupiter:junit-jupiter'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
 
 test {

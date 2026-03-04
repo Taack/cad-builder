@@ -1,7 +1,7 @@
 package org.taack
 
 import groovy.transform.CompileStatic
-import org.nativelib.NativeLib as nl
+import org.taack.occt.NativeLib as nl
 import org.taack.cad.dsl.dump.direct.ShapeEnum
 
 import java.lang.foreign.Arena

@@ -1,6 +1,6 @@
 package org.taack.cad.dsl.dump.direct
 
-import org.nativelib.NativeLib as nl
+import org.taack.occt.NativeLib as nl
 
 import java.lang.foreign.MemorySegment
 

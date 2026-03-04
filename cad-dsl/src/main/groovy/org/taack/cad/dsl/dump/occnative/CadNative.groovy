@@ -1,7 +1,7 @@
 package org.taack.cad.dsl.dump.occnative
 
 import groovy.transform.CompileStatic
-import org.nativelib.NativeLib
+import org.taack.occt.NativeLib
 import org.taack.cad.dsl.builder.ICad
 
 import java.lang.foreign.Arena
