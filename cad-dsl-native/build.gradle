@@ -55,7 +55,7 @@ tasks.withType(LinkExecutable).configureEach {
     linkerArgs = ["-Xlinker", "-S", "-Bdirect", "-L/usr/local/lib/"] + linkerLibs
 }
 
-task('listSymsPerLib') {
+tasks.register('listSymsPerLib') {
     doLast {
         println "AUO ++++++++++++++++++++++++++ $libs"
         libs.split(' ').each { libName ->

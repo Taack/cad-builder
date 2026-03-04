@@ -509,7 +509,7 @@ TopoDS_Shape Cutout(TopoDS_Shape base)
     return result;
 }
 
-int main()
+int mainSprocket()
 {
 
      // Build a wedge containing one tooth

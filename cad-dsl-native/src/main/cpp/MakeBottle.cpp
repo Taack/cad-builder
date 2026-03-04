@@ -198,7 +198,7 @@ extern "C" TopoDS_Shape* cMakeBottle(const Standard_Real myWidth, const Standard
     }
 }
 
-int main() {
+int mainMakeBottle() {
          BRepTools::Write(MakeBottle(3.0, 6.0, 4.2), "bottle.brep");
 }
 
