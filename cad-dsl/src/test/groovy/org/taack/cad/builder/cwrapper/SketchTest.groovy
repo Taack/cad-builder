@@ -106,4 +106,33 @@ class SketchTest {
                 .toWire().toFace().from(new Vec(0.0, 1.0, 0.0)).prism().display()
     }
 
+    @Test
+    void "Extrude Square Face with Hole"() {
+        BigDecimal length = 0.1
+
+        Vec p1 = new Vec(- length, 0.0, -length)
+        Vec p2 = new Vec(- length, 0.0, length)
+        Vec p3 = new Vec(length, 0.0, length)
+        Vec p4 = new Vec(length, 0.0, -length)
+
+        Vec c1 = p1 * .2
+        Vec c2 = p2 * .2
+        Vec c3 = p3 * .2
+        Vec c4 = p4 * .2
+
+//        def square = cb().from(p1)
+//                .edge(p2)
+//                .edge(p3)
+//                .edge(p4)
+//                .edge(p1)
+//                .toWire()
+
+//        def circle = cb().from(c1)
+         cb().from(c1)
+            .arc(c3, c2)
+            .arc(c1, c4).toWire().toFace().from(new Vec(0.0, 1.0, 0.0)).prism().display()
+
+        //.toFace().from(new Vec(0.0, 1.0, 0.0)).prism().display()
+    }
+
 }

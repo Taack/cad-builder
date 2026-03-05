@@ -1,9 +1,11 @@
 package org.taack.cad.dsl.dump.direct
 
+import groovy.transform.CompileStatic
 import org.taack.occt.NativeLib as nl
 
 import java.lang.foreign.MemorySegment
 
+@CompileStatic
 class Edge extends Vertice implements Selector {
 
     private List<Vec> edges = []
@@ -54,16 +56,15 @@ class Edge extends Vertice implements Selector {
         int index = 0
         Iterator<Integer> arcIndexIt = arcIndex.size() > 0 ? arcIndex.iterator() : null
         Iterator<Vec> arcCenterIt = arcCenter.size() > 0 ? arcCenter.iterator() : null
-        Integer arcIndexCur = arcIndex.size() > 0 ? arcIndex.first : null
+        Integer arcIndexCur = arcIndex.size() > 0 ? arcIndexIt.next() : null
 
         println "arcIndexCur: $arcIndexCur, ${arcIndex}"
 
         for (Vec to : edges) {
-
             if (arcIndexCur != null && index == arcIndexCur) {
                 def arcCenter = arcCenterIt.next()
                 arcIndexCur = arcIndexIt.hasNext() ? arcIndexIt.next() : 0
-                println "Arc from: $fromLocal, to: $to, radius: $arcCenter"
+                println "Arc from: $fromLocal, to: $to, radius: $arcCenter, arcIndexCur(next): $arcIndexCur"
                 def arcNative = nl.gc_make_arc_of_circle(fromLocal.toGpPnt(), arcCenter.toGpPnt(), to.toGpPnt())
                 def arcEdge = nl.brep_builderapi_make_edge(arcNative)
                 fromLocal = to
@@ -93,7 +94,7 @@ class Edge extends Vertice implements Selector {
      * @param operations
      * @return
      */
-    CadBuilder center(@DelegatesTo(value = Edge, strategy = Closure.DELEGATE_FIRST) operations) {
+    CadBuilder center(@DelegatesTo(value = Edge, strategy = Closure.DELEGATE_FIRST) Closure operations) {
         clockwiseLoc = [Vec.fromAPnt(nl.gp_pnt_center_of_mass(currentFaceNative))]
         operations.delegate = this
         operations.call()
@@ -107,7 +108,7 @@ class Edge extends Vertice implements Selector {
      * @param operations
      * @return Face
      */
-    CadBuilder rect(BigDecimal sx, BigDecimal sy, @DelegatesTo(value = Edge, strategy = Closure.DELEGATE_FIRST) operations) {
+    CadBuilder rect(BigDecimal sx, BigDecimal sy, @DelegatesTo(value = Edge, strategy = Closure.DELEGATE_FIRST) Closure operations) {
         def centerOfFace = Vec.fromAPnt(nl.gp_pnt_center_of_mass(currentFaceNative))
         def faceDir = Vec.fromADir(nl.gp_dir_normal_to_face(currentFaceNative))
         println "rect ($sx, $sy), faceDir = ${faceDir}, centerOfFace = ${centerOfFace}"
