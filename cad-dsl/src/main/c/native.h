@@ -37,6 +37,7 @@ BRepBuilderAPI_Transform* brep_builderapi_transform(const TopoDS_Wire* w, gp_Trs
 //const TopoDS_Shape* brep_builderapi_transform_shape(BRepBuilderAPI_Transform *b_rep_transform);
 TopoDS_Wire* topo_ds_wire(TopoDS_Shape* shape);
 TopoDS_Face* brep_builderapi_make_face_from_wire(TopoDS_Wire* wire);
+TopoDS_Face* brep_builderapi_make_face_from_wire_add(TopoDS_Face* face, TopoDS_Wire* wire);
 TopoDS_Face* brep_builderapi_make_face_from_face(TopoDS_Face* face);
 TopoDS_Shape* brep_primapi_make_prism(TopoDS_Face* face, gp_Vec* normal);
 

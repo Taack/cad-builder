@@ -187,6 +187,10 @@ extern "C" TopoDS_Face *brep_builderapi_make_face_from_wire(TopoDS_Wire &wire) {
     return new TopoDS_Face(BRepBuilderAPI_MakeFace(wire).Face());
 }
 
+extern "C" TopoDS_Face *brep_builderapi_make_face_from_wire_add(TopoDS_Face &face, TopoDS_Wire &wire) {
+    return face.Add(wire);
+}
+
 extern "C" TopoDS_Face *brep_builderapi_make_face_from_makewire(BRepBuilderAPI_MakeWire &wire) {
     return new TopoDS_Face(BRepBuilderAPI_MakeFace(wire).Face());
 }

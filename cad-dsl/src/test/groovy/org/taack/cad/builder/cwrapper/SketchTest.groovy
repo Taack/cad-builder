@@ -88,9 +88,9 @@ class SketchTest {
         BigDecimal zValue2 = zValue1 * 2.0
 
 
-        Vec p1 = new Vec(- xValue1, 0.0, -zValue2)
-        Vec p2 = new Vec(- xValue2, 0.0, -zValue1)
-        Vec p3 = new Vec(- xValue2, 0.0, zValue1)
+        Vec p1 = new Vec(-xValue1, 0.0, -zValue2)
+        Vec p2 = new Vec(-xValue2, 0.0, -zValue1)
+        Vec p3 = new Vec(-xValue2, 0.0, zValue1)
         Vec p4 = new Vec(xValue2, 0.0, zValue1)
         Vec p5 = new Vec(xValue2, 0.0, -zValue1)
         Vec p6 = new Vec(xValue1, 0.0, -zValue2)
@@ -100,7 +100,7 @@ class SketchTest {
                 .edge(p2)
                 .edge(p3)
                 .edge(p4)
-                .arc(p5, new Vec( xValue2 + 0.05, 0.0, -zValue1 - 0.004))
+                .arc(p5, new Vec(xValue2 + 0.05, 0.0, -zValue1 - 0.004))
                 .edge(p6)
                 .edge(p7)
                 .toWire().toFace().from(new Vec(0.0, 1.0, 0.0)).prism().display()
@@ -110,8 +110,8 @@ class SketchTest {
     void "Extrude Square Face with Hole"() {
         BigDecimal length = 0.1
 
-        Vec p1 = new Vec(- length, 0.0, -length)
-        Vec p2 = new Vec(- length, 0.0, length)
+        Vec p1 = new Vec(-length, 0.0, -length)
+        Vec p2 = new Vec(-length, 0.0, length)
         Vec p3 = new Vec(length, 0.0, length)
         Vec p4 = new Vec(length, 0.0, -length)
 
@@ -120,19 +120,15 @@ class SketchTest {
         Vec c3 = p3 * .2
         Vec c4 = p4 * .2
 
-//        def square = cb().from(p1)
-//                .edge(p2)
-//                .edge(p3)
-//                .edge(p4)
-//                .edge(p1)
-//                .toWire()
-
-//        def circle = cb().from(c1)
-         cb().from(c1)
-            .arc(c3, c2)
-            .arc(c1, c4).toWire().toFace().from(new Vec(0.0, 1.0, 0.0)).prism().display()
-
-        //.toFace().from(new Vec(0.0, 1.0, 0.0)).prism().display()
+        cb().from(p1)
+                .edge(p2)
+                .edge(p3)
+                .edge(p4)
+                .edge(p1).toWire()
+                .from(c1)
+                .arc(c3, c2)
+                .arc(c1, c4)
+                .toWire().toFace().from(new Vec(0.0, 1.0, 0.0)).prism().display()
     }
 
 }

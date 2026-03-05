@@ -11,7 +11,7 @@ class Edge extends Vertice implements Selector {
     private List<Vec> edges = []
     private List<Vec> arcCenter = []
     private List<Integer> arcIndex = []
-    private MemorySegment wireNative
+    private Stack<MemorySegment> wireNatives = []
 
     /**
      * Initial position of a new wire
@@ -51,7 +51,7 @@ class Edge extends Vertice implements Selector {
     CadBuilder toWire() {
 //        def listOfShapeNative = nl.top_tools_list_of_shape()
         Vec fromLocal = currentLoc
-        wireNative = nl.brep_builderapi_makewire_new()
+        def wireNative = nl.brep_builderapi_makewire_new()
 
         int index = 0
         Iterator<Integer> arcIndexIt = arcIndex.size() > 0 ? arcIndex.iterator() : null
@@ -78,6 +78,7 @@ class Edge extends Vertice implements Selector {
             index++
 
         }
+        wireNatives.add(wireNative)
         this as CadBuilder
     }
 
