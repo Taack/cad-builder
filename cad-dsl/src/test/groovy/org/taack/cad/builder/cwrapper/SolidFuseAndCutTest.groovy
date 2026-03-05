@@ -21,7 +21,6 @@ class SolidFuseAndCutTest {
             hole featureDiameter
         }
 
-        c.display()
         c
     }
 
