@@ -80,4 +80,30 @@ class SketchTest {
                 .toWire().toFace().from(new Vec(0.0)).revolution().display()
     }
 
+    @Test
+    void "Extrude Edges with arcs"() {
+        BigDecimal xValue1 = 0.05
+        BigDecimal xValue2 = xValue1 * 2.0
+        BigDecimal zValue1 = 0.025
+        BigDecimal zValue2 = zValue1 * 2.0
+
+
+        Vec p1 = new Vec(- xValue1, 0.0, -zValue2)
+        Vec p2 = new Vec(- xValue2, 0.0, -zValue1)
+        Vec p3 = new Vec(- xValue2, 0.0, zValue1)
+        Vec p4 = new Vec(xValue2, 0.0, zValue1)
+        Vec p5 = new Vec(xValue2, 0.0, -zValue1)
+        Vec p6 = new Vec(xValue1, 0.0, -zValue2)
+        Vec p7 = p1
+
+        cb().from(p1)
+                .edge(p2)
+                .edge(p3)
+                .edge(p4)
+                .arc(p5, new Vec( xValue2 + 0.05, 0.0, -zValue1 - 0.004))
+                .edge(p6)
+                .edge(p7)
+                .toWire().toFace().from(new Vec(0.0, 1.0, 0.0)).prism().display()
+    }
+
 }
