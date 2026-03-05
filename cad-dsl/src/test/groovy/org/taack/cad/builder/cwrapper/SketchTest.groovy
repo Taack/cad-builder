@@ -55,17 +55,28 @@ class SketchTest {
 
     @Test
     void "Revolut Edges with arcs"() {
-        BigDecimal face_inner_radius = 0.8
+        BigDecimal innerRadius = 0.8
+        BigDecimal xValue1 = 0.05
+        BigDecimal xValue2 = xValue1 * 2.0
+        BigDecimal zValue1 = 0.025
+        BigDecimal zValue2 = zValue1 * 2.0
 
 
-        cb().from(new Vec(face_inner_radius - 0.05, 0.0, -0.05))
-//                .arc(new Vec(face_inner_radius - 0.10, 0.0, -0.025), new Vec(face_inner_radius - 0.0, 0.0, -0.0))
-                .edge(new Vec(face_inner_radius - 0.10, 0.0, -0.025))
-                .edge(new Vec(face_inner_radius - 0.10, 0.0, 0.025))
-                .edge(new Vec(face_inner_radius + 0.10, 0.0, 0.025))
-                .arc(new Vec(face_inner_radius + 0.10, 0.0, -0.025), new Vec(face_inner_radius + 0.15, 0.0, -0.029))
-                .edge(new Vec(face_inner_radius + 0.05, 0.0, -0.05))
-                .edge(new Vec(face_inner_radius - 0.05, 0.0, -0.05))
+        Vec p1 = new Vec(innerRadius - xValue1, 0.0, -zValue2)
+        Vec p2 = new Vec(innerRadius - xValue2, 0.0, -zValue1)
+        Vec p3 = new Vec(innerRadius - xValue2, 0.0, zValue1)
+        Vec p4 = new Vec(innerRadius + xValue2, 0.0, zValue1)
+        Vec p5 = new Vec(innerRadius + xValue2, 0.0, -zValue1)
+        Vec p6 = new Vec(innerRadius + xValue1, 0.0, -zValue2)
+        Vec p7 = p1
+
+        cb().from(p1)
+                .edge(p2)
+                .edge(p3)
+                .edge(p4)
+                .arc(p5, new Vec(innerRadius + 0.15, 0.0, -0.029))
+                .edge(p6)
+                .edge(p7)
                 .toWire().toFace().from(new Vec(0.0)).revolution().display()
     }
 

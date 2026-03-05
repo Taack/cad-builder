@@ -64,7 +64,7 @@ class Edge extends Vertice implements Selector {
                 def arcCenter = arcCenterIt.next()
                 arcIndexCur = arcIndexIt.hasNext() ? arcIndexIt.next() : 0
                 println "Arc from: $fromLocal, to: $to, radius: $arcCenter"
-                def arcNative = nl.gc_make_arc_of_circle(fromLocal.toGpPnt(), to.toGpPnt(), arcCenter.toGpPnt())
+                def arcNative = nl.gc_make_arc_of_circle(fromLocal.toGpPnt(), arcCenter.toGpPnt(), to.toGpPnt())
                 def arcEdge = nl.brep_builderapi_make_edge(arcNative)
                 fromLocal = to
                 nl.brep_builderapi_wire_add_edge(wireNative, arcEdge)
