@@ -94,6 +94,10 @@ extern "C" Handle(Geom_TrimmedCurve) *gc_make_arc_of_circle(gp_Pnt *pnt1, gp_Pnt
     return new Handle(Geom_TrimmedCurve)(GC_MakeArcOfCircle(*pnt1, *pnt2, *pnt3).Value());
 }
 
+extern "C" Handle(Geom_TrimmedCurve) *gc_make_arc_of_circle_tan(gp_Pnt *pnt1, gp_Vec *v, gp_Pnt *pnt3) {
+    return new Handle(Geom_TrimmedCurve)(GC_MakeArcOfCircle(*pnt1, *v, *pnt3).Value());
+}
+
 extern "C" void gc_delete_arc_of_circle(Handle(Geom_TrimmedCurve)* ptr) {
     delete ptr;
 }

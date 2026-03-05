@@ -7,6 +7,8 @@ import java.lang.foreign.MemorySegment
 class Edge extends Vertice implements Selector {
 
     private List<Vec> edges = []
+    private List<Vec> arcCenter = []
+    private List<Integer> arcIndex = []
     private MemorySegment wireNative
 
     /**
@@ -31,16 +33,49 @@ class Edge extends Vertice implements Selector {
         this as CadBuilder
     }
 
+    /**
+     * Add an Arc to the current wire
+     * @param toPosition
+     * @param radius
+     * @return
+     */
+    CadBuilder arc(Vec toPosition, Vec center) {
+        edges.add toPosition
+        arcCenter.add center
+        arcIndex.add(edges.size() - 1)
+        this as CadBuilder
+    }
+
     CadBuilder toWire() {
 //        def listOfShapeNative = nl.top_tools_list_of_shape()
         Vec fromLocal = currentLoc
         wireNative = nl.brep_builderapi_makewire_new()
 
+        int index = 0
+        Iterator<Integer> arcIndexIt = arcIndex.size() > 0 ? arcIndex.iterator() : null
+        Iterator<Vec> arcCenterIt = arcCenter.size() > 0 ? arcCenter.iterator() : null
+        Integer arcIndexCur = arcIndex.size() > 0 ? arcIndex.first : null
+
+        println "arcIndexCur: $arcIndexCur, ${arcIndex}"
+
         for (Vec to : edges) {
-            println "Edge from: $fromLocal, to: $to"
-            def edgeNative = nl.brep_builderapi_make_edge_from_pts(fromLocal.toGpPnt(), to.toGpPnt())
-            fromLocal = to
-            nl.brep_builderapi_wire_add_makeedge(wireNative, edgeNative)
+
+            if (arcIndexCur != null && index == arcIndexCur) {
+                def arcCenter = arcCenterIt.next()
+                arcIndexCur = arcIndexIt.hasNext() ? arcIndexIt.next() : 0
+                println "Arc from: $fromLocal, to: $to, radius: $arcCenter"
+                def arcNative = nl.gc_make_arc_of_circle(fromLocal.toGpPnt(), to.toGpPnt(), arcCenter.toGpPnt())
+                def arcEdge = nl.brep_builderapi_make_edge(arcNative)
+                fromLocal = to
+                nl.brep_builderapi_wire_add_edge(wireNative, arcEdge)
+            } else {
+                println "Edge from: $fromLocal, to: $to"
+                def edgeNative = nl.brep_builderapi_make_edge_from_pts(fromLocal.toGpPnt(), to.toGpPnt())
+                fromLocal = to
+                nl.brep_builderapi_wire_add_makeedge(wireNative, edgeNative)
+            }
+            index++
+
         }
         this as CadBuilder
     }
@@ -76,10 +111,10 @@ class Edge extends Vertice implements Selector {
         def centerOfFace = Vec.fromAPnt(nl.gp_pnt_center_of_mass(currentFaceNative))
         def faceDir = Vec.fromADir(nl.gp_dir_normal_to_face(currentFaceNative))
         println "rect ($sx, $sy), faceDir = ${faceDir}, centerOfFace = ${centerOfFace}"
-        def gCoords1 = Vec.globalLocFromLocal(centerOfFace, faceDir, new Vec2d(-sx/2.0,-sy/2.0))
-        def gCoords2 = Vec.globalLocFromLocal(centerOfFace, faceDir, new Vec2d(sx/2.0,-sy/2.0))
-        def gCoords3 = Vec.globalLocFromLocal(centerOfFace, faceDir, new Vec2d(sx/2.0,sy/2.0))
-        def gCoords4 = Vec.globalLocFromLocal(centerOfFace, faceDir, new Vec2d(-sx/2.0,sy/2.0))
+        def gCoords1 = Vec.globalLocFromLocal(centerOfFace, faceDir, new Vec2d(-sx / 2.0, -sy / 2.0))
+        def gCoords2 = Vec.globalLocFromLocal(centerOfFace, faceDir, new Vec2d(sx / 2.0, -sy / 2.0))
+        def gCoords3 = Vec.globalLocFromLocal(centerOfFace, faceDir, new Vec2d(sx / 2.0, sy / 2.0))
+        def gCoords4 = Vec.globalLocFromLocal(centerOfFace, faceDir, new Vec2d(-sx / 2.0, sy / 2.0))
 
         clockwiseLoc = [gCoords1, gCoords2, gCoords3, gCoords4]
         println "rect $clockwiseLoc"

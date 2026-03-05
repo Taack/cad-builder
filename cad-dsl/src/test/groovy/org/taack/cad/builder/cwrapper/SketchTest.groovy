@@ -38,4 +38,35 @@ class SketchTest {
         }).display()
     }
 
+    @Test
+    void "Revolut Edges"() {
+        BigDecimal face_inner_radius = 0.8
+
+
+        cb().from(new Vec(face_inner_radius - 0.05, 0.0, -0.05))
+                .edge(new Vec(face_inner_radius - 0.10, 0.0, -0.025))
+                .edge(new Vec(face_inner_radius - 0.10, 0.0, 0.025))
+                .edge(new Vec(face_inner_radius + 0.10, 0.0, 0.025))
+                .edge(new Vec(face_inner_radius + 0.10, 0.0, -0.025))
+                .edge(new Vec(face_inner_radius + 0.05, 0.0, -0.05))
+                .edge(new Vec(face_inner_radius - 0.05, 0.0, -0.05))
+                .toWire().toFace().from(new Vec(0.0)).revolution().display()
+    }
+
+    @Test
+    void "Revolut Edges with arcs"() {
+        BigDecimal face_inner_radius = 0.8
+
+
+        cb().from(new Vec(face_inner_radius - 0.05, 0.0, -0.05))
+//                .arc(new Vec(face_inner_radius - 0.10, 0.0, -0.025), new Vec(face_inner_radius - 0.0, 0.0, -0.0))
+                .edge(new Vec(face_inner_radius - 0.10, 0.0, -0.025))
+                .edge(new Vec(face_inner_radius - 0.10, 0.0, 0.025))
+                .edge(new Vec(face_inner_radius + 0.10, 0.0, 0.025))
+                .arc(new Vec(face_inner_radius + 0.10, 0.0, -0.025), new Vec(face_inner_radius + 0.15, 0.0, -0.029))
+                .edge(new Vec(face_inner_radius + 0.05, 0.0, -0.05))
+                .edge(new Vec(face_inner_radius - 0.05, 0.0, -0.05))
+                .toWire().toFace().from(new Vec(0.0)).revolution().display()
+    }
+
 }

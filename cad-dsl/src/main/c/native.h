@@ -23,6 +23,7 @@ Standard_Real gp_pnt_x(gp_Pnt *pnt);
 Standard_Real gp_pnt_y(gp_Pnt *pnt);
 Standard_Real gp_pnt_z(gp_Pnt *pnt);
 Handle(Geom_TrimmedCurve)* gc_make_arc_of_circle(gp_Pnt *pnt1, gp_Pnt *pnt2, gp_Pnt *pnt3);
+Handle(Geom_TrimmedCurve)* gc_make_arc_of_circle_tan(gp_Pnt *pnt1, gp_Vec *v, gp_Pnt *pnt3);
 Handle(Geom_TrimmedCurve)* gc_make_segment(gp_Pnt *pnt1, gp_Pnt *pnt2);
 const TopoDS_Edge* brep_builderapi_make_edge(Handle(Geom_TrimmedCurve)* segment);
 const TopoDS_Wire* brep_builderapi_make_wire_topo_ds_wire(TopoDS_Edge* e1, TopoDS_Edge* e2, TopoDS_Edge* e3);
