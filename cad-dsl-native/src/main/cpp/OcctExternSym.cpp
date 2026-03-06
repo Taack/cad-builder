@@ -80,10 +80,6 @@ extern "C" gp_Dir2d *gp_dir_2d_new() {
     return new gp_Dir2d();
 }
 
-extern "C" gp_Dir2d *gp_dir_2d_new() {
-    return new gp_Dir2d();
-}
-
 extern "C" gp_Pnt2d *make_gp_pnt2d(const Standard_Real theXp, const Standard_Real theYp) {
     return new gp_Pnt2d(theXp, theYp);
 }
