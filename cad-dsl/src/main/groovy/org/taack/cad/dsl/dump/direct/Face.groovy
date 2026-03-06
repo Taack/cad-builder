@@ -13,10 +13,10 @@ class Face extends Edge implements Selector {
 
 
     CadBuilder topZ(@DelegatesTo(value = Face, strategy = Closure.DELEGATE_FIRST) c = null) {
-        face(Axe.Z, Qty.max, c) as CadBuilder
+        face(Axe.Z, c) as CadBuilder
     }
 
-    Face face(Axe axe, Qty qty, @DelegatesTo(value = Face, strategy = Closure.DELEGATE_ONLY) operations = null) {
+    Face face(Axe axe, @DelegatesTo(value = Face, strategy = Closure.DELEGATE_ONLY) operations = null) {
         double positionMax = -1
 
         for (def aFaceExplorer = nl.top_exp_explorer(currentShapeNative, ShapeEnum.TopAbs_FACE.ordinal(), ShapeEnum.TopAbs_SHAPE.ordinal());

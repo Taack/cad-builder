@@ -51,7 +51,6 @@ class Edge extends Vertice implements Selector {
     }
 
     CadBuilder toWire() {
-//        def listOfShapeNative = nl.top_tools_list_of_shape()
         Vec fromLocal = currentLoc
         def wireNative = nl.brep_builderapi_makewire_new()
 
@@ -81,8 +80,6 @@ class Edge extends Vertice implements Selector {
 
         }
         wireNatives.add wireNative
-//        nl.brep_builderapi_wire_add_wire(this.wireNative, wireNative)
-//        currentShapeNative = this.wireNative
         this as CadBuilder
     }
 
