@@ -3,6 +3,7 @@
 void* cMakeBottle(const double, const double, const double);
 int visualize(void*);
 
+#define gp_Pln void
 #define gp_Pnt void
 #define gp_Vec void
 #define gp_Ax1 void
@@ -38,6 +39,7 @@ BRepBuilderAPI_Transform* brep_builderapi_transform(const TopoDS_Wire* w, gp_Trs
 TopoDS_Wire* topo_ds_wire(TopoDS_Shape* shape);
 TopoDS_Face* brep_builderapi_make_face_from_wire(TopoDS_Wire* wire);
 TopoDS_Face* brep_builderapi_make_face_from_face(TopoDS_Face* face);
+TopoDS_Face* brep_builderapi_make_face_from_plane(gp_Pln *plane);
 TopoDS_Shape* brep_primapi_make_prism(TopoDS_Face* face, gp_Vec* normal);
 
 #define BRepFilletAPI_MakeFillet void
@@ -217,3 +219,5 @@ void geom2d_trimmedcurve_reverse(Geom2d_TrimmedCurve* curve);
 gp_Pnt2d* geom2d_trimmedcurve_endpoint(Geom2d_TrimmedCurve* curve);
 gp_Pnt2d* geom2d_trimmedcurve_startpoint(Geom2d_TrimmedCurve* curve);
 void brep_builderapi_wire_add_wire(BRepBuilderAPI_MakeWire *mw, BRepBuilderAPI_MakeWire *mw2);
+gp_Pln* plane_create(const Standard_Real x, const Standard_Real y, const Standard_Real z, const Standard_Real d);
+void brep_builder_add_wire(BRep_Builder *builder, TopoDS_Face *aFace, TopoDS_Wire *aWire);

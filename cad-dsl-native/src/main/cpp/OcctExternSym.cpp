@@ -200,6 +200,10 @@ extern "C" TopoDS_Face *brep_builderapi_make_face_from_face(TopoDS_Face &face) {
     return new TopoDS_Face(BRepBuilderAPI_MakeFace(face).Face());
 }
 
+extern "C" TopoDS_Face *brep_builderapi_make_face_from_plane(gp_Pln &plane) {
+    return new TopoDS_Face(BRepBuilderAPI_MakeFace(plane).Face());
+}
+
 extern "C" TopoDS_Face *topods_face_new() {
     return new TopoDS_Face();
 }
@@ -412,6 +416,10 @@ extern "C" TopoDS_Compound *topods_compound_create() {
 
 extern "C" BRep_Builder *brep_builder_create() {
     return new BRep_Builder();
+}
+
+extern "C" void brep_builder_add_wire(BRep_Builder &builder, TopoDS_Face &aFace, TopoDS_Wire &aWire) {
+    builder.Add(aFace, aWire);
 }
 
 extern "C" void brep_builder_make_compound(BRep_Builder &b, TopoDS_Compound &c) {
@@ -756,4 +764,8 @@ extern "C" gp_Pnt2d* geom2d_trimmedcurve_endpoint(Geom2d_TrimmedCurve& curve) {
 
 extern "C" gp_Pnt2d* geom2d_trimmedcurve_startpoint(Geom2d_TrimmedCurve& curve) {
     return new gp_Pnt2d(curve.StartPoint());
+}
+
+extern "C" gp_Pln* plane_create(const Standard_Real x, const Standard_Real y, const Standard_Real z, const Standard_Real d) {
+    return new gp_Pln(x, y, z, d);
 }

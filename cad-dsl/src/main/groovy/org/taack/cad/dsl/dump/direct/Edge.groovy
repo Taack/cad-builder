@@ -90,26 +90,16 @@ class Edge extends Vertice implements Selector {
      * @return
      */
     CadBuilder toFace() {
-//        println "1"
-////        def w = nl.brep_builderapi_makewire_new()
-//        println "2"
-////        wireNatives.each { MemorySegment it ->
-////            println "3"
-////            nl.brep_builderapi_wire_add_wire(w, it)
-////        }
-//        println "4"
-//        currentFaceNative = nl.brep_builderapi_make_face_from_makewire(wireNative)
-        println("1")
-        currentFaceNative = nl.brep_builderapi_make_face_from_makewire(wireNatives.first)
-        println("2")
-        wireNatives.eachWithIndex { MemorySegment it, int i ->
-            println("3")
-            if (i > 0) {
-                println("31")
-                nl.brep_builderapi_wire_add(currentFaceNative, it)
+        def pXY = nl.plane_create(0.0d, 1.0d, 0.0d, 0.0d)
+        def aFace = nl.brep_builderapi_make_face_from_plane(pXY)
+        def builder = nl.brep_builder_create()
+
+        if (wireNatives.size() > 0) {
+            wireNatives.eachWithIndex { MemorySegment it, int i ->
+                nl.brep_builder_add_wire(builder, aFace, nl.brep_builderapi_make_wire_topo_ds_wire2(it))
             }
         }
-        println("4")
+        currentFaceNative = aFace
         this as CadBuilder
     }
     /**
