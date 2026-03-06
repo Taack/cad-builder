@@ -80,14 +80,6 @@ class CadBuilder extends Face {
         } else nl.visualize(currentShapeNative)
     }
 
-    static Sketch sketch(@DelegatesTo(value = Sketch, strategy = Closure.DELEGATE_ONLY) Closure<Sketch> sketch) {
-        sketch.call()
-    }
-
-    CadBuilder extrude(Vec vect, Sketch sketch) {
-        this
-    }
-
     CadBuilder isValid() {
         nl.analyze(currentShapeNative)
         this

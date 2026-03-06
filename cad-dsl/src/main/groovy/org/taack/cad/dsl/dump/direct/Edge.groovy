@@ -11,8 +11,7 @@ class Edge extends Vertice implements Selector {
     private List<Vec> edges = []
     private List<Vec> arcCenter = []
     private List<Integer> arcIndex = []
-    private Stack<MemorySegment> wireNatives = []
-//    private MemorySegment wireNative = nl.brep_builderapi_makewire_new()
+    private Stack<MemorySegment> wireNatives = new Stack<>()
 
     /**
      * Initial position of a new wire
