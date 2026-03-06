@@ -37,7 +37,6 @@ BRepBuilderAPI_Transform* brep_builderapi_transform(const TopoDS_Wire* w, gp_Trs
 //const TopoDS_Shape* brep_builderapi_transform_shape(BRepBuilderAPI_Transform *b_rep_transform);
 TopoDS_Wire* topo_ds_wire(TopoDS_Shape* shape);
 TopoDS_Face* brep_builderapi_make_face_from_wire(TopoDS_Wire* wire);
-TopoDS_Face* brep_builderapi_make_face_from_wire_add(TopoDS_Face* face, TopoDS_Wire* wire);
 TopoDS_Face* brep_builderapi_make_face_from_face(TopoDS_Face* face);
 TopoDS_Shape* brep_primapi_make_prism(TopoDS_Face* face, gp_Vec* normal);
 
@@ -217,3 +216,4 @@ void geom2d_trimmedcurve_mirror(Geom2d_TrimmedCurve* curve, gp_Ax2d* ax2d);
 void geom2d_trimmedcurve_reverse(Geom2d_TrimmedCurve* curve);
 gp_Pnt2d* geom2d_trimmedcurve_endpoint(Geom2d_TrimmedCurve* curve);
 gp_Pnt2d* geom2d_trimmedcurve_startpoint(Geom2d_TrimmedCurve* curve);
+void brep_builderapi_wire_add_wire(BRepBuilderAPI_MakeWire *mw, BRepBuilderAPI_MakeWire *mw2);

@@ -126,8 +126,12 @@ class SketchTest {
                 .edge(p4)
                 .edge(p1).toWire()
                 .from(c1)
-                .arc(c3, c2)
-                .arc(c1, c4)
+                .edge(c4)
+                .edge(c3)
+                .edge(c2)
+                .edge(c1)
+//                .arc(c3, c4)
+//                .arc(c1, c2)
                 .toWire().toFace().from(new Vec(0.0, 1.0, 0.0)).prism().display()
     }
 

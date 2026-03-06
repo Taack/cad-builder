@@ -12,6 +12,7 @@ class Edge extends Vertice implements Selector {
     private List<Vec> arcCenter = []
     private List<Integer> arcIndex = []
     private Stack<MemorySegment> wireNatives = []
+//    private MemorySegment wireNative = nl.brep_builderapi_makewire_new()
 
     /**
      * Initial position of a new wire
@@ -78,7 +79,9 @@ class Edge extends Vertice implements Selector {
             index++
 
         }
-        wireNatives.add(wireNative)
+        wireNatives.add wireNative
+//        nl.brep_builderapi_wire_add_wire(this.wireNative, wireNative)
+//        currentShapeNative = this.wireNative
         this as CadBuilder
     }
 
@@ -87,7 +90,26 @@ class Edge extends Vertice implements Selector {
      * @return
      */
     CadBuilder toFace() {
-        currentFaceNative = nl.brep_builderapi_make_face_from_makewire(wireNative)
+//        println "1"
+////        def w = nl.brep_builderapi_makewire_new()
+//        println "2"
+////        wireNatives.each { MemorySegment it ->
+////            println "3"
+////            nl.brep_builderapi_wire_add_wire(w, it)
+////        }
+//        println "4"
+//        currentFaceNative = nl.brep_builderapi_make_face_from_makewire(wireNative)
+        println("1")
+        currentFaceNative = nl.brep_builderapi_make_face_from_makewire(wireNatives.first)
+        println("2")
+        wireNatives.eachWithIndex { MemorySegment it, int i ->
+            println("3")
+            if (i > 0) {
+                println("31")
+                nl.brep_builderapi_wire_add(currentFaceNative, it)
+            }
+        }
+        println("4")
         this as CadBuilder
     }
     /**

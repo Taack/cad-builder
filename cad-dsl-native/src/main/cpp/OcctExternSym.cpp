@@ -146,6 +146,10 @@ extern "C" void brep_builderapi_wire_add(BRepBuilderAPI_MakeWire &mw, TopoDS_Wir
     mw.Add(wire);
 }
 
+extern "C" void brep_builderapi_wire_add_wire(BRepBuilderAPI_MakeWire &mw, BRepBuilderAPI_MakeWire &mw2) {
+    mw.Add(mw2);
+}
+
 extern "C" void brep_builderapi_wire_add_edge(BRepBuilderAPI_MakeWire &mw, TopoDS_Edge &edge) {
     mw.Add(edge);
 }
@@ -187,9 +191,6 @@ extern "C" TopoDS_Face *brep_builderapi_make_face_from_wire(TopoDS_Wire &wire) {
     return new TopoDS_Face(BRepBuilderAPI_MakeFace(wire).Face());
 }
 
-extern "C" TopoDS_Face *brep_builderapi_make_face_from_wire_add(TopoDS_Face &face, TopoDS_Wire &wire) {
-    return face.Add(wire);
-}
 
 extern "C" TopoDS_Face *brep_builderapi_make_face_from_makewire(BRepBuilderAPI_MakeWire &wire) {
     return new TopoDS_Face(BRepBuilderAPI_MakeFace(wire).Face());
