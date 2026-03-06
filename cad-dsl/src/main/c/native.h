@@ -17,9 +17,16 @@ int visualize(void*);
 #define TopoDS_Shape void
 #define BRepBuilderAPI_MakeWire void
 #define BRepBuilderAPI_Transform void
+#define gp_Ax2d void
+#define gp_Pnt2d void
+#define Geom_Curve void
+#define Geom2d_Curve void
+#define Geom_Surface void
+#define BRepBuilderAPI_MakeShape void
 #define Standard_Real double
 
 gp_Dir2d *gp_dir_2d_new();
+gp_Ax2d *gp_ax_2d_new_pt_dir(const gp_Pnt2d *theP, const gp_Dir2d *theV);
 gp_Pnt *gp_pnt_new(const Standard_Real theXp, const Standard_Real theYp, const Standard_Real theZp);
 gp_Vec *gp_vec_new(const Standard_Real theXp, const Standard_Real theYp, const Standard_Real theZp);
 Standard_Real gp_pnt_x(gp_Pnt *pnt);
@@ -29,7 +36,10 @@ Handle(Geom_TrimmedCurve)* gc_make_arc_of_circle(gp_Pnt *pnt1, gp_Pnt *pnt2, gp_
 Handle(Geom_TrimmedCurve)* gc_make_arc_of_circle_tan(gp_Pnt *pnt1, gp_Vec *v, gp_Pnt *pnt3);
 Handle(Geom_TrimmedCurve)* gc_make_segment(gp_Pnt *pnt1, gp_Pnt *pnt2);
 const TopoDS_Edge* brep_builderapi_make_edge(Handle(Geom_TrimmedCurve)* segment);
+TopoDS_Shape* brep_builderapi_make_shape_Shape(BRepBuilderAPI_MakeShape *shape);
+TopoDS_Edge *brep_builderapi_make_edge2(Handle(Geom2d_Curve) *curve, Handle(Geom_Surface) *surface);
 const TopoDS_Wire* brep_builderapi_make_wire_topo_ds_wire(TopoDS_Edge* e1, TopoDS_Edge* e2, TopoDS_Edge* e3);
+TopoDS_Wire *brep_builderapi_make_wire_topo_ds_wire2p(TopoDS_Edge* e1, TopoDS_Edge *e2);
 const TopoDS_Wire* brep_builderapi_make_wire_topo_ds_wire2(BRepBuilderAPI_MakeWire* make_wire);
 const BRepBuilderAPI_MakeWire* brep_builderapi_make_wire_new(void);
 void brep_builderapi_wire_add(BRepBuilderAPI_MakeWire* mw, TopoDS_Wire* wire);

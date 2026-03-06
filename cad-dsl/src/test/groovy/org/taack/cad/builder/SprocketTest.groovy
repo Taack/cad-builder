@@ -15,40 +15,40 @@ class SprocketTest {
     double chain_width = 6.35
 
     // Dimensions derived from the provided inputs
-    double roller_radius = roller_diameter / 2.0;
-    double tooth_angle = (2 * Math.PI) / num_teeth;
-    double pitch_circle_diameter = pitch / Math.sin(tooth_angle.toDouble() / 2.0);
-    double pitch_circle_radius = pitch_circle_diameter / 2.0;
+    double roller_radius = roller_diameter / 2.0
+    double tooth_angle = (2 * Math.PI) / num_teeth
+    double pitch_circle_diameter = pitch / Math.sin(tooth_angle.toDouble() / 2.0)
+    double pitch_circle_radius = pitch_circle_diameter / 2.0
 
     double roller_contact_angle_min =
-            (Math.PI * 120 / 180) - ((Math.PI / 2) / num_teeth);
+            (Math.PI * 120 / 180) - ((Math.PI / 2) / num_teeth)
     double roller_contact_angle_max =
-            (Math.PI * 140 / 180) - ((Math.PI / 2) / num_teeth);
+            (Math.PI * 140 / 180) - ((Math.PI / 2) / num_teeth)
     double roller_contact_angle =
-            (roller_contact_angle_min + roller_contact_angle_max) / 2.0;
+            (roller_contact_angle_min + roller_contact_angle_max) / 2.0
 
-    double tooth_radius_min = 0.505 * roller_diameter;
+    double tooth_radius_min = 0.505 * roller_diameter
     double tooth_radius_max =
-            tooth_radius_min + (0.069 * Math.pow(roller_diameter.toDouble(), 1.0d / 3.0));
-    double tooth_radius = (tooth_radius_min + tooth_radius_max) / 2.0;
+            tooth_radius_min + (0.069 * Math.pow(roller_diameter.toDouble(), 1.0d / 3.0))
+    double tooth_radius = (tooth_radius_min + tooth_radius_max) / 2.0
 
-    double profile_radius = 0.12 * roller_diameter * (num_teeth + 2);
+    double profile_radius = 0.12 * roller_diameter * (num_teeth + 2)
     double top_diameter =
-            pitch_circle_diameter + ((1 - (1.6 / num_teeth)) * pitch) - roller_diameter;
-    double top_radius = top_diameter / 2.0;
+            pitch_circle_diameter + ((1 - (1.6 / num_teeth)) * pitch) - roller_diameter
+    double top_radius = top_diameter / 2.0
 
-    double thickness = chain_width * 0.95;
+    double thickness = chain_width * 0.95
 
     // Center hole data
-    double center_radius = 125.0 / 2.0;
+    double center_radius = 125.0 / 2.0
 
     // Mounting hole data
-    BigInteger mounting_hole_count = 6;
-    double mounting_radius = 153.0 / 2.0;
-    double hole_radius = 8.5 / 2.0;
+    BigInteger mounting_hole_count = 6
+    double mounting_radius = 153.0 / 2.0
+    double hole_radius = 8.5 / 2.0
 
 
-    CadBuilder buildTooth() {
+    void buildTooth() {
 
         Vec2d baseCenter = new Vec2d(pitch_circle_radius + (tooth_radius - roller_radius), 0)
 //        def baseCircle = nl.gp_circ2d_new(nl.gp_ax_2d_new_pt_dir(baseCenter, nl.gp_Dir2d()),

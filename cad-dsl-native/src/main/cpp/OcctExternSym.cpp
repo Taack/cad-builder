@@ -200,8 +200,12 @@ extern "C" void gc_delete_segment(Handle(Geom_TrimmedCurve)* ptr) {
     delete ptr;
 }
 
-extern "C" const TopoDS_Edge *brep_builderapi_make_edge(Handle(Geom_TrimmedCurve) &segment) {
+extern "C" const TopoDS_Edge *brep_builderapi_make_edge(Handle(Geom_Curve) &segment) {
     return new TopoDS_Edge(BRepBuilderAPI_MakeEdge(segment).Edge());
+}
+
+extern "C" const TopoDS_Edge *brep_builderapi_make_edge2(Handle(Geom2d_Curve) &curve, const Handle(Geom_Surface) &surface) {
+    return new TopoDS_Edge(BRepBuilderAPI_MakeEdge(curve, surface));
 }
 
 extern "C" void brep_builderapi_delete_edge(TopoDS_Edge *ptr) {
@@ -220,8 +224,12 @@ extern "C" void brep_builderapi_make_wire_add(BRepBuilderAPI_MakeWire& wireMaker
     wireMaker.Add(edge);
 }
 
-extern "C" const TopoDS_Wire *brep_builderapi_make_wire_topo_ds_wire(TopoDS_Edge e1, TopoDS_Edge e2, TopoDS_Edge e3) {
+extern "C" const TopoDS_Wire *brep_builderapi_make_wire_topo_ds_wire(TopoDS_Edge& e1, TopoDS_Edge& e2, TopoDS_Edge& e3) {
     return new TopoDS_Wire(BRepBuilderAPI_MakeWire(e1, e2, e3).Wire());
+}
+
+extern "C" const TopoDS_Wire *brep_builderapi_make_wire_topo_ds_wire2p(TopoDS_Edge& e1, TopoDS_Edge& e2) {
+    return new TopoDS_Wire(BRepBuilderAPI_MakeWire(e1, e2).Wire());
 }
 
 extern "C" const TopoDS_Wire &brep_builderapi_make_wire_topo_ds_wire2(BRepBuilderAPI_MakeWire &make_wire) {
@@ -640,6 +648,10 @@ extern "C" void deleteVoid(void *ptr) {
 
 extern "C" gp_Pln* plane_create(const Standard_Real x, const Standard_Real y, const Standard_Real z, const Standard_Real d) {
     return new gp_Pln(x, y, z, d);
+}
+
+extern "C" TopoDS_Shape* brep_builderapi_make_shape_Shape(BRepBuilderAPI_MakeShape &shape) {
+    return new TopoDS_Shape(shape.Shape());
 }
 
 /*

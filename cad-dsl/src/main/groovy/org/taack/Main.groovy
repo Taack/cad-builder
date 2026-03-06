@@ -103,12 +103,62 @@ static void mainBottle() {
 
     myBody = nl.brep_builderapi_make_shape(aSolidMaker)
 
+    // Threading: Create Surfaces
+    def aCyl1 = nl.geom_cylindrical_surface_create(neckAx2, myNeckRadius * 0.99)
+    def aCyl2 = nl.geom_cylindrical_surface_create(neckAx2, myNeckRadius * 1.05)
+
+    // Threading: Define 2D Curves
+    def aPnt = nl.make_gp_pnt2d(2.0 * Math.PI, myNeckHeight / 2.0d)
+    def aDir = nl.make_gp_dir2d(2.0 * Math.PI, myNeckHeight / 4.0d)
+    def anAx2d = nl.gp_ax_2d_new_pt_dir(aPnt, aDir)
+
+    double aMajor = 2.0 * Math.PI
+    double aMinor = myNeckHeight / 10
+
+    def anEllipse1 = nl.geom2d_ellipse_create(anAx2d, aMajor, aMinor, 1)
+    def anEllipse2 = nl.geom2d_ellipse_create(anAx2d, aMajor, aMinor / 4.0d, 1)
+
+    def anArc1 = nl.geom2d_trimmed_curve_create(anEllipse1, 0, Math.PI, 1, 1)
+    def anArc2 = nl.geom2d_trimmed_curve_create(anEllipse2, 0, Math.PI, 1, 1)
+
+
+    def anEllipsePnt1 = nl.geom2d_ellipse_value(anEllipse1, 0.0d)
+    def anEllipsePnt2 = nl.geom2d_ellipse_value(anEllipse1, Math.PI)
+    def aSegment = nl.gce2d_make_segment(anEllipsePnt1, anEllipsePnt2)
+
+    // Threading: Build Edges and Wiresnew
+    def anEdge1OnSurf1 = nl.brep_builderapi_make_edge2(anArc1, aCyl1)
+    def anEdge2OnSurf1 = nl.brep_builderapi_make_edge2(aSegment, aCyl1)
+    def anEdge1OnSurf2 = nl.brep_builderapi_make_edge2(anArc2, aCyl2)
+    def anEdge2OnSurf2 = nl.brep_builderapi_make_edge2(aSegment, aCyl2)
+
+    def threadingWire1 = nl.brep_builderapi_make_wire_topo_ds_wire2p(anEdge1OnSurf1, anEdge2OnSurf1)
+    def threadingWire2 = nl.brep_builderapi_make_wire_topo_ds_wire2p(anEdge1OnSurf2, anEdge2OnSurf2)
+
+    nl.brep_lib_build_curves_3d(threadingWire1)
+    nl.brep_lib_build_curves_3d(threadingWire2)
+
+    // Create Threading
+    def aTool = nl.brep_tool_thru_sections(1, 0, 1.0e-06d)
+    nl.brep_tool_thru_sections_add_wire(aTool, threadingWire1)
+    nl.brep_tool_thru_sections_add_wire(aTool, threadingWire2)
+    nl.brep_tool_thru_sections_check_compatibility(aTool, 0)
+
+    def myThreading = nl.brep_builderapi_make_shape_Shape(aTool)
+
+    // Building the Resulting Compound
+    def aRes = nl.topods_compound_create()
+    def aBuilder = nl.brep_builder_create()
+    nl.brep_builder_make_compound(aBuilder, aRes)
+    nl.brep_builder_add(aBuilder, aRes, myBody)
+    nl.brep_builder_add(aBuilder, aRes, myThreading)
+
     try (Arena arena = Arena.ofConfined()) {
         MemorySegment t = arena.allocateFrom('Test.png')
         nl.dumpShape(myBody, 512, 512, t)
     }
 
-    nl.visualize(myBody)
+    nl.visualize(aRes)
 }
 
 

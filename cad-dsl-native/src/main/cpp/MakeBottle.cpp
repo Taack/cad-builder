@@ -1,5 +1,5 @@
 //
-// Created by auo on 27/07/24.
+// https://dev.opencascade.org/doc/overview/html/occt__tutorial.html
 //
 
 #include <TopoDS.hxx>
@@ -47,12 +47,9 @@ TopoDS_Shape MakeBottle(const Standard_Real myWidth, const Standard_Real myHeigh
     std::cout << "aPnt1: " << aPnt1.X() << std::endl;
 
     Handle(Geom_TrimmedCurve) anArcOfCircle = GC_MakeArcOfCircle(aPnt2, aPnt3, aPnt4);
-    std::cout << "aSegment1:" << std::endl;
     Handle(Geom_TrimmedCurve) aSegment1 = GC_MakeSegment(aPnt1, aPnt2);
-    std::cout << "aSegment2:" << std::endl;
     Handle(Geom_TrimmedCurve) aSegment2 = GC_MakeSegment(aPnt4, aPnt5);
 
-    std::cout << "aSegment3:" << std::endl;
     // Profile: Define the Topology
     TopoDS_Edge anEdge1 = BRepBuilderAPI_MakeEdge(aSegment1);
     std::cout << "aSegment4:" << std::endl;
