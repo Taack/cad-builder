@@ -1,15 +1,72 @@
 package org.taack
 
 import groovy.transform.CompileStatic
-import org.taack.occt.NativeLib as nl
+import org.taack.cad.dsl.builder.Vec2d
 import org.taack.cad.dsl.dump.direct.ShapeEnum
+import org.taack.occt.NativeLib as nl
 
 import java.lang.foreign.Arena
 import java.lang.foreign.MemorySegment
 
+@CompileStatic
+class Sprocket {
+    double M_PI = Math.PI
+// The basic inputs needed to build a sprocket
+    double roller_diameter = 10.2
+    double pitch = 15.875
+    int num_teeth = 40
+    double chain_width = 6.35
+
+// Dimensions derived from the provided inputs
+    double roller_radius = roller_diameter / 2.0
+    double tooth_angle = (2 * M_PI) / num_teeth
+    double pitch_circle_diameter = pitch / Math.sin(tooth_angle / 2.0d)
+    double pitch_circle_radius = pitch_circle_diameter / 2.0
+
+    double roller_contact_angle_min =
+            (M_PI * 120 / 180) - ((M_PI / 2) / num_teeth)
+    double roller_contact_angle_max =
+            (M_PI * 140 / 180) - ((M_PI / 2) / num_teeth)
+    double roller_contact_angle =
+            (roller_contact_angle_min + roller_contact_angle_max) / 2.0
+
+    double tooth_radius_min = 0.505 * roller_diameter
+    double tooth_radius_max =
+            tooth_radius_min + (0.069 * Math.pow(roller_diameter, 1.0/3.0d))
+    double tooth_radius = (tooth_radius_min + tooth_radius_max) / 2.0
+
+    double profile_radius = 0.12 * roller_diameter * (num_teeth + 2)
+    double top_diameter =
+            pitch_circle_diameter + ((1-(1.6/num_teeth)) * pitch) - roller_diameter
+    double top_radius = top_diameter / 2.0
+
+    double thickness = chain_width * 0.95
+
+// Center hole data
+    double center_radius = 125.0 / 2.0
+
+// Mounting hole data
+    int mounting_hole_count = 6
+    double mounting_radius = 153.0 / 2.0
+    double hole_radius = 8.5 / 2.0
+
+
+    MemorySegment buildTooth() {
+        Vec2d baseCenter = new Vec2d(pitch_circle_radius + (tooth_radius - roller_radius), 0)
+//        def baseCircle = nl.gp_circ2d_new(nl.gp_ax_2d_new_pt_dir(baseCenter, nl.gp_Dir2d()),
+//                                      tooth_radius)
+        null
+    }
+
+}
+
+
+static void mainSprocket() {
+
+}
 
 @CompileStatic
-static void main(String[] args) {
+static void mainBottle() {
     double myWidth = 50.0
     double myHeight = 70.0
     double myThickness = 30.0
@@ -105,9 +162,13 @@ static void main(String[] args) {
     myBody = nl.brep_builderapi_make_shape(aSolidMaker)
 
     try (Arena arena = Arena.ofConfined()) {
-        MemorySegment t = arena.allocateFrom('Test.png');
+        MemorySegment t = arena.allocateFrom('Test.png')
         nl.dumpShape(myBody, 512, 512, t)
     }
 
     nl.visualize(myBody)
 }
+
+
+mainBottle()
+

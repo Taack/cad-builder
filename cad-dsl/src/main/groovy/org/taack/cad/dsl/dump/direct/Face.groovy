@@ -1,6 +1,8 @@
 package org.taack.cad.dsl.dump.direct
 
 import groovy.transform.CompileStatic
+import org.taack.cad.dsl.builder.Axe
+import org.taack.cad.dsl.builder.Vec
 import org.taack.occt.NativeLib as nl
 
 @CompileStatic

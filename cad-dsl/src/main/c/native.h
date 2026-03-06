@@ -3,6 +3,7 @@
 void* cMakeBottle(const double, const double, const double);
 int visualize(void*);
 
+#define gp_Dir2d void
 #define gp_Pln void
 #define gp_Pnt void
 #define gp_Vec void
@@ -18,6 +19,7 @@ int visualize(void*);
 #define BRepBuilderAPI_Transform void
 #define Standard_Real double
 
+gp_Dir2d *gp_dir_2d_new();
 gp_Pnt *gp_pnt_new(const Standard_Real theXp, const Standard_Real theYp, const Standard_Real theZp);
 gp_Vec *gp_vec_new(const Standard_Real theXp, const Standard_Real theYp, const Standard_Real theZp);
 Standard_Real gp_pnt_x(gp_Pnt *pnt);

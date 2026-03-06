@@ -1,8 +1,8 @@
-package org.taack.cad.builder.cwrapper
+package org.taack.cad.builder
 
 import org.junit.jupiter.api.Test
+import org.taack.cad.dsl.builder.Vec
 import org.taack.cad.dsl.dump.direct.CadBuilder
-import org.taack.cad.dsl.dump.direct.Vec
 
 import static org.taack.cad.dsl.dump.direct.CadBuilder.cb
 
@@ -20,7 +20,6 @@ class SolidFuseAndCutTest {
         def c = cb().sphere(radius, new Vec(1.0), -angle, angle).topZ().center {
             hole featureDiameter
         }
-
         c
     }
 

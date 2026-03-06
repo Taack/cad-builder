@@ -1,4 +1,4 @@
-package org.taack.cad.builder.cwrapper
+package org.taack.cad.builder
 
 import org.junit.jupiter.api.Test
 import org.taack.cad.dsl.dump.direct.CadBuilder

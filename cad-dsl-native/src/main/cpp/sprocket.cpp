@@ -509,7 +509,7 @@ TopoDS_Shape Cutout(TopoDS_Shape base)
     return result;
 }
 
-int mainSprocket()
+int main()
 {
 
      // Build a wedge containing one tooth
@@ -531,7 +531,7 @@ int mainSprocket()
      TopoDS_Shape finished_sprocket = Cutout(mountable_disc);
 
      // Write the result to a brep file
-     BRepTools::Write(finished_sprocket, "sprocket.step");
+     BRepTools::Write(finished_sprocket, "sprocket.brep");
 
      cout << "Done" << endl;
 

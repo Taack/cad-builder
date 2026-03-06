@@ -62,6 +62,100 @@
 OcctExternSym::OcctExternSym() {
 }
 
+/*
+
+    2D
+
+*/
+
+extern "C" gp_Ax2d *gp_ax_2d_new() {
+    return new gp_Ax2d();
+}
+
+extern "C" gp_Ax2d *gp_ax_2d_new_pt_dir(const gp_Pnt2d &theP, const gp_Dir2d &theV) {
+    return new gp_Ax2d(theP, theV);
+}
+
+extern "C" gp_Dir2d *gp_dir_2d_new() {
+    return new gp_Dir2d();
+}
+
+extern "C" gp_Dir2d *gp_dir_2d_new() {
+    return new gp_Dir2d();
+}
+
+extern "C" gp_Pnt2d *make_gp_pnt2d(const Standard_Real theXp, const Standard_Real theYp) {
+    return new gp_Pnt2d(theXp, theYp);
+}
+
+extern "C" gp_Dir2d *make_gp_dir2d(const Standard_Real theXp, const Standard_Real theYp) {
+    return new gp_Dir2d(theXp, theYp);
+}
+
+extern "C" Handle(Geom2d_Ellipse) *geom2d_ellipse_create(const gp_Ax2d &MajorAxis, const Standard_Real MajorRadius,
+                                                         const Standard_Real MinorRadius,
+                                                         const Standard_Boolean Sense = Standard_True) {
+    return new Handle(Geom2d_Ellipse)(new Geom2d_Ellipse(MajorAxis, MajorRadius, MinorRadius, Sense));
+}
+
+extern "C" Handle(Geom2d_TrimmedCurve) *geom2d_trimmed_curve_create(const Handle(Geom2d_Curve) &C,
+                                                                    const Standard_Real U1, const Standard_Real U2,
+                                                                    const Standard_Boolean Sense = Standard_True,
+                                                                    const Standard_Boolean theAdjustPeriodic =
+                                                                        Standard_True) {
+    return new Handle(Geom2d_TrimmedCurve)(new Geom2d_TrimmedCurve(C, U1, U2, Sense, theAdjustPeriodic));
+}
+
+extern "C" gp_Pnt2d *geom2d_ellipse_value(Handle(Geom2d_Ellipse) &geom2d_ellipse, const Standard_Real U) {
+    return new gp_Pnt2d(geom2d_ellipse->Value(U));
+}
+
+extern "C" Handle(Geom2d_TrimmedCurve) *gce2d_make_segment(const gp_Pnt2d &P1, const gp_Pnt2d &P2) {
+    return new Handle(Geom2d_TrimmedCurve)(GCE2d_MakeSegment(P1, P2));
+}
+
+extern "C" Handle(Geom2d_TrimmedCurve)* gce2d_makearcofcircle(gp_Circ2d& circ2d, gp_Pnt2d& p1, gp_Pnt2d& p2) {
+    return new Handle(Geom2d_TrimmedCurve)(GCE2d_MakeArcOfCircle(circ2d, p1, p2));
+}
+
+extern "C" void geom2d_trimmedcurve_mirror(Geom2d_TrimmedCurve& curve, gp_Ax2d& ax2d) {
+    curve.Mirror(ax2d);
+}
+
+extern "C" void geom2d_trimmedcurve_reverse(Geom2d_TrimmedCurve& curve) {
+    curve.Reverse();
+}
+
+extern "C" gp_Pnt2d* geom2d_trimmedcurve_endpoint(Geom2d_TrimmedCurve& curve) {
+    return new gp_Pnt2d(curve.EndPoint());
+}
+
+extern "C" gp_Pnt2d* geom2d_trimmedcurve_startpoint(Geom2d_TrimmedCurve& curve) {
+    return new gp_Pnt2d(curve.StartPoint());
+}
+
+extern "C" gp_Circ2d* gp_circ2d_new(gp_Ax2d &ax2d, Standard_Real theRadius) {
+    return new gp_Circ2d(ax2d, theRadius);
+}
+
+extern "C" Handle(Geom2d_Circle)* gce2d_makecircle(gp_Circ2d &ptr) {
+    return new Handle(Geom2d_Circle)(GCE2d_MakeCircle(ptr));
+}
+
+extern "C" Geom2dAPI_InterCurveCurve* geom2dapi_intercurvecurve_new(const Handle(Geom2d_Curve)& C1, const Handle(Geom2d_Curve)& C2) {
+    return new Geom2dAPI_InterCurveCurve(C1, C2);
+}
+
+extern "C" Standard_Integer geom2dapi_intercurvecurve_nbpoints(const Geom2dAPI_InterCurveCurve &inter_curve_curve) {
+    return inter_curve_curve.NbPoints();
+}
+
+/*
+
+    3D
+
+*/
+
 extern "C" gp_Pnt *gp_pnt_new(const Standard_Real theXp, const Standard_Real theYp, const Standard_Real theZp) {
     return new gp_Pnt(theXp, theYp, theZp);
 }
@@ -178,11 +272,6 @@ extern "C" BRepBuilderAPI_Transform *brep_builderapi_transform(const TopoDS_Wire
     return new BRepBuilderAPI_Transform(*w, *trsf);
 }
 
-
-// extern "C" const TopoDS_Shape &brep_builderapi_transform_shape(BRepBuilderAPI_Transform *b_rep_transform) {
-//     return b_rep_transform->Shape();
-// }
-
 extern "C" TopoDS_Wire &topo_ds_wire(TopoDS_Shape &shape) {
     return TopoDS::Wire(shape);
 }
@@ -271,10 +360,6 @@ extern "C" void brep_filletapi_make_fillet_add(BRepFilletAPI_MakeFillet &make_fi
     return make_fillet.Add(r, edge);
 }
 
-// extern "C" TopoDS_Shape *brep_filletapi_make_fillet_shape(BRepFilletAPI_MakeFillet &make_fillet) {
-//     return new TopoDS_Shape(make_fillet.Shape());
-// }
-
 extern "C" const gp_Dir *gp_dz() {
     return new gp_Dir(gp::DZ());
 }
@@ -347,44 +432,9 @@ extern "C" void brep_offset_api_make_thick_solid_join(BRepOffsetAPI_MakeThickSol
     thick_solid->MakeThickSolidByJoin(*shape, *face_to_remove, thickness, tol);
 }
 
-//
-// extern "C" TopoDS_Shape *brep_offset_api_make_thick_solid_shape(BRepOffsetAPI_MakeThickSolid *thick_solid) {
-//     return new TopoDS_Shape(thick_solid->Shape());
-// }
-
 extern "C" Handle(Geom_CylindricalSurface) *geom_cylindrical_surface_create(
     const gp_Ax3 &ax2, const Standard_Real radius) {
     return new Handle(Geom_CylindricalSurface)(new Geom_CylindricalSurface(ax2, radius));
-}
-
-extern "C" gp_Pnt2d *make_gp_pnt2d(const Standard_Real theXp, const Standard_Real theYp) {
-    return new gp_Pnt2d(theXp, theYp);
-}
-
-extern "C" gp_Dir2d *make_gp_dir2d(const Standard_Real theXp, const Standard_Real theYp) {
-    return new gp_Dir2d(theXp, theYp);
-}
-
-extern "C" Handle(Geom2d_Ellipse) *geom2d_ellipse_create(const gp_Ax2d &MajorAxis, const Standard_Real MajorRadius,
-                                                         const Standard_Real MinorRadius,
-                                                         const Standard_Boolean Sense = Standard_True) {
-    return new Handle(Geom2d_Ellipse)(new Geom2d_Ellipse(MajorAxis, MajorRadius, MinorRadius, Sense));
-}
-
-extern "C" Handle(Geom2d_TrimmedCurve) *geom2d_trimmed_curve_create(const Handle(Geom2d_Curve) &C,
-                                                                    const Standard_Real U1, const Standard_Real U2,
-                                                                    const Standard_Boolean Sense = Standard_True,
-                                                                    const Standard_Boolean theAdjustPeriodic =
-                                                                        Standard_True) {
-    return new Handle(Geom2d_TrimmedCurve)(new Geom2d_TrimmedCurve(C, U1, U2, Sense, theAdjustPeriodic));
-}
-
-extern "C" gp_Pnt2d *geom2d_ellipse_value(Handle(Geom2d_Ellipse) &geom2d_ellipse, const Standard_Real U) {
-    return new gp_Pnt2d(geom2d_ellipse->Value(U));
-}
-
-extern "C" Handle(Geom2d_TrimmedCurve) *gce2d_make_segment(const gp_Pnt2d &P1, const gp_Pnt2d &P2) {
-    return new Handle(Geom2d_TrimmedCurve)(GCE2d_MakeSegment(P1, P2));
 }
 
 extern "C" void brep_lib_build_curves_3d(TopoDS_Wire &w1) {
@@ -406,10 +456,6 @@ extern "C" void brep_tool_thru_sections_check_compatibility(BRepOffsetAPI_ThruSe
     thru_sections->CheckCompatibility(b);
 }
 
-// extern "C" TopoDS_Shape *brep_tool_thru_sections_shape(BRepOffsetAPI_ThruSections *thru_sections) {
-//     return new TopoDS_Shape(thru_sections->Shape());
-// }
-
 extern "C" TopoDS_Compound *topods_compound_create() {
     return new TopoDS_Compound();
 }
@@ -430,83 +476,6 @@ extern "C" void brep_builder_add(BRep_Builder &b, TopoDS_Compound &c, TopoDS_Sha
     b.Add(c, s);
 }
 
-extern "C" bool dumpShape(const TopoDS_Shape &shape, const Standard_Integer width, const Standard_Integer height,
-                          const char *fileName) {
-    Handle(Aspect_DisplayConnection)
-        _displayConnection = new Aspect_DisplayConnection();
-
-    // don't waste the time waiting for VSync when window is not displayed on the screen
-    OpenGl_Caps _caps;
-    _caps.buffersNoSwap = true;
-
-    Handle(OpenGl_GraphicDriver)
-        _graphicDriver = new OpenGl_GraphicDriver(_displayConnection, false);
-    //
-    _graphicDriver->ChangeOptions() = _caps;
-    _graphicDriver->InitContext();
-
-    //* Viewer setup
-    Handle(V3d_Viewer) _viewer = new V3d_Viewer(_graphicDriver);
-    Quantity_Color bgColor(255. / 255, 255. / 255, 255. / 255, Quantity_TOC_RGB);
-    _viewer->SetDefaultBackgroundColor(bgColor);
-    _viewer->SetDefaultLights();
-    _viewer->SetLightOn();
-
-    Handle(V3d_View)
-        _view = new V3d_View(_viewer, _viewer->DefaultTypeOfView());
-
-#ifdef _WIN32
-  /* Window - create a so called "virtual" WNT window that is a pure WNT window
-     redefined to be never shown. */
-  Handle(WNT_WClass) _wClass = new WNT_WClass("GW3D_Class", (void*) DefWindowProcW,
-    CS_VREDRAW | CS_HREDRAW, 0, 0,
-    ::LoadCursor(NULL, IDC_ARROW));
-
-  Handle(WNT_Window) _win = new WNT_Window("",
-    _wClass,
-    WS_POPUP,
-    0, 0,
-    width, height,
-    Quantity_NOC_BLACK);
-
-  _win->SetVirtual(true);
-  _view->SetWindow(_win);
-
-#else // Linux
-    Handle(Xw_Window) _win = new Xw_Window(_graphicDriver->GetDisplayConnection(),
-                                           "",
-                                           0, 0,
-                                           width, height);
-    _win->SetVirtual(true);
-    _view->SetWindow(_win);
-#endif
-
-    //* View setup
-    _view->SetWindow(_win);
-    _view->SetComputedMode(false);
-    _view->SetProj(V3d_XposYnegZpos);
-    _view->AutoZFit();
-
-    //* AIS context
-    Handle(AIS_InteractiveContext) _context = new AIS_InteractiveContext(_viewer);
-    _context->SetDisplayMode(AIS_Shaded, false);
-    _context->DefaultDrawer()->SetFaceBoundaryDraw(true);
-
-    // Render immediate structures into back buffer rather than front.
-    _view->View()->SetImmediateModeDrawToFront(false);
-
-    //* Dump
-    Handle(Image_AlienPixMap) pixmap = new Image_AlienPixMap;
-    Quantity_Color _shapeColor(200. / 255, 200. / 255, 200. / 255, Quantity_TOC_RGB);
-
-    Handle(AIS_Shape) _shapePrs = new AIS_Shape(shape);
-    _shapePrs->SetColor(_shapeColor);
-    _context->Display(_shapePrs, false);
-    _view->FitAll(0.1, true);
-
-    _view->ToPixMap(*pixmap, width, height);
-    return pixmap->Save(fileName);
-}
 
 extern "C" TopoDS_Shape *make_hole(const TopoDS_Shape &shape, const gp_Ax1 &ax1, const Standard_Real Radius,
                                    const Standard_Real PFrom, const Standard_Real PTo) {
@@ -615,7 +584,7 @@ extern "C" TopoDS_Shape *brep_algoapi_cut(TopoDS_Shape &result, TopTools_ListOfS
     Standard_Boolean bRunParallel;
     Standard_Real aFuzzyValue;
     BRepAlgoAPI_Cut aBuilder;
-    // perpare the arguments
+    // prepare the arguments
     TopTools_ListOfShape aLS;
     aLS.Append(result);
     //
@@ -664,34 +633,102 @@ extern "C" TopoDS_Shape *brep_primapi_make_thorus(const gp_Ax2 &origin, const St
                                                   radius2).Shape());
 }
 
-extern "C" void analyze(const TopoDS_Shape &myShape) {
-    BRepCheck_Analyzer checker(myShape);
-    if (checker.IsValid()) {
-        std::cout << "Valide Shaoe " << std::endl << std::flush;
-        return;
-    }
-    std::cout << "Not valid Shaoe " << std::endl << std::flush;
-    Handle(BRepCheck_Result) r = checker.Result(myShape);
-    if (r->IsBlind())
-        std::cout << "Shape is Blind" << std::endl;
-    if (r->IsMinimum())
-        std::cout << "Shape is Min" << std::endl;
-    //
-    // BRepCheck_HListOfStatus aSL = r->Status();
-    // for(BRepCheck_ListIteratorOfListOfStatus it = aSL.(); it != aSL.end(); ++it)
-    // {
-    //     std::cout << "Status " << it.Index() << std::endl;
-    //     std::cout << "Shape " << it.Index() << std::endl;
-    // }
+
+extern "C" TopoDS_Shape* brep_primapi_makerevol(TopoDS_Face& face, gp_Ax1& ax1) {
+    return new TopoDS_Shape(BRepPrimAPI_MakeRevol(face, ax1).Shape());
 }
-//
-// extern "C" TopTools_ListOfShape *toptools_listofshape_new() {
-//     return new TopTools_ListOfShape();
-// }
-//
-// extern "C" void toptools_listofshape_append(TopTools_ListOfShape &ls, const TopoDS_Shape &myShape) {
-//     ls.Append(myShape);
-// }
+
+extern "C" void deleteVoid(void *ptr) {
+    delete ptr;
+}
+
+extern "C" gp_Pln* plane_create(const Standard_Real x, const Standard_Real y, const Standard_Real z, const Standard_Real d) {
+    return new gp_Pln(x, y, z, d);
+}
+
+/*
+
+OUTPUT
+
+*/
+
+extern "C" bool dumpShape(const TopoDS_Shape &shape, const Standard_Integer width, const Standard_Integer height,
+                          const char *fileName) {
+    Handle(Aspect_DisplayConnection)
+        _displayConnection = new Aspect_DisplayConnection();
+
+    // don't waste the time waiting for VSync when window is not displayed on the screen
+    OpenGl_Caps _caps;
+    _caps.buffersNoSwap = true;
+
+    Handle(OpenGl_GraphicDriver)
+        _graphicDriver = new OpenGl_GraphicDriver(_displayConnection, false);
+    //
+    _graphicDriver->ChangeOptions() = _caps;
+    _graphicDriver->InitContext();
+
+    //* Viewer setup
+    Handle(V3d_Viewer) _viewer = new V3d_Viewer(_graphicDriver);
+    Quantity_Color bgColor(255. / 255, 255. / 255, 255. / 255, Quantity_TOC_RGB);
+    _viewer->SetDefaultBackgroundColor(bgColor);
+    _viewer->SetDefaultLights();
+    _viewer->SetLightOn();
+
+    Handle(V3d_View)
+        _view = new V3d_View(_viewer, _viewer->DefaultTypeOfView());
+
+#ifdef _WIN32
+  /* Window - create a so called "virtual" WNT window that is a pure WNT window
+     redefined to be never shown. */
+  Handle(WNT_WClass) _wClass = new WNT_WClass("GW3D_Class", (void*) DefWindowProcW,
+    CS_VREDRAW | CS_HREDRAW, 0, 0,
+    ::LoadCursor(NULL, IDC_ARROW));
+
+  Handle(WNT_Window) _win = new WNT_Window("",
+    _wClass,
+    WS_POPUP,
+    0, 0,
+    width, height,
+    Quantity_NOC_BLACK);
+
+  _win->SetVirtual(true);
+  _view->SetWindow(_win);
+
+#else // Linux
+    Handle(Xw_Window) _win = new Xw_Window(_graphicDriver->GetDisplayConnection(),
+                                           "",
+                                           0, 0,
+                                           width, height);
+    _win->SetVirtual(true);
+    _view->SetWindow(_win);
+#endif
+
+    //* View setup
+    _view->SetWindow(_win);
+    _view->SetComputedMode(false);
+    _view->SetProj(V3d_XposYnegZpos);
+    _view->AutoZFit();
+
+    //* AIS context
+    Handle(AIS_InteractiveContext) _context = new AIS_InteractiveContext(_viewer);
+    _context->SetDisplayMode(AIS_Shaded, false);
+    _context->DefaultDrawer()->SetFaceBoundaryDraw(true);
+
+    // Render immediate structures into back buffer rather than front.
+    _view->View()->SetImmediateModeDrawToFront(false);
+
+    //* Dump
+    Handle(Image_AlienPixMap) pixmap = new Image_AlienPixMap;
+    Quantity_Color _shapeColor(200. / 255, 200. / 255, 200. / 255, Quantity_TOC_RGB);
+
+    Handle(AIS_Shape) _shapePrs = new AIS_Shape(shape);
+    _shapePrs->SetColor(_shapeColor);
+    _context->Display(_shapePrs, false);
+    _view->FitAll(0.1, true);
+
+    _view->ToPixMap(*pixmap, width, height);
+    return pixmap->Save(fileName);
+}
 
 extern "C" void write_step(const TopoDS_Shape& shape, const char *fileName)
 {
@@ -720,52 +757,17 @@ extern "C" void write_stl(const TopoDS_Shape& shape, const char *fileName)
     stl_writer.Write(shape, fileName);
 }
 
-
-extern "C" TopoDS_Shape* brep_primapi_makerevol(TopoDS_Face& face, gp_Ax1& ax1) {
-    return new TopoDS_Shape(BRepPrimAPI_MakeRevol(face, ax1).Shape());
+extern "C" void analyze(const TopoDS_Shape &myShape) {
+    BRepCheck_Analyzer checker(myShape);
+    if (checker.IsValid()) {
+        std::cout << "Valide Shaoe " << std::endl << std::flush;
+        return;
+    }
+    std::cout << "Not valid Shaoe " << std::endl << std::flush;
+    Handle(BRepCheck_Result) r = checker.Result(myShape);
+    if (r->IsBlind())
+        std::cout << "Shape is Blind" << std::endl;
+    if (r->IsMinimum())
+        std::cout << "Shape is Min" << std::endl;
 }
 
-extern "C" void deleteVoid(void *ptr) {
-    delete ptr;
-}
-
-
-extern "C" gp_Circ2d* gp_circ2d_new(gp_Ax2d &ax2d, Standard_Real theRadius) {
-    return new gp_Circ2d(ax2d, theRadius);
-}
-
-extern "C" Handle(Geom2d_Circle)* gce2d_makecircle(gp_Circ2d &ptr) {
-    return new Handle(Geom2d_Circle)(GCE2d_MakeCircle(ptr));
-}
-
-extern "C" Geom2dAPI_InterCurveCurve* geom2dapi_intercurvecurve_new(const Handle(Geom2d_Curve)& C1, const Handle(Geom2d_Curve)& C2) {
-    return new Geom2dAPI_InterCurveCurve(C1, C2);
-}
-
-extern "C" Standard_Integer geom2dapi_intercurvecurve_nbpoints(const Geom2dAPI_InterCurveCurve &inter_curve_curve) {
-    return inter_curve_curve.NbPoints();
-}
-
-extern "C" Handle(Geom2d_TrimmedCurve)* gce2d_makearcofcircle(gp_Circ2d& circ2d, gp_Pnt2d& p1, gp_Pnt2d& p2) {
-    return new Handle(Geom2d_TrimmedCurve)(GCE2d_MakeArcOfCircle(circ2d, p1, p2));
-}
-
-extern "C" void geom2d_trimmedcurve_mirror(Geom2d_TrimmedCurve& curve, gp_Ax2d& ax2d) {
-    curve.Mirror(ax2d);
-}
-
-extern "C" void geom2d_trimmedcurve_reverse(Geom2d_TrimmedCurve& curve) {
-    curve.Reverse();
-}
-
-extern "C" gp_Pnt2d* geom2d_trimmedcurve_endpoint(Geom2d_TrimmedCurve& curve) {
-    return new gp_Pnt2d(curve.EndPoint());
-}
-
-extern "C" gp_Pnt2d* geom2d_trimmedcurve_startpoint(Geom2d_TrimmedCurve& curve) {
-    return new gp_Pnt2d(curve.StartPoint());
-}
-
-extern "C" gp_Pln* plane_create(const Standard_Real x, const Standard_Real y, const Standard_Real z, const Standard_Real d) {
-    return new gp_Pln(x, y, z, d);
-}
