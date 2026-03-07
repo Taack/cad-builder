@@ -13,7 +13,3 @@ enum Axe {
     Vec vec
 }
 
-enum Qty {
-    max, min
-}
-
