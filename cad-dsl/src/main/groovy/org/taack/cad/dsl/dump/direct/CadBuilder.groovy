@@ -78,7 +78,7 @@ class CadBuilder extends Face {
                 } else
                 nl.dumpShape(currentShapeNative, w, h, t)
             }
-        } else nl.visualize(currentShapeNative)
+        } else nl.visualize(currentNative)
     }
 
     CadBuilder isValid() {
@@ -86,4 +86,16 @@ class CadBuilder extends Face {
         this
     }
 
+    MemorySegment getCurrentNative() {
+        if (currentShapeNative) {
+            println "AUO currentShapeNative"
+            currentShapeNative
+        } else if (currentFaceNative) {
+            println "AUO currentFaceNative"
+            currentFaceNative
+        } else {
+            println "AUO currentWireNative"
+            currentWireNative
+        }
+    }
 }

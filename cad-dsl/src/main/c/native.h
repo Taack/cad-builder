@@ -40,8 +40,9 @@ TopoDS_Shape* brep_builderapi_make_shape_Shape(BRepBuilderAPI_MakeShape *shape);
 TopoDS_Edge *brep_builderapi_make_edge2(Handle(Geom2d_Curve) *curve, Handle(Geom_Surface) *surface);
 const TopoDS_Wire* brep_builderapi_make_wire_topo_ds_wire(TopoDS_Edge* e1, TopoDS_Edge* e2, TopoDS_Edge* e3);
 TopoDS_Wire *brep_builderapi_make_wire_topo_ds_wire2p(TopoDS_Edge* e1, TopoDS_Edge *e2);
+TopoDS_Wire *brep_builderapi_make_wire_topo_ds_wire4p(TopoDS_Edge* e1, TopoDS_Edge* e2, TopoDS_Edge* e3, TopoDS_Edge* e4);
+
 const TopoDS_Wire* brep_builderapi_make_wire_topo_ds_wire2(BRepBuilderAPI_MakeWire* make_wire);
-const BRepBuilderAPI_MakeWire* brep_builderapi_make_wire_new(void);
 void brep_builderapi_wire_add(BRepBuilderAPI_MakeWire* mw, TopoDS_Wire* wire);
 const gp_Ax1* gp_ox(void);
 gp_Trsf* gp_trsf(void);

@@ -232,12 +232,12 @@ extern "C" const TopoDS_Wire *brep_builderapi_make_wire_topo_ds_wire2p(TopoDS_Ed
     return new TopoDS_Wire(BRepBuilderAPI_MakeWire(e1, e2).Wire());
 }
 
-extern "C" const TopoDS_Wire &brep_builderapi_make_wire_topo_ds_wire2(BRepBuilderAPI_MakeWire &make_wire) {
-    return make_wire.Wire();
+extern "C" const TopoDS_Wire *brep_builderapi_make_wire_topo_ds_wire4p(TopoDS_Edge& e1, TopoDS_Edge& e2, TopoDS_Edge& e3, TopoDS_Edge& e4) {
+    return new TopoDS_Wire(BRepBuilderAPI_MakeWire(e1, e2, e3, e4).Wire());
 }
 
-extern "C" const BRepBuilderAPI_MakeWire *brep_builderapi_make_wire_new() {
-    return new BRepBuilderAPI_MakeWire();
+extern "C" const TopoDS_Wire &brep_builderapi_make_wire_topo_ds_wire2(BRepBuilderAPI_MakeWire &make_wire) {
+    return make_wire.Wire();
 }
 
 extern "C" void brep_builderapi_wire_add(BRepBuilderAPI_MakeWire &mw, TopoDS_Wire &wire) {

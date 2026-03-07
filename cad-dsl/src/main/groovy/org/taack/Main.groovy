@@ -39,7 +39,7 @@ static void mainBottle() {
     def aMirroredShape = nl.brep_builderapi_make_shape(aBRepTrsf)
     def aMirroredWire = nl.topo_ds_wire(aMirroredShape)
 
-    def mkWire = nl.brep_builderapi_make_wire_new()
+    def mkWire = nl.brep_builderapi_makewire_new()
     nl.brep_builderapi_wire_add(mkWire, aWire)
     nl.brep_builderapi_wire_add(mkWire, aMirroredWire)
     def myWireProfile = nl.brep_builderapi_make_wire_topo_ds_wire2(mkWire)

@@ -13,7 +13,6 @@ class Edge extends Vertice implements Selector {
     private List<Vec> edges = []
     private List<Vec> arcCenter = []
     private List<Integer> arcIndex = []
-    private Stack<MemorySegment> wireNatives = new Stack<>()
 
     /**
      * Initial position of a new wire
@@ -21,6 +20,10 @@ class Edge extends Vertice implements Selector {
      * @param newOrigin
      * @return
      */
+    CadBuilder from(Vec2d newOrigin) {
+        from(new Vec(newOrigin))
+    }
+
     CadBuilder from(Vec newOrigin) {
         edges = []
         currentLoc = newOrigin
@@ -37,7 +40,11 @@ class Edge extends Vertice implements Selector {
         this as CadBuilder
     }
 
-    /**
+    CadBuilder edge(Vec2d toPosition) {
+        edge(new Vec(toPosition))
+    }
+
+        /**
      * Add an Arc to the current wire
      * @param toPosition
      * @param radius
@@ -48,6 +55,10 @@ class Edge extends Vertice implements Selector {
         arcCenter.add center
         arcIndex.add(edges.size() - 1)
         this as CadBuilder
+    }
+
+    CadBuilder arc(Vec2d toPosition, Vec2d center) {
+        arc(new Vec(toPosition), new Vec(center))
     }
 
     CadBuilder toWire() {
@@ -87,10 +98,12 @@ class Edge extends Vertice implements Selector {
      * Turns Edges wire into face
      * @return
      */
-    CadBuilder toFace() {
-        def pXY = nl.plane_create(0.0d, 1.0d, 0.0d, 0.0d)
+    CadBuilder toFace(Vec plan = new Vec(0.0d, 0.0d, 1.0d)) {
+        def pXY = plan.toGpPln()
         def aFace = nl.brep_builderapi_make_face_from_plane(pXY)
         def builder = nl.brep_builder_create()
+//        nl.brep_builder_add_wire(builder, aFace, nl.brep_builderapi_make_wire_topo_ds_wire2(currentWireNative))
+//        nl.brep_builder_add_wire(builder, aFace, currentWireNative)
 
         if (wireNatives.size() > 0) {
             wireNatives.eachWithIndex { MemorySegment it, int i ->

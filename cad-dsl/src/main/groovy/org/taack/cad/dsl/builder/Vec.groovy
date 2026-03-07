@@ -8,24 +8,29 @@ import java.lang.foreign.MemorySegment
 
 @CompileStatic
 final class Vec extends Vec2d {
-    final BigDecimal z
+    final double z
     final static Vec vX = new Vec(1.0, 0.0, 0.0)
     final static Vec vY = new Vec(0.0, 1.0, 0.0)
     final static Vec vZ = new Vec(0.0, 0.0, 1.0)
 
-    Vec(BigDecimal z) {
+    Vec(double z) {
         super(0.0, 0.0)
         this.z = z
     }
 
-    Vec(double x, double y, BigDecimal z) {
+    Vec(Number z) {
+        super(0.0, 0.0)
+        this.z = z.toDouble()
+    }
+
+    Vec(double x, double y, double z) {
         super(x, y)
         this.z = z
     }
 
-    Vec(BigDecimal x, BigDecimal y, BigDecimal z) {
+    Vec(Number x, Number y, Number z) {
         super(x, y)
-        this.z = z
+        this.z = z.toDouble()
     }
 
     Vec(Vec2d loc2d) {
@@ -43,6 +48,10 @@ final class Vec extends Vec2d {
 
     Vec minus(Vec other) {
         new Vec(x - other.x, y - other.y, z - other.z)
+    }
+
+    Vec negative() {
+        new Vec(-x, -y, -z)
     }
 
     Vec multiply(Vec other) {
@@ -93,6 +102,10 @@ final class Vec extends Vec2d {
 
     MemorySegment toGpVec() {
         NativeLib.gp_vec_new(x.doubleValue(), y.doubleValue(), z.doubleValue())
+    }
+
+    MemorySegment toGpPln(Number t = 0) {
+        NativeLib.plane_create(x.doubleValue(), y.doubleValue(), z.doubleValue(), t.toDouble())
     }
 
     BigDecimal cord(Axe axe) {

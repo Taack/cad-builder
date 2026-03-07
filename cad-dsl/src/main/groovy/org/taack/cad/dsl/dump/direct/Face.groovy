@@ -38,7 +38,7 @@ class Face extends Edge implements Selector {
         return this as Face
     }
 
-    CadBuilder revolution(Vec dir = new Vec(1.0)) {
+    CadBuilder revolution(Vec dir = new Vec(0, 1, 0)) {
         def ax1 = nl.gp_ax1_new(currentLoc.toGpPnt(), dir.toGpDir())
 
         this.currentShapeNative = nl.brep_primapi_makerevol(currentFaceNative, ax1)
@@ -46,7 +46,7 @@ class Face extends Edge implements Selector {
     }
 
     CadBuilder prism(Vec dir = new Vec(1.0)) {
-        def ax1 = nl.gp_ax1_new(currentLoc.toGpPnt(), dir.toGpDir())
+        def ax1 = nl.gp_ax1_new(dir.toGpPnt(), dir.toGpDir())
 
         this.currentShapeNative = nl.brep_primapi_make_prism(currentFaceNative, ax1)
         this as CadBuilder
