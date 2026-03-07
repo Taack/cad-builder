@@ -1,7 +1,6 @@
-package org.taack.cad.dsl.dump.direct
+package org.taack.cad.dsl.builder
 
 import groovy.transform.CompileStatic
-import org.taack.cad.dsl.builder.Vec
 
 import java.lang.foreign.MemorySegment
 import org.taack.occt.NativeLib as nl

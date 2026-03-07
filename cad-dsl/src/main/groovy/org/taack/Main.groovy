@@ -1,12 +1,17 @@
 package org.taack
 
 import groovy.transform.CompileStatic
-import org.taack.cad.dsl.dump.direct.ShapeEnum
+import org.taack.cad.dsl.builder.ShapeEnum
 import org.taack.occt.NativeLib as nl
 
 import java.lang.foreign.Arena
 import java.lang.foreign.MemorySegment
 
+/**
+ * Create The Bottle Using direct binding
+ * C++ Code in cad-builder/cad-dsl/src/main/groovy/org/taack/cad/dsl/builder
+ * See https://dev.opencascade.org/doc/overview/html/occt__tutorial.html
+ */
 @CompileStatic
 static void mainBottle() {
     double myWidth = 50.0

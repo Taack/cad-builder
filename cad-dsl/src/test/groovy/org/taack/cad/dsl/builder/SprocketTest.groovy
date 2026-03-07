@@ -1,9 +1,7 @@
-package org.taack.cad.builder
+package org.taack.cad.dsl.builder
 
-import org.junit.jupiter.api.Test
-import org.taack.cad.dsl.builder.Vec2d
-import org.taack.cad.dsl.dump.direct.CadBuilder
 import groovy.transform.CompileStatic
+import org.junit.jupiter.api.Test
 //https://algotopia.com/contents/opencascade/opencascade_sprocket
 @CompileStatic
 class SprocketTest {

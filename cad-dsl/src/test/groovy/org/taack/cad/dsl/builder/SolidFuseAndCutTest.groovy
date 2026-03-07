@@ -1,12 +1,9 @@
-package org.taack.cad.builder
-
-import org.junit.jupiter.api.Test
-import org.taack.cad.dsl.builder.Vec
-import org.taack.cad.dsl.dump.direct.CadBuilder
-
-import static org.taack.cad.dsl.dump.direct.CadBuilder.cb
+package org.taack.cad.dsl.builder
 
 import groovy.transform.CompileStatic
+import org.junit.jupiter.api.Test
+
+import static org.taack.cad.dsl.builder.CadBuilder.cb
 
 @CompileStatic
 class SolidFuseAndCutTest {

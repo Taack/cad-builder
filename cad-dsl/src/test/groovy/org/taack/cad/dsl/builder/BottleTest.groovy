@@ -1,13 +1,6 @@
-package org.taack.cad.builder
+package org.taack.cad.dsl.builder
 
 import groovy.transform.CompileStatic
-import org.junit.jupiter.api.Test
-import org.taack.cad.dsl.builder.Vec
-import org.taack.cad.dsl.builder.Vec2d
-
-import java.lang.foreign.MemorySegment
-
-import static org.taack.cad.dsl.dump.direct.CadBuilder.cb
 
 @CompileStatic
 class BottleTest {
