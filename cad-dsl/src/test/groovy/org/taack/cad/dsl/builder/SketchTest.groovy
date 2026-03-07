@@ -50,6 +50,32 @@ class SketchTest {
     }
 
     @Test
+    void "Revolut Edges with arcs from 2D Vectors Change revolution Center"() {
+        BigDecimal xValue1 = 0.05
+        BigDecimal xValue2 = xValue1 * 2.0
+        BigDecimal yValue1 = 0.025
+        BigDecimal yValue2 = yValue1 * 2.0
+
+
+        Vec2d p1 = new Vec2d(- xValue1, -yValue2)
+        Vec2d p2 = new Vec2d(- xValue2, -yValue1)
+        Vec2d p3 = new Vec2d(- xValue2, yValue1)
+        Vec2d p4 = -p2
+        Vec2d p5 = -p3
+        Vec2d p6 = new Vec2d(xValue1, -yValue2)
+        Vec2d p7 = p1
+
+        cb().from(p1)
+                .edge(p2)
+                .edge(p3)
+                .edge(p4)
+                .arc(p5, new Vec2d( 0.15, -0.029))
+                .edge(p6)
+                .edge(p7)
+                .toWire().toFace().from(new Vec(-1, 0, 0)).revolution(new Vec(0, 1, 0)).display()
+    }
+
+    @Test
     void "Extrude Edges with arcs"() {
         BigDecimal xValue1 = 0.05
         BigDecimal xValue2 = xValue1 * 2.0

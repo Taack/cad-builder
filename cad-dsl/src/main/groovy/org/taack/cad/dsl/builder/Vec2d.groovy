@@ -30,6 +30,10 @@ class Vec2d {
         new Vec2d(-x, -y)
     }
 
+    Vec2d bitwiseNegate() {
+        new Vec2d(y, x)
+    }
+
     Vec2d multiply(Vec2d other) {
         new Vec2d(x * other.x, y * other.y)
     }
