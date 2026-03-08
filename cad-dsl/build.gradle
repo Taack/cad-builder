@@ -2,7 +2,7 @@ plugins {
     id 'c'
     id 'groovy'
     id 'application'
-    id 'de.infolektuell.jextract' version '1.3.0'
+    id 'de.infolektuell.jextract' version '1.4.0'
 }
 
 group = 'org.taack'
@@ -12,41 +12,8 @@ def OCCT78 = file("/usr/lib").absolutePath
 def nativeLibPath = file("${project.parent.projectDir}/cad-dsl/build/libs/nativeLib/shared").absolutePath
 def nativeLibPath2 = file("${project.parent.projectDir}/cad-dsl-native/build/lib/main/release").absolutePath
 
-model {
-    components {
-        nativeLib(NativeLibrarySpec) {
-            sources {
-                c {
-                    source {
-                        srcDir 'src/main/c' // Path to your C source files
-                    }
-                }
-            }
-        }
-    }
-    binaries {
-        all {
-
-            // Define a preprocessor macro for every binary
-            cppCompiler.define "DEBUG"
-
-            // Define toolchain-specific compiler and linker options
-            if (toolChain in Gcc) {
-                println "Linking with Gcc"
-                cppCompiler.args "-g", "-fno-access-control"
-                linker.args "-Xlinker", "-S", "-B", "direct", "-L", nativeLibPath, "-L", nativeLibPath2, "-L", OCCT78, "-l", "cad-dsl-native", "-l", "GL", "-l", "GLU", "-l", "GLX", "-l", "GLEW"
-            }
-            if (toolChain in VisualCpp) {
-                cppCompiler.args "/Zi"
-                linker.args "/DEBUG"
-            }
-        }
-    }
-}
-
-// Tells gradle to wait for our native library to compile before we can run our java application
 run.dependsOn ':cad-dsl-native:linkRelease'
-//nativeLibSharedLibrary.dependsOn ':cad-dsl-native:linkDebug'
+
 repositories {
     mavenCentral()
 }
