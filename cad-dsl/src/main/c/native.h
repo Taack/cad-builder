@@ -7,6 +7,7 @@ int visualize(void*);
 #define gp_Pln void
 #define gp_Pnt void
 #define gp_Vec void
+#define gp_Vec2d void
 #define gp_Ax1 void
 #define gp_Trsf void
 #define Geom_TrimmedCurve void
@@ -25,13 +26,17 @@ int visualize(void*);
 #define BRepBuilderAPI_MakeShape void
 #define Standard_Real double
 
-gp_Dir2d *gp_dir_2d_new();
+gp_Dir2d *gp_dir_2d_new(void);
 gp_Ax2d *gp_ax_2d_new_pt_dir(const gp_Pnt2d *theP, const gp_Dir2d *theV);
 gp_Pnt *gp_pnt_new(const Standard_Real theXp, const Standard_Real theYp, const Standard_Real theZp);
+gp_Pnt2d *gp_pnt2d_new(const Standard_Real theXp, const Standard_Real theYp);
 gp_Vec *gp_vec_new(const Standard_Real theXp, const Standard_Real theYp, const Standard_Real theZp);
+gp_Vec2d *gp_vec2d_new(const Standard_Real theXp, const Standard_Real theYp);
 Standard_Real gp_pnt_x(gp_Pnt *pnt);
 Standard_Real gp_pnt_y(gp_Pnt *pnt);
 Standard_Real gp_pnt_z(gp_Pnt *pnt);
+Standard_Real gp_pnt2d_x(gp_Pnt2d *pnt);
+Standard_Real gp_pnt2d_y(gp_Pnt2d *pnt);
 Handle(Geom_TrimmedCurve)* gc_make_arc_of_circle(gp_Pnt *pnt1, gp_Pnt *pnt2, gp_Pnt *pnt3);
 Handle(Geom_TrimmedCurve)* gc_make_arc_of_circle_tan(gp_Pnt *pnt1, gp_Vec *v, gp_Pnt *pnt3);
 Handle(Geom_TrimmedCurve)* gc_make_segment(gp_Pnt *pnt1, gp_Pnt *pnt2);
@@ -137,7 +142,7 @@ void brep_offset_api_make_thick_solid_join(BRepOffsetAPI_MakeThickSolid* thick_s
 Handle(Geom_CylindricalSurface)* geom_cylindrical_surface_create(const gp_Ax3* ax2, const Standard_Real radius);
 
 gp_Pnt2d *make_gp_pnt2d(const Standard_Real theXp, const Standard_Real theYp);
-
+Standard_Real gp_Pnt2d_distance(const gp_Pnt2d *theOne, const gp_Pnt2d *theOther);
 gp_Dir2d *make_gp_dir2d(const Standard_Real theXp, const Standard_Real theYp);
 Handle(Geom2d_Ellipse)* geom2d_ellipse_create(const gp_Ax2d* MajorAxis, const Standard_Real MajorRadius, const Standard_Real MinorRadius, const Standard_Boolean Sense);
 Handle(Geom2d_TrimmedCurve)* geom2d_trimmed_curve_create(const Handle(Geom2d_Curve)* C, const Standard_Real U1, const Standard_Real U2, const Standard_Boolean Sense, const Standard_Boolean theAdjustPeriodic);
@@ -166,16 +171,17 @@ TopoDS_Shape* make_hole_blind(const TopoDS_Shape* shape, const gp_Ax1* ax1, cons
 gp_Ax1* gp_ax1_new(const gp_Pnt *theP, const gp_Dir *theV);
 
 gp_Dir* gp_dir_new(const Standard_Real theXv, const Standard_Real theYv, const Standard_Real theZv);
+gp_Dir2d* gp_dir2d_new(const Standard_Real theXv, const Standard_Real theYv);
 
 gp_Dir* gp_dir_normal_to_face(const TopoDS_Face* aCurrentFace);
 
 gp_Pnt* gp_pnt_center_of_mass(const TopoDS_Shape* myShape);
 
 Standard_Real gp_dir_x(gp_Dir *dir);
-
 Standard_Real gp_dir_y(gp_Dir *dir);
-
 Standard_Real gp_dir_z(gp_Pnt *dir);
+Standard_Real gp_dir2d_x(gp_Dir2d *dir);
+Standard_Real gp_dir2d_y(gp_Dir2d *dir);
 
 TopoDS_Shape* brep_builderapi_make_shere(const gp_Ax2* origin, const Standard_Real radius, const Standard_Real angle1, const Standard_Real angle2);
 TopoDS_Shape* brep_builderapi_make_cylinder(const gp_Ax2* origin, const Standard_Real radius, const Standard_Real height);
@@ -221,14 +227,19 @@ TopoDS_Face *brep_builderapi_make_face_from_makewire(BRepBuilderAPI_MakeWire *wi
 #define gp_Circ2d void
 #define Geom2d_Circle void
 #define Geom2dAPI_InterCurveCurve void
+#define Geom2d_Geometry void
 
 gp_Circ2d* gp_circ2d_new(gp_Ax2d *ax2d, Standard_Real theRadius);
 Handle(Geom2d_Circle)* gce2d_makecircle(gp_Circ2d *ptr);
 Geom2dAPI_InterCurveCurve* geom2dapi_intercurvecurve_new(const Handle(Geom2d_Curve)* C1, const Handle(Geom2d_Curve)* C2);
 Standard_Integer geom2dapi_intercurvecurve_nbpoints(const Geom2dAPI_InterCurveCurve *inter_curve_curve);
+gp_Pnt2d* geom2dapi_intercurvecurve_point(const Geom2dAPI_InterCurveCurve *inter_curve_curve, const Standard_Integer index);
+Handle(Geom2d_Geometry)* geom2d_geometry_copy(const Handle(Geom2d_Geometry) *toCpy);
 Handle(Geom2d_TrimmedCurve)* gce2d_makearcofcircle(gp_Circ2d* circ2d, gp_Pnt2d* p1, gp_Pnt2d* p2);
+Handle(Geom2d_TrimmedCurve)* gce2d_makearcofcircle_from_angles(gp_Circ2d* circ2d, Standard_Real angle1, Standard_Real angle2);
+Handle(Geom2d_TrimmedCurve)* gce2d_makearcofcircle_from_points(gp_Pnt2d* pt1, gp_Pnt2d* pt2, gp_Pnt2d* pt3);
 void geom2d_trimmedcurve_mirror(Geom2d_TrimmedCurve* curve, gp_Ax2d* ax2d);
-void geom2d_trimmedcurve_reverse(Geom2d_TrimmedCurve* curve);
+void geom2d_trimmedcurve_reverse(Handle(Geom2d_TrimmedCurve)* curve);
 gp_Pnt2d* geom2d_trimmedcurve_endpoint(Geom2d_TrimmedCurve* curve);
 gp_Pnt2d* geom2d_trimmedcurve_startpoint(Geom2d_TrimmedCurve* curve);
 void brep_builderapi_wire_add_wire(BRepBuilderAPI_MakeWire *mw, BRepBuilderAPI_MakeWire *mw2);

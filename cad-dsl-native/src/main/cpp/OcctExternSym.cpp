@@ -84,6 +84,10 @@ extern "C" gp_Pnt2d *make_gp_pnt2d(const Standard_Real theXp, const Standard_Rea
     return new gp_Pnt2d(theXp, theYp);
 }
 
+extern "C" Standard_Real gp_Pnt2d_distance(const gp_Pnt2d &theOne, const gp_Pnt2d &theOther) {
+    return theOne.Distance(theOther);
+}
+
 extern "C" gp_Dir2d *make_gp_dir2d(const Standard_Real theXp, const Standard_Real theYp) {
     return new gp_Dir2d(theXp, theYp);
 }
@@ -114,20 +118,28 @@ extern "C" Handle(Geom2d_TrimmedCurve)* gce2d_makearcofcircle(gp_Circ2d& circ2d,
     return new Handle(Geom2d_TrimmedCurve)(GCE2d_MakeArcOfCircle(circ2d, p1, p2));
 }
 
-extern "C" void geom2d_trimmedcurve_mirror(Geom2d_TrimmedCurve& curve, gp_Ax2d& ax2d) {
-    curve.Mirror(ax2d);
+extern "C" Handle(Geom2d_TrimmedCurve)* gce2d_makearcofcircle_from_angles(gp_Circ2d& circ2d, Standard_Real angle1, Standard_Real angle2) {
+    return new Handle(Geom2d_TrimmedCurve)(GCE2d_MakeArcOfCircle(circ2d, angle1, angle2));
 }
 
-extern "C" void geom2d_trimmedcurve_reverse(Geom2d_TrimmedCurve& curve) {
-    curve.Reverse();
+extern "C" Handle(Geom2d_TrimmedCurve)* gce2d_makearcofcircle_from_points(gp_Pnt2d& pt1, gp_Pnt2d& pt2, gp_Pnt2d& pt3) {
+    return new Handle(Geom2d_TrimmedCurve)(GCE2d_MakeArcOfCircle(pt1, pt2, pt3));
 }
 
-extern "C" gp_Pnt2d* geom2d_trimmedcurve_endpoint(Geom2d_TrimmedCurve& curve) {
-    return new gp_Pnt2d(curve.EndPoint());
+extern "C" void geom2d_trimmedcurve_mirror(Handle(Geom2d_TrimmedCurve)& curve, gp_Ax2d& ax2d) {
+    curve->Mirror(ax2d);
 }
 
-extern "C" gp_Pnt2d* geom2d_trimmedcurve_startpoint(Geom2d_TrimmedCurve& curve) {
-    return new gp_Pnt2d(curve.StartPoint());
+extern "C" void geom2d_trimmedcurve_reverse(Handle(Geom2d_TrimmedCurve)& curve) {
+    curve->Reverse();
+}
+
+extern "C" gp_Pnt2d* geom2d_trimmedcurve_endpoint(const Handle(Geom2d_TrimmedCurve)& curve) {
+    return new gp_Pnt2d(curve->EndPoint());
+}
+
+extern "C" gp_Pnt2d* geom2d_trimmedcurve_startpoint(const Handle(Geom2d_TrimmedCurve)& curve) {
+    return new gp_Pnt2d(curve->StartPoint());
 }
 
 extern "C" gp_Circ2d* gp_circ2d_new(gp_Ax2d &ax2d, Standard_Real theRadius) {
@@ -146,6 +158,13 @@ extern "C" Standard_Integer geom2dapi_intercurvecurve_nbpoints(const Geom2dAPI_I
     return inter_curve_curve.NbPoints();
 }
 
+extern "C" gp_Pnt2d* geom2dapi_intercurvecurve_point(const Geom2dAPI_InterCurveCurve &inter_curve_curve, const Standard_Integer index) {
+    return new gp_Pnt2d(inter_curve_curve.Point(index));
+}
+
+extern "C"  Handle(Geom2d_Geometry)* geom2d_geometry_copy(const Handle(Geom2d_Geometry) &toCpy) {
+    return new Handle(Geom2d_Geometry)(toCpy->Copy());
+}
 /*
 
     3D
@@ -156,12 +175,20 @@ extern "C" gp_Pnt *gp_pnt_new(const Standard_Real theXp, const Standard_Real the
     return new gp_Pnt(theXp, theYp, theZp);
 }
 
+extern "C" gp_Pnt2d *gp_pnt2d_new(const Standard_Real theXp, const Standard_Real theYp) {
+    return new gp_Pnt2d(theXp, theYp);
+}
+
 extern "C" void gp_pnt_delete(gp_Pnt *pnt) {
     delete pnt;
 }
 
 extern "C" gp_Vec *gp_vec_new(const Standard_Real theXp, const Standard_Real theYp, const Standard_Real theZp) {
     return new gp_Vec(theXp, theYp, theZp);
+}
+
+extern "C" gp_Vec2d *gp_vec2d_new(const Standard_Real theXp, const Standard_Real theYp) {
+    return new gp_Vec2d(theXp, theYp);
 }
 
 extern "C" void gp_vec_delete(gp_Vec *pnt) {
@@ -173,6 +200,14 @@ extern "C" Standard_Real gp_pnt_x(gp_Pnt *pnt) {
 }
 
 extern "C" Standard_Real gp_pnt_y(gp_Pnt *pnt) {
+    return pnt->Y();
+}
+
+extern "C" Standard_Real gp_pnt2d_x(gp_Pnt2d *pnt) {
+    return pnt->X();
+}
+
+extern "C" Standard_Real gp_pnt2d_y(gp_Pnt2d *pnt) {
     return pnt->Y();
 }
 
@@ -511,6 +546,10 @@ extern "C" gp_Dir *gp_dir_new(const Standard_Real theXv, const Standard_Real the
     return new gp_Dir(theXv, theYv, theZv);
 }
 
+extern "C" gp_Dir2d *gp_dir2d_new(const Standard_Real theXv, const Standard_Real theYv) {
+    return new gp_Dir2d(theXv, theYv);
+}
+
 extern "C" gp_Dir *gp_dir_normal_to_face(const TopoDS_Face &aCurrentFace) {
     Standard_Real umin, umax, vmin, vmax;
     BRepTools::UVBounds(aCurrentFace, umin, umax, vmin, vmax);
@@ -539,6 +578,14 @@ extern "C" Standard_Real gp_dir_y(gp_Dir *dir) {
 
 extern "C" Standard_Real gp_dir_z(gp_Pnt *dir) {
     return dir->Z();
+}
+
+extern "C" Standard_Real gp_dir2d_x(gp_Dir2d *dir) {
+    return dir->X();
+}
+
+extern "C" Standard_Real gp_dir2d_y(gp_Dir2d *dir) {
+    return dir->Y();
 }
 
 

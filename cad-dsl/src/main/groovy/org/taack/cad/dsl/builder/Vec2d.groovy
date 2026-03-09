@@ -1,6 +1,9 @@
 package org.taack.cad.dsl.builder
 
 import groovy.transform.CompileStatic
+import org.taack.occt.NativeLib
+
+import java.lang.foreign.MemorySegment
 
 @CompileStatic
 class Vec2d {
@@ -17,6 +20,10 @@ class Vec2d {
         this.y = y
     }
 
+    Vec2d() {
+        x = 0d
+        y = 0d
+    }
 
     Vec2d div(Vec2d other) {
         new Vec2d(y * other.x - x * other.y, y * other.x - x * other.y)
@@ -40,6 +47,47 @@ class Vec2d {
 
     Vec2d multiply(Number other) {
         new Vec2d(x * other.toDouble(), y * other.toDouble())
+    }
+
+    Vec2d rotate(double beta) {
+        double cb = Math.cos(beta)
+        double sb = Math.sin(beta)
+        new Vec2d(cb * x - sb * y, sb * x + cb * y)
+    }
+
+    static Vec2d fromAPnt(MemorySegment aPnt) {
+        new Vec2d(
+                NativeLib.gp_pnt2d_x(aPnt).toBigDecimal(),
+                NativeLib.gp_pnt2d_y(aPnt).toBigDecimal(),
+        )
+    }
+
+    static Vec2d fromADir(MemorySegment aDir) {
+        new Vec2d(
+                NativeLib.gp_dir2d_x(aDir).toBigDecimal(),
+                NativeLib.gp_dir2d_y(aDir).toBigDecimal(),
+        )
+    }
+
+    MemorySegment toGpDir2d() {
+        NativeLib.gp_dir2d_new(x.doubleValue(), y.doubleValue())
+    }
+
+    MemorySegment toGpPnt2d() {
+        NativeLib.gp_pnt2d_new(x.doubleValue(), y.doubleValue())
+    }
+
+    MemorySegment toGpVec() {
+        NativeLib.gp_vec2d_new(x.doubleValue(), y.doubleValue())
+    }
+
+    BigDecimal cord(Axe axe) {
+        switch (axe) {
+            case Axe.X:
+                return x
+            case Axe.Y:
+                return y
+        }
     }
 
 }
