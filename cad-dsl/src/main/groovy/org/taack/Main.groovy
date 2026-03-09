@@ -41,7 +41,7 @@ static void mainBottle() {
 
     nl.gp_trsf_set_mirror(aTrsf, xAxis)
     def aBRepTrsf = nl.brep_builderapi_transform(aWire, aTrsf)
-    def aMirroredShape = nl.brep_builderapi_make_shape(aBRepTrsf)
+    def aMirroredShape = nl.brep_builderapi_make_shape_Shape(aBRepTrsf)
     def aMirroredWire = nl.topo_ds_wire(aMirroredShape)
 
     def mkWire = nl.brep_builderapi_makewire_new()
@@ -66,7 +66,7 @@ static void mainBottle() {
         nl.top_exp_explorer_next(anEdgeExplorer)
     }
 
-    myBody = nl.brep_builderapi_make_shape(mkFillet)
+    myBody = nl.brep_builderapi_make_shape_Shape(mkFillet)
 
     println "Body: Add the Neck"
 
@@ -78,7 +78,7 @@ static void mainBottle() {
     double myNeckHeight = myHeight / 10
 
     def MKCylinder = nl.brep_primapi_make_cylinder(neckAx2, myNeckRadius, myNeckHeight)
-    def myNeck = nl.brep_builderapi_make_shape(MKCylinder)
+    def myNeck = nl.brep_builderapi_make_shape_Shape(MKCylinder)
 
     myBody = nl.brep_algoapi_fuse(myBody, myNeck)
 
@@ -106,7 +106,7 @@ static void mainBottle() {
     def aSolidMaker = nl.brep_offset_api_make_thick_solid()
     nl.brep_offset_api_make_thick_solid_join(aSolidMaker, myBody, facesToRemove, -myThickness / 50d, 0.001d)
 
-    myBody = nl.brep_builderapi_make_shape(aSolidMaker)
+    myBody = nl.brep_builderapi_make_shape_Shape(aSolidMaker)
 
     // Threading: Create Surfaces
     def aCyl1 = nl.geom_cylindrical_surface_create(neckAx2, myNeckRadius * 0.99)

@@ -13,6 +13,10 @@ final class Vec extends Vec2d {
     final static Vec vY = new Vec(0.0, 1.0, 0.0)
     final static Vec vZ = new Vec(0.0, 0.0, 1.0)
 
+    Vec() {
+        super(0.0, 0.0)
+        z = 0
+    }
     Vec(double z) {
         super(0.0, 0.0)
         this.z = z

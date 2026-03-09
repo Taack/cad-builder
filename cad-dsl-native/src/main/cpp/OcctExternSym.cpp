@@ -58,6 +58,8 @@
 #include <XCAFDoc_ShapeTool.hxx>
 #include <Xw_Window.hxx>
 #include <gp_Pnt.hxx>
+#include <GeomAPI.hxx>
+
 
 OcctExternSym::OcctExternSym() {
 }
@@ -126,6 +128,10 @@ extern "C" Handle(Geom2d_TrimmedCurve)* gce2d_makearcofcircle_from_points(gp_Pnt
     return new Handle(Geom2d_TrimmedCurve)(GCE2d_MakeArcOfCircle(pt1, pt2, pt3));
 }
 
+extern "C" Handle(Geom2d_TrimmedCurve)* gce2d_makearcofcircle_from_point_angle(gp_Circ2d& circ2d, gp_Pnt2d& pt1, Standard_Real angle1) {
+    return new Handle(Geom2d_TrimmedCurve)(GCE2d_MakeArcOfCircle(circ2d, pt1, angle1));
+}
+
 extern "C" void geom2d_trimmedcurve_mirror(Handle(Geom2d_TrimmedCurve)& curve, gp_Ax2d& ax2d) {
     curve->Mirror(ax2d);
 }
@@ -165,6 +171,12 @@ extern "C" gp_Pnt2d* geom2dapi_intercurvecurve_point(const Geom2dAPI_InterCurveC
 extern "C"  Handle(Geom2d_Geometry)* geom2d_geometry_copy(const Handle(Geom2d_Geometry) &toCpy) {
     return new Handle(Geom2d_Geometry)(toCpy->Copy());
 }
+
+extern "C"  Handle(Geom_Curve)* geomapi_2dto3d(Handle(Geom2d_Curve) &curve, gp_Pln &plan) {
+    return new Handle(Geom_Curve)(GeomAPI::To3d(curve, plan));
+}
+
+
 /*
 
     3D
@@ -251,8 +263,16 @@ extern "C" const BRepBuilderAPI_MakeEdge *brep_builderapi_make_edge_from_pts(gp_
     return new BRepBuilderAPI_MakeEdge(from, to);
 }
 
+extern "C" const BRepBuilderAPI_MakeEdge *brep_builderapi_make_edge_from_curve(Handle(Geom_Curve)& curve) {
+    return new BRepBuilderAPI_MakeEdge(curve);
+}
+
 extern "C" const BRepBuilderAPI_MakeWire *brep_builderapi_makewire_new() {
     return new BRepBuilderAPI_MakeWire();
+}
+
+extern "C" const BRepBuilderAPI_MakeWire *brep_builderapi_makewire_new_edge(BRepBuilderAPI_MakeEdge& edge) {
+    return new BRepBuilderAPI_MakeWire(edge);
 }
 
 extern "C" void brep_builderapi_make_wire_add(BRepBuilderAPI_MakeWire& wireMaker, BRepBuilderAPI_MakeEdge& edge) {
@@ -419,10 +439,6 @@ extern "C" BRepPrimAPI_MakeCylinder *brep_primapi_make_cylinder(const gp_Ax2 &Ax
 extern "C" BRepPrimAPI_MakeBox *brep_primapi_make_box(const Standard_Real x, const Standard_Real y,
                                                       const Standard_Real z) {
     return new BRepPrimAPI_MakeBox(x, y, z);
-}
-
-extern "C" TopoDS_Shape *brep_builderapi_make_shape(BRepBuilderAPI_MakeShape &mk) {
-    return new TopoDS_Shape(mk.Shape());
 }
 
 extern "C" Handle(Geom_Surface) *brep_tool_surface(TopoDS_Face &face) {
@@ -685,7 +701,7 @@ extern "C" TopoDS_Shape *brep_primapi_make_thorus(const gp_Ax2 &origin, const St
 }
 
 
-extern "C" TopoDS_Shape* brep_primapi_makerevol(TopoDS_Face& face, gp_Ax1& ax1) {
+extern "C" TopoDS_Shape *brep_primapi_makerevol(TopoDS_Face& face, gp_Ax1& ax1) {
     return new TopoDS_Shape(BRepPrimAPI_MakeRevol(face, ax1).Shape());
 }
 
@@ -695,6 +711,10 @@ extern "C" void deleteVoid(void *ptr) {
 
 extern "C" gp_Pln* plane_create(const Standard_Real x, const Standard_Real y, const Standard_Real z, const Standard_Real d) {
     return new gp_Pln(x, y, z, d);
+}
+
+extern "C" gp_Pln* plane_create_pt_dir(const gp_Pnt& pt, const gp_Dir& dir) {
+    return new gp_Pln(pt, dir);
 }
 
 extern "C" TopoDS_Shape* brep_builderapi_make_shape_Shape(BRepBuilderAPI_MakeShape &shape) {

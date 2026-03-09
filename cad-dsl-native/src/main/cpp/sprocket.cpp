@@ -73,7 +73,60 @@ g++ -I /usr/include/opencascade/ -lTKBinL -lTKBin -lTKBinTObj -lTKBinXCAF -lTKBo
 #include <TopExp_Explorer.hxx>
 #include <BRepTools_WireExplorer.hxx>
 
+#include <V3d_View.hxx>
+#include <V3d_Viewer.hxx>
+#include <AIS_InteractiveContext.hxx>
+#include <AIS_Shape.hxx>
+#include <OpenGl_GraphicDriver.hxx>
+#include <Xw_Window.hxx>
+#include <X11/Xlib.h>
+
 using namespace std;
+
+
+void visualize(const TopoDS_Shape& aShape) {
+     cout << "huh1" << endl;
+    Handle(Aspect_DisplayConnection) aDisplay = new Aspect_DisplayConnection();
+    Handle(Graphic3d_GraphicDriver) aDriver = new OpenGl_GraphicDriver(aDisplay);
+    Handle(V3d_Viewer) aViewer = new V3d_Viewer(aDriver);
+    Handle(V3d_View) aView =  new V3d_View(aViewer);
+     cout << "huh2" << endl;
+    Handle(AIS_InteractiveContext) aContext = new AIS_InteractiveContext (aViewer);
+     cout << "huh3" << endl;
+    Handle(AIS_Shape) aShapePrs = new AIS_Shape (aShape); // creation of the presentable object
+     cout << "huh4" << endl;
+    aContext->Display (aShapePrs, AIS_Shaded, 0, true);   // display the presentable object and redraw 3d viewer
+    aView->FitAll(0.01, false);
+    Handle(Xw_Window) aWindow = new Xw_Window(aDisplay, "OCCT Viewer", 100, 100, 512, 512);
+        Display *anXDisplay = (Display *) aDisplay->GetDisplayAspect();
+        XSelectInput(anXDisplay, (Window) aWindow->NativeHandle(),
+                     ExposureMask | KeyPressMask | KeyReleaseMask | FocusChangeMask | StructureNotifyMask
+                     | ButtonPressMask | ButtonReleaseMask | PointerMotionMask | Button1MotionMask | Button2MotionMask |
+                     Button3MotionMask);
+        Atom aDelWinAtom = aDisplay->GetAtom(Aspect_XA_DELETE_WINDOW);
+        XSetWMProtocols(anXDisplay, (Window) aWindow->NativeHandle(), &aDelWinAtom, 1);
+    aView->SetWindow(aWindow);
+    aView->SetBackgroundColor(Quantity_NOC_GRAY50);
+    aView->TriedronDisplay(Aspect_TOTP_LEFT_LOWER, Quantity_NOC_WHITE, 0.1);
+    aView->ChangeRenderingParams().RenderResolutionScale = 2.0f;
+
+    aWindow->Map();
+    aView->Redraw();
+      // X11 event loop
+      Handle(Xw_Window) axWindow = Handle(Xw_Window)::DownCast(aView->Window());
+      Handle(Aspect_DisplayConnection) aDispConn = aView->Viewer()->Driver()->GetDisplayConnection();
+//      Display *anXDisplay = (Display *) aDispConn->GetDisplayAspect();
+      for (;;) {
+        XEvent anXEvent;
+        XNextEvent(anXDisplay, &anXEvent);
+        axWindow->ProcessMessage(new AIS_ViewController(), anXEvent);
+        if (anXEvent.type == ClientMessage && (Atom) anXEvent.xclient.data.l[0] == aDispConn->GetAtom(
+              Aspect_XA_DELETE_WINDOW)) {
+          return ; // exit when window is closed
+        }
+      }
+
+}
 
 // The basic inputs needed to build a sprocket
 Standard_Real roller_diameter = 10.2;
@@ -248,6 +301,9 @@ TopoDS_Shape BuildTooth()
 
     // Finally, extrude the face
     BRepPrimAPI_MakePrism wedge(face.Shape(), gp_Vec(0.0, 0.0, thickness));
+
+    visualize(wedge);
+
     return wedge.Shape();
 }
 
@@ -511,9 +567,11 @@ TopoDS_Shape Cutout(TopoDS_Shape base)
 
 int main()
 {
+     cout << "Start" << endl;
 
      // Build a wedge containing one tooth
      TopoDS_Shape wedge = BuildTooth();
+     cout << "Start2" << endl;
 
      // Round off the tooth
      TopoDS_Shape rounded_wedge = RoundTooth(wedge);

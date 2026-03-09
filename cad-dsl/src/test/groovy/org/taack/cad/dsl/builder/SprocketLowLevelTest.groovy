@@ -3,6 +3,9 @@ package org.taack.cad.dsl.builder
 import groovy.transform.CompileStatic
 import org.junit.jupiter.api.Test
 import org.taack.occt.NativeLib as nl
+
+import java.lang.foreign.MemorySegment
+
 // https://algotopia.com/contents/opencascade/opencascade_sprocket
 @CompileStatic
 class SprocketLowLevelTest {
@@ -47,12 +50,12 @@ class SprocketLowLevelTest {
     double hole_radius = 8.5 / 2.0
 
 
-    void buildTooth() {
+    MemorySegment buildTooth() {
 
         println "Create a 2D arc to form the base of the tooth"
         Vec2d base_center = new Vec2d(pitch_circle_radius + (tooth_radius - roller_radius), 0)
         def base_circle = nl.gp_circ2d_new(nl.gp_ax_2d_new_pt_dir(base_center.toGpPnt2d(), nl.gp_dir_2d_new()),
-                                      tooth_radius)
+                tooth_radius)
         def trimmed_base = nl.gce2d_makearcofcircle_from_angles(base_circle, Math.PI - (roller_contact_angle / 2.0), Math.PI)
         nl.geom2d_trimmedcurve_reverse(trimmed_base)
         def p0 = nl.geom2d_trimmedcurve_startpoint(trimmed_base)
@@ -119,16 +122,50 @@ class SprocketLowLevelTest {
         def outer_end = nl.geom2d_trimmedcurve_endpoint(mirror_outer)
         def outer_arc = nl.gce2d_makearcofcircle_from_points(outer_start, outer_mid, outer_end)
 
-        // Create an arc for the inside of the wedge
+        println "Create an arc for the inside of the wedge"
+        def inner_circle = nl.gp_circ2d_new(nl.gp_ax2(new Vec2d().toGpPnt2d(), new Vec2d(1, 0).toGpDir2d()), top_radius - roller_diameter)
+        Vec2d innerStartVec2d = new Vec2d(top_radius - roller_diameter, 0)
+        def inner_arc = nl.gce2d_makearcofcircle_from_point_angle(inner_circle, innerStartVec2d.toGpPnt2d(), tooth_angle)
+        nl.geom2d_trimmedcurve_reverse(inner_arc)
 
-        //Convert the 2D arcs and two extra lines to 3D edges
+        println "Convert the 2D arcs and two extra lines to 3D edges"
+        def plane = nl.plane_create_pt_dir(new Vec().toGpPnt(), new Vec(0, 0, 1).toGpDir())
+        def arc1 = nl.brep_builderapi_make_edge_from_curve nl.geomapi_2dto3d(trimmed_base, plane)
+        def arc2 = nl.brep_builderapi_make_edge_from_curve nl.geomapi_2dto3d(trimmed_profile, plane)
+        def arc3 = nl.brep_builderapi_make_edge_from_curve nl.geomapi_2dto3d(outer_arc, plane)
+        def arc4 = nl.brep_builderapi_make_edge_from_curve nl.geomapi_2dto3d(mirror_profile, plane)
+        def arc5 = nl.brep_builderapi_make_edge_from_curve nl.geomapi_2dto3d(mirror_base, plane)
 
-        // Combine the edges in a wire
+        def p4 = nl.geom2d_trimmedcurve_endpoint(mirror_base)
+        Vec2d p4v2d = Vec2d.fromAPnt(p4)
+        def p5 = nl.geom2d_trimmedcurve_startpoint(inner_arc)
+        Vec2d p5v2d = Vec2d.fromAPnt(p5)
+        def lin1 = nl.brep_builderapi_make_edge_from_pts(new Vec(p4v2d.x, p4v2d.y, 0).toGpPnt(), new Vec(p5v2d.x, p5v2d.y, 0).toGpPnt())
+        def arc6 = nl.brep_builderapi_make_edge_from_curve nl.geomapi_2dto3d(inner_arc, plane)
+        def p6 = nl.geom2d_trimmedcurve_endpoint(inner_arc)
+        Vec2d p6v2d = Vec2d.fromAPnt(p6)
+        Vec2d p0v2d = Vec2d.fromAPnt(p0)
+        def lin2 = nl.brep_builderapi_make_edge_from_pts(new Vec(p6v2d.x, p6v2d.y, 0).toGpPnt(), new Vec(p0v2d.x, p0v2d.y, 0).toGpPnt())
 
-        // Convert the wire into a face
+        println "Combine the edges in a wire"
+        def wire = nl.brep_builderapi_makewire_new_edge(arc1)
+        nl.brep_builderapi_make_wire_add(wire, arc2)
+        nl.brep_builderapi_make_wire_add(wire, arc3)
+        nl.brep_builderapi_make_wire_add(wire, arc4)
+        nl.brep_builderapi_make_wire_add(wire, arc5)
+        nl.brep_builderapi_make_wire_add(wire, lin1)
+        nl.brep_builderapi_make_wire_add(wire, arc6)
+        nl.brep_builderapi_make_wire_add(wire, lin2)
+
+        println "Convert the wire into a face"
+        def face = nl.brep_builderapi_make_face_from_makewire(wire)
 
         println "Finally, extrude the face"
+        def wedge = nl.brep_primapi_make_prism(face, new Vec(0, 0, thickness).toGpVec())
 
+        nl.visualize(face)
+
+        return nl.brep_builderapi_make_shape_Shape(wedge)
     }
 
 

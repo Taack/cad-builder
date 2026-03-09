@@ -55,7 +55,7 @@ class CadBuilder extends Face {
     }
 
     CadBuilder box(BigDecimal x, BigDecimal y, BigDecimal z) {
-        currentShapeNative = nl.brep_builderapi_make_shape(nl.brep_primapi_make_box(x.doubleValue(), y.doubleValue(), z.doubleValue()))
+        currentShapeNative = nl.brep_builderapi_make_shape_Shape(nl.brep_primapi_make_box(x.doubleValue(), y.doubleValue(), z.doubleValue()))
         return this
     }
 

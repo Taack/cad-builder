@@ -113,8 +113,6 @@ const gp_Ax2* gp_ax2(gp_Pnt* loc, gp_Dir* dir);
 BRepPrimAPI_MakeCylinder* brep_primapi_make_cylinder(const gp_Ax2* Axes, const Standard_Real R, const Standard_Real H);
 BRepPrimAPI_MakeBox *brep_primapi_make_box(const Standard_Real x, const Standard_Real y,
                                                                 const Standard_Real z);
-TopoDS_Shape* brep_builderapi_make_shape(BRepPrimAPI_MakeShape* mk);
-
 TopoDS_Shape* brep_algoapi_fuse(TopoDS_Shape* s1, TopoDS_Shape* s2);
 
 Handle(Geom_Surface)* brep_tool_surface(TopoDS_Face* face);
@@ -207,7 +205,9 @@ void write_stl(const TopoDS_Shape* shape, const char *fileName);
 #define BRepBuilderAPI_MakeEdge void
 
 const BRepBuilderAPI_MakeEdge *brep_builderapi_make_edge_from_pts(gp_Pnt* from, gp_Pnt* to);
+const BRepBuilderAPI_MakeEdge *brep_builderapi_make_edge_from_curve(Handle(Geom_Curve)* curve);
 const BRepBuilderAPI_MakeWire *brep_builderapi_makewire_new(void);
+const BRepBuilderAPI_MakeWire *brep_builderapi_makewire_new_edge(BRepBuilderAPI_MakeEdge* edge);
 void brep_builderapi_make_wire_add(BRepBuilderAPI_MakeWire* wireMaker, BRepBuilderAPI_MakeEdge* edge);
 
 TopoDS_Shape* brep_primapi_makerevol(TopoDS_Face* face, gp_Ax1* ax1);
@@ -238,10 +238,14 @@ Handle(Geom2d_Geometry)* geom2d_geometry_copy(const Handle(Geom2d_Geometry) *toC
 Handle(Geom2d_TrimmedCurve)* gce2d_makearcofcircle(gp_Circ2d* circ2d, gp_Pnt2d* p1, gp_Pnt2d* p2);
 Handle(Geom2d_TrimmedCurve)* gce2d_makearcofcircle_from_angles(gp_Circ2d* circ2d, Standard_Real angle1, Standard_Real angle2);
 Handle(Geom2d_TrimmedCurve)* gce2d_makearcofcircle_from_points(gp_Pnt2d* pt1, gp_Pnt2d* pt2, gp_Pnt2d* pt3);
+Handle(Geom2d_TrimmedCurve)* gce2d_makearcofcircle_from_point_angle(gp_Circ2d* circ2d, gp_Pnt2d* pt1, Standard_Real angle1);
 void geom2d_trimmedcurve_mirror(Geom2d_TrimmedCurve* curve, gp_Ax2d* ax2d);
 void geom2d_trimmedcurve_reverse(Handle(Geom2d_TrimmedCurve)* curve);
 gp_Pnt2d* geom2d_trimmedcurve_endpoint(Geom2d_TrimmedCurve* curve);
 gp_Pnt2d* geom2d_trimmedcurve_startpoint(Geom2d_TrimmedCurve* curve);
 void brep_builderapi_wire_add_wire(BRepBuilderAPI_MakeWire *mw, BRepBuilderAPI_MakeWire *mw2);
 gp_Pln* plane_create(const Standard_Real x, const Standard_Real y, const Standard_Real z, const Standard_Real d);
+gp_Pln* plane_create_pt_dir(const gp_Pnt* pt, const gp_Dir* dir);
 void brep_builder_add_wire(BRep_Builder *builder, TopoDS_Face *aFace, TopoDS_Wire *aWire);
+
+ Handle(Geom_Curve)* geomapi_2dto3d(Handle(Geom2d_Curve) *curve, gp_Pln *plan);
