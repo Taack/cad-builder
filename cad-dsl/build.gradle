@@ -1,8 +1,10 @@
 plugins {
     id 'c'
     id 'groovy'
-    id 'application'
+    id 'java-library'
+//    id 'application'
     id 'de.infolektuell.jextract' version '1.4.0'
+    id 'maven-publish'
 }
 
 group = 'org.taack'
@@ -12,7 +14,7 @@ def OCCT78 = file("/usr/lib").absolutePath
 def nativeLibPath = file("${project.parent.projectDir}/cad-dsl/build/libs/nativeLib/shared").absolutePath
 def nativeLibPath2 = file("${project.parent.projectDir}/cad-dsl-native/build/lib/main/release").absolutePath
 
-run.dependsOn ':cad-dsl-native:linkRelease'
+compileJava.dependsOn ':cad-dsl-native:linkRelease'
 
 repositories {
     mavenCentral()
@@ -24,10 +26,10 @@ java {
     }
 }
 
-application {
-    mainClass = 'org.taack.Main'
-    applicationDefaultJvmArgs = ["-Djava.library.path=" + OCCT78 + ":" + nativeLibPath + ":" + nativeLibPath2, "--enable-preview", "--enable-native-access=ALL-UNNAMED"]
-}
+//application {
+//    mainClass = 'org.taack.Main'
+//    applicationDefaultJvmArgs = ["-Djava.library.path=" + OCCT78 + ":" + nativeLibPath + ":" + nativeLibPath2, "--enable-preview", "--enable-native-access=ALL-UNNAMED"]
+//}
 
 jextract.libraries {
     def occt = register('cad-dsl-native') {
@@ -35,27 +37,56 @@ jextract.libraries {
         headerClassName = "NativeLib"
         targetPackage = "org.taack.occt"
         useSystemLoadLibrary = true
-        libraries.add("cad-dsl-native")
+        libraries.add("libcad-dsl-native.so")
+        libraryPath.add(layout.projectDirectory.dir("../cad-dsl-native/build/lib/main/release"))
     }
     sourceSets.named("main") {
         jextract.libraries.addLater(occt)
     }
 }
 
-run  {
-    println "Setting LD_LIBRARY_PATH=$OCCT78:$nativeLibPath2:$nativeLibPath"
-    environment('LD_LIBRARY_PATH', "$OCCT78:$nativeLibPath2:$nativeLibPath")
-}
+//run  {
+//    println "Setting LD_LIBRARY_PATH=$OCCT78:$nativeLibPath2:$nativeLibPath"
+//    environment('LD_LIBRARY_PATH', "$OCCT78:$nativeLibPath2:$nativeLibPath")
+//}
 
 dependencies {
     implementation 'org.apache.groovy:groovy:5.0.4'
     testImplementation platform('org.junit:junit-bom:6.0.3')
     testImplementation 'org.junit.jupiter:junit-jupiter'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+    project(':cad-dsl-native')
 }
 
 test {
     println "Setting LD_LIBRARY_PATH=$OCCT78:$nativeLibPath2:$nativeLibPath"
     environment('LD_LIBRARY_PATH', "$OCCT78:$nativeLibPath2:$nativeLibPath")
     useJUnitPlatform()
+}
+
+publishing {
+    publications {
+        maven(MavenPublication) {
+            groupId = 'org.taack.cad'
+            artifactId = 'cad-dsl'
+            version = '0.1'
+
+            from components.java
+            withBuildIdentifier()
+        }
+    }
+    repositories {
+        maven {
+            name = "myRepo"
+            // change to point to your repo, e.g. http://my.org/repo
+            url = layout.buildDirectory.dir('repo')
+            metadataSources {
+                gradleMetadata()
+            }
+        }
+    }
+}
+
+tasks.withType(GenerateModuleMetadata) {
+    enabled = true
 }

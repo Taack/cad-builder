@@ -76,6 +76,7 @@ g++ -I /usr/include/opencascade/ -lTKBinL -lTKBin -lTKBinTObj -lTKBinXCAF -lTKBo
 #include <V3d_View.hxx>
 #include <V3d_Viewer.hxx>
 #include <AIS_InteractiveContext.hxx>
+#include <AIS_ViewController.hxx>
 #include <AIS_Shape.hxx>
 #include <OpenGl_GraphicDriver.hxx>
 #include <Xw_Window.hxx>
@@ -119,11 +120,11 @@ void visualize(const TopoDS_Shape& aShape) {
       for (;;) {
         XEvent anXEvent;
         XNextEvent(anXDisplay, &anXEvent);
-        axWindow->ProcessMessage(new AIS_ViewController(), anXEvent);
-        if (anXEvent.type == ClientMessage && (Atom) anXEvent.xclient.data.l[0] == aDispConn->GetAtom(
-              Aspect_XA_DELETE_WINDOW)) {
-          return ; // exit when window is closed
-        }
+//        axWindow->ProcessMessage(new AIS_ViewController(), anXEvent);
+//        if (anXEvent.type == ClientMessage && (Atom) anXEvent.xclient.data.l[0] == aDispConn->GetAtom(
+//              Aspect_XA_DELETE_WINDOW)) {
+//          return ; // exit when window is closed
+//        }
       }
 
 }

@@ -40,6 +40,8 @@ library {
     ]
 }
 
+//ext.nativeLibDir = file(projectDir.path + "build/lib/main/release/")
+
 tasks.withType(CppCompile).configureEach {
     optimized = false
     includes.from new File("/usr/include/opencascade/").path

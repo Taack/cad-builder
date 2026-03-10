@@ -49,7 +49,9 @@ class SprocketLowLevelTest {
     double mounting_radius = 153.0 / 2.0
     double hole_radius = 8.5 / 2.0
 
-
+    /**
+     * Build a single tooth
+     */
     MemorySegment buildTooth() {
 
         println "Create a 2D arc to form the base of the tooth"
@@ -163,14 +165,29 @@ class SprocketLowLevelTest {
         println "Finally, extrude the face"
         def wedge = nl.brep_primapi_make_prism(face, new Vec(0, 0, thickness).toGpVec())
 
-        nl.visualize(face)
-
         return nl.brep_builderapi_make_shape_Shape(wedge)
+    }
+
+    /**
+     * Round off the edge of the single tooth
+     */
+    MemorySegment roundTooth(MemorySegment wedge) {
+        double round_x = 2.6
+        double round_z = 0.06 * pitch
+        double round_radius = pitch
+
+        println "Determine where the circle used for rounding has to start and stop"
+        Vec2d p2d_1v = new Vec2d(top_radius - round_x, 0)
+        Vec2d p2d_2v = new Vec2d(top_radius, round_z)
+
+        println "Construct the rounding circle"
+        def round_circle
     }
 
 
     @Test
     void "Build Tooth"() {
-        buildTooth()
+        def tooth = buildTooth()
+
     }
 }
