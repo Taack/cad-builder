@@ -181,7 +181,7 @@ class SprocketLowLevelTest {
         Vec2d p2d_2v = new Vec2d(top_radius, round_z)
 
         println "Construct the rounding circle"
-        def round_circle
+//        def round_circle
     }
 
 

@@ -25,6 +25,41 @@ int visualize(void*);
 #define Geom_Surface void
 #define BRepBuilderAPI_MakeShape void
 #define Standard_Real double
+#define BRepFilletAPI_MakeFillet void
+#define TopExp_Explorer void
+#define TopAbs_ShapeEnum int
+#define bool unsigned int
+#define Standard_Boolean unsigned int
+#define gp_Dir void
+#define gp_Ax2 void
+#define BRepPrimAPI_MakeCylinder void
+#define Geom_Surface void
+#define Geom_Plane void
+#define BRepOffsetAPI_MakeThickSolid void
+#define TopTools_ListOfShape void
+#define Geom_CylindricalSurface void
+#define gp_Ax3 void
+#define gp_Pnt2d void
+#define gp_Dir2d void
+#define Geom2d_Ellipse void
+#define gp_Ax2d void
+#define Standard_True 1
+#define Standard_False 0
+#define Geom2d_TrimmedCurve void
+#define Geom2d_Curve void
+#define BRepOffsetAPI_ThruSections void
+#define TopoDS_Compound void
+#define BRep_Builder void
+#define BRepPrimAPI_MakeBox void
+#define BRepPrimAPI_MakeShape void
+#define Standard_Integer int
+#define BRepBuilderAPI_MakeEdge void
+#define TopTools_ListOfShape void
+#define BRepBuilderAPI_MakeEdge void
+#define gp_Circ2d void
+#define Geom2d_Circle void
+#define Geom2dAPI_InterCurveCurve void
+#define Geom2d_Geometry void
 
 gp_Dir2d *gp_dir_2d_new(void);
 gp_Ax2d *gp_ax_2d_new_pt_dir(const gp_Pnt2d *theP, const gp_Dir2d *theV);
@@ -60,33 +95,6 @@ TopoDS_Face* brep_builderapi_make_face_from_face(TopoDS_Face* face);
 TopoDS_Face* brep_builderapi_make_face_from_plane(gp_Pln *plane);
 TopoDS_Shape* brep_primapi_make_prism(TopoDS_Face* face, gp_Vec* normal);
 
-#define BRepFilletAPI_MakeFillet void
-#define TopExp_Explorer void
-#define TopAbs_ShapeEnum int
-#define bool unsigned int
-#define Standard_Boolean unsigned int
-#define gp_Dir void
-#define gp_Ax2 void
-#define BRepPrimAPI_MakeCylinder void
-#define Geom_Surface void
-#define Geom_Plane void
-#define BRepOffsetAPI_MakeThickSolid void
-#define TopTools_ListOfShape void
-#define Geom_CylindricalSurface void
-#define gp_Ax3 void
-#define gp_Pnt2d void
-#define gp_Dir2d void
-#define Geom2d_Ellipse void
-#define gp_Ax2d void
-#define Standard_True 1
-#define Standard_False 0
-#define Geom2d_TrimmedCurve void
-#define Geom2d_Curve void
-#define BRepOffsetAPI_ThruSections void
-#define TopoDS_Compound void
-#define BRep_Builder void
-#define BRepPrimAPI_MakeBox void
-#define BRepPrimAPI_MakeShape void
 
 BRepFilletAPI_MakeFillet* brep_filletapi_make_fillet(TopoDS_Shape* body);
 
@@ -128,7 +136,6 @@ TopTools_ListOfShape* top_tools_list_of_shape(void);
 void top_tools_list_of_shape_append(TopTools_ListOfShape* l, TopoDS_Face* face);
 void top_tools_list_of_shape_append_edge(TopTools_ListOfShape* l, TopoDS_Edge* edge);
 
-#define BRepBuilderAPI_MakeEdge void
 
 void top_tools_list_of_shape_append_makeedge(TopTools_ListOfShape *l, BRepBuilderAPI_MakeEdge *makeEdge);
 BRepOffsetAPI_MakeThickSolid* brep_offset_api_make_thick_solid(void);
@@ -158,7 +165,6 @@ void brep_builder_add(BRep_Builder* b, TopoDS_Compound* c, TopoDS_Shape* s);
 TopoDS_Face* topods_face_new(void);
 void topods_shape_assignment_operator(TopoDS_Shape** left, TopoDS_Shape* right);
 
-#define Standard_Integer int
 
 int dumpShape(const TopoDS_Shape* shape, const Standard_Integer width, const Standard_Integer height,
   const char* fileName);
@@ -191,7 +197,6 @@ TopoDS_Shape* brep_primapi_make_thorus(const gp_Ax2* origin, const Standard_Real
 gp_Ax2* gp_ax2_dz(void);
 void analyze(const TopoDS_Shape* myShape);
 
-#define TopTools_ListOfShape void
 
 //TopTools_ListOfShape* toptools_listofshape_new(void);
 //void toptools_listofshape_append(TopTools_ListOfShape* ls, const TopoDS_Shape* myShape);
@@ -202,7 +207,6 @@ void write_step(const TopoDS_Shape* shape, const char *fileName);
 
 void write_stl(const TopoDS_Shape* shape, const char *fileName);
 
-#define BRepBuilderAPI_MakeEdge void
 
 const BRepBuilderAPI_MakeEdge *brep_builderapi_make_edge_from_pts(gp_Pnt* from, gp_Pnt* to);
 const BRepBuilderAPI_MakeEdge *brep_builderapi_make_edge_from_curve(Handle(Geom_Curve)* curve);
@@ -224,10 +228,6 @@ void top_tools_list_of_shape_delete(TopTools_ListOfShape* ptr);
 void brep_builderapi_wire_add_makeedge(BRepBuilderAPI_MakeWire* mw, BRepBuilderAPI_MakeEdge* edge);
 TopoDS_Face *brep_builderapi_make_face_from_makewire(BRepBuilderAPI_MakeWire *wire);
 
-#define gp_Circ2d void
-#define Geom2d_Circle void
-#define Geom2dAPI_InterCurveCurve void
-#define Geom2d_Geometry void
 
 gp_Circ2d* gp_circ2d_new(gp_Ax2d *ax2d, Standard_Real theRadius);
 Handle(Geom2d_Circle)* gce2d_makecircle(gp_Circ2d *ptr);

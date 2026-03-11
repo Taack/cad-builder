@@ -70,141 +70,48 @@ OcctExternSym::OcctExternSym() {
 
 */
 
-extern "C" gp_Ax2d *gp_ax_2d_new() {
-    return new gp_Ax2d();
-}
-
-extern "C" gp_Ax2d *gp_ax_2d_new_pt_dir(const gp_Pnt2d &theP, const gp_Dir2d &theV) {
-    return new gp_Ax2d(theP, theV);
-}
-
-extern "C" gp_Dir2d *gp_dir_2d_new() {
-    return new gp_Dir2d();
-}
-
-extern "C" gp_Pnt2d *make_gp_pnt2d(const Standard_Real theXp, const Standard_Real theYp) {
+extern "C" gp_Pnt2d *new_gp_Pnt2d__x_y(const Standard_Real theXp, const Standard_Real theYp) {
     return new gp_Pnt2d(theXp, theYp);
 }
 
-extern "C" Standard_Real gp_Pnt2d_distance(const gp_Pnt2d &theOne, const gp_Pnt2d &theOther) {
-    return theOne.Distance(theOther);
+extern "C" gp_Pnt2d *new_gp_Pnt2d__Geom2d_Conic__Value__u(Handle(Geom2d_Conic) &geom2d_conic, const Standard_Real U) {
+    return new gp_Pnt2d(geom2d_conic->Value(U));
 }
 
-extern "C" gp_Dir2d *make_gp_dir2d(const Standard_Real theXp, const Standard_Real theYp) {
-    return new gp_Dir2d(theXp, theYp);
-}
-
-extern "C" Handle(Geom2d_Ellipse) *geom2d_ellipse_create(const gp_Ax2d &MajorAxis, const Standard_Real MajorRadius,
-                                                         const Standard_Real MinorRadius,
-                                                         const Standard_Boolean Sense = Standard_True) {
-    return new Handle(Geom2d_Ellipse)(new Geom2d_Ellipse(MajorAxis, MajorRadius, MinorRadius, Sense));
-}
-
-extern "C" Handle(Geom2d_TrimmedCurve) *geom2d_trimmed_curve_create(const Handle(Geom2d_Curve) &C,
-                                                                    const Standard_Real U1, const Standard_Real U2,
-                                                                    const Standard_Boolean Sense = Standard_True,
-                                                                    const Standard_Boolean theAdjustPeriodic =
-                                                                        Standard_True) {
-    return new Handle(Geom2d_TrimmedCurve)(new Geom2d_TrimmedCurve(C, U1, U2, Sense, theAdjustPeriodic));
-}
-
-extern "C" gp_Pnt2d *geom2d_ellipse_value(Handle(Geom2d_Ellipse) &geom2d_ellipse, const Standard_Real U) {
-    return new gp_Pnt2d(geom2d_ellipse->Value(U));
-}
-
-extern "C" Handle(Geom2d_TrimmedCurve) *gce2d_make_segment(const gp_Pnt2d &P1, const gp_Pnt2d &P2) {
-    return new Handle(Geom2d_TrimmedCurve)(GCE2d_MakeSegment(P1, P2));
-}
-
-extern "C" Handle(Geom2d_TrimmedCurve)* gce2d_makearcofcircle(gp_Circ2d& circ2d, gp_Pnt2d& p1, gp_Pnt2d& p2) {
-    return new Handle(Geom2d_TrimmedCurve)(GCE2d_MakeArcOfCircle(circ2d, p1, p2));
-}
-
-extern "C" Handle(Geom2d_TrimmedCurve)* gce2d_makearcofcircle_from_angles(gp_Circ2d& circ2d, Standard_Real angle1, Standard_Real angle2) {
-    return new Handle(Geom2d_TrimmedCurve)(GCE2d_MakeArcOfCircle(circ2d, angle1, angle2));
-}
-
-extern "C" Handle(Geom2d_TrimmedCurve)* gce2d_makearcofcircle_from_points(gp_Pnt2d& pt1, gp_Pnt2d& pt2, gp_Pnt2d& pt3) {
-    return new Handle(Geom2d_TrimmedCurve)(GCE2d_MakeArcOfCircle(pt1, pt2, pt3));
-}
-
-extern "C" Handle(Geom2d_TrimmedCurve)* gce2d_makearcofcircle_from_point_angle(gp_Circ2d& circ2d, gp_Pnt2d& pt1, Standard_Real angle1) {
-    return new Handle(Geom2d_TrimmedCurve)(GCE2d_MakeArcOfCircle(circ2d, pt1, angle1));
-}
-
-extern "C" void geom2d_trimmedcurve_mirror(Handle(Geom2d_TrimmedCurve)& curve, gp_Ax2d& ax2d) {
-    curve->Mirror(ax2d);
-}
-
-extern "C" void geom2d_trimmedcurve_reverse(Handle(Geom2d_TrimmedCurve)& curve) {
-    curve->Reverse();
-}
-
-extern "C" gp_Pnt2d* geom2d_trimmedcurve_endpoint(const Handle(Geom2d_TrimmedCurve)& curve) {
+extern "C" gp_Pnt2d* new_gp_Pnt2d__Geom2d_TrimmedCurve__EndPoint(const Handle(Geom2d_TrimmedCurve)& curve) {
     return new gp_Pnt2d(curve->EndPoint());
 }
 
-extern "C" gp_Pnt2d* geom2d_trimmedcurve_startpoint(const Handle(Geom2d_TrimmedCurve)& curve) {
+extern "C" gp_Pnt2d* new_gp_Pnt2d__Geom2d_TrimmedCurve__StartPoint(const Handle(Geom2d_TrimmedCurve)& curve) {
     return new gp_Pnt2d(curve->StartPoint());
 }
 
-extern "C" gp_Circ2d* gp_circ2d_new(gp_Ax2d &ax2d, Standard_Real theRadius) {
-    return new gp_Circ2d(ax2d, theRadius);
-}
-
-extern "C" Handle(Geom2d_Circle)* gce2d_makecircle(gp_Circ2d &ptr) {
-    return new Handle(Geom2d_Circle)(GCE2d_MakeCircle(ptr));
-}
-
-extern "C" Geom2dAPI_InterCurveCurve* geom2dapi_intercurvecurve_new(const Handle(Geom2d_Curve)& C1, const Handle(Geom2d_Curve)& C2) {
-    return new Geom2dAPI_InterCurveCurve(C1, C2);
-}
-
-extern "C" Standard_Integer geom2dapi_intercurvecurve_nbpoints(const Geom2dAPI_InterCurveCurve &inter_curve_curve) {
-    return inter_curve_curve.NbPoints();
-}
-
-extern "C" gp_Pnt2d* geom2dapi_intercurvecurve_point(const Geom2dAPI_InterCurveCurve &inter_curve_curve, const Standard_Integer index) {
-    return new gp_Pnt2d(inter_curve_curve.Point(index));
-}
-
-extern "C"  Handle(Geom2d_Geometry)* geom2d_geometry_copy(const Handle(Geom2d_Geometry) &toCpy) {
-    return new Handle(Geom2d_Geometry)(toCpy->Copy());
-}
-
-extern "C"  Handle(Geom_Curve)* geomapi_2dto3d(Handle(Geom2d_Curve) &curve, gp_Pln &plan) {
-    return new Handle(Geom_Curve)(GeomAPI::To3d(curve, plan));
-}
-
-
-/*
-
-    3D
-
-*/
-
-extern "C" gp_Pnt *gp_pnt_new(const Standard_Real theXp, const Standard_Real theYp, const Standard_Real theZp) {
-    return new gp_Pnt(theXp, theYp, theZp);
-}
-
-extern "C" gp_Pnt2d *gp_pnt2d_new(const Standard_Real theXp, const Standard_Real theYp) {
-    return new gp_Pnt2d(theXp, theYp);
-}
-
-extern "C" void gp_pnt_delete(gp_Pnt *pnt) {
-    delete pnt;
-}
-
-extern "C" gp_Vec *gp_vec_new(const Standard_Real theXp, const Standard_Real theYp, const Standard_Real theZp) {
-    return new gp_Vec(theXp, theYp, theZp);
-}
-
-extern "C" gp_Vec2d *gp_vec2d_new(const Standard_Real theXp, const Standard_Real theYp) {
+extern "C" gp_Vec2d *new_gp_Vec2d__x_y(const Standard_Real theXp, const Standard_Real theYp) {
     return new gp_Vec2d(theXp, theYp);
 }
 
-extern "C" void gp_vec_delete(gp_Vec *pnt) {
-    delete pnt;
+extern "C" gp_Ax2d *new_gp_Ax2d() {
+    return new gp_Ax2d();
+}
+
+extern "C" gp_Ax2d *new_gp_Ax2d__pt_dir(const gp_Pnt2d &theP, const gp_Dir2d &theV) {
+    return new gp_Ax2d(theP, theV);
+}
+
+extern "C" gp_Dir2d *new_gp_Dir2d() {
+    return new gp_Dir2d();
+}
+
+extern "C" gp_Dir2d *new_gp_Dir2d__x_y(const Standard_Real theXp, const Standard_Real theYp) {
+    return new gp_Dir2d(theXp, theYp);
+}
+
+extern "C" gp_Circ2d* new_gp_Circ2d__ax2d_r(gp_Ax2d &ax2d, Standard_Real theRadius) {
+    return new gp_Circ2d(ax2d, theRadius);
+}
+
+extern "C" Standard_Real real_gp_Pnt2d__Distance__p1_p2(const gp_Pnt2d &theOne, const gp_Pnt2d &theOther) {
+    return theOne.Distance(theOther);
 }
 
 extern "C" Standard_Real gp_pnt_x(gp_Pnt *pnt) {
@@ -227,140 +134,211 @@ extern "C" Standard_Real gp_pnt_z(gp_Pnt *pnt) {
     return pnt->Z();
 }
 
-extern "C" Handle(Geom_TrimmedCurve) *gc_make_arc_of_circle(gp_Pnt *pnt1, gp_Pnt *pnt2, gp_Pnt *pnt3) {
+extern "C" Handle(Geom2d_Ellipse) *handle_Geom2d_Ellipse__a2_majorRadius_minorRadius_sense(const gp_Ax2d &MajorAxis, const Standard_Real MajorRadius,
+                                                         const Standard_Real MinorRadius,
+                                                         const Standard_Boolean Sense = Standard_True) {
+    return new Handle(Geom2d_Ellipse)(new Geom2d_Ellipse(MajorAxis, MajorRadius, MinorRadius, Sense));
+}
+
+extern "C" Handle(Geom2d_TrimmedCurve) *handle_Geom2d_TrimmedCurve__curve_u1_u2(const Handle(Geom2d_Curve) &C,
+                                                                    const Standard_Real U1, const Standard_Real U2,
+                                                                    const Standard_Boolean Sense = Standard_True,
+                                                                    const Standard_Boolean theAdjustPeriodic =
+                                                                        Standard_True) {
+    return new Handle(Geom2d_TrimmedCurve)(new Geom2d_TrimmedCurve(C, U1, U2, Sense, theAdjustPeriodic));
+}
+
+extern "C" Handle(Geom2d_TrimmedCurve) *handle_Geom2d_TrimmedCurve__GCE2d_MakeSegment__p1_p2(const gp_Pnt2d &P1, const gp_Pnt2d &P2) {
+    return new Handle(Geom2d_TrimmedCurve)(GCE2d_MakeSegment(P1, P2));
+}
+
+extern "C" Handle(Geom2d_TrimmedCurve)* handle_Geom2d_TrimmedCurve__GCE2d_MakeArcOfCircle__cir2d_p1_p2(gp_Circ2d& circ2d, gp_Pnt2d& p1, gp_Pnt2d& p2) {
+    return new Handle(Geom2d_TrimmedCurve)(GCE2d_MakeArcOfCircle(circ2d, p1, p2));
+}
+
+extern "C" Handle(Geom2d_TrimmedCurve)* handle_Geom2d_TrimmedCurve__GCE2d_MakeArcOfCircle__cir2d_ang1_ang2(gp_Circ2d& circ2d, Standard_Real angle1, Standard_Real angle2) {
+    return new Handle(Geom2d_TrimmedCurve)(GCE2d_MakeArcOfCircle(circ2d, angle1, angle2));
+}
+
+extern "C" Handle(Geom2d_TrimmedCurve)* handle_Geom2d_TrimmedCurve__GCE2d_MakeArcOfCircle__p1_p2_p3(gp_Pnt2d& pt1, gp_Pnt2d& pt2, gp_Pnt2d& pt3) {
+    return new Handle(Geom2d_TrimmedCurve)(GCE2d_MakeArcOfCircle(pt1, pt2, pt3));
+}
+
+extern "C" Handle(Geom2d_TrimmedCurve)* handle_Geom2d_TrimmedCurve__GCE2d_MakeArcOfCircle__cir2d_p1_ang(gp_Circ2d& circ2d, gp_Pnt2d& pt1, Standard_Real angle1) {
+    return new Handle(Geom2d_TrimmedCurve)(GCE2d_MakeArcOfCircle(circ2d, pt1, angle1));
+}
+
+extern "C" void _Geom2d_TrimmedCurve__Mirror__ax2(Handle(Geom2d_TrimmedCurve)& curve, gp_Ax2d& ax2d) {
+    curve->Mirror(ax2d);
+}
+
+extern "C" void _Geom2d_TrimmedCurve__Reverse(Handle(Geom2d_TrimmedCurve)& curve) {
+    curve->Reverse();
+}
+
+extern "C" Handle(Geom2d_Circle)* handle_Geom2d_Circle__GCE2d_MakeCircle__cir2d(gp_Circ2d &cir2d) {
+    return new Handle(Geom2d_Circle)(GCE2d_MakeCircle(cir2d));
+}
+
+extern "C" Geom2dAPI_InterCurveCurve* new_Geom2dAPI_InterCurveCurve__curve1_curve2(const Handle(Geom2d_Curve)& C1, const Handle(Geom2d_Curve)& C2) {
+    return new Geom2dAPI_InterCurveCurve(C1, C2);
+}
+
+extern "C" Standard_Integer int_Geom2dAPI_InterCurveCurve__NbPoints(const Geom2dAPI_InterCurveCurve &inter_curve_curve) {
+    return inter_curve_curve.NbPoints();
+}
+
+extern "C"  Handle(Geom2d_Geometry)*  handle_Geom2d_Geometry__Copy(const Handle(Geom2d_Geometry) &toCpy) {
+    return new Handle(Geom2d_Geometry)(toCpy->Copy());
+}
+
+extern "C"  Handle(Geom_Curve)* handle_Geom_Curve__GeomAPI_To3d__curve_plan(Handle(Geom2d_Curve) &curve, gp_Pln &plan) {
+    return new Handle(Geom_Curve)(GeomAPI::To3d(curve, plan));
+}
+
+/***********************************************************************************************************************
+
+    3D
+
+***********************************************************************************************************************/
+
+extern "C" gp_Pnt * new_gp_Pnt__x_y_z(const Standard_Real theXp, const Standard_Real theYp, const Standard_Real theZp) {
+    return new gp_Pnt(theXp, theYp, theZp);
+}
+
+extern "C" void delete_gp_Pnt(gp_Pnt *pnt) {
+    delete pnt;
+}
+
+extern "C" gp_Vec *new_gp_Vec__x_y_z(const Standard_Real theXp, const Standard_Real theYp, const Standard_Real theZp) {
+    return new gp_Vec(theXp, theYp, theZp);
+}
+
+extern "C" void delete_gp_Vec(gp_Vec *pnt) {
+    delete pnt;
+}
+
+extern "C" Handle(Geom_TrimmedCurve) *handle_Geom_TrimmedCurve__GC_MakeArcOfCircle_p1_p2_p3(gp_Pnt *pnt1, gp_Pnt *pnt2, gp_Pnt *pnt3) {
     return new Handle(Geom_TrimmedCurve)(GC_MakeArcOfCircle(*pnt1, *pnt2, *pnt3).Value());
 }
 
-extern "C" Handle(Geom_TrimmedCurve) *gc_make_arc_of_circle_tan(gp_Pnt *pnt1, gp_Vec *v, gp_Pnt *pnt3) {
-    return new Handle(Geom_TrimmedCurve)(GC_MakeArcOfCircle(*pnt1, *v, *pnt3).Value());
+extern "C" Handle(Geom_TrimmedCurve) *handle_Geom_TrimmedCurve__GC_MakeArcOfCircle_p1_vtangente_p2(gp_Pnt *pnt1, gp_Vec *tan, gp_Pnt *pnt3) {
+    return new Handle(Geom_TrimmedCurve)(GC_MakeArcOfCircle(*pnt1, *tan, *pnt3).Value());
 }
 
-extern "C" void gc_delete_arc_of_circle(Handle(Geom_TrimmedCurve)* ptr) {
+extern "C" void delete_handle_Geom_TrimmedCurve(Handle(Geom_TrimmedCurve)* ptr) {
     delete ptr;
 }
 
-extern "C" Handle(Geom_TrimmedCurve) *gc_make_segment(gp_Pnt *pnt1, gp_Pnt *pnt2) {
+extern "C" Handle(Geom_TrimmedCurve) *handle_Geom_TrimmedCurve__GC_MakeSegment__p1_p2(gp_Pnt *pnt1, gp_Pnt *pnt2) {
     return new Handle(Geom_TrimmedCurve)(GC_MakeSegment(*pnt1, *pnt2).Value());
 }
 
-extern "C" void gc_delete_segment(Handle(Geom_TrimmedCurve)* ptr) {
-    delete ptr;
-}
-
-extern "C" const TopoDS_Edge *brep_builderapi_make_edge(Handle(Geom_Curve) &segment) {
+extern "C" const TopoDS_Edge *new_TopoDS_Edge__BRepBuilderAPI_MakeEdge__Geom_Curve(Handle(Geom_Curve) &segment) {
     return new TopoDS_Edge(BRepBuilderAPI_MakeEdge(segment).Edge());
 }
 
-extern "C" const TopoDS_Edge *brep_builderapi_make_edge2(Handle(Geom2d_Curve) &curve, const Handle(Geom_Surface) &surface) {
+extern "C" const TopoDS_Edge *new_TopoDS_Edge__BRepBuilderAPI_MakeEdge__Geom_Curve_Geom_Surface(Handle(Geom2d_Curve) &curve, const Handle(Geom_Surface) &surface) {
     return new TopoDS_Edge(BRepBuilderAPI_MakeEdge(curve, surface));
 }
 
-extern "C" void brep_builderapi_delete_edge(TopoDS_Edge *ptr) {
+extern "C" void delete_TopoDS_Edge(TopoDS_Edge *ptr) {
     delete ptr;
 }
 
-extern "C" const BRepBuilderAPI_MakeEdge *brep_builderapi_make_edge_from_pts(gp_Pnt& from, gp_Pnt& to) {
+extern "C" const BRepBuilderAPI_MakeEdge *new_BRepBuilderAPI_MakeEdge__ptFrom_ptTo(gp_Pnt& from, gp_Pnt& to) {
     return new BRepBuilderAPI_MakeEdge(from, to);
 }
 
-extern "C" const BRepBuilderAPI_MakeEdge *brep_builderapi_make_edge_from_curve(Handle(Geom_Curve)& curve) {
+extern "C" const BRepBuilderAPI_MakeEdge *new_BRepBuilderAPI_MakeEdge__Geom_Curve(Handle(Geom_Curve)& curve) {
     return new BRepBuilderAPI_MakeEdge(curve);
 }
 
-extern "C" const BRepBuilderAPI_MakeWire *brep_builderapi_makewire_new() {
+extern "C" const BRepBuilderAPI_MakeWire * new_BRepBuilderAPI_MakeWire() {
     return new BRepBuilderAPI_MakeWire();
 }
 
-extern "C" const BRepBuilderAPI_MakeWire *brep_builderapi_makewire_new_edge(BRepBuilderAPI_MakeEdge& edge) {
+extern "C" const BRepBuilderAPI_MakeWire *new BRepBuilderAPI_MakeWire__BRepBuilderAPI_MakeEdge(BRepBuilderAPI_MakeEdge& edge) {
     return new BRepBuilderAPI_MakeWire(edge);
 }
 
-extern "C" void brep_builderapi_make_wire_add(BRepBuilderAPI_MakeWire& wireMaker, BRepBuilderAPI_MakeEdge& edge) {
+extern "C" void _BRepBuilderAPI_MakeWire__Add__BRepBuilderAPI_MakeEdge(BRepBuilderAPI_MakeWire& wireMaker, BRepBuilderAPI_MakeEdge& edge) {
     wireMaker.Add(edge);
 }
 
-extern "C" const TopoDS_Wire *brep_builderapi_make_wire_topo_ds_wire(TopoDS_Edge& e1, TopoDS_Edge& e2, TopoDS_Edge& e3) {
+extern "C" const TopoDS_Wire * new_TopoDS_Wire__BRepBuilderAPI_MakeWire__TopoDS_Edge1_e2_e3(TopoDS_Edge& e1, TopoDS_Edge& e2, TopoDS_Edge& e3) {
     return new TopoDS_Wire(BRepBuilderAPI_MakeWire(e1, e2, e3).Wire());
 }
 
-extern "C" const TopoDS_Wire *brep_builderapi_make_wire_topo_ds_wire2p(TopoDS_Edge& e1, TopoDS_Edge& e2) {
+extern "C" const TopoDS_Wire *new_TopoDS_Wire__BRepBuilderAPI_MakeWire__TopoDS_Edge1_e2(TopoDS_Edge& e1, TopoDS_Edge& e2) {
     return new TopoDS_Wire(BRepBuilderAPI_MakeWire(e1, e2).Wire());
 }
 
-extern "C" const TopoDS_Wire *brep_builderapi_make_wire_topo_ds_wire4p(TopoDS_Edge& e1, TopoDS_Edge& e2, TopoDS_Edge& e3, TopoDS_Edge& e4) {
+extern "C" const TopoDS_Wire *new_TopoDS_Wire__BRepBuilderAPI_MakeWire__TopoDS_Edge1_e2_e3_e4(TopoDS_Edge& e1, TopoDS_Edge& e2, TopoDS_Edge& e3, TopoDS_Edge& e4) {
     return new TopoDS_Wire(BRepBuilderAPI_MakeWire(e1, e2, e3, e4).Wire());
 }
 
-extern "C" const TopoDS_Wire &brep_builderapi_make_wire_topo_ds_wire2(BRepBuilderAPI_MakeWire &make_wire) {
+extern "C" const TopoDS_Wire &ref_TopoDS_Wire__BRepBuilderAPI_MakeWire__Wire(BRepBuilderAPI_MakeWire &make_wire) {
     return make_wire.Wire();
 }
 
-extern "C" void brep_builderapi_wire_add(BRepBuilderAPI_MakeWire &mw, TopoDS_Wire &wire) {
+extern "C" void _BRepBuilderAPI_MakeWire__Add__TopoDS_Wire(BRepBuilderAPI_MakeWire &mw, TopoDS_Wire &wire) {
     mw.Add(wire);
 }
 
-extern "C" void brep_builderapi_wire_add_wire(BRepBuilderAPI_MakeWire &mw, BRepBuilderAPI_MakeWire &mw2) {
+extern "C" void _BRepBuilderAPI_MakeWire__Add__BRepBuilderAPI_MakeWire(BRepBuilderAPI_MakeWire &mw, BRepBuilderAPI_MakeWire &mw2) {
     mw.Add(mw2);
 }
 
-extern "C" void brep_builderapi_wire_add_edge(BRepBuilderAPI_MakeWire &mw, TopoDS_Edge &edge) {
+extern "C" void _BRepBuilderAPI_MakeWire__Add__TopoDS_Edge(BRepBuilderAPI_MakeWire &mw, TopoDS_Edge &edge) {
     mw.Add(edge);
 }
 
-extern "C" void brep_builderapi_wire_add_makeedge(BRepBuilderAPI_MakeWire &mw, BRepBuilderAPI_MakeEdge &edge) {
+extern "C" void _BRepBuilderAPI_MakeWire__Add__BRepBuilderAPI_MakeEdge(BRepBuilderAPI_MakeWire &mw, BRepBuilderAPI_MakeEdge &edge) {
     mw.Add(edge);
 }
 
-extern "C" void brep_builderapi_wire_add_Listofshape(BRepBuilderAPI_MakeWire &mw, TopTools_ListOfShape &listOfShape) {
+extern "C" void _BRepBuilderAPI_MakeWire__Add__TopTools_ListOfShape(BRepBuilderAPI_MakeWire &mw, TopTools_ListOfShape &listOfShape) {
     mw.Add(listOfShape);
 }
 
-extern "C" const gp_Ax1 &gp_ox() {
+extern "C" const gp_Ax1 &gp__OX() {
     return gp::OX();
 }
 
-extern "C" gp_Trsf *gp_trsf() {
+extern "C" gp_Trsf *new_gp_Trsf() {
     return new gp_Trsf();
 }
 
-extern "C" void gp_trsf_set_mirror(gp_Trsf *trsf, gp_Ax1 *ax1) {
+extern "C" void _gp_Trsf__SetMirror__gp_Ax1(gp_Trsf *trsf, gp_Ax1 *ax1) {
     trsf->SetMirror(*ax1);
 }
 
-extern "C" BRepBuilderAPI_Transform *brep_builderapi_transform(const TopoDS_Wire *w, gp_Trsf *trsf) {
+extern "C" BRepBuilderAPI_Transform *new_BRepBuilderAPI_Transform__TopoDS_Wire_gp_Trsf(const TopoDS_Wire *w, gp_Trsf *trsf) {
     return new BRepBuilderAPI_Transform(*w, *trsf);
 }
 
-extern "C" TopoDS_Wire &topo_ds_wire(TopoDS_Shape &shape) {
+extern "C" TopoDS_Wire &ref_TopoDS__Wire__TopoDS_Shape(TopoDS_Shape &shape) {
     return TopoDS::Wire(shape);
 }
 
-extern "C" TopoDS_Face *brep_builderapi_make_face_from_wire(TopoDS_Wire &wire) {
+extern "C" TopoDS_Face *new_TopoDS_Face__BRepBuilderAPI_MakeFace__TopoDS_Wire(TopoDS_Wire &wire) {
     return new TopoDS_Face(BRepBuilderAPI_MakeFace(wire).Face());
 }
 
-
-extern "C" TopoDS_Face *brep_builderapi_make_face_from_makewire(BRepBuilderAPI_MakeWire &wire) {
-    return new TopoDS_Face(BRepBuilderAPI_MakeFace(wire).Face());
-}
-
-extern "C" TopoDS_Face *brep_builderapi_make_face_from_face(TopoDS_Face &face) {
-    return new TopoDS_Face(BRepBuilderAPI_MakeFace(face).Face());
-}
-
-extern "C" TopoDS_Face *brep_builderapi_make_face_from_plane(gp_Pln &plane) {
+extern "C" TopoDS_Face *new_TopoDS_Face__BRepBuilderAPI_MakeFace__gp_Pln(gp_Pln &plane) {
     return new TopoDS_Face(BRepBuilderAPI_MakeFace(plane).Face());
 }
 
-extern "C" TopoDS_Face *topods_face_new() {
+extern "C" TopoDS_Face *new_TopoDS_Face() {
     return new TopoDS_Face();
 }
 
-extern "C" TopoDS_Shape *brep_primapi_make_prism(TopoDS_Face &face, gp_Vec &normal) {
+extern "C" TopoDS_Shape *new_TopoDS_Shape__BRepPrimAPI_MakePrism__TopoDS_Face_gp_Vec(TopoDS_Face &face, gp_Vec &normal) {
     return new TopoDS_Shape(BRepPrimAPI_MakePrism(face, normal));
 }
 
-extern "C" BRepFilletAPI_MakeFillet *brep_filletapi_make_fillet(TopoDS_Shape &body) {
+extern "C" BRepFilletAPI_MakeFillet * new_BRepFilletAPI_MakeFillet__TopoDS_Shape(TopoDS_Shape &body) {
     return new BRepFilletAPI_MakeFillet(body);
 }
 
@@ -389,45 +367,45 @@ TopAbs_ShapeEnum TopAbs_ShapeEnumFromOrdinal(int ordinal) {
     }
 }
 
-extern "C" TopExp_Explorer *top_exp_explorer(const TopoDS_Shape &S, const /*TopAbs_ShapeEnum*/int ToFind,
+extern "C" TopExp_Explorer *new_TopExp_Explorer__TopoDS_Shape_ToFind_ToAvoid(const TopoDS_Shape &S, const /*TopAbs_ShapeEnum*/int ToFind,
                                              const int ToAvoid = TopAbs_SHAPE) {
     return new TopExp_Explorer(S, TopAbs_ShapeEnumFromOrdinal(ToFind), TopAbs_ShapeEnumFromOrdinal(ToAvoid));
 }
 
-extern "C" bool top_exp_explorer_more(TopExp_Explorer &explorer) {
+extern "C" bool _TopExp_Explorer__More(TopExp_Explorer &explorer) {
     return explorer.More();
 }
 
-extern "C" TopoDS_Shape *top_exp_explorer_current(TopExp_Explorer &explorer) {
+extern "C" TopoDS_Shape *new_TopoDS_Shape__TopExp_Explorer__Current(TopExp_Explorer &explorer) {
     return new TopoDS_Shape(explorer.Current());
 }
 
-extern "C" TopoDS_Shape *top_exp_explorer_current_face(TopExp_Explorer &explorer) {
+extern "C" TopoDS_Face * new_TopoDS_Face__TopExp_Explorer__Current(TopExp_Explorer &explorer) {
     return new TopoDS_Face(TopoDS::Face(explorer.Current()));
 }
 
-extern "C" void top_exp_explorer_next(TopExp_Explorer &explorer) {
+extern "C" void _TopExp_Explorer__Next(TopExp_Explorer &explorer) {
     return explorer.Next();
 }
 
-extern "C" TopoDS_Edge &topo_ds_edge(TopoDS_Shape &shape) {
+extern "C" TopoDS_Edge &ref_TopoDS_Edge__TopoDS_Shape(TopoDS_Shape &shape) {
     return TopoDS::Edge(shape);
 }
 
-extern "C" void brep_filletapi_make_fillet_add(BRepFilletAPI_MakeFillet &make_fillet, Standard_Real r,
+extern "C" void _BRepFilletAPI_MakeFillet__Add__radius_TopoDS_Edge(BRepFilletAPI_MakeFillet &make_fillet, Standard_Real r,
                                                TopoDS_Edge &edge) {
     return make_fillet.Add(r, edge);
 }
 
-extern "C" const gp_Dir *gp_dz() {
+extern "C" const gp_Dir * new_gp_Dir_DZ() {
     return new gp_Dir(gp::DZ());
 }
 
-extern "C" const gp_Ax2 *gp_ax2(gp_Pnt &loc, gp_Dir &dir) {
+extern "C" const gp_Ax2 * new_gp_Ax2__gp_Pnt_gp_Dir(gp_Pnt &loc, gp_Dir &dir) {
     return new gp_Ax2(loc, dir);
 }
 
-extern "C" const gp_Ax2 *gp_ax2_dz() {
+extern "C" const gp_Ax2 *new_gp_Ax2_DZ() {
     return new gp_Ax2(gp_Pnt(0.0, 0.0, 0.0), gp::DZ());
 }
 
@@ -560,10 +538,6 @@ extern "C" gp_Ax1 *gp_ax1_new(const gp_Pnt &theP, const gp_Dir &theV) {
 
 extern "C" gp_Dir *gp_dir_new(const Standard_Real theXv, const Standard_Real theYv, const Standard_Real theZv) {
     return new gp_Dir(theXv, theYv, theZv);
-}
-
-extern "C" gp_Dir2d *gp_dir2d_new(const Standard_Real theXv, const Standard_Real theYv) {
-    return new gp_Dir2d(theXv, theYv);
 }
 
 extern "C" gp_Dir *gp_dir_normal_to_face(const TopoDS_Face &aCurrentFace) {
