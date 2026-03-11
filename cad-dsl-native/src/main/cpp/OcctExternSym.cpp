@@ -60,6 +60,11 @@
 #include <gp_Pnt.hxx>
 #include <GeomAPI.hxx>
 
+#define TRACE(message) TRACE_IMPL(__FILE__, __LINE__, __PRETTY_FUNCTION__, message)
+void TRACE_IMPL(const char *file, int line, const char *function, const char *message) {
+    std::cout << file << " : " << line << " : " << function << " : " << message << "\n"
+}
+
 
 OcctExternSym::OcctExternSym() {
 }
@@ -110,28 +115,25 @@ extern "C" gp_Circ2d* new_gp_Circ2d__ax2d_r(gp_Ax2d &ax2d, Standard_Real theRadi
     return new gp_Circ2d(ax2d, theRadius);
 }
 
-extern "C" Standard_Real real_gp_Pnt2d__Distance__p1_p2(const gp_Pnt2d &theOne, const gp_Pnt2d &theOther) {
+extern "C" Standard_Real gp_Pnt2d__Distance__p1_p2(const gp_Pnt2d &theOne, const gp_Pnt2d &theOther) {
     return theOne.Distance(theOther);
 }
 
-extern "C" Standard_Real gp_pnt_x(gp_Pnt *pnt) {
+extern "C" Standard_Real gp_Pnt2d__X(gp_Pnt2d *pnt) {
     return pnt->X();
 }
 
-extern "C" Standard_Real gp_pnt_y(gp_Pnt *pnt) {
+extern "C" Standard_Real gp_Pnt2d__Y(gp_Pnt2d *pnt) {
     return pnt->Y();
 }
 
-extern "C" Standard_Real gp_pnt2d_x(gp_Pnt2d *pnt) {
-    return pnt->X();
+
+extern "C" Standard_Real gp_Dir2d__X(gp_Dir2d *dir) {
+    return dir->X();
 }
 
-extern "C" Standard_Real gp_pnt2d_y(gp_Pnt2d *pnt) {
-    return pnt->Y();
-}
-
-extern "C" Standard_Real gp_pnt_z(gp_Pnt *pnt) {
-    return pnt->Z();
+extern "C" Standard_Real gp_Dir2d__Y(gp_Dir2d *dir) {
+    return dir->Y();
 }
 
 extern "C" Handle(Geom2d_Ellipse) *handle_Geom2d_Ellipse__a2_majorRadius_minorRadius_sense(const gp_Ax2d &MajorAxis, const Standard_Real MajorRadius,
@@ -258,7 +260,7 @@ extern "C" const BRepBuilderAPI_MakeWire * new_BRepBuilderAPI_MakeWire() {
     return new BRepBuilderAPI_MakeWire();
 }
 
-extern "C" const BRepBuilderAPI_MakeWire *new BRepBuilderAPI_MakeWire__BRepBuilderAPI_MakeEdge(BRepBuilderAPI_MakeEdge& edge) {
+extern "C" const BRepBuilderAPI_MakeWire *new_BRepBuilderAPI_MakeWire__BRepBuilderAPI_MakeEdge(BRepBuilderAPI_MakeEdge& edge) {
     return new BRepBuilderAPI_MakeWire(edge);
 }
 
@@ -312,6 +314,10 @@ extern "C" gp_Trsf *new_gp_Trsf() {
 
 extern "C" void _gp_Trsf__SetMirror__gp_Ax1(gp_Trsf *trsf, gp_Ax1 *ax1) {
     trsf->SetMirror(*ax1);
+}
+
+extern "C" void _gp_Trsf__SetTranslation__gp_Vec(gp_Trsf &gp_trsf, const gp_Vec &translation) {
+    return gp_trsf.SetTranslation(translation);
 }
 
 extern "C" BRepBuilderAPI_Transform *new_BRepBuilderAPI_Transform__TopoDS_Wire_gp_Trsf(const TopoDS_Wire *w, gp_Trsf *trsf) {
@@ -397,150 +403,15 @@ extern "C" void _BRepFilletAPI_MakeFillet__Add__radius_TopoDS_Edge(BRepFilletAPI
     return make_fillet.Add(r, edge);
 }
 
-extern "C" const gp_Dir * new_gp_Dir_DZ() {
+extern "C" const gp_Dir *new_gp_Dir_DZ() {
     return new gp_Dir(gp::DZ());
 }
 
-extern "C" const gp_Ax2 * new_gp_Ax2__gp_Pnt_gp_Dir(gp_Pnt &loc, gp_Dir &dir) {
-    return new gp_Ax2(loc, dir);
-}
-
-extern "C" const gp_Ax2 *new_gp_Ax2_DZ() {
-    return new gp_Ax2(gp_Pnt(0.0, 0.0, 0.0), gp::DZ());
-}
-
-extern "C" BRepPrimAPI_MakeCylinder *brep_primapi_make_cylinder(const gp_Ax2 &Axes, const Standard_Real R,
-                                                                const Standard_Real H) {
-    return new BRepPrimAPI_MakeCylinder(Axes, R, H);
-}
-
-extern "C" BRepPrimAPI_MakeBox *brep_primapi_make_box(const Standard_Real x, const Standard_Real y,
-                                                      const Standard_Real z) {
-    return new BRepPrimAPI_MakeBox(x, y, z);
-}
-
-extern "C" Handle(Geom_Surface) *brep_tool_surface(TopoDS_Face &face) {
-    return new Handle(Geom_Surface)(BRep_Tool::Surface(face));
-}
-
-extern "C" int geom_surface_is_geom_plane(Handle(Geom_Surface) &surface) {
-    return surface->DynamicType() == STANDARD_TYPE(Geom_Plane) ? 1 : 0;
-}
-
-extern "C" Handle(Geom_Plane) *downcast_geom_plane(Handle(Geom_Surface) &surface) {
-    return new Handle(Geom_Plane)(Handle(Geom_Plane)::DownCast(surface));
-}
-
-extern "C" gp_Pnt *geom_plane_location(Handle(Geom_Plane) &plane) {
-    return new gp_Pnt(plane->Location());
-}
-
-extern "C" TopTools_ListOfShape *top_tools_list_of_shape() {
-    return new TopTools_ListOfShape();
-}
-
-extern "C" void top_tools_list_of_shape_delete(TopTools_ListOfShape* ptr) {
-    delete ptr;
-}
-
-extern "C" void top_tools_list_of_shape_append(TopTools_ListOfShape *l, TopoDS_Shape &face) {
-    l->Append(face);
-}
-
-extern "C" void top_tools_list_of_shape_append_edge(TopTools_ListOfShape *l, TopoDS_Edge &face) {
-    l->Append(face);
-}
-
-extern "C" void top_tools_list_of_shape_append_makeedge(TopTools_ListOfShape *l, BRepBuilderAPI_MakeEdge &face) {
-    l->Append(face);
-}
-
-extern "C" BRepOffsetAPI_MakeThickSolid *brep_offset_api_make_thick_solid() {
-    return new BRepOffsetAPI_MakeThickSolid();
-}
-
-extern "C" void brep_offset_api_make_thick_solid_join(BRepOffsetAPI_MakeThickSolid *thick_solid, TopoDS_Shape *shape,
-                                                      const TopTools_ListOfShape *face_to_remove,
-                                                      Standard_Real thickness, Standard_Real tol) {
-    thick_solid->MakeThickSolidByJoin(*shape, *face_to_remove, thickness, tol);
-}
-
-extern "C" Handle(Geom_CylindricalSurface) *geom_cylindrical_surface_create(
-    const gp_Ax3 &ax2, const Standard_Real radius) {
-    return new Handle(Geom_CylindricalSurface)(new Geom_CylindricalSurface(ax2, radius));
-}
-
-extern "C" void brep_lib_build_curves_3d(TopoDS_Wire &w1) {
-    BRepLib::BuildCurves3d(w1);
-}
-
-extern "C" BRepOffsetAPI_ThruSections *brep_tool_thru_sections(const Standard_Boolean isSolid = Standard_False,
-                                                               const Standard_Boolean ruled = Standard_False,
-                                                               const Standard_Real pres3d = 1.0e-06) {
-    return new BRepOffsetAPI_ThruSections(isSolid, ruled, pres3d);
-}
-
-extern "C" void brep_tool_thru_sections_add_wire(BRepOffsetAPI_ThruSections *thru_sections, const TopoDS_Wire &w) {
-    thru_sections->AddWire(w);
-}
-
-extern "C" void brep_tool_thru_sections_check_compatibility(BRepOffsetAPI_ThruSections *thru_sections,
-                                                            const Standard_Boolean b) {
-    thru_sections->CheckCompatibility(b);
-}
-
-extern "C" TopoDS_Compound *topods_compound_create() {
-    return new TopoDS_Compound();
-}
-
-extern "C" BRep_Builder *brep_builder_create() {
-    return new BRep_Builder();
-}
-
-extern "C" void brep_builder_add_wire(BRep_Builder &builder, TopoDS_Face &aFace, TopoDS_Wire &aWire) {
-    builder.Add(aFace, aWire);
-}
-
-extern "C" void brep_builder_make_compound(BRep_Builder &b, TopoDS_Compound &c) {
-    b.MakeCompound(c);
-}
-
-extern "C" void brep_builder_add(BRep_Builder &b, TopoDS_Compound &c, TopoDS_Shape &s) {
-    b.Add(c, s);
-}
-
-
-extern "C" TopoDS_Shape *make_hole(const TopoDS_Shape &shape, const gp_Ax1 &ax1, const Standard_Real Radius,
-                                   const Standard_Real PFrom, const Standard_Real PTo) {
-    std::cout << "PFrom = " << PFrom << "PTo = " << PTo << " " << (PFrom > PTo) << std::endl;
-    BRepFeat_MakeCylindricalHole makeCylindrical;
-    makeCylindrical.Init(shape, ax1);
-    if (PFrom > PTo)
-        makeCylindrical.Perform(Radius);
-    else
-        makeCylindrical.Perform(Radius, PFrom, PTo);
-    return new TopoDS_Shape(makeCylindrical.Shape());
-}
-
-extern "C" TopoDS_Shape *make_hole_blind(const TopoDS_Shape &shape, const gp_Ax1 &ax1, const Standard_Real Radius,
-                                         const Standard_Real Length) {
-    std::cout << "Length = " << Length << std::endl;
-    BRepFeat_MakeCylindricalHole makeCylindrical;
-    makeCylindrical.Init(shape, ax1);
-    makeCylindrical.PerformBlind(Radius, Length);
-    makeCylindrical.Build();
-    return new TopoDS_Shape(makeCylindrical.Shape());
-}
-
-extern "C" gp_Ax1 *gp_ax1_new(const gp_Pnt &theP, const gp_Dir &theV) {
-    return new gp_Ax1(theP, theV);
-}
-
-extern "C" gp_Dir *gp_dir_new(const Standard_Real theXv, const Standard_Real theYv, const Standard_Real theZv) {
+extern "C" gp_Dir *new_gp_Dir__x_y_z(const Standard_Real theXv, const Standard_Real theYv, const Standard_Real theZv) {
     return new gp_Dir(theXv, theYv, theZv);
 }
 
-extern "C" gp_Dir *gp_dir_normal_to_face(const TopoDS_Face &aCurrentFace) {
+extern "C" gp_Dir *new_gp_Dir__Normal__TopoDS_Face(const TopoDS_Face &aCurrentFace) {
     Standard_Real umin, umax, vmin, vmax;
     BRepTools::UVBounds(aCurrentFace, umin, umax, vmin, vmax);
     Handle(Geom_Surface) aSurface = BRep_Tool::Surface(aCurrentFace);
@@ -551,35 +422,139 @@ extern "C" gp_Dir *gp_dir_normal_to_face(const TopoDS_Face &aCurrentFace) {
     return new gp_Dir(n);
 }
 
-extern "C" gp_Pnt *gp_pnt_center_of_mass(const TopoDS_Shape &myShape) {
+
+extern "C" const gp_Ax2 * new_gp_Ax2__gp_Pnt_gp_Dir(gp_Pnt &loc, gp_Dir &dir) {
+    return new gp_Ax2(loc, dir);
+}
+
+extern "C" const gp_Ax2 *new_gp_Ax2_DZ() {
+    return new gp_Ax2(gp_Pnt(0.0, 0.0, 0.0), gp::DZ());
+}
+
+extern "C" BRepPrimAPI_MakeCylinder *new_BRepPrimAPI_MakeCylinder__gp_Ax2_r_h(const gp_Ax2 &Axes, const Standard_Real R,
+                                                                const Standard_Real H) {
+    return new BRepPrimAPI_MakeCylinder(Axes, R, H);
+}
+
+extern "C" BRepPrimAPI_MakeBox *new_BRepPrimAPI_MakeBox__x_y_z(const Standard_Real x, const Standard_Real y,
+                                                      const Standard_Real z) {
+    return new BRepPrimAPI_MakeBox(x, y, z);
+}
+
+extern "C" Handle(Geom_Surface) *handle_Geom_Surface__TopoDS_Face(TopoDS_Face &face) {
+    return new Handle(Geom_Surface)(BRep_Tool::Surface(face));
+}
+
+extern "C" Standard_Integer int_Geom_Surface__is__Geom_Plane(Handle(Geom_Surface) &surface) {
+    return surface->DynamicType() == STANDARD_TYPE(Geom_Plane) ? 1 : 0;
+}
+
+extern "C" Handle(Geom_Plane) *handle_Geom_Plane__handle_Geom_Surface(Handle(Geom_Surface) &surface) {
+    return new Handle(Geom_Plane)(Handle(Geom_Plane)::DownCast(surface));
+}
+
+extern "C" gp_Pnt *new_gp_Pnt__Geom_Plane(Handle(Geom_Plane) &plane) {
+    return new gp_Pnt(plane->Location());
+}
+
+extern "C" TopTools_ListOfShape *new_TopTools_ListOfShape() {
+    return new TopTools_ListOfShape();
+}
+
+extern "C" void delete_TopTools_ListOfShape(TopTools_ListOfShape* ptr) {
+    delete ptr;
+}
+
+extern "C" void _TopTools_ListOfShape__Append__TopoDS_Shape(TopTools_ListOfShape *l, TopoDS_Shape &face) {
+    l->Append(face);
+}
+
+extern "C" BRepOffsetAPI_MakeThickSolid *new_BRepOffsetAPI_MakeThickSolid() {
+    return new BRepOffsetAPI_MakeThickSolid();
+}
+
+extern "C" void _BRepOffsetAPI_MakeThickSolid__MakeThickSolidByJoin__TopoDS_Shape_TopTools_ListOfShape_thickness_tol(
+                                                      BRepOffsetAPI_MakeThickSolid *thick_solid, TopoDS_Shape *shape,
+                                                      const TopTools_ListOfShape *face_to_remove,
+                                                      Standard_Real thickness, Standard_Real tol) {
+    thick_solid->MakeThickSolidByJoin(*shape, *face_to_remove, thickness, tol);
+}
+
+extern "C" Handle(Geom_CylindricalSurface) *handle_Geom_CylindricalSurface__ax2_radius(
+    const gp_Ax3 &ax2, const Standard_Real radius) {
+    return new Handle(Geom_CylindricalSurface)(new Geom_CylindricalSurface(ax2, radius));
+}
+
+extern "C" void _BRepLib__BuildCurves3d__TopoDS_Shape(const TopoDS_Shape &w1) {
+    BRepLib::BuildCurves3d(w1);
+}
+
+extern "C" BRepOffsetAPI_ThruSections *new_BRepOffsetAPI_ThruSections__isSolid_ruled_pres3d(const Standard_Boolean isSolid = Standard_False,
+                                                               const Standard_Boolean ruled = Standard_False,
+                                                               const Standard_Real pres3d = 1.0e-06) {
+    return new BRepOffsetAPI_ThruSections(isSolid, ruled, pres3d);
+}
+
+extern "C" void _BRepOffsetAPI_ThruSections__AddWire__TopoDS_Wire(BRepOffsetAPI_ThruSections *thru_sections, const TopoDS_Wire &w) {
+    thru_sections->AddWire(w);
+}
+
+extern "C" void _BRepOffsetAPI_ThruSections__CheckCompatibility__bool(BRepOffsetAPI_ThruSections *thru_sections,
+                                                            const Standard_Boolean b) {
+    thru_sections->CheckCompatibility(b);
+}
+
+extern "C" TopoDS_Compound *new_TopoDS_Compound() {
+    return new TopoDS_Compound();
+}
+
+extern "C" BRep_Builder *new_BRep_Builder() {
+    return new BRep_Builder();
+}
+
+extern "C" void _TopoDS_Builder__Add__resTopoDS_Shape_toAddTopoDS_Shape(TopoDS_Builder &builder, TopoDS_Shape &inThis, TopoDS_Shape &toAdd) {
+    builder.Add(aFace, aWire);
+}
+
+extern "C" void _TopoDS_Builder__MakeCompound__TopoDS_Compound(TopoDS_Builder &b, TopoDS_Compound &c) {
+    b.MakeCompound(c);
+}
+
+extern "C" gp_Ax1 *new_gp_Ax1__p_dir(const gp_Pnt &theP, const gp_Dir &theV) {
+    return new gp_Ax1(theP, theV);
+}
+
+extern "C" gp_Pnt *new_gp_Pnt__CentreOfMass__TopoDS_Shape(const TopoDS_Shape &myShape) {
     GProp_GProps massProps;
     BRepGProp::SurfaceProperties(myShape, massProps);
     return new gp_Pnt(massProps.CentreOfMass());
 }
 
+extern "C" Standard_Real gp_Pnt__X(gp_Pnt *pnt) {
+    return pnt->X();
+}
 
-extern "C" Standard_Real gp_dir_x(gp_Dir *dir) {
+extern "C" Standard_Real gp_Pnt__Y(gp_Pnt *pnt) {
+    return pnt->Y();
+}
+
+extern "C" Standard_Real gp_Pnt__Z(gp_Pnt *pnt) {
+    return pnt->Z();
+}
+
+extern "C" Standard_Real gp_Dir__X(gp_Dir *dir) {
     return dir->X();
 }
 
-extern "C" Standard_Real gp_dir_y(gp_Dir *dir) {
+extern "C" Standard_Real gp_Dir__Y(gp_Dir *dir) {
     return dir->Y();
 }
 
-extern "C" Standard_Real gp_dir_z(gp_Pnt *dir) {
+extern "C" Standard_Real gp_Dir__Z(gp_Pnt *dir) {
     return dir->Z();
 }
 
-extern "C" Standard_Real gp_dir2d_x(gp_Dir2d *dir) {
-    return dir->X();
-}
-
-extern "C" Standard_Real gp_dir2d_y(gp_Dir2d *dir) {
-    return dir->Y();
-}
-
-
-extern "C" TopoDS_Shape *brep_builderapi_make_shere(const gp_Ax2 &origin, const Standard_Real radius,
+extern "C" TopoDS_Shape *new_TopoDS_Shape__BRepPrimAPI_MakeSphere__gp_Ax2_radius_a1_a2(const gp_Ax2 &origin, const Standard_Real radius,
                                                     const Standard_Real angle1, const Standard_Real angle2) {
     return new TopoDS_Shape(BRepPrimAPI_MakeSphere(origin,
                                                    radius,
@@ -587,19 +562,11 @@ extern "C" TopoDS_Shape *brep_builderapi_make_shere(const gp_Ax2 &origin, const 
                                                    angle2));
 }
 
-extern "C" TopoDS_Shape *brep_builderapi_make_cylinder(const gp_Ax2 &origin, const Standard_Real radius,
+extern "C" TopoDS_Shape *new_TopoDS_Shape__BRepPrimAPI_MakeCylinder__gp_Ax2_radius_height(const gp_Ax2 &origin, const Standard_Real radius,
                                                        const Standard_Real height) {
     return new TopoDS_Shape(BRepPrimAPI_MakeCylinder(origin,
                                                      radius,
                                                      height).Shape());
-}
-
-extern "C" gp_Trsf *gp_trsf_new() {
-    return new gp_Trsf();
-}
-
-extern "C" void gp_trsf_set_translation(gp_Trsf &gp_trsf, const gp_Vec &translation) {
-    return gp_trsf.SetTranslation(translation);
 }
 
 extern "C" TopoDS_Shape *brep_builderapi_transform_shape(const TopoDS_Shape &shape, const gp_Trsf &gp_trsf,
@@ -607,6 +574,40 @@ extern "C" TopoDS_Shape *brep_builderapi_transform_shape(const TopoDS_Shape &sha
     return new TopoDS_Shape(BRepBuilderAPI_Transform(shape, gp_trsf, theCopyGeom).Shape());
 }
 
+
+extern "C" TopoDS_Shape *brep_primapi_make_thorus(const gp_Ax2 &origin, const Standard_Real radius1,
+                                                  const Standard_Real radius2) {
+    return new TopoDS_Shape(BRepPrimAPI_MakeTorus(origin,
+                                                  radius1,
+                                                  radius2).Shape());
+}
+
+
+extern "C" TopoDS_Shape *brep_primapi_makerevol(TopoDS_Face& face, gp_Ax1& ax1) {
+    return new TopoDS_Shape(BRepPrimAPI_MakeRevol(face, ax1).Shape());
+}
+
+extern "C" void deleteVoid(void *ptr) {
+    delete ptr;
+}
+
+extern "C" gp_Pln* plane_create(const Standard_Real x, const Standard_Real y, const Standard_Real z, const Standard_Real d) {
+    return new gp_Pln(x, y, z, d);
+}
+
+extern "C" gp_Pln* plane_create_pt_dir(const gp_Pnt& pt, const gp_Dir& dir) {
+    return new gp_Pln(pt, dir);
+}
+
+extern "C" TopoDS_Shape* brep_builderapi_make_shape_Shape(BRepBuilderAPI_MakeShape &shape) {
+    return new TopoDS_Shape(shape.Shape());
+}
+
+/*
+
+Composed
+
+*/
 extern "C" TopoDS_Shape *brep_algoapi_cut_ds_shape(TopoDS_Shape &result, TopoDS_Shape &tool) {
     const auto cut = new BRepAlgoAPI_Cut(result, tool);
     cut->Build();
@@ -667,39 +668,29 @@ extern "C" TopoDS_Shape *brep_algoapi_cut(TopoDS_Shape &result, TopTools_ListOfS
     return new TopoDS_Shape(aR);
 }
 
-extern "C" TopoDS_Shape *brep_primapi_make_thorus(const gp_Ax2 &origin, const Standard_Real radius1,
-                                                  const Standard_Real radius2) {
-    return new TopoDS_Shape(BRepPrimAPI_MakeTorus(origin,
-                                                  radius1,
-                                                  radius2).Shape());
+
+extern "C" TopoDS_Shape *ptrTopoDS_Shape__BRepFeat_MakeCylindricalHole__Perform__TopoDS_Shape_gp_Ax1_r_ptFrom_ptTo(const TopoDS_Shape &shape, const gp_Ax1 &ax1, const Standard_Real Radius,
+                                   const Standard_Real PFrom, const Standard_Real PTo) {
+    std::cout << "PFrom = " << PFrom << "PTo = " << PTo << " " << (PFrom > PTo) << std::endl;
+    BRepFeat_MakeCylindricalHole makeCylindrical;
+    makeCylindrical.Init(shape, ax1);
+    if (PFrom > PTo)
+        makeCylindrical.Perform(Radius);
+    else
+        makeCylindrical.Perform(Radius, PFrom, PTo);
+    return new TopoDS_Shape(makeCylindrical.Shape());
 }
 
-
-extern "C" TopoDS_Shape *brep_primapi_makerevol(TopoDS_Face& face, gp_Ax1& ax1) {
-    return new TopoDS_Shape(BRepPrimAPI_MakeRevol(face, ax1).Shape());
+extern "C" TopoDS_Shape *ptrTopoDS_Shape__BRepFeat_MakeCylindricalHole__Perform__TopoDS_Shape_gp_Ax1_r_l(const TopoDS_Shape &shape, const gp_Ax1 &ax1, const Standard_Real Radius,
+                                         const Standard_Real Length) {
+    std::cout << "Length = " << Length << std::endl;
+    BRepFeat_MakeCylindricalHole makeCylindrical;
+    makeCylindrical.Init(shape, ax1);
+    makeCylindrical.PerformBlind(Radius, Length);
+    makeCylindrical.Build();
+    return new TopoDS_Shape(makeCylindrical.Shape());
 }
 
-extern "C" void deleteVoid(void *ptr) {
-    delete ptr;
-}
-
-extern "C" gp_Pln* plane_create(const Standard_Real x, const Standard_Real y, const Standard_Real z, const Standard_Real d) {
-    return new gp_Pln(x, y, z, d);
-}
-
-extern "C" gp_Pln* plane_create_pt_dir(const gp_Pnt& pt, const gp_Dir& dir) {
-    return new gp_Pln(pt, dir);
-}
-
-extern "C" TopoDS_Shape* brep_builderapi_make_shape_Shape(BRepBuilderAPI_MakeShape &shape) {
-    return new TopoDS_Shape(shape.Shape());
-}
-
-/*
-
-OUTPUT
-
-*/
 
 extern "C" bool dumpShape(const TopoDS_Shape &shape, const Standard_Integer width, const Standard_Integer height,
                           const char *fileName) {
