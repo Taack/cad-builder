@@ -37,7 +37,7 @@ jextract.libraries {
         headerClassName = "NativeLib"
         targetPackage = "org.taack.occt"
         useSystemLoadLibrary = true
-        libraries.add("libcad-dsl-native.so")
+        libraries.add("cad-dsl-native")
         libraryPath.add(layout.projectDirectory.dir("../cad-dsl-native/build/lib/main/release"))
     }
     sourceSets.named("main") {
