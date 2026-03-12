@@ -62,7 +62,7 @@
 
 #define TRACE(message) TRACE_IMPL(__FILE__, __LINE__, __PRETTY_FUNCTION__, message)
 void TRACE_IMPL(const char *file, int line, const char *function, const char *message) {
-    std::cout << file << " : " << line << " : " << function << " : " << message << "\n"
+    std::cout << file << " : " << line << " : " << function << " : " << message << "\n";
 }
 
 
@@ -296,10 +296,6 @@ extern "C" void _BRepBuilderAPI_MakeWire__Add__TopoDS_Edge(BRepBuilderAPI_MakeWi
     mw.Add(edge);
 }
 
-extern "C" void _BRepBuilderAPI_MakeWire__Add__BRepBuilderAPI_MakeEdge(BRepBuilderAPI_MakeWire &mw, BRepBuilderAPI_MakeEdge &edge) {
-    mw.Add(edge);
-}
-
 extern "C" void _BRepBuilderAPI_MakeWire__Add__TopTools_ListOfShape(BRepBuilderAPI_MakeWire &mw, TopTools_ListOfShape &listOfShape) {
     mw.Add(listOfShape);
 }
@@ -513,7 +509,7 @@ extern "C" BRep_Builder *new_BRep_Builder() {
 }
 
 extern "C" void _TopoDS_Builder__Add__resTopoDS_Shape_toAddTopoDS_Shape(TopoDS_Builder &builder, TopoDS_Shape &inThis, TopoDS_Shape &toAdd) {
-    builder.Add(aFace, aWire);
+    builder.Add(inThis, toAdd);
 }
 
 extern "C" void _TopoDS_Builder__MakeCompound__TopoDS_Compound(TopoDS_Builder &b, TopoDS_Compound &c) {
@@ -566,41 +562,46 @@ extern "C" TopoDS_Shape *new_TopoDS_Shape__BRepPrimAPI_MakeCylinder__gp_Ax2_radi
                                                        const Standard_Real height) {
     return new TopoDS_Shape(BRepPrimAPI_MakeCylinder(origin,
                                                      radius,
-                                                     height).Shape());
+                                                     height));
+//    return BRepPrimAPI_MakeCylinder(origin, radius, height).Shape();erreur: ne peut convertir «const TopoDS_Shape» en «TopoDS_Shape*» dans le retour
 }
 
-extern "C" TopoDS_Shape *brep_builderapi_transform_shape(const TopoDS_Shape &shape, const gp_Trsf &gp_trsf,
+extern "C" TopoDS_Shape *new_TopoDS_Shape__BRepBuilderAPI_Transform__Shape__gp_Trsf_bCopy(const TopoDS_Shape &shape, const gp_Trsf &gp_trsf,
                                                          const Standard_Boolean theCopyGeom) {
     return new TopoDS_Shape(BRepBuilderAPI_Transform(shape, gp_trsf, theCopyGeom).Shape());
+//    return BRepBuilderAPI_Transform(shape, gp_trsf, theCopyGeom).Shape();
 }
 
 
-extern "C" TopoDS_Shape *brep_primapi_make_thorus(const gp_Ax2 &origin, const Standard_Real radius1,
+extern "C" TopoDS_Shape *new_TopoDS_Shape__BRepPrimAPI_MakeTorus__gp_Ax2_r1_r2(const gp_Ax2 &origin, const Standard_Real radius1,
                                                   const Standard_Real radius2) {
     return new TopoDS_Shape(BRepPrimAPI_MakeTorus(origin,
                                                   radius1,
                                                   radius2).Shape());
+//    return BRepPrimAPI_MakeTorus(origin,radius1,radius2).Shape();
 }
 
 
-extern "C" TopoDS_Shape *brep_primapi_makerevol(TopoDS_Face& face, gp_Ax1& ax1) {
+extern "C" TopoDS_Shape *new_TopoDS_Shape__BRepPrimAPI_MakeRevol__TopoDS_Face_gp_Ax1(TopoDS_Face& face, gp_Ax1& ax1) {
     return new TopoDS_Shape(BRepPrimAPI_MakeRevol(face, ax1).Shape());
+//    return BRepPrimAPI_MakeRevol(face, ax1).Shape();
 }
 
 extern "C" void deleteVoid(void *ptr) {
     delete ptr;
 }
 
-extern "C" gp_Pln* plane_create(const Standard_Real x, const Standard_Real y, const Standard_Real z, const Standard_Real d) {
+extern "C" gp_Pln* new_gp_Pln__x_y_z_d(const Standard_Real x, const Standard_Real y, const Standard_Real z, const Standard_Real d) {
     return new gp_Pln(x, y, z, d);
 }
 
-extern "C" gp_Pln* plane_create_pt_dir(const gp_Pnt& pt, const gp_Dir& dir) {
+extern "C" gp_Pln* new_gp_Pln__pt_dir(const gp_Pnt& pt, const gp_Dir& dir) {
     return new gp_Pln(pt, dir);
 }
 
-extern "C" TopoDS_Shape* brep_builderapi_make_shape_Shape(BRepBuilderAPI_MakeShape &shape) {
+extern "C" TopoDS_Shape* new_TopoDS_Shape__Shape__BRepBuilderAPI_MakeShape(BRepBuilderAPI_MakeShape &shape) {
     return new TopoDS_Shape(shape.Shape());
+//    return shape.Shape();
 }
 
 /*
