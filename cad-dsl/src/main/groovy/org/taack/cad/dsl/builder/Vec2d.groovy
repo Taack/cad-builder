@@ -1,7 +1,7 @@
 package org.taack.cad.dsl.builder
 
 import groovy.transform.CompileStatic
-import org.taack.occt.NativeLib
+import static org.taack.occt.NativeLib.*
 
 import java.lang.foreign.MemorySegment
 
@@ -57,28 +57,28 @@ class Vec2d {
 
     static Vec2d fromAPnt(MemorySegment aPnt) {
         new Vec2d(
-                NativeLib.gp_pnt2d_x(aPnt).toBigDecimal(),
-                NativeLib.gp_pnt2d_y(aPnt).toBigDecimal(),
+                gp_Pnt2d__X(aPnt),
+                gp_Pnt2d__Y(aPnt),
         )
     }
 
     static Vec2d fromADir(MemorySegment aDir) {
         new Vec2d(
-                NativeLib.gp_dir2d_x(aDir).toBigDecimal(),
-                NativeLib.gp_dir2d_y(aDir).toBigDecimal(),
+                gp_Dir2d__X(aDir),
+                gp_Dir2d__Y(aDir),
         )
     }
 
     MemorySegment toGpDir2d() {
-        NativeLib.gp_dir2d_new(x.doubleValue(), y.doubleValue())
+        new_gp_Dir2d__x_y(x, y)
     }
 
     MemorySegment toGpPnt2d() {
-        NativeLib.gp_pnt2d_new(x.doubleValue(), y.doubleValue())
+        new_gp_Pnt2d__x_y(x, y)
     }
 
     MemorySegment toGpVec() {
-        NativeLib.gp_vec2d_new(x.doubleValue(), y.doubleValue())
+        new_gp_Vec2d__x_y(x, y)
     }
 
     BigDecimal cord(Axe axe) {

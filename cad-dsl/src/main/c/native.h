@@ -85,7 +85,7 @@ int visualize(void*);
 
 gp_Pnt2d *new_gp_Pnt2d__x_y(const Standard_Real theXp, const Standard_Real theYp);
 
-gp_Pnt2d *new_gp_Pnt2d__Geom2d_Conic__Value__u(Handle(Geom2d_Conic) *geom2d_conic, const Standard_Real U);
+gp_Pnt2d *new_gp_Pnt2d__Geom2d_Curve__Value__u(Handle(Geom2d_Conic) *geom2d_conic, const Standard_Real U);
 
 gp_Pnt2d* new_gp_Pnt2d__Geom2d_TrimmedCurve__EndPoint(const Handle(Geom2d_TrimmedCurve)* curve);
 
@@ -93,11 +93,11 @@ gp_Pnt2d* new_gp_Pnt2d__Geom2d_TrimmedCurve__StartPoint(const Handle(Geom2d_Trim
 
 gp_Vec2d *new_gp_Vec2d__x_y(const Standard_Real theXp, const Standard_Real theYp);
 
-gp_Ax2d *new_gp_Ax2d();
+gp_Ax2d *new_gp_Ax2d(void);
 
 gp_Ax2d *new_gp_Ax2d__pt_dir(const gp_Pnt2d *theP, const gp_Dir2d *theV);
 
-gp_Dir2d *new_gp_Dir2d();
+gp_Dir2d *new_gp_Dir2d(void);
 
 gp_Dir2d *new_gp_Dir2d__x_y(const Standard_Real theXp, const Standard_Real theYp);
 
@@ -143,6 +143,8 @@ Geom2dAPI_InterCurveCurve* new_Geom2dAPI_InterCurveCurve__curve1_curve2(const Ha
 
 Standard_Integer int_Geom2dAPI_InterCurveCurve__NbPoints(const Geom2dAPI_InterCurveCurve *inter_curve_curve);
 
+gp_Pnt2d* new_gp_Pnt2d__Geom2dAPI_InterCurveCurve__Point__i(const Geom2dAPI_InterCurveCurve *inter_curve_curve, const Standard_Integer index);
+
  Handle(Geom2d_Geometry)*  handle_Geom2d_Geometry__Copy(const Handle(Geom2d_Geometry) *toCpy);
 
  Handle(Geom_Curve)* handle_Geom_Curve__GeomAPI_To3d__curve_plan(Handle(Geom2d_Curve) *curve, gp_Pln *plan);
@@ -179,7 +181,7 @@ const BRepBuilderAPI_MakeEdge *new_BRepBuilderAPI_MakeEdge__ptFrom_ptTo(gp_Pnt* 
 
 const BRepBuilderAPI_MakeEdge *new_BRepBuilderAPI_MakeEdge__Geom_Curve(Handle(Geom_Curve)* curve);
 
-const BRepBuilderAPI_MakeWire * new_BRepBuilderAPI_MakeWire();
+const BRepBuilderAPI_MakeWire * new_BRepBuilderAPI_MakeWire(void);
 
 const BRepBuilderAPI_MakeWire *new_BRepBuilderAPI_MakeWire__BRepBuilderAPI_MakeEdge(BRepBuilderAPI_MakeEdge* edge);
 
@@ -201,9 +203,9 @@ void _BRepBuilderAPI_MakeWire__Add__TopoDS_Edge(BRepBuilderAPI_MakeWire *mw, Top
 
 void _BRepBuilderAPI_MakeWire__Add__TopTools_ListOfShape(BRepBuilderAPI_MakeWire *mw, TopTools_ListOfShape *listOfShape);
 
-const gp_Ax1 *gp__OX();
+const gp_Ax1 *gp__OX(void);
 
-gp_Trsf *new_gp_Trsf();
+gp_Trsf *new_gp_Trsf(void);
 
 void _gp_Trsf__SetMirror__gp_Ax1(gp_Trsf *trsf, gp_Ax1 *ax1);
 
@@ -217,36 +219,13 @@ TopoDS_Face *new_TopoDS_Face__BRepBuilderAPI_MakeFace__TopoDS_Wire(TopoDS_Wire *
 
 TopoDS_Face *new_TopoDS_Face__BRepBuilderAPI_MakeFace__gp_Pln(gp_Pln *plane);
 
-TopoDS_Face *new_TopoDS_Face();
+TopoDS_Face *new_TopoDS_Face(void);
 
 TopoDS_Shape *new_TopoDS_Shape__BRepPrimAPI_MakePrism__TopoDS_Face_gp_Vec(TopoDS_Face *face, gp_Vec *normal);
 
 BRepFilletAPI_MakeFillet * new_BRepFilletAPI_MakeFillet__TopoDS_Shape(TopoDS_Shape *body);
 
-TopAbs_ShapeEnum TopAbs_ShapeEnumFromOrdinal(int ordinal) {
-    switch (ordinal) {
-    case 0:
-        return TopAbs_COMPOUND;
-    case 1:
-        return TopAbs_COMPSOLID;
-    case 2:
-        return TopAbs_SOLID;
-    case 3:
-        return TopAbs_SHELL;
-    case 4:
-        return TopAbs_FACE;
-    case 5:
-        return TopAbs_WIRE;
-    case 6:
-        return TopAbs_EDGE;
-    case 7:
-        return TopAbs_VERTEX;
-    case 8:
-        return TopAbs_SHAPE;
-    default:
-        return TopAbs_SHAPE;
-    }
-}
+TopAbs_ShapeEnum TopAbs_ShapeEnumFromOrdinal(int ordinal);
 
 TopExp_Explorer *new_TopExp_Explorer__TopoDS_Shape_ToFind_ToAvoid(const TopoDS_Shape *S, const /*TopAbs_ShapeEnum*/int ToFind,
                                              const int ToAvoid);
@@ -264,7 +243,7 @@ TopoDS_Edge *ref_TopoDS_Edge__TopoDS_Shape(TopoDS_Shape *shape);
 void _BRepFilletAPI_MakeFillet__Add__radius_TopoDS_Edge(BRepFilletAPI_MakeFillet *make_fillet, Standard_Real r,
                                                TopoDS_Edge *edge);
 
-const gp_Dir *new_gp_Dir_DZ();
+const gp_Dir *new_gp_Dir_DZ(void);
 
 gp_Dir *new_gp_Dir__x_y_z(const Standard_Real theXv, const Standard_Real theYv, const Standard_Real theZv);
 
@@ -273,7 +252,7 @@ gp_Dir *new_gp_Dir__Normal__TopoDS_Face(const TopoDS_Face *aCurrentFace);
 
 const gp_Ax2 * new_gp_Ax2__gp_Pnt_gp_Dir(gp_Pnt *loc, gp_Dir *dir);
 
-const gp_Ax2 *new_gp_Ax2_DZ();
+const gp_Ax2 *new_gp_Ax2_DZ(void);
 
 BRepPrimAPI_MakeCylinder *new_BRepPrimAPI_MakeCylinder__gp_Ax2_r_h(const gp_Ax2 *Axes, const Standard_Real R,
                                                                 const Standard_Real H);
@@ -289,13 +268,13 @@ Handle(Geom_Plane) *handle_Geom_Plane__handle_Geom_Surface(Handle(Geom_Surface) 
 
 gp_Pnt *new_gp_Pnt__Geom_Plane(Handle(Geom_Plane) *plane);
 
-TopTools_ListOfShape *new_TopTools_ListOfShape();
+TopTools_ListOfShape *new_TopTools_ListOfShape(void);
 
 void delete_TopTools_ListOfShape(TopTools_ListOfShape* ptr);
 
 void _TopTools_ListOfShape__Append__TopoDS_Shape(TopTools_ListOfShape *l, TopoDS_Shape *face);
 
-BRepOffsetAPI_MakeThickSolid *new_BRepOffsetAPI_MakeThickSolid();
+BRepOffsetAPI_MakeThickSolid *new_BRepOffsetAPI_MakeThickSolid(void);
 
 void _BRepOffsetAPI_MakeThickSolid__MakeThickSolidByJoin__TopoDS_Shape_TopTools_ListOfShape_thickness_tol(
                                                       BRepOffsetAPI_MakeThickSolid *thick_solid, TopoDS_Shape *shape,
@@ -316,9 +295,9 @@ void _BRepOffsetAPI_ThruSections__AddWire__TopoDS_Wire(BRepOffsetAPI_ThruSection
 void _BRepOffsetAPI_ThruSections__CheckCompatibility__bool(BRepOffsetAPI_ThruSections *thru_sections,
                                                             const Standard_Boolean b);
 
-TopoDS_Compound *new_TopoDS_Compound();
+TopoDS_Compound *new_TopoDS_Compound(void);
 
-BRep_Builder *new_BRep_Builder();
+BRep_Builder *new_BRep_Builder(void);
 
 void _TopoDS_Builder__Add__resTopoDS_Shape_toAddTopoDS_Shape(TopoDS_Builder *builder, TopoDS_Shape *inThis, TopoDS_Shape *toAdd);
 
@@ -369,11 +348,11 @@ TopoDS_Shape* new_TopoDS_Shape__Shape__BRepBuilderAPI_MakeShape(BRepBuilderAPI_M
 Composed
 
 */
-TopoDS_Shape *brep_algoapi_cut_ds_shape(TopoDS_Shape *result, TopoDS_Shape *tool);
+TopoDS_Shape *new_TopoDS_Shape__bBRepAlgoAPI_Cut__s1_s2(TopoDS_Shape *result, TopoDS_Shape *tool);
 
-TopoDS_Shape *brep_algoapi_fuse(TopoDS_Shape *s1, TopoDS_Shape *s2);
+TopoDS_Shape *new_TopoDS_Shape__brep_algoapi_fuse__s1_s2(TopoDS_Shape *s1, TopoDS_Shape *s2);
 
-TopoDS_Shape *brep_algoapi_cut(TopoDS_Shape *result, TopTools_ListOfShape *aLT);
+TopoDS_Shape *new_TopoDS_Shape__BRepAlgoAPI_Cut__TopoDS_Shape_TopTools_ListOfShape(TopoDS_Shape *result, TopTools_ListOfShape *aLT);
 
 
 TopoDS_Shape *ptrTopoDS_Shape__BRepFeat_MakeCylindricalHole__Perform__TopoDS_Shape_gp_Ax1_r_ptFrom_ptTo(const TopoDS_Shape *shape, const gp_Ax1 *ax1, const Standard_Real Radius,

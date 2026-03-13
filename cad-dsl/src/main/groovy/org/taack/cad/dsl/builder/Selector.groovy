@@ -3,7 +3,8 @@ package org.taack.cad.dsl.builder
 import groovy.transform.CompileStatic
 
 import java.lang.foreign.MemorySegment
-import org.taack.occt.NativeLib as nl
+
+import static org.taack.occt.NativeLib.*
 
 @CompileStatic
 trait Selector {
@@ -13,10 +14,10 @@ trait Selector {
     Stack<MemorySegment> wireNatives = new Stack<>()
 
     MemorySegment getCurrentWireNative() {
-        MemorySegment ret = nl.brep_builderapi_makewire_new()
+        MemorySegment ret = new_BRepBuilderAPI_MakeWire()
         if (wireNatives.size() > 0) {
             wireNatives.eachWithIndex { MemorySegment it, int i ->
-                nl.brep_builderapi_wire_add_wire(ret, it)//nl.brep_builderapi_make_wire_topo_ds_wire2(it))
+                _BRepBuilderAPI_MakeWire__Add__BRepBuilderAPI_MakeWire(ret, it)//ref_TopoDS_Wire__BRepBuilderAPI_MakeWire__Wire(it))
             }
         }
         ret

@@ -79,8 +79,8 @@ extern "C" gp_Pnt2d *new_gp_Pnt2d__x_y(const Standard_Real theXp, const Standard
     return new gp_Pnt2d(theXp, theYp);
 }
 
-extern "C" gp_Pnt2d *new_gp_Pnt2d__Geom2d_Conic__Value__u(Handle(Geom2d_Conic) &geom2d_conic, const Standard_Real U) {
-    return new gp_Pnt2d(geom2d_conic->Value(U));
+extern "C" gp_Pnt2d *new_gp_Pnt2d__Geom2d_Curve__Value__u(Handle(Geom2d_Curve) &geom2d_curve, const Standard_Real U) {
+    return new gp_Pnt2d(geom2d_curve->Value(U));
 }
 
 extern "C" gp_Pnt2d* new_gp_Pnt2d__Geom2d_TrimmedCurve__EndPoint(const Handle(Geom2d_TrimmedCurve)& curve) {
@@ -188,6 +188,10 @@ extern "C" Geom2dAPI_InterCurveCurve* new_Geom2dAPI_InterCurveCurve__curve1_curv
 
 extern "C" Standard_Integer int_Geom2dAPI_InterCurveCurve__NbPoints(const Geom2dAPI_InterCurveCurve &inter_curve_curve) {
     return inter_curve_curve.NbPoints();
+}
+
+extern "C" gp_Pnt2d* new_gp_Pnt2d__Geom2dAPI_InterCurveCurve__Point__i(const Geom2dAPI_InterCurveCurve &inter_curve_curve, const Standard_Integer index) {
+    return new gp_Pnt2d(inter_curve_curve.Point(index));
 }
 
 extern "C"  Handle(Geom2d_Geometry)*  handle_Geom2d_Geometry__Copy(const Handle(Geom2d_Geometry) &toCpy) {
@@ -609,21 +613,21 @@ extern "C" TopoDS_Shape* new_TopoDS_Shape__Shape__BRepBuilderAPI_MakeShape(BRepB
 Composed
 
 */
-extern "C" TopoDS_Shape *brep_algoapi_cut_ds_shape(TopoDS_Shape &result, TopoDS_Shape &tool) {
+extern "C" TopoDS_Shape *new_TopoDS_Shape__bBRepAlgoAPI_Cut__s1_s2(TopoDS_Shape &result, TopoDS_Shape &tool) {
     const auto cut = new BRepAlgoAPI_Cut(result, tool);
     cut->Build();
     cut->SimplifyResult();
     return new TopoDS_Shape(cut->Shape());
 }
 
-extern "C" TopoDS_Shape *brep_algoapi_fuse(TopoDS_Shape &s1, TopoDS_Shape &s2) {
+extern "C" TopoDS_Shape *new_TopoDS_Shape__brep_algoapi_fuse__s1_s2(TopoDS_Shape &s1, TopoDS_Shape &s2) {
     const auto fuse = new BRepAlgoAPI_Fuse(s1, s2);
     fuse->Build();
     fuse->SimplifyResult();
     return new TopoDS_Shape(fuse->Shape());
 }
 
-extern "C" TopoDS_Shape *brep_algoapi_cut(TopoDS_Shape &result, TopTools_ListOfShape &aLT) {
+extern "C" TopoDS_Shape *new_TopoDS_Shape__BRepAlgoAPI_Cut__TopoDS_Shape_TopTools_ListOfShape(TopoDS_Shape &result, TopTools_ListOfShape &aLT) {
     Standard_Boolean bRunParallel;
     Standard_Real aFuzzyValue;
     BRepAlgoAPI_Cut aBuilder;

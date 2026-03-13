@@ -1,7 +1,7 @@
 package org.taack.cad.dsl.builder
 
 import groovy.transform.CompileStatic
-import org.taack.occt.NativeLib as nl
+import static org.taack.occt.NativeLib.*
 
 @CompileStatic
 class Face extends Edge implements Selector {
@@ -17,14 +17,14 @@ class Face extends Edge implements Selector {
     Face face(Axe axe, @DelegatesTo(value = Face, strategy = Closure.DELEGATE_ONLY) operations = null) {
         double positionMax = -1
 
-        for (def aFaceExplorer = nl.top_exp_explorer(currentShapeNative, ShapeEnum.TopAbs_FACE.ordinal(), ShapeEnum.TopAbs_SHAPE.ordinal());
-             nl.top_exp_explorer_more(aFaceExplorer);
-             nl.top_exp_explorer_next(aFaceExplorer)) {
-            def aFace = nl.top_exp_explorer_current_face(aFaceExplorer)
-            def aSurface = nl.brep_tool_surface(aFace)
-            if (nl.geom_surface_is_geom_plane(aSurface) == 1) {
-                def aPlan = nl.downcast_geom_plane(aSurface)
-                def aPnt = nl.geom_plane_location(aPlan)
+        for (def aFaceExplorer = new_TopExp_Explorer__TopoDS_Shape_ToFind_ToAvoid(currentShapeNative, ShapeEnum.TopAbs_FACE.ordinal(), ShapeEnum.TopAbs_SHAPE.ordinal());
+             _TopExp_Explorer__More(aFaceExplorer);
+             _TopExp_Explorer__Next(aFaceExplorer)) {
+            def aFace = new_TopoDS_Face__TopExp_Explorer__Current(aFaceExplorer)
+            def aSurface = handle_Geom_Surface__TopoDS_Face(aFace)
+            if (int_Geom_Surface__is__Geom_Plane(aSurface) == 1) {
+                def aPlan = handle_Geom_Plane__handle_Geom_Surface(aSurface)
+                def aPnt = new_gp_Pnt__Geom_Plane(aPlan)
                 currentLoc = Vec.fromAPnt(aPnt)
                 double aZ = currentLoc.cord(axe)
                 if (aZ > positionMax) {
@@ -37,16 +37,16 @@ class Face extends Edge implements Selector {
     }
 
     CadBuilder revolution(Vec dir = new Vec(0, 1, 0)) {
-        def ax1 = nl.gp_ax1_new(currentLoc.toGpPnt(), dir.toGpDir())
+        def ax1 = new_gp_Ax1__p_dir(currentLoc.toGpPnt(), dir.toGpDir())
 
-        this.currentShapeNative = nl.brep_primapi_makerevol(currentFaceNative, ax1)
+        this.currentShapeNative = new_TopoDS_Shape__BRepPrimAPI_MakeRevol__TopoDS_Face_gp_Ax1(currentFaceNative, ax1)
         this as CadBuilder
     }
 
     CadBuilder prism(Vec dir = new Vec(1.0)) {
-        def ax1 = nl.gp_ax1_new(dir.toGpPnt(), dir.toGpDir())
+        def ax1 = new_gp_Ax1__p_dir(dir.toGpPnt(), dir.toGpDir())
 
-        this.currentShapeNative = nl.brep_primapi_make_prism(currentFaceNative, ax1)
+        this.currentShapeNative = new_TopoDS_Shape__BRepPrimAPI_MakePrism__TopoDS_Face_gp_Vec(currentFaceNative, ax1)
         this as CadBuilder
     }
 }

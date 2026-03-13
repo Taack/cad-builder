@@ -1,11 +1,11 @@
 package org.taack.cad.dsl.builder
 
 import groovy.transform.CompileStatic
-import org.taack.occt.NativeLib as nl
 
 import java.lang.foreign.Arena
 import java.lang.foreign.MemorySegment
 
+import static org.taack.occt.NativeLib.*
 /*
  * Todo: realise one move instead of many
  */
@@ -17,51 +17,51 @@ class CadBuilder extends Face {
     }
 
     private Vec loc = new Vec(0.0, 0.0, 0.0)
-    private final MemorySegment trsf = nl.gp_trsf()
+    private final MemorySegment trsf = new_gp_Trsf()
 
     CadBuilder move(Vec p) {
         loc = p
-        nl.gp_trsf_set_translation(trsf, loc.toGpVec())
-        currentShapeNative = nl.brep_builderapi_transform_shape(currentShapeNative, trsf, 1)
+        _gp_Trsf__SetTranslation__gp_Vec(trsf, loc.toGpVec())
+        currentShapeNative = new_TopoDS_Shape__BRepBuilderAPI_Transform__Shape__gp_Trsf_bCopy(currentShapeNative, trsf, 1)
         this
     }
 
     CadBuilder fuse(CadBuilder other) {
-        def res = nl.brep_algoapi_fuse(currentShapeNative, other.currentShapeNative)
+        def res = new_TopoDS_Shape__brep_algoapi_fuse__s1_s2(currentShapeNative, other.currentShapeNative)
         currentShapeNative = res
         this
     }
 
     CadBuilder cut(List<CadBuilder> others) {
-        def tools = nl.top_tools_list_of_shape()
+        def tools = new_TopTools_ListOfShape()
         others.each {
-            nl.top_tools_list_of_shape_append(tools, it.currentShapeNative)
+            _TopTools_ListOfShape__Append__TopoDS_Shape(tools, it.currentShapeNative)
         }
-        def res = nl.brep_algoapi_cut(currentShapeNative, tools)
+        def res = new_TopoDS_Shape__BRepAlgoAPI_Cut__TopoDS_Shape_TopTools_ListOfShape(currentShapeNative, tools)
         currentShapeNative = res
         this
     }
 
     CadBuilder sphere(BigDecimal radius, Vec dir = new Vec(1.0), BigDecimal angle1 = null, BigDecimal angle2 = null) {
-        def ax2 = nl.gp_ax2(loc.toGpPnt(), dir.toGpDir())
-        currentShapeNative = nl.brep_builderapi_make_shere(ax2, radius.toDouble(), angle1?.toDouble(), angle2?.toDouble())
+        def ax2 = new_gp_Ax2__gp_Pnt_gp_Dir(loc.toGpPnt(), dir.toGpDir())
+        currentShapeNative = new_TopoDS_Shape__BRepPrimAPI_MakeSphere__gp_Ax2_radius_a1_a2(ax2, radius.toDouble(), angle1?.toDouble(), angle2?.toDouble())
         return this
     }
 
     CadBuilder cylinder(BigDecimal radius, BigDecimal height, Vec dir = new Vec(1.0)) {
-        def ax2 = nl.gp_ax2(loc.toGpPnt(), dir.toGpDir())
-        currentShapeNative = nl.brep_builderapi_make_cylinder(ax2, radius.toDouble(), height.toDouble())
+        def ax2 = new_gp_Ax2__gp_Pnt_gp_Dir(loc.toGpPnt(), dir.toGpDir())
+        currentShapeNative = new_TopoDS_Shape__BRepPrimAPI_MakeCylinder__gp_Ax2_radius_height(ax2, radius.toDouble(), height.toDouble())
         return this
     }
 
     CadBuilder box(BigDecimal x, BigDecimal y, BigDecimal z) {
-        currentShapeNative = nl.brep_builderapi_make_shape_Shape(nl.brep_primapi_make_box(x.doubleValue(), y.doubleValue(), z.doubleValue()))
+        currentShapeNative = new_TopoDS_Shape__Shape__BRepBuilderAPI_MakeShape(new_BRepPrimAPI_MakeBox__x_y_z(x.doubleValue(), y.doubleValue(), z.doubleValue()))
         return this
     }
 
     CadBuilder torus(BigDecimal outerRadius, BigDecimal innerRadius, Vec dir = new Vec(1.0)) {
-        def ax2 = nl.gp_ax2(loc.toGpPnt(), dir.toGpDir())
-        currentShapeNative = nl.brep_primapi_make_thorus(ax2, outerRadius.toDouble(), innerRadius.toDouble())
+        def ax2 = new_gp_Ax2__gp_Pnt_gp_Dir(loc.toGpPnt(), dir.toGpDir())
+        currentShapeNative = new_TopoDS_Shape__BRepPrimAPI_MakeTorus__gp_Ax2_r1_r2(ax2, outerRadius.toDouble(), innerRadius.toDouble())
         this
     }
 
@@ -71,17 +71,17 @@ class CadBuilder extends Face {
             try (Arena arena = Arena.ofConfined()) {
                 MemorySegment t = arena.allocateFrom(fileName)
                 if (fileName.endsWith(".step")) {
-                    nl.write_step(this.currentShapeNative, t)
+                    write_step(this.currentShapeNative, t)
                 } else if (fileName.endsWith(".stl")) {
-                    nl.write_stl(this.currentShapeNative, t)
+                    write_stl(this.currentShapeNative, t)
                 } else
-                nl.dumpShape(currentShapeNative, w, h, t)
+                dumpShape(currentShapeNative, w, h, t)
             }
-        } else nl.visualize(currentNative)
+        } else visualize(currentNative)
     }
 
     CadBuilder isValid() {
-        nl.analyze(currentShapeNative)
+        analyze(currentShapeNative)
         this
     }
 

@@ -1,9 +1,10 @@
 package org.taack.cad.dsl.builder
 
 import groovy.transform.CompileStatic
-import org.taack.occt.NativeLib as nl
 
 import java.lang.foreign.MemorySegment
+
+import static org.taack.occt.NativeLib.*
 
 @CompileStatic
 class Edge extends Vertice implements Selector {
@@ -61,7 +62,7 @@ class Edge extends Vertice implements Selector {
 
     CadBuilder toWire() {
         Vec fromLocal = currentLoc
-        def wireNative = nl.brep_builderapi_makewire_new()
+        def wireNative = new_BRepBuilderAPI_MakeWire()
 
         int index = 0
         Iterator<Integer> arcIndexIt = arcIndex.size() > 0 ? arcIndex.iterator() : null
@@ -75,15 +76,15 @@ class Edge extends Vertice implements Selector {
                 def arcCenter = arcCenterIt.next()
                 arcIndexCur = arcIndexIt.hasNext() ? arcIndexIt.next() : 0
                 println "Arc from: $fromLocal, to: $to, radius: $arcCenter, arcIndexCur(next): $arcIndexCur"
-                def arcNative = nl.gc_make_arc_of_circle(fromLocal.toGpPnt(), arcCenter.toGpPnt(), to.toGpPnt())
-                def arcEdge = nl.brep_builderapi_make_edge(arcNative)
+                def arcNative = handle_Geom_TrimmedCurve__GC_MakeArcOfCircle_p1_p2_p3(fromLocal.toGpPnt(), arcCenter.toGpPnt(), to.toGpPnt())
+                def arcEdge = new_TopoDS_Edge__BRepBuilderAPI_MakeEdge__Geom_Curve(arcNative)
                 fromLocal = to
-                nl.brep_builderapi_wire_add_edge(wireNative, arcEdge)
+                _BRepBuilderAPI_MakeWire__Add__TopoDS_Edge(wireNative, arcEdge)
             } else {
                 println "Edge from: $fromLocal, to: $to"
-                def edgeNative = nl.brep_builderapi_make_edge_from_pts(fromLocal.toGpPnt(), to.toGpPnt())
+                def edgeNative = new_BRepBuilderAPI_MakeEdge__ptFrom_ptTo(fromLocal.toGpPnt(), to.toGpPnt())
                 fromLocal = to
-                nl.brep_builderapi_wire_add_makeedge(wireNative, edgeNative)
+                _BRepBuilderAPI_MakeWire__Add__TopoDS_Edge(wireNative, edgeNative)
             }
             index++
 
@@ -98,14 +99,12 @@ class Edge extends Vertice implements Selector {
      */
     CadBuilder toFace(Vec plan = new Vec(0.0d, 0.0d, 1.0d)) {
         def pXY = plan.toGpPln()
-        def aFace = nl.brep_builderapi_make_face_from_plane(pXY)
-        def builder = nl.brep_builder_create()
-//        nl.brep_builder_add_wire(builder, aFace, nl.brep_builderapi_make_wire_topo_ds_wire2(currentWireNative))
-//        nl.brep_builder_add_wire(builder, aFace, currentWireNative)
+        def aFace = new_TopoDS_Face__BRepBuilderAPI_MakeFace__gp_Pln(pXY)
+        def builder = new_BRep_Builder()
 
         if (wireNatives.size() > 0) {
             wireNatives.eachWithIndex { MemorySegment it, int i ->
-                nl.brep_builder_add_wire(builder, aFace, nl.brep_builderapi_make_wire_topo_ds_wire2(it))
+                _TopoDS_Builder__Add__resTopoDS_Shape_toAddTopoDS_Shape(builder, aFace, ref_TopoDS_Wire__BRepBuilderAPI_MakeWire__Wire(it))
             }
         }
         currentFaceNative = aFace
@@ -117,7 +116,7 @@ class Edge extends Vertice implements Selector {
      * @return
      */
     CadBuilder center(@DelegatesTo(value = Edge, strategy = Closure.DELEGATE_FIRST) Closure operations) {
-        clockwiseLoc = [Vec.fromAPnt(nl.gp_pnt_center_of_mass(currentFaceNative))]
+        clockwiseLoc = [Vec.fromAPnt(new_gp_Pnt__CentreOfMass__TopoDS_Shape(currentFaceNative))]
         operations.delegate = this
         operations.call()
         this as CadBuilder
@@ -131,8 +130,8 @@ class Edge extends Vertice implements Selector {
      * @return Face
      */
     CadBuilder rect(BigDecimal sx, BigDecimal sy, @DelegatesTo(value = Edge, strategy = Closure.DELEGATE_FIRST) Closure operations) {
-        def centerOfFace = Vec.fromAPnt(nl.gp_pnt_center_of_mass(currentFaceNative))
-        def faceDir = Vec.fromADir(nl.gp_dir_normal_to_face(currentFaceNative))
+        def centerOfFace = Vec.fromAPnt(new_gp_Pnt__CentreOfMass__TopoDS_Shape(currentFaceNative))
+        def faceDir = Vec.fromADir(new_gp_Dir__Normal__TopoDS_Face(currentFaceNative))
         println "rect ($sx, $sy), faceDir = ${faceDir}, centerOfFace = ${centerOfFace}"
         def gCoords1 = Vec.globalLocFromLocal(centerOfFace, faceDir, new Vec2d(-sx / 2.0, -sy / 2.0))
         def gCoords2 = Vec.globalLocFromLocal(centerOfFace, faceDir, new Vec2d(sx / 2.0, -sy / 2.0))
@@ -147,8 +146,8 @@ class Edge extends Vertice implements Selector {
     }
 
     private void holeHelper(Vec loc, MemorySegment dir, BigDecimal diameter, BigDecimal from, BigDecimal to) {
-        currentShapeNative = nl.make_hole(currentShapeNative,
-                nl.gp_ax1_new(
+        currentShapeNative = ptrTopoDS_Shape__BRepFeat_MakeCylindricalHole__Perform__TopoDS_Shape_gp_Ax1_r_ptFrom_ptTo(currentShapeNative,
+                new_gp_Ax1__p_dir(
                         loc.toGpPnt(),
                         dir
                 ), diameter.doubleValue(), from.doubleValue(), to.doubleValue())
@@ -156,8 +155,8 @@ class Edge extends Vertice implements Selector {
     }
 
     private void holeHelper(Vec loc, MemorySegment dir, BigDecimal diameter, BigDecimal length) {
-        currentShapeNative = nl.make_hole_blind(currentShapeNative,
-                nl.gp_ax1_new(
+        currentShapeNative = ptrTopoDS_Shape__BRepFeat_MakeCylindricalHole__Perform__TopoDS_Shape_gp_Ax1_r_l(currentShapeNative,
+                new_gp_Ax1__p_dir(
                         loc.toGpPnt(),
                         dir
                 ), diameter.doubleValue(), length.doubleValue())
@@ -165,7 +164,7 @@ class Edge extends Vertice implements Selector {
     }
 
     void hole(BigDecimal diameter, BigDecimal length) {
-        def gpDir = nl.gp_dir_normal_to_face(currentFaceNative)
+        def gpDir = new_gp_Dir__Normal__TopoDS_Face(currentFaceNative)
         println "hole $diameter Dir: ${Vec.fromADir(gpDir)}"
         clockwiseLoc.each {
             println "holeHelper $diameter, Loc: $it, Dir: ${Vec.fromADir(gpDir)}"
@@ -174,7 +173,7 @@ class Edge extends Vertice implements Selector {
     }
 
     void hole(BigDecimal diameter) {
-        def gpDir = nl.gp_dir_normal_to_face(currentFaceNative)
+        def gpDir = new_gp_Dir__Normal__TopoDS_Face(currentFaceNative)
         println "hole $diameter Dir: ${Vec.fromADir(gpDir)}"
         clockwiseLoc.each {
             println "holeHelper $diameter, Loc: $it, Dir: ${Vec.fromADir(gpDir)}"
@@ -183,11 +182,11 @@ class Edge extends Vertice implements Selector {
     }
 
     CadBuilder cut(CadBuilder other) {
-        MemorySegment trsf = nl.gp_trsf()
+        MemorySegment trsf = new_gp_Trsf()
         println "cut currentLoc = $currentLoc, other.currentLoc = ${other.currentLoc}"
-        nl.gp_trsf_set_translation(trsf, (new Vec(0.0) - currentLoc).toGpVec())
-        def toolNative = nl.brep_builderapi_transform_shape(other.currentShapeNative, trsf, 1)
-        def cutNative = nl.brep_algoapi_cut_ds_shape(currentShapeNative, toolNative)
+        _gp_Trsf__SetTranslation__gp_Vec(trsf, (new Vec(0.0) - currentLoc).toGpVec())
+        def toolNative = new_TopoDS_Shape__BRepBuilderAPI_Transform__Shape__gp_Trsf_bCopy(other.currentShapeNative, trsf, 1)
+        def cutNative = new_TopoDS_Shape__bBRepAlgoAPI_Cut__s1_s2(currentShapeNative, toolNative)
         currentShapeNative = cutNative
         this as CadBuilder
     }

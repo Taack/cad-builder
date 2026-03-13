@@ -1,9 +1,10 @@
 package org.taack.cad.dsl.builder
 
 import groovy.transform.CompileStatic
-import org.taack.occt.NativeLib
 
 import java.lang.foreign.MemorySegment
+
+import static org.taack.occt.NativeLib.*
 
 
 @CompileStatic
@@ -82,34 +83,34 @@ final class Vec extends Vec2d {
 
     static Vec fromAPnt(MemorySegment aPnt) {
         new Vec(
-                NativeLib.gp_pnt_x(aPnt).toBigDecimal(),
-                NativeLib.gp_pnt_y(aPnt).toBigDecimal(),
-                NativeLib.gp_pnt_z(aPnt).toBigDecimal()
+                gp_Pnt__X(aPnt),
+                gp_Pnt__Y(aPnt),
+                gp_Pnt__Z(aPnt)
         )
     }
 
     static Vec fromADir(MemorySegment aDir) {
         new Vec(
-                NativeLib.gp_dir_x(aDir).toBigDecimal(),
-                NativeLib.gp_dir_y(aDir).toBigDecimal(),
-                NativeLib.gp_dir_z(aDir).toBigDecimal()
+                gp_Dir__X(aDir),
+                gp_Dir__Y(aDir),
+                gp_Dir__Z(aDir)
         )
     }
 
     MemorySegment toGpDir() {
-        NativeLib.gp_dir_new(x.doubleValue(), y.doubleValue(), z.doubleValue())
+        new_gp_Dir__x_y_z(x, y, z)
     }
 
     MemorySegment toGpPnt() {
-        NativeLib.gp_pnt_new(x.doubleValue(), y.doubleValue(), z.doubleValue())
+        new_gp_Pnt__x_y_z(x, y, z)
     }
 
     MemorySegment toGpVec() {
-        NativeLib.gp_vec_new(x.doubleValue(), y.doubleValue(), z.doubleValue())
+        new_gp_Vec__x_y_z(x, y, z)
     }
 
     MemorySegment toGpPln(Number t = 0) {
-        NativeLib.plane_create(x.doubleValue(), y.doubleValue(), z.doubleValue(), t.toDouble())
+        new_gp_Pln__x_y_z_d(x, y, z, t.toDouble())
     }
 
     BigDecimal cord(Axe axe) {
