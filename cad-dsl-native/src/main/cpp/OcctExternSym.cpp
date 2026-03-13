@@ -76,69 +76,85 @@ OcctExternSym::OcctExternSym() {
 */
 
 extern "C" gp_Pnt2d *new_gp_Pnt2d__x_y(const Standard_Real theXp, const Standard_Real theYp) {
+    TRACE("");
     return new gp_Pnt2d(theXp, theYp);
 }
 
 extern "C" gp_Pnt2d *new_gp_Pnt2d__Geom2d_Curve__Value__u(Handle(Geom2d_Curve) &geom2d_curve, const Standard_Real U) {
+    TRACE("");
     return new gp_Pnt2d(geom2d_curve->Value(U));
 }
 
 extern "C" gp_Pnt2d* new_gp_Pnt2d__Geom2d_TrimmedCurve__EndPoint(const Handle(Geom2d_TrimmedCurve)& curve) {
+    TRACE("");
     return new gp_Pnt2d(curve->EndPoint());
 }
 
 extern "C" gp_Pnt2d* new_gp_Pnt2d__Geom2d_TrimmedCurve__StartPoint(const Handle(Geom2d_TrimmedCurve)& curve) {
+    TRACE("");
     return new gp_Pnt2d(curve->StartPoint());
 }
 
 extern "C" gp_Vec2d *new_gp_Vec2d__x_y(const Standard_Real theXp, const Standard_Real theYp) {
+    TRACE("");
     return new gp_Vec2d(theXp, theYp);
 }
 
 extern "C" gp_Ax2d *new_gp_Ax2d() {
+    TRACE("");
     return new gp_Ax2d();
 }
 
 extern "C" gp_Ax2d *new_gp_Ax2d__pt_dir(const gp_Pnt2d &theP, const gp_Dir2d &theV) {
+    TRACE("");
     return new gp_Ax2d(theP, theV);
 }
 
 extern "C" gp_Dir2d *new_gp_Dir2d() {
+    TRACE("");
     return new gp_Dir2d();
 }
 
 extern "C" gp_Dir2d *new_gp_Dir2d__x_y(const Standard_Real theXp, const Standard_Real theYp) {
+    TRACE("");
     return new gp_Dir2d(theXp, theYp);
 }
 
 extern "C" gp_Circ2d* new_gp_Circ2d__ax2d_r(gp_Ax2d &ax2d, Standard_Real theRadius) {
+    TRACE("");
     return new gp_Circ2d(ax2d, theRadius);
 }
 
 extern "C" Standard_Real gp_Pnt2d__Distance__p1_p2(const gp_Pnt2d &theOne, const gp_Pnt2d &theOther) {
+    TRACE("");
     return theOne.Distance(theOther);
 }
 
 extern "C" Standard_Real gp_Pnt2d__X(gp_Pnt2d *pnt) {
+    TRACE("");
     return pnt->X();
 }
 
 extern "C" Standard_Real gp_Pnt2d__Y(gp_Pnt2d *pnt) {
+    TRACE("");
     return pnt->Y();
 }
 
 
 extern "C" Standard_Real gp_Dir2d__X(gp_Dir2d *dir) {
+    TRACE("");
     return dir->X();
 }
 
 extern "C" Standard_Real gp_Dir2d__Y(gp_Dir2d *dir) {
+    TRACE("");
     return dir->Y();
 }
 
 extern "C" Handle(Geom2d_Ellipse) *handle_Geom2d_Ellipse__a2_majorRadius_minorRadius_sense(const gp_Ax2d &MajorAxis, const Standard_Real MajorRadius,
                                                          const Standard_Real MinorRadius,
                                                          const Standard_Boolean Sense = Standard_True) {
+    TRACE("");
     return new Handle(Geom2d_Ellipse)(new Geom2d_Ellipse(MajorAxis, MajorRadius, MinorRadius, Sense));
 }
 
@@ -147,58 +163,72 @@ extern "C" Handle(Geom2d_TrimmedCurve) *handle_Geom2d_TrimmedCurve__curve_u1_u2(
                                                                     const Standard_Boolean Sense = Standard_True,
                                                                     const Standard_Boolean theAdjustPeriodic =
                                                                         Standard_True) {
+    TRACE("");
     return new Handle(Geom2d_TrimmedCurve)(new Geom2d_TrimmedCurve(C, U1, U2, Sense, theAdjustPeriodic));
 }
 
 extern "C" Handle(Geom2d_TrimmedCurve) *handle_Geom2d_TrimmedCurve__GCE2d_MakeSegment__p1_p2(const gp_Pnt2d &P1, const gp_Pnt2d &P2) {
+    TRACE("");
     return new Handle(Geom2d_TrimmedCurve)(GCE2d_MakeSegment(P1, P2));
 }
 
 extern "C" Handle(Geom2d_TrimmedCurve)* handle_Geom2d_TrimmedCurve__GCE2d_MakeArcOfCircle__cir2d_p1_p2(gp_Circ2d& circ2d, gp_Pnt2d& p1, gp_Pnt2d& p2) {
+    TRACE("");
     return new Handle(Geom2d_TrimmedCurve)(GCE2d_MakeArcOfCircle(circ2d, p1, p2));
 }
 
 extern "C" Handle(Geom2d_TrimmedCurve)* handle_Geom2d_TrimmedCurve__GCE2d_MakeArcOfCircle__cir2d_ang1_ang2(gp_Circ2d& circ2d, Standard_Real angle1, Standard_Real angle2) {
+    TRACE("");
     return new Handle(Geom2d_TrimmedCurve)(GCE2d_MakeArcOfCircle(circ2d, angle1, angle2));
 }
 
 extern "C" Handle(Geom2d_TrimmedCurve)* handle_Geom2d_TrimmedCurve__GCE2d_MakeArcOfCircle__p1_p2_p3(gp_Pnt2d& pt1, gp_Pnt2d& pt2, gp_Pnt2d& pt3) {
+    TRACE("");
     return new Handle(Geom2d_TrimmedCurve)(GCE2d_MakeArcOfCircle(pt1, pt2, pt3));
 }
 
 extern "C" Handle(Geom2d_TrimmedCurve)* handle_Geom2d_TrimmedCurve__GCE2d_MakeArcOfCircle__cir2d_p1_ang(gp_Circ2d& circ2d, gp_Pnt2d& pt1, Standard_Real angle1) {
+    TRACE("");
     return new Handle(Geom2d_TrimmedCurve)(GCE2d_MakeArcOfCircle(circ2d, pt1, angle1));
 }
 
 extern "C" void _Geom2d_TrimmedCurve__Mirror__ax2(Handle(Geom2d_TrimmedCurve)& curve, gp_Ax2d& ax2d) {
+    TRACE("");
     curve->Mirror(ax2d);
 }
 
 extern "C" void _Geom2d_TrimmedCurve__Reverse(Handle(Geom2d_TrimmedCurve)& curve) {
+    TRACE("");
     curve->Reverse();
 }
 
 extern "C" Handle(Geom2d_Circle)* handle_Geom2d_Circle__GCE2d_MakeCircle__cir2d(gp_Circ2d &cir2d) {
+    TRACE("");
     return new Handle(Geom2d_Circle)(GCE2d_MakeCircle(cir2d));
 }
 
 extern "C" Geom2dAPI_InterCurveCurve* new_Geom2dAPI_InterCurveCurve__curve1_curve2(const Handle(Geom2d_Curve)& C1, const Handle(Geom2d_Curve)& C2) {
+    TRACE("");
     return new Geom2dAPI_InterCurveCurve(C1, C2);
 }
 
 extern "C" Standard_Integer int_Geom2dAPI_InterCurveCurve__NbPoints(const Geom2dAPI_InterCurveCurve &inter_curve_curve) {
+    TRACE("");
     return inter_curve_curve.NbPoints();
 }
 
 extern "C" gp_Pnt2d* new_gp_Pnt2d__Geom2dAPI_InterCurveCurve__Point__i(const Geom2dAPI_InterCurveCurve &inter_curve_curve, const Standard_Integer index) {
+    TRACE("");
     return new gp_Pnt2d(inter_curve_curve.Point(index));
 }
 
 extern "C"  Handle(Geom2d_Geometry)*  handle_Geom2d_Geometry__Copy(const Handle(Geom2d_Geometry) &toCpy) {
+    TRACE("");
     return new Handle(Geom2d_Geometry)(toCpy->Copy());
 }
 
 extern "C"  Handle(Geom_Curve)* handle_Geom_Curve__GeomAPI_To3d__curve_plan(Handle(Geom2d_Curve) &curve, gp_Pln &plan) {
+    TRACE("");
     return new Handle(Geom_Curve)(GeomAPI::To3d(curve, plan));
 }
 
@@ -209,147 +239,189 @@ extern "C"  Handle(Geom_Curve)* handle_Geom_Curve__GeomAPI_To3d__curve_plan(Hand
 ***********************************************************************************************************************/
 
 extern "C" gp_Pnt * new_gp_Pnt__x_y_z(const Standard_Real theXp, const Standard_Real theYp, const Standard_Real theZp) {
+    TRACE("");
     return new gp_Pnt(theXp, theYp, theZp);
 }
 
 extern "C" void delete_gp_Pnt(gp_Pnt *pnt) {
+    TRACE("");
     delete pnt;
 }
 
 extern "C" gp_Vec *new_gp_Vec__x_y_z(const Standard_Real theXp, const Standard_Real theYp, const Standard_Real theZp) {
+    TRACE("");
     return new gp_Vec(theXp, theYp, theZp);
 }
 
 extern "C" void delete_gp_Vec(gp_Vec *pnt) {
+    TRACE("");
     delete pnt;
 }
 
 extern "C" Handle(Geom_TrimmedCurve) *handle_Geom_TrimmedCurve__GC_MakeArcOfCircle_p1_p2_p3(gp_Pnt *pnt1, gp_Pnt *pnt2, gp_Pnt *pnt3) {
+    TRACE("");
     return new Handle(Geom_TrimmedCurve)(GC_MakeArcOfCircle(*pnt1, *pnt2, *pnt3).Value());
 }
 
 extern "C" Handle(Geom_TrimmedCurve) *handle_Geom_TrimmedCurve__GC_MakeArcOfCircle_p1_vtangente_p2(gp_Pnt *pnt1, gp_Vec *tan, gp_Pnt *pnt3) {
+    TRACE("");
     return new Handle(Geom_TrimmedCurve)(GC_MakeArcOfCircle(*pnt1, *tan, *pnt3).Value());
 }
 
 extern "C" void delete_handle_Geom_TrimmedCurve(Handle(Geom_TrimmedCurve)* ptr) {
+    TRACE("");
     delete ptr;
 }
 
 extern "C" Handle(Geom_TrimmedCurve) *handle_Geom_TrimmedCurve__GC_MakeSegment__p1_p2(gp_Pnt *pnt1, gp_Pnt *pnt2) {
+    TRACE("");
     return new Handle(Geom_TrimmedCurve)(GC_MakeSegment(*pnt1, *pnt2).Value());
 }
 
 extern "C" const TopoDS_Edge *new_TopoDS_Edge__BRepBuilderAPI_MakeEdge__Geom_Curve(Handle(Geom_Curve) &segment) {
+    TRACE("");
     return new TopoDS_Edge(BRepBuilderAPI_MakeEdge(segment).Edge());
 }
 
 extern "C" const TopoDS_Edge *new_TopoDS_Edge__BRepBuilderAPI_MakeEdge__Geom_Curve_Geom_Surface(Handle(Geom2d_Curve) &curve, const Handle(Geom_Surface) &surface) {
+    TRACE("");
     return new TopoDS_Edge(BRepBuilderAPI_MakeEdge(curve, surface));
 }
 
 extern "C" void delete_TopoDS_Edge(TopoDS_Edge *ptr) {
+    TRACE("");
     delete ptr;
 }
 
 extern "C" const BRepBuilderAPI_MakeEdge *new_BRepBuilderAPI_MakeEdge__ptFrom_ptTo(gp_Pnt& from, gp_Pnt& to) {
+    TRACE("");
     return new BRepBuilderAPI_MakeEdge(from, to);
 }
 
 extern "C" const BRepBuilderAPI_MakeEdge *new_BRepBuilderAPI_MakeEdge__Geom_Curve(Handle(Geom_Curve)& curve) {
+    TRACE("");
     return new BRepBuilderAPI_MakeEdge(curve);
 }
 
 extern "C" const BRepBuilderAPI_MakeWire * new_BRepBuilderAPI_MakeWire() {
+    TRACE("");
     return new BRepBuilderAPI_MakeWire();
 }
 
 extern "C" const BRepBuilderAPI_MakeWire *new_BRepBuilderAPI_MakeWire__BRepBuilderAPI_MakeEdge(BRepBuilderAPI_MakeEdge& edge) {
+    TRACE("");
     return new BRepBuilderAPI_MakeWire(edge);
 }
 
 extern "C" void _BRepBuilderAPI_MakeWire__Add__BRepBuilderAPI_MakeEdge(BRepBuilderAPI_MakeWire& wireMaker, BRepBuilderAPI_MakeEdge& edge) {
+    TRACE("");
     wireMaker.Add(edge);
 }
 
 extern "C" const TopoDS_Wire * new_TopoDS_Wire__BRepBuilderAPI_MakeWire__TopoDS_Edge1_e2_e3(TopoDS_Edge& e1, TopoDS_Edge& e2, TopoDS_Edge& e3) {
+    TRACE("");
     return new TopoDS_Wire(BRepBuilderAPI_MakeWire(e1, e2, e3).Wire());
 }
 
 extern "C" const TopoDS_Wire *new_TopoDS_Wire__BRepBuilderAPI_MakeWire__TopoDS_Edge1_e2(TopoDS_Edge& e1, TopoDS_Edge& e2) {
+    TRACE("");
     return new TopoDS_Wire(BRepBuilderAPI_MakeWire(e1, e2).Wire());
 }
 
 extern "C" const TopoDS_Wire *new_TopoDS_Wire__BRepBuilderAPI_MakeWire__TopoDS_Edge1_e2_e3_e4(TopoDS_Edge& e1, TopoDS_Edge& e2, TopoDS_Edge& e3, TopoDS_Edge& e4) {
+    TRACE("");
     return new TopoDS_Wire(BRepBuilderAPI_MakeWire(e1, e2, e3, e4).Wire());
 }
 
 extern "C" const TopoDS_Wire &ref_TopoDS_Wire__BRepBuilderAPI_MakeWire__Wire(BRepBuilderAPI_MakeWire &make_wire) {
+    TRACE("");
     return make_wire.Wire();
 }
 
+extern "C" const TopoDS_Shape &ref_TopoDS_Shape__BRepBuilderAPI_MakeWire__Shape(BRepBuilderAPI_MakeWire &make_wire) {
+    TRACE("");
+    return make_wire.Shape();
+}
+
 extern "C" void _BRepBuilderAPI_MakeWire__Add__TopoDS_Wire(BRepBuilderAPI_MakeWire &mw, TopoDS_Wire &wire) {
+    TRACE("");
     mw.Add(wire);
 }
 
 extern "C" void _BRepBuilderAPI_MakeWire__Add__BRepBuilderAPI_MakeWire(BRepBuilderAPI_MakeWire &mw, BRepBuilderAPI_MakeWire &mw2) {
+    TRACE("");
     mw.Add(mw2);
 }
 
 extern "C" void _BRepBuilderAPI_MakeWire__Add__TopoDS_Edge(BRepBuilderAPI_MakeWire &mw, TopoDS_Edge &edge) {
+    TRACE("");
     mw.Add(edge);
 }
 
 extern "C" void _BRepBuilderAPI_MakeWire__Add__TopTools_ListOfShape(BRepBuilderAPI_MakeWire &mw, TopTools_ListOfShape &listOfShape) {
+    TRACE("");
     mw.Add(listOfShape);
 }
 
 extern "C" const gp_Ax1 &gp__OX() {
+    TRACE("");
     return gp::OX();
 }
 
 extern "C" gp_Trsf *new_gp_Trsf() {
+    TRACE("");
     return new gp_Trsf();
 }
 
 extern "C" void _gp_Trsf__SetMirror__gp_Ax1(gp_Trsf *trsf, gp_Ax1 *ax1) {
+    TRACE("");
     trsf->SetMirror(*ax1);
 }
 
 extern "C" void _gp_Trsf__SetTranslation__gp_Vec(gp_Trsf &gp_trsf, const gp_Vec &translation) {
+    TRACE("");
     return gp_trsf.SetTranslation(translation);
 }
 
-extern "C" BRepBuilderAPI_Transform *new_BRepBuilderAPI_Transform__TopoDS_Wire_gp_Trsf(const TopoDS_Wire *w, gp_Trsf *trsf) {
-    return new BRepBuilderAPI_Transform(*w, *trsf);
+extern "C" BRepBuilderAPI_Transform *new_BRepBuilderAPI_Transform__TopoDS_Shape_gp_Trsf(const TopoDS_Shape &w, gp_Trsf &trsf) {
+    TRACE("");
+    return new BRepBuilderAPI_Transform(w, trsf);
 }
 
 extern "C" TopoDS_Wire &ref_TopoDS__Wire__TopoDS_Shape(TopoDS_Shape &shape) {
+    TRACE("");
     return TopoDS::Wire(shape);
 }
 
 extern "C" TopoDS_Face *new_TopoDS_Face__BRepBuilderAPI_MakeFace__TopoDS_Wire(TopoDS_Wire &wire) {
+    TRACE("");
     return new TopoDS_Face(BRepBuilderAPI_MakeFace(wire).Face());
 }
 
 extern "C" TopoDS_Face *new_TopoDS_Face__BRepBuilderAPI_MakeFace__gp_Pln(gp_Pln &plane) {
+    TRACE("");
     return new TopoDS_Face(BRepBuilderAPI_MakeFace(plane).Face());
 }
 
 extern "C" TopoDS_Face *new_TopoDS_Face() {
+    TRACE("");
     return new TopoDS_Face();
 }
 
 extern "C" TopoDS_Shape *new_TopoDS_Shape__BRepPrimAPI_MakePrism__TopoDS_Face_gp_Vec(TopoDS_Face &face, gp_Vec &normal) {
+    TRACE("");
     return new TopoDS_Shape(BRepPrimAPI_MakePrism(face, normal));
 }
 
 extern "C" BRepFilletAPI_MakeFillet * new_BRepFilletAPI_MakeFillet__TopoDS_Shape(TopoDS_Shape &body) {
+    TRACE("");
     return new BRepFilletAPI_MakeFillet(body);
 }
 
 TopAbs_ShapeEnum TopAbs_ShapeEnumFromOrdinal(int ordinal) {
+    TRACE("");
     switch (ordinal) {
+    TRACE("");
     case 0:
         return TopAbs_COMPOUND;
     case 1:
@@ -375,43 +447,53 @@ TopAbs_ShapeEnum TopAbs_ShapeEnumFromOrdinal(int ordinal) {
 
 extern "C" TopExp_Explorer *new_TopExp_Explorer__TopoDS_Shape_ToFind_ToAvoid(const TopoDS_Shape &S, const /*TopAbs_ShapeEnum*/int ToFind,
                                              const int ToAvoid = TopAbs_SHAPE) {
+    TRACE("");
     return new TopExp_Explorer(S, TopAbs_ShapeEnumFromOrdinal(ToFind), TopAbs_ShapeEnumFromOrdinal(ToAvoid));
 }
 
 extern "C" bool _TopExp_Explorer__More(TopExp_Explorer &explorer) {
+    TRACE("");
     return explorer.More();
 }
 
 extern "C" TopoDS_Shape *new_TopoDS_Shape__TopExp_Explorer__Current(TopExp_Explorer &explorer) {
+    TRACE("");
     return new TopoDS_Shape(explorer.Current());
 }
 
 extern "C" TopoDS_Face * new_TopoDS_Face__TopExp_Explorer__Current(TopExp_Explorer &explorer) {
+    TRACE("");
     return new TopoDS_Face(TopoDS::Face(explorer.Current()));
 }
 
 extern "C" void _TopExp_Explorer__Next(TopExp_Explorer &explorer) {
+    TRACE("");
     return explorer.Next();
 }
 
 extern "C" TopoDS_Edge &ref_TopoDS_Edge__TopoDS_Shape(TopoDS_Shape &shape) {
+    TRACE("");
     return TopoDS::Edge(shape);
 }
 
 extern "C" void _BRepFilletAPI_MakeFillet__Add__radius_TopoDS_Edge(BRepFilletAPI_MakeFillet &make_fillet, Standard_Real r,
                                                TopoDS_Edge &edge) {
+    TRACE("");
     return make_fillet.Add(r, edge);
 }
 
 extern "C" const gp_Dir *new_gp_Dir_DZ() {
+    TRACE("");
     return new gp_Dir(gp::DZ());
 }
 
 extern "C" gp_Dir *new_gp_Dir__x_y_z(const Standard_Real theXv, const Standard_Real theYv, const Standard_Real theZv) {
+    TRACE("");
     return new gp_Dir(theXv, theYv, theZv);
 }
 
 extern "C" gp_Dir *new_gp_Dir__Normal__TopoDS_Face(const TopoDS_Face &aCurrentFace) {
+    TRACE("");
     Standard_Real umin, umax, vmin, vmax;
     BRepTools::UVBounds(aCurrentFace, umin, umax, vmin, vmax);
     Handle(Geom_Surface) aSurface = BRep_Tool::Surface(aCurrentFace);
@@ -424,52 +506,64 @@ extern "C" gp_Dir *new_gp_Dir__Normal__TopoDS_Face(const TopoDS_Face &aCurrentFa
 
 
 extern "C" const gp_Ax2 * new_gp_Ax2__gp_Pnt_gp_Dir(gp_Pnt &loc, gp_Dir &dir) {
+    TRACE("");
     return new gp_Ax2(loc, dir);
 }
 
 extern "C" const gp_Ax2 *new_gp_Ax2_DZ() {
+    TRACE("");
     return new gp_Ax2(gp_Pnt(0.0, 0.0, 0.0), gp::DZ());
 }
 
 extern "C" BRepPrimAPI_MakeCylinder *new_BRepPrimAPI_MakeCylinder__gp_Ax2_r_h(const gp_Ax2 &Axes, const Standard_Real R,
                                                                 const Standard_Real H) {
+    TRACE("");
     return new BRepPrimAPI_MakeCylinder(Axes, R, H);
 }
 
 extern "C" BRepPrimAPI_MakeBox *new_BRepPrimAPI_MakeBox__x_y_z(const Standard_Real x, const Standard_Real y,
                                                       const Standard_Real z) {
+    TRACE("");
     return new BRepPrimAPI_MakeBox(x, y, z);
 }
 
 extern "C" Handle(Geom_Surface) *handle_Geom_Surface__TopoDS_Face(TopoDS_Face &face) {
+    TRACE("");
     return new Handle(Geom_Surface)(BRep_Tool::Surface(face));
 }
 
 extern "C" Standard_Integer int_Geom_Surface__is__Geom_Plane(Handle(Geom_Surface) &surface) {
+    TRACE("");
     return surface->DynamicType() == STANDARD_TYPE(Geom_Plane) ? 1 : 0;
 }
 
 extern "C" Handle(Geom_Plane) *handle_Geom_Plane__handle_Geom_Surface(Handle(Geom_Surface) &surface) {
+    TRACE("");
     return new Handle(Geom_Plane)(Handle(Geom_Plane)::DownCast(surface));
 }
 
 extern "C" gp_Pnt *new_gp_Pnt__Geom_Plane(Handle(Geom_Plane) &plane) {
+    TRACE("");
     return new gp_Pnt(plane->Location());
 }
 
 extern "C" TopTools_ListOfShape *new_TopTools_ListOfShape() {
+    TRACE("");
     return new TopTools_ListOfShape();
 }
 
 extern "C" void delete_TopTools_ListOfShape(TopTools_ListOfShape* ptr) {
+    TRACE("");
     delete ptr;
 }
 
 extern "C" void _TopTools_ListOfShape__Append__TopoDS_Shape(TopTools_ListOfShape *l, TopoDS_Shape &face) {
+    TRACE("");
     l->Append(face);
 }
 
 extern "C" BRepOffsetAPI_MakeThickSolid *new_BRepOffsetAPI_MakeThickSolid() {
+    TRACE("");
     return new BRepOffsetAPI_MakeThickSolid();
 }
 
@@ -477,85 +571,104 @@ extern "C" void _BRepOffsetAPI_MakeThickSolid__MakeThickSolidByJoin__TopoDS_Shap
                                                       BRepOffsetAPI_MakeThickSolid *thick_solid, TopoDS_Shape *shape,
                                                       const TopTools_ListOfShape *face_to_remove,
                                                       Standard_Real thickness, Standard_Real tol) {
+    TRACE("");
     thick_solid->MakeThickSolidByJoin(*shape, *face_to_remove, thickness, tol);
 }
 
 extern "C" Handle(Geom_CylindricalSurface) *handle_Geom_CylindricalSurface__ax2_radius(
     const gp_Ax3 &ax2, const Standard_Real radius) {
+    TRACE("");
     return new Handle(Geom_CylindricalSurface)(new Geom_CylindricalSurface(ax2, radius));
 }
 
 extern "C" void _BRepLib__BuildCurves3d__TopoDS_Shape(const TopoDS_Shape &w1) {
+    TRACE("");
     BRepLib::BuildCurves3d(w1);
 }
 
 extern "C" BRepOffsetAPI_ThruSections *new_BRepOffsetAPI_ThruSections__isSolid_ruled_pres3d(const Standard_Boolean isSolid = Standard_False,
                                                                const Standard_Boolean ruled = Standard_False,
                                                                const Standard_Real pres3d = 1.0e-06) {
+    TRACE("");
     return new BRepOffsetAPI_ThruSections(isSolid, ruled, pres3d);
 }
 
 extern "C" void _BRepOffsetAPI_ThruSections__AddWire__TopoDS_Wire(BRepOffsetAPI_ThruSections *thru_sections, const TopoDS_Wire &w) {
+    TRACE("");
     thru_sections->AddWire(w);
 }
 
 extern "C" void _BRepOffsetAPI_ThruSections__CheckCompatibility__bool(BRepOffsetAPI_ThruSections *thru_sections,
                                                             const Standard_Boolean b) {
+    TRACE("");
     thru_sections->CheckCompatibility(b);
 }
 
 extern "C" TopoDS_Compound *new_TopoDS_Compound() {
+    TRACE("");
     return new TopoDS_Compound();
 }
 
 extern "C" BRep_Builder *new_BRep_Builder() {
+    TRACE("");
     return new BRep_Builder();
 }
 
 extern "C" void _TopoDS_Builder__Add__resTopoDS_Shape_toAddTopoDS_Shape(TopoDS_Builder &builder, TopoDS_Shape &inThis, TopoDS_Shape &toAdd) {
+    TRACE("");
     builder.Add(inThis, toAdd);
 }
 
 extern "C" void _TopoDS_Builder__MakeCompound__TopoDS_Compound(TopoDS_Builder &b, TopoDS_Compound &c) {
+    TRACE("");
     b.MakeCompound(c);
 }
 
 extern "C" gp_Ax1 *new_gp_Ax1__p_dir(const gp_Pnt &theP, const gp_Dir &theV) {
+    TRACE("");
     return new gp_Ax1(theP, theV);
 }
 
 extern "C" gp_Pnt *new_gp_Pnt__CentreOfMass__TopoDS_Shape(const TopoDS_Shape &myShape) {
+    TRACE("");
     GProp_GProps massProps;
     BRepGProp::SurfaceProperties(myShape, massProps);
     return new gp_Pnt(massProps.CentreOfMass());
 }
 
 extern "C" Standard_Real gp_Pnt__X(gp_Pnt *pnt) {
+    TRACE("");
     return pnt->X();
 }
 
 extern "C" Standard_Real gp_Pnt__Y(gp_Pnt *pnt) {
+    TRACE("");
     return pnt->Y();
 }
 
 extern "C" Standard_Real gp_Pnt__Z(gp_Pnt *pnt) {
+    TRACE("");
     return pnt->Z();
 }
 
 extern "C" Standard_Real gp_Dir__X(gp_Dir *dir) {
+    TRACE("");
     return dir->X();
 }
 
 extern "C" Standard_Real gp_Dir__Y(gp_Dir *dir) {
+    TRACE("");
     return dir->Y();
 }
 
 extern "C" Standard_Real gp_Dir__Z(gp_Pnt *dir) {
+    TRACE("");
     return dir->Z();
 }
 
 extern "C" TopoDS_Shape *new_TopoDS_Shape__BRepPrimAPI_MakeSphere__gp_Ax2_radius_a1_a2(const gp_Ax2 &origin, const Standard_Real radius,
                                                     const Standard_Real angle1, const Standard_Real angle2) {
+    TRACE("");
     return new TopoDS_Shape(BRepPrimAPI_MakeSphere(origin,
                                                    radius,
                                                    angle1,
@@ -564,6 +677,7 @@ extern "C" TopoDS_Shape *new_TopoDS_Shape__BRepPrimAPI_MakeSphere__gp_Ax2_radius
 
 extern "C" TopoDS_Shape *new_TopoDS_Shape__BRepPrimAPI_MakeCylinder__gp_Ax2_radius_height(const gp_Ax2 &origin, const Standard_Real radius,
                                                        const Standard_Real height) {
+    TRACE("");
     return new TopoDS_Shape(BRepPrimAPI_MakeCylinder(origin,
                                                      radius,
                                                      height));
@@ -572,6 +686,7 @@ extern "C" TopoDS_Shape *new_TopoDS_Shape__BRepPrimAPI_MakeCylinder__gp_Ax2_radi
 
 extern "C" TopoDS_Shape *new_TopoDS_Shape__BRepBuilderAPI_Transform__Shape__gp_Trsf_bCopy(const TopoDS_Shape &shape, const gp_Trsf &gp_trsf,
                                                          const Standard_Boolean theCopyGeom) {
+    TRACE("");
     return new TopoDS_Shape(BRepBuilderAPI_Transform(shape, gp_trsf, theCopyGeom).Shape());
 //    return BRepBuilderAPI_Transform(shape, gp_trsf, theCopyGeom).Shape();
 }
@@ -579,6 +694,7 @@ extern "C" TopoDS_Shape *new_TopoDS_Shape__BRepBuilderAPI_Transform__Shape__gp_T
 
 extern "C" TopoDS_Shape *new_TopoDS_Shape__BRepPrimAPI_MakeTorus__gp_Ax2_r1_r2(const gp_Ax2 &origin, const Standard_Real radius1,
                                                   const Standard_Real radius2) {
+    TRACE("");
     return new TopoDS_Shape(BRepPrimAPI_MakeTorus(origin,
                                                   radius1,
                                                   radius2).Shape());
@@ -587,23 +703,28 @@ extern "C" TopoDS_Shape *new_TopoDS_Shape__BRepPrimAPI_MakeTorus__gp_Ax2_r1_r2(c
 
 
 extern "C" TopoDS_Shape *new_TopoDS_Shape__BRepPrimAPI_MakeRevol__TopoDS_Face_gp_Ax1(TopoDS_Face& face, gp_Ax1& ax1) {
+    TRACE("");
     return new TopoDS_Shape(BRepPrimAPI_MakeRevol(face, ax1).Shape());
 //    return BRepPrimAPI_MakeRevol(face, ax1).Shape();
 }
 
 extern "C" void deleteVoid(void *ptr) {
+    TRACE("");
     delete ptr;
 }
 
 extern "C" gp_Pln* new_gp_Pln__x_y_z_d(const Standard_Real x, const Standard_Real y, const Standard_Real z, const Standard_Real d) {
+    TRACE("");
     return new gp_Pln(x, y, z, d);
 }
 
 extern "C" gp_Pln* new_gp_Pln__pt_dir(const gp_Pnt& pt, const gp_Dir& dir) {
+    TRACE("");
     return new gp_Pln(pt, dir);
 }
 
 extern "C" TopoDS_Shape* new_TopoDS_Shape__Shape__BRepBuilderAPI_MakeShape(BRepBuilderAPI_MakeShape &shape) {
+    TRACE("");
     return new TopoDS_Shape(shape.Shape());
 //    return shape.Shape();
 }
@@ -614,6 +735,7 @@ Composed
 
 */
 extern "C" TopoDS_Shape *new_TopoDS_Shape__bBRepAlgoAPI_Cut__s1_s2(TopoDS_Shape &result, TopoDS_Shape &tool) {
+    TRACE("");
     const auto cut = new BRepAlgoAPI_Cut(result, tool);
     cut->Build();
     cut->SimplifyResult();
@@ -621,6 +743,7 @@ extern "C" TopoDS_Shape *new_TopoDS_Shape__bBRepAlgoAPI_Cut__s1_s2(TopoDS_Shape 
 }
 
 extern "C" TopoDS_Shape *new_TopoDS_Shape__brep_algoapi_fuse__s1_s2(TopoDS_Shape &s1, TopoDS_Shape &s2) {
+    TRACE("");
     const auto fuse = new BRepAlgoAPI_Fuse(s1, s2);
     fuse->Build();
     fuse->SimplifyResult();
@@ -628,6 +751,7 @@ extern "C" TopoDS_Shape *new_TopoDS_Shape__brep_algoapi_fuse__s1_s2(TopoDS_Shape
 }
 
 extern "C" TopoDS_Shape *new_TopoDS_Shape__BRepAlgoAPI_Cut__TopoDS_Shape_TopTools_ListOfShape(TopoDS_Shape &result, TopTools_ListOfShape &aLT) {
+    TRACE("");
     Standard_Boolean bRunParallel;
     Standard_Real aFuzzyValue;
     BRepAlgoAPI_Cut aBuilder;
@@ -676,6 +800,7 @@ extern "C" TopoDS_Shape *new_TopoDS_Shape__BRepAlgoAPI_Cut__TopoDS_Shape_TopTool
 
 extern "C" TopoDS_Shape *ptrTopoDS_Shape__BRepFeat_MakeCylindricalHole__Perform__TopoDS_Shape_gp_Ax1_r_ptFrom_ptTo(const TopoDS_Shape &shape, const gp_Ax1 &ax1, const Standard_Real Radius,
                                    const Standard_Real PFrom, const Standard_Real PTo) {
+    TRACE("");
     std::cout << "PFrom = " << PFrom << "PTo = " << PTo << " " << (PFrom > PTo) << std::endl;
     BRepFeat_MakeCylindricalHole makeCylindrical;
     makeCylindrical.Init(shape, ax1);
@@ -688,6 +813,7 @@ extern "C" TopoDS_Shape *ptrTopoDS_Shape__BRepFeat_MakeCylindricalHole__Perform_
 
 extern "C" TopoDS_Shape *ptrTopoDS_Shape__BRepFeat_MakeCylindricalHole__Perform__TopoDS_Shape_gp_Ax1_r_l(const TopoDS_Shape &shape, const gp_Ax1 &ax1, const Standard_Real Radius,
                                          const Standard_Real Length) {
+    TRACE("");
     std::cout << "Length = " << Length << std::endl;
     BRepFeat_MakeCylindricalHole makeCylindrical;
     makeCylindrical.Init(shape, ax1);
@@ -699,6 +825,7 @@ extern "C" TopoDS_Shape *ptrTopoDS_Shape__BRepFeat_MakeCylindricalHole__Perform_
 
 extern "C" bool dumpShape(const TopoDS_Shape &shape, const Standard_Integer width, const Standard_Integer height,
                           const char *fileName) {
+    TRACE("");
     Handle(Aspect_DisplayConnection)
         _displayConnection = new Aspect_DisplayConnection();
 
@@ -803,8 +930,10 @@ extern "C" void write_stl(const TopoDS_Shape& shape, const char *fileName)
 }
 
 extern "C" void analyze(const TopoDS_Shape &myShape) {
+    TRACE("");
     BRepCheck_Analyzer checker(myShape);
     if (checker.IsValid()) {
+    TRACE("");
         std::cout << "Valide Shaoe " << std::endl << std::flush;
         return;
     }

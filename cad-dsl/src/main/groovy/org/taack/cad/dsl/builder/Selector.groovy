@@ -17,13 +17,15 @@ trait Selector {
         MemorySegment ret = new_BRepBuilderAPI_MakeWire()
         if (wireNatives.size() > 0) {
             wireNatives.eachWithIndex { MemorySegment it, int i ->
-                _BRepBuilderAPI_MakeWire__Add__BRepBuilderAPI_MakeWire(ret, it)//ref_TopoDS_Wire__BRepBuilderAPI_MakeWire__Wire(it))
+                _BRepBuilderAPI_MakeWire__Add__BRepBuilderAPI_MakeWire(ret, it)
             }
         }
         ret
     }
 
+    MemorySegment toShape() {
+        ref_TopoDS_Shape__BRepBuilderAPI_MakeWire__Shape(currentWireNative)
+    }
+
     Vec currentLoc
-
-
 }

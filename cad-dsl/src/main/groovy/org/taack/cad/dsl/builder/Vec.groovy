@@ -63,8 +63,9 @@ final class Vec extends Vec2d {
         new Vec(x * other.x, y * other.y, z * other.z)
     }
 
-    Vec multiply(BigDecimal fac) {
-        new Vec(x * fac, y * fac, z * fac)
+    Vec multiply(Number fac) {
+        double f = fac.toDouble()
+        new Vec(x * f, y * f, z * f)
     }
 
     static Vec dirXToGlobal(Vec dir) {

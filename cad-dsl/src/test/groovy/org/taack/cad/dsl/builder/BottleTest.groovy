@@ -7,30 +7,44 @@ import java.lang.foreign.Arena
 import java.lang.foreign.MemorySegment
 
 import static org.taack.occt.NativeLib.*
+import static org.taack.cad.dsl.builder.CadBuilder.cb
 
 @CompileStatic
-class BottleLowLevelTest {
+class BottleTest {
 
     @CompileStatic
     static void mainBottle() {
         double myWidth = 50.0
         double myHeight = 70.0
         double myThickness = 30.0
-        def aPnt1 = new_gp_Pnt__x_y_z(-myWidth / 2d, 0, 0)
-        def aPnt2 = new_gp_Pnt__x_y_z(-myWidth / 2d, -myThickness / 4d, 0)
-        def aPnt3 = new_gp_Pnt__x_y_z(0, -myThickness / 2d, 0)
-        def aPnt4 = new_gp_Pnt__x_y_z(myWidth / 2d, -myThickness / 4d, 0)
-        def aPnt5 = new_gp_Pnt__x_y_z(myWidth / 2d, 0, 0)
+        Vec v1 = new Vec(-myWidth / 2, 0, 0)
+        Vec v11 = new Vec(0, -myThickness / 4, 0)
+        Vec v2 = v1 + v11
+        Vec v3 = v11 * 2
+        Vec v4 = -v1 + v11
+        Vec v5 = -v1
 
-        def anArcOfCircle = handle_Geom_TrimmedCurve__GC_MakeArcOfCircle_p1_p2_p3(aPnt2, aPnt3, aPnt4)
-        def aSegment1 = handle_Geom_TrimmedCurve__GC_MakeSegment__p1_p2(aPnt1, aPnt2)
-        def aSegment2 = handle_Geom_TrimmedCurve__GC_MakeSegment__p1_p2(aPnt4, aPnt5)
+        def aWire = cb().from(v1)
+                .edge(v2)
+                .arc(v4, v3)
+                .edge(v5).toWire().toShape()
 
-        println "Profile: Define the Topology"
-        def anEdge1 = new_TopoDS_Edge__BRepBuilderAPI_MakeEdge__Geom_Curve(aSegment1)
-        def anEdge2 = new_TopoDS_Edge__BRepBuilderAPI_MakeEdge__Geom_Curve(anArcOfCircle)
-        def anEdge3 = new_TopoDS_Edge__BRepBuilderAPI_MakeEdge__Geom_Curve(aSegment2)
-        def aWire = new_TopoDS_Wire__BRepBuilderAPI_MakeWire__TopoDS_Edge1_e2_e3(anEdge1, anEdge2, anEdge3)
+
+//        def aPnt1 = new_gp_Pnt__x_y_z(-myWidth / 2d, 0, 0)
+//        def aPnt2 = new_gp_Pnt__x_y_z(-myWidth / 2d, -myThickness / 4d, 0)
+//        def aPnt3 = new_gp_Pnt__x_y_z(0, -myThickness / 2d, 0)
+//        def aPnt4 = new_gp_Pnt__x_y_z(myWidth / 2d, -myThickness / 4d, 0)
+//        def aPnt5 = new_gp_Pnt__x_y_z(myWidth / 2d, 0, 0)
+//
+//        def anArcOfCircle = handle_Geom_TrimmedCurve__GC_MakeArcOfCircle_p1_p2_p3(aPnt2, aPnt3, aPnt4)
+//        def aSegment1 = handle_Geom_TrimmedCurve__GC_MakeSegment__p1_p2(aPnt1, aPnt2)
+//        def aSegment2 = handle_Geom_TrimmedCurve__GC_MakeSegment__p1_p2(aPnt4, aPnt5)
+
+//        println "Profile: Define the Topology"
+//        def anEdge1 = new_TopoDS_Edge__BRepBuilderAPI_MakeEdge__Geom_Curve(aSegment1)
+//        def anEdge2 = new_TopoDS_Edge__BRepBuilderAPI_MakeEdge__Geom_Curve(anArcOfCircle)
+//        def anEdge3 = new_TopoDS_Edge__BRepBuilderAPI_MakeEdge__Geom_Curve(aSegment2)
+//        def aWire = new_TopoDS_Wire__BRepBuilderAPI_MakeWire__TopoDS_Edge1_e2_e3(anEdge1, anEdge2, anEdge3)
 
         println "Complete Profile"
         def xAxis = gp__OX()

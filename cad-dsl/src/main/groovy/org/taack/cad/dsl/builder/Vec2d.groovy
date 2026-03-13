@@ -46,7 +46,8 @@ class Vec2d {
     }
 
     Vec2d multiply(Number other) {
-        new Vec2d(x * other.toDouble(), y * other.toDouble())
+        double o = other.toDouble()
+        new Vec2d(x * o, y * o)
     }
 
     Vec2d rotate(double beta) {
