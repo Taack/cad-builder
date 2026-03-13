@@ -84,7 +84,7 @@ class Edge extends Vertice implements Selector {
                 println "Edge from: $fromLocal, to: $to"
                 def edgeNative = new_BRepBuilderAPI_MakeEdge__ptFrom_ptTo(fromLocal.toGpPnt(), to.toGpPnt())
                 fromLocal = to
-                _BRepBuilderAPI_MakeWire__Add__TopoDS_Edge(wireNative, edgeNative)
+                _BRepBuilderAPI_MakeWire__Add__BRepBuilderAPI_MakeEdge(wireNative, edgeNative)
             }
             index++
 
