@@ -17,6 +17,7 @@ class BottleTest {
         double myWidth = 50.0
         double myHeight = 70.0
         double myThickness = 30.0
+
         Vec v1 = new Vec(-myWidth / 2, 0, 0)
         Vec v11 = new Vec(0, -myThickness / 4, 0)
         Vec v2 = v1 + v11
@@ -24,10 +25,16 @@ class BottleTest {
         Vec v4 = -v1 + v11
         Vec v5 = -v1
 
-        def aWire = cb().from(v1)
+
+        cb().from(v1)
                 .edge(v2)
                 .arc(v4, v3)
-                .edge(v5).toWire().toShape()
+                .edge(v5).toWire().mirror(new Vec(), new Vec(1,0,0)).toFace().display()
+
+        MemorySegment aWire = cb().from(v1)
+                .edge(v2)
+                .arc(v4, v3)
+                .edge(v5).toWire().mirror(new Vec(), new Vec(1,0,0)).toShape()
 
 
 //        def aPnt1 = new_gp_Pnt__x_y_z(-myWidth / 2d, 0, 0)
@@ -47,23 +54,28 @@ class BottleTest {
 //        def aWire = new_TopoDS_Wire__BRepBuilderAPI_MakeWire__TopoDS_Edge1_e2_e3(anEdge1, anEdge2, anEdge3)
 
         println "Complete Profile"
-        def xAxis = gp__OX()
-        def aTrsf = new_gp_Trsf()
-        _gp_Trsf__SetMirror__gp_Ax1(aTrsf, xAxis)
+//        def xAxis = gp__OX()
+//        def aTrsf = new_gp_Trsf()
+//        _gp_Trsf__SetMirror__gp_Ax1(aTrsf, xAxis)
+//
+//        def aBRepTrsf = new_BRepBuilderAPI_Transform__TopoDS_Shape_gp_Trsf(aWire, aTrsf)
+//        def aMirroredShape = new_TopoDS_Shape__Shape__BRepBuilderAPI_MakeShape(aBRepTrsf)
+//        def aMirroredWire = ref_TopoDS__Wire__TopoDS_Shape(aMirroredShape)
 
-        def aBRepTrsf = new_BRepBuilderAPI_Transform__TopoDS_Shape_gp_Trsf(aWire, aTrsf)
-        def aMirroredShape = new_TopoDS_Shape__Shape__BRepBuilderAPI_MakeShape(aBRepTrsf)
-        def aMirroredWire = ref_TopoDS__Wire__TopoDS_Shape(aMirroredShape)
-
-        def mkWire = new_BRepBuilderAPI_MakeWire()
-        _BRepBuilderAPI_MakeWire__Add__TopoDS_Wire(mkWire, aWire)
-        _BRepBuilderAPI_MakeWire__Add__TopoDS_Wire(mkWire, aMirroredWire)
-        def myWireProfile = ref_TopoDS_Wire__BRepBuilderAPI_MakeWire__Wire(mkWire)
+//        def mkWire = new_BRepBuilderAPI_MakeWire()
+//        _BRepBuilderAPI_MakeWire__Add__TopoDS_Wire(mkWire, aWire)
+//        _BRepBuilderAPI_MakeWire__Add__TopoDS_Wire(mkWire, aMirroredWire)
+//        def myWireProfile = ref_TopoDS_Wire__BRepBuilderAPI_MakeWire__Wire(mkWire)
 
         println "Body: Prism the Profile"
-        def myFaceProfile = new_TopoDS_Face__BRepBuilderAPI_MakeFace__TopoDS_Wire(myWireProfile)
+
+
+
+        def myFaceProfile = new_TopoDS_Face__BRepBuilderAPI_MakeFace__TopoDS_Wire(aWire)
         def aPrismVec = new_gp_Vec__x_y_z(0d, 0d, myHeight)
         def myBody = new_TopoDS_Shape__BRepPrimAPI_MakePrism__TopoDS_Face_gp_Vec(myFaceProfile, aPrismVec)
+
+        visualize(myBody)
 
         println "Body: Apply Fillets"
         def mkFillet = new_BRepFilletAPI_MakeFillet__TopoDS_Shape(myBody)
@@ -174,7 +186,7 @@ class BottleTest {
     }
 
     @Test
-    void "Make Bottle Using Low Level API"() {
+    void "Make Bottle Normal API"() {
         mainBottle()
     }
 //    @Test

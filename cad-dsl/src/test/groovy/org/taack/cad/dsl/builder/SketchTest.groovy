@@ -177,4 +177,30 @@ class SketchTest {
                 .toWire().toFace().prism().display()
     }
 
+    @Test
+    void "Extrude Square Face with Hole using 2D Vectors with mirror"() {
+        BigDecimal length = 0.1
+
+        Vec2d p1 = new Vec2d(-length, -length)
+        Vec2d p2 = new Vec2d(-length, length)
+        Vec2d p3 = -p1
+        Vec2d p4 = -p2
+
+        Vec2d c1 = p1 * .2
+        Vec2d c2 = p2 * .2
+        Vec2d c3 = p3 * .2
+        Vec2d c4 = p4 * .2
+
+        cb()
+            .from(p1)
+                .edge(p4)
+                .edge(p3).toWire().mirror(p1, p3 - p1).toFace().prism().display()//.mirror(new Vec(), new Vec(0,1,0)).display()
+//                .edge(p2)
+//                .edge(p1).toWire()
+//            .from(c1)
+//                .arc(c3, c2)
+//                .arc(c1, c4)
+//                .toWire().toFace().prism().display()
+    }
+
 }

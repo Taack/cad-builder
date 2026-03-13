@@ -59,6 +59,10 @@
 #include <Xw_Window.hxx>
 #include <gp_Pnt.hxx>
 #include <GeomAPI.hxx>
+#include <ShapeExtend_Status.hxx>
+#include <ShapeExtend_WireData.hxx>
+#include <ShapeFix_Wire.hxx>
+#include <ShapeFix_ShapeTolerance.hxx>
 
 #define TRACE(message) TRACE_IMPL(__FILE__, __LINE__, __PRETTY_FUNCTION__, message)
 void TRACE_IMPL(const char *file, int line, const char *function, const char *message) {
@@ -385,7 +389,7 @@ extern "C" void _gp_Trsf__SetTranslation__gp_Vec(gp_Trsf &gp_trsf, const gp_Vec 
 
 extern "C" BRepBuilderAPI_Transform *new_BRepBuilderAPI_Transform__TopoDS_Shape_gp_Trsf(const TopoDS_Shape &w, gp_Trsf &trsf) {
     TRACE("");
-    return new BRepBuilderAPI_Transform(w, trsf);
+    return new BRepBuilderAPI_Transform(w, trsf, 0, 0);
 }
 
 extern "C" TopoDS_Wire &ref_TopoDS__Wire__TopoDS_Shape(TopoDS_Shape &shape) {
@@ -421,7 +425,6 @@ extern "C" BRepFilletAPI_MakeFillet * new_BRepFilletAPI_MakeFillet__TopoDS_Shape
 TopAbs_ShapeEnum TopAbs_ShapeEnumFromOrdinal(int ordinal) {
     TRACE("");
     switch (ordinal) {
-    TRACE("");
     case 0:
         return TopAbs_COMPOUND;
     case 1:
@@ -708,11 +711,6 @@ extern "C" TopoDS_Shape *new_TopoDS_Shape__BRepPrimAPI_MakeRevol__TopoDS_Face_gp
 //    return BRepPrimAPI_MakeRevol(face, ax1).Shape();
 }
 
-extern "C" void deleteVoid(void *ptr) {
-    TRACE("");
-    delete ptr;
-}
-
 extern "C" gp_Pln* new_gp_Pln__x_y_z_d(const Standard_Real x, const Standard_Real y, const Standard_Real z, const Standard_Real d) {
     TRACE("");
     return new gp_Pln(x, y, z, d);
@@ -727,6 +725,45 @@ extern "C" TopoDS_Shape* new_TopoDS_Shape__Shape__BRepBuilderAPI_MakeShape(BRepB
     TRACE("");
     return new TopoDS_Shape(shape.Shape());
 //    return shape.Shape();
+}
+
+extern "C" Handle(ShapeExtend_WireData)* new_ShapeExtend_WireData() {
+    TRACE("");
+    return new Handle(ShapeExtend_WireData)(new ShapeExtend_WireData());
+}
+
+extern "C" void _ShapeExtend_WireData__Add__TopoDS_Edge(ShapeExtend_WireData &data, const TopoDS_Edge &edge, const Standard_Integer atnum=0) {
+    TRACE("");
+    data.Add(edge, atnum);
+}
+
+extern "C" void _ShapeExtend_WireData__Add__TopoDS_Wire(ShapeExtend_WireData &data, const TopoDS_Wire &edge, const Standard_Integer atnum=0) {
+    TRACE("");
+    data.Add(edge, atnum);
+}
+
+extern "C" TopoDS_Wire* util_ShapeFix_Wire__Load__ShapeExtend_WireData(const Handle(ShapeExtend_WireData) &data) {
+    TRACE("");
+    BRepBuilderAPI_MakeWire aMakeWire;
+    ShapeFix_Wire* sfw = new ShapeFix_Wire();
+    ShapeFix_ShapeTolerance FTol;
+
+    sfw->Load(data);
+    sfw->Perform();
+    //Reorder edges is very important
+    sfw->FixReorder();
+    sfw->SetMaxTolerance(0.01);
+    sfw->ClosedWireMode() = Standard_True;
+    sfw->FixConnected(1.e-3);
+    sfw->FixClosed(1.e-3);
+    for (int i = 1; i <= sfw->NbEdges(); i ++) {
+        TopoDS_Edge Edge = sfw->WireData()->Edge(i);
+        FTol.SetTolerance(Edge, 0.01, TopAbs_VERTEX);
+        aMakeWire.Add(Edge);
+    }
+
+    TopoDS_Wire aWire = aMakeWire.Wire();
+    return new TopoDS_Wire(aWire);
 }
 
 /*
@@ -944,4 +981,5 @@ extern "C" void analyze(const TopoDS_Shape &myShape) {
     if (r->IsMinimum())
         std::cout << "Shape is Min" << std::endl;
 }
+
 

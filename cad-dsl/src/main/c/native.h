@@ -76,6 +76,7 @@ int visualize(void*);
 #define Geom2d_Geometry void
 #define Geom2d_Conic void
 #define TopoDS_Builder void
+#define ShapeExtend_WireData void
 
 /*
 
@@ -337,13 +338,19 @@ TopoDS_Shape *new_TopoDS_Shape__BRepPrimAPI_MakeTorus__gp_Ax2_r1_r2(const gp_Ax2
 
 TopoDS_Shape *new_TopoDS_Shape__BRepPrimAPI_MakeRevol__TopoDS_Face_gp_Ax1(TopoDS_Face* face, gp_Ax1* ax1);
 
-void deleteVoid(void *ptr);
-
 gp_Pln* new_gp_Pln__x_y_z_d(const Standard_Real x, const Standard_Real y, const Standard_Real z, const Standard_Real d);
 
 gp_Pln* new_gp_Pln__pt_dir(const gp_Pnt* pt, const gp_Dir* dir);
 
 TopoDS_Shape* new_TopoDS_Shape__Shape__BRepBuilderAPI_MakeShape(BRepBuilderAPI_MakeShape *shape);
+
+ShapeExtend_WireData* new_ShapeExtend_WireData(void);
+
+void _ShapeExtend_WireData__Add__TopoDS_Edge(ShapeExtend_WireData *data, const TopoDS_Edge *edge, const Standard_Integer atnum);
+
+void _ShapeExtend_WireData__Add__TopoDS_Wire(ShapeExtend_WireData *data, const TopoDS_Wire *edge, const Standard_Integer atnum);
+
+Handle(TopoDS_Wire)* util_ShapeFix_Wire__Load__ShapeExtend_WireData(ShapeExtend_WireData *data);
 
 /*
 

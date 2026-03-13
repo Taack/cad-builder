@@ -33,6 +33,10 @@ class Vec2d {
         new Vec2d(x + other.x, y + other.y)
     }
 
+    Vec2d minus(Vec2d other) {
+        new Vec2d(x - other.x, y - other.y)
+    }
+
     Vec2d negative() {
         new Vec2d(-x, -y)
     }
