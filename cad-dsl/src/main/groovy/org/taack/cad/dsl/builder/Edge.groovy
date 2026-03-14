@@ -43,7 +43,7 @@ class Edge extends Vertice implements Selector {
         edge(new Vec(toPosition))
     }
 
-        /**
+    /**
      * Add an Arc to the current wire
      * @param toPosition
      * @param radius
@@ -113,7 +113,7 @@ class Edge extends Vertice implements Selector {
             wireNatives.eachWithIndex { MemorySegment it, int i ->
 //                if (i > 0) {
 
-                    _TopoDS_Builder__Add__resTopoDS_Shape_toAddTopoDS_Shape(builder, aFace, ref_TopoDS_Wire__BRepBuilderAPI_MakeWire__Wire(it))
+                _TopoDS_Builder__Add__resTopoDS_Shape_toAddTopoDS_Shape(builder, aFace, ref_TopoDS_Wire__BRepBuilderAPI_MakeWire__Wire(it))
 //                }
             }
         }
@@ -229,6 +229,37 @@ class Edge extends Vertice implements Selector {
         def mkWire = new_BRepBuilderAPI_MakeWire()
         _BRepBuilderAPI_MakeWire__Add__TopoDS_Wire(mkWire, aMirroredShape)
         wireNatives.add(mkWire)
+        this as CadBuilder
+    }
+
+    CadBuilder mirror2(Vec pt, Vec dir) {
+        def ax1 = new_gp_Ax1__p_dir(pt.toGpPnt(), dir.toGpDir())
+        def aTrsf = new_gp_Trsf()
+        _gp_Trsf__SetMirror__gp_Ax1(aTrsf, ax1)
+
+        List<MemorySegment> toAdd = []
+        wireNatives.eachWithIndex { it, i ->
+            def shape = ref_TopoDS_Shape__BRepBuilderAPI_MakeWire__Shape(it)
+            def aBRepTrsf = new_BRepBuilderAPI_Transform__TopoDS_Shape_gp_Trsf(shape, aTrsf)
+            def aMirroredShape = new_TopoDS_Shape__Shape__BRepBuilderAPI_MakeShape(aBRepTrsf)
+            def mkWire = new_BRepBuilderAPI_MakeWire()
+            _BRepBuilderAPI_MakeWire__Add__TopoDS_Wire(mkWire, aMirroredShape)
+            toAdd.add(mkWire)
+        }
+        wireNatives.addAll(toAdd)
+
+
+        def fixer = new_ShapeExtend_WireData()
+        wireNatives.eachWithIndex { MemorySegment it, int i ->
+            _ShapeExtend_WireData__Add__TopoDS_Wire(fixer, ref_TopoDS_Wire__BRepBuilderAPI_MakeWire__Wire(it), i)
+        }
+        MemorySegment aWireFixed = util_ShapeFix_Wire__Load__ShapeExtend_WireData(fixer)
+
+        def aFace = new_TopoDS_Face__BRepBuilderAPI_MakeFace__gp_Pln(new Vec().toGpPln())
+        def builder = new_BRep_Builder()
+
+        _TopoDS_Builder__Add__resTopoDS_Shape_toAddTopoDS_Shape(builder, aFace, aWireFixed)
+
         this as CadBuilder
     }
 

@@ -29,7 +29,17 @@ class BottleTest {
         cb().from(v1)
                 .edge(v2)
                 .arc(v4, v3)
-                .edge(v5).toWire().mirror(new Vec(), new Vec(1,0,0)).toFace().display()
+                .edge(v5).toWire().toFace().prism().display()
+
+        cb().from(v1)
+                .edge(v2)
+                .arc(v4, v3)
+                .edge(v5).toWire().mirror(new Vec(), new Vec(1,0,0)).toFace().prism().display()
+
+        cb().from(v1)
+                .edge(v2)
+                .arc(v4, v3)
+                .edge(v5).toWire().mirror2(new Vec(), new Vec(1,0,0)).toFace().prism().display()
 
         MemorySegment aWire = cb().from(v1)
                 .edge(v2)
