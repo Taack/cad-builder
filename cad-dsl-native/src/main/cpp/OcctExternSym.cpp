@@ -67,7 +67,7 @@
 
 #define TRACE(message) TRACE_IMPL(__FILE__, __LINE__, __PRETTY_FUNCTION__, message)
 void TRACE_IMPL(const char *file, int line, const char *function, const char *message) {
-    std::cout << file << " : " << line << " : " << function << " : " << message << "\n";
+    std::cout << /*file << " : " <<*/ line << " : " << function << " : " << message << "\n";
     std::cout.flush();
 }
 
@@ -337,6 +337,11 @@ extern "C" const TopoDS_Wire *new_TopoDS_Wire__BRepBuilderAPI_MakeWire__TopoDS_E
 extern "C" const TopoDS_Wire *new_TopoDS_Wire__BRepBuilderAPI_MakeWire__TopoDS_Edge1_e2_e3_e4(TopoDS_Edge& e1, TopoDS_Edge& e2, TopoDS_Edge& e3, TopoDS_Edge& e4) {
     TRACE("");
     return new TopoDS_Wire(BRepBuilderAPI_MakeWire(e1, e2, e3, e4).Wire());
+}
+
+extern "C" const TopoDS_Wire *new_TopoDS_Wire__BRepBuilderAPI_MakeWire__Wire(BRepBuilderAPI_MakeWire &make_wire) {
+    TRACE("");
+    return new TopoDS_Wire(make_wire.Wire());
 }
 
 extern "C" const TopoDS_Wire &ref_TopoDS_Wire__BRepBuilderAPI_MakeWire__Wire(BRepBuilderAPI_MakeWire &make_wire) {

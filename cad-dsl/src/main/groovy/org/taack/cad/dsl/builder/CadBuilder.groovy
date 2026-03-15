@@ -91,7 +91,7 @@ class CadBuilder extends Face {
         } else if (currentFaceNative) {
             currentFaceNative
         } else {
-            currentWireNative
+            addCurrentWireNative()
         }
     }
 }

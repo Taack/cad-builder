@@ -69,7 +69,7 @@ class BottleTest {
 //        def aPrismVec = new_gp_Vec__x_y_z(0d, 0d, myHeight)
 //        def myBody = new_TopoDS_Shape__BRepPrimAPI_MakePrism__TopoDS_Face_gp_Vec(myFaceProfile, aPrismVec)
 
-//        visualize(myBody)
+        visualize(myBody)
 
         println "Body: Apply Fillets"
         def mkFillet = new_BRepFilletAPI_MakeFillet__TopoDS_Shape(myBody)

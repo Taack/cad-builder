@@ -62,34 +62,31 @@ class Edge extends Vertice implements Selector {
 
     CadBuilder toWire() {
         Vec fromLocal = currentLoc
-        def wireNative = new_BRepBuilderAPI_MakeWire()
+        MemorySegment wireNative = new_BRepBuilderAPI_MakeWire()
 
         int index = 0
         Iterator<Integer> arcIndexIt = arcIndex.size() > 0 ? arcIndex.iterator() : null
         Iterator<Vec> arcCenterIt = arcCenter.size() > 0 ? arcCenter.iterator() : null
         Integer arcIndexCur = arcIndex.size() > 0 ? arcIndexIt.next() : null
 
-        println "arcIndexCur: $arcIndexCur, ${arcIndex}"
-
         for (Vec to : edges) {
+            MemorySegment trimmedCurve
             if (arcIndexCur != null && index == arcIndexCur) {
                 def arcCenter = arcCenterIt.next()
                 arcIndexCur = arcIndexIt.hasNext() ? arcIndexIt.next() : 0
-                println "Arc from: $fromLocal, to: $to, radius: $arcCenter, arcIndexCur(next): $arcIndexCur"
-                def arcNative = handle_Geom_TrimmedCurve__GC_MakeArcOfCircle_p1_p2_p3(fromLocal.toGpPnt(), arcCenter.toGpPnt(), to.toGpPnt())
-                def arcEdge = new_TopoDS_Edge__BRepBuilderAPI_MakeEdge__Geom_Curve(arcNative)
-                fromLocal = to
-                _BRepBuilderAPI_MakeWire__Add__TopoDS_Edge(wireNative, arcEdge)
+                trimmedCurve = handle_Geom_TrimmedCurve__GC_MakeArcOfCircle_p1_p2_p3(fromLocal.toGpPnt(), arcCenter.toGpPnt(), to.toGpPnt())
             } else {
-                println "Edge from: $fromLocal, to: $to"
-                def edgeNative = new_BRepBuilderAPI_MakeEdge__ptFrom_ptTo(fromLocal.toGpPnt(), to.toGpPnt())
-                fromLocal = to
-                _BRepBuilderAPI_MakeWire__Add__BRepBuilderAPI_MakeEdge(wireNative, edgeNative)
+                trimmedCurve = handle_Geom_TrimmedCurve__GC_MakeSegment__p1_p2(fromLocal.toGpPnt(), to.toGpPnt())
             }
+            def arcEdge = new_TopoDS_Edge__BRepBuilderAPI_MakeEdge__Geom_Curve(trimmedCurve)
+            _BRepBuilderAPI_MakeWire__Add__TopoDS_Edge(wireNative, arcEdge)
+            fromLocal = to
             index++
 
         }
-        wireNatives.add wireNative
+        this.wireNative = addCurrentWireNative(wireNative)
+        wireNatives.add new_TopoDS_Wire__BRepBuilderAPI_MakeWire__Wire(wireNative)
+//        wireNatives.add(wireNative)
         this as CadBuilder
     }
 
@@ -97,14 +94,16 @@ class Edge extends Vertice implements Selector {
      * Turns Edges wire into face
      * @return
      */
-    CadBuilder toFace(Vec plan = new Vec(1)) {
+    CadBuilder toFace() {
 
-//        def aFace = new_TopoDS_Face__BRepBuilderAPI_MakeFace__TopoDS_Wire(ref_TopoDS_Shape__BRepBuilderAPI_MakeWire__Shape(currentWireNative))
-        def aFace = new_TopoDS_Face__BRepBuilderAPI_MakeFace__TopoDS_Wire(ref_TopoDS_Shape__BRepBuilderAPI_MakeWire__Shape(wireNatives.first))
+        currentFaceNative = new_TopoDS_Face__BRepBuilderAPI_MakeFace__TopoDS_Wire(ref_TopoDS_Shape__BRepBuilderAPI_MakeWire__Shape(wireNative))
+//        return this as CadBuilder
+//        def aFace = new_TopoDS_Face__BRepBuilderAPI_MakeFace__TopoDS_Wire(ref_TopoDS_Shape__BRepBuilderAPI_MakeWire__Shape(wireNatives.first))
+//        def aFace = new_TopoDS_Face__BRepBuilderAPI_MakeFace__TopoDS_Wire(wireNatives.first)
 //        def aFace = new_TopoDS_Face__BRepBuilderAPI_MakeFace__gp_Pln(plan.toGpPln())
         def builder = new_BRep_Builder()
 //
-        if (wireNatives.size() > 0) {
+//        if (wireNatives.size() > 0) {
 ////            def fixer = new_ShapeExtend_WireData()
 ////            wireNatives.eachWithIndex {MemorySegment it, int i ->
 ////                _ShapeExtend_WireData__Add__TopoDS_Wire(fixer, ref_TopoDS_Wire__BRepBuilderAPI_MakeWire__Wire(it), 0)
@@ -114,11 +113,12 @@ class Edge extends Vertice implements Selector {
             wireNatives.eachWithIndex { MemorySegment it, int i ->
                 if (i > 0) {
 
-                _TopoDS_Builder__Add__resTopoDS_Shape_toAddTopoDS_Shape(builder, aFace, ref_TopoDS_Wire__BRepBuilderAPI_MakeWire__Wire(it))
-                }
+                _TopoDS_Builder__Add__resTopoDS_Shape_toAddTopoDS_Shape(builder, currentFaceNative, ref_TopoDS_Wire__BRepBuilderAPI_MakeWire__Wire(it))
+//                _TopoDS_Builder__Add__resTopoDS_Shape_toAddTopoDS_Shape(builder, aFace, it)
+//                }
             }
-        }
-        currentFaceNative = aFace
+    }
+//        currentFaceNative = aFace
 
 
 //        def pXY = plan.toGpPln()
@@ -134,11 +134,12 @@ class Edge extends Vertice implements Selector {
 //        currentFaceNative = new_TopoDS_Face__BRepBuilderAPI_MakeFace__TopoDS_Wire(toShape())
         this as CadBuilder
     }
-    /**
-     * Center of current face
-     * @param operations
-     * @return
-     */
+
+/**
+ * Center of current face
+ * @param operations
+ * @return
+ */
     CadBuilder center(@DelegatesTo(value = Edge, strategy = Closure.DELEGATE_FIRST) Closure operations) {
         clockwiseLoc = [Vec.fromAPnt(new_gp_Pnt__CentreOfMass__TopoDS_Shape(currentFaceNative))]
         operations.delegate = this
@@ -146,13 +147,13 @@ class Edge extends Vertice implements Selector {
         this as CadBuilder
     }
 
-    /**
-     * Construction Rect. Center corresponds to currentFace center.
-     * @param sx Size along x
-     * @param sy Size along y
-     * @param operations
-     * @return Face
-     */
+/**
+ * Construction Rect. Center corresponds to currentFace center.
+ * @param sx Size along x
+ * @param sy Size along y
+ * @param operations
+ * @return Face
+ */
     CadBuilder rect(BigDecimal sx, BigDecimal sy, @DelegatesTo(value = Edge, strategy = Closure.DELEGATE_FIRST) Closure operations) {
         def centerOfFace = Vec.fromAPnt(new_gp_Pnt__CentreOfMass__TopoDS_Shape(currentFaceNative))
         def faceDir = Vec.fromADir(new_gp_Dir__Normal__TopoDS_Face(currentFaceNative))
@@ -227,11 +228,13 @@ class Edge extends Vertice implements Selector {
         def shape = toShape()
         _TopoDS__Shape__Reverse(shape)
         def aBRepTrsf = new_BRepBuilderAPI_Transform__TopoDS_Shape_gp_Trsf(shape, aTrsf)
-        def aMirroredShape = new_TopoDS_Shape__Shape__BRepBuilderAPI_MakeShape(aBRepTrsf)
+        def aMirroredShape = ref_TopoDS__Wire__TopoDS_Shape(new_TopoDS_Shape__Shape__BRepBuilderAPI_MakeShape(aBRepTrsf))
         def mkWire = new_BRepBuilderAPI_MakeWire()
         _BRepBuilderAPI_MakeWire__Add__TopoDS_Wire(mkWire, aMirroredShape)
+        this.wireNative = addCurrentWireNative(mkWire)
 //        _TopoDS__Shape__Reverse(ref_TopoDS_Shape__BRepBuilderAPI_MakeWire__Shape(mkWire))
-        wireNatives.add(mkWire)
+//        wireNatives.add(mkWire)
         this as CadBuilder
     }
+
 }

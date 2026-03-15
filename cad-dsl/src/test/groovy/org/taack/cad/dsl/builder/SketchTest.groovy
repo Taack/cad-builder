@@ -98,7 +98,7 @@ class SketchTest {
                 .arc(p5, new Vec(xValue2 + 0.05, 0.0, -zValue1 - 0.004))
                 .edge(p6)
                 .edge(p7)
-                .toWire().toFace(new Vec(0, 1, 0)).prism(new Vec(0.0, 1.0, 0.0)).display()
+                .toWire().toFace().prism(new Vec(0.0, 1.0, 0.0)).display()
     }
     
     @Test
@@ -148,7 +148,7 @@ class SketchTest {
             .from(c1)
                 .arc(c3, c4)
                 .arc(c1, c2)
-                .toWire().toFace(new Vec(0, 1, 0)).prism(new Vec(0, 1, 0)).display()
+                .toWire().toFace().prism(new Vec(0, 1, 0)).display()
     }
     
     @Test
@@ -185,11 +185,6 @@ class SketchTest {
         Vec2d p2 = new Vec2d(-length, length)
         Vec2d p3 = -p1
         Vec2d p4 = -p2
-
-        Vec2d c1 = p1 * .2
-        Vec2d c2 = p2 * .2
-        Vec2d c3 = p3 * .2
-        Vec2d c4 = p4 * .2
 
         cb()
             .from(p1)

@@ -12,23 +12,23 @@ trait Selector {
     MemorySegment currentShapeNative
     MemorySegment currentFaceNative
     Stack<MemorySegment> wireNatives = new Stack<>()
+    MemorySegment wireNative = new_BRepBuilderAPI_MakeWire()
 
-    MemorySegment getCurrentWireNative() {
-        MemorySegment ret = new_BRepBuilderAPI_MakeWire()
+    MemorySegment addCurrentWireNative(MemorySegment wireNative = null) {
+        MemorySegment ret = wireNative ?: new_BRepBuilderAPI_MakeWire()
         if (wireNatives.size() > 0) {
             wireNatives.eachWithIndex { MemorySegment it, int i ->
-                _BRepBuilderAPI_MakeWire__Add__BRepBuilderAPI_MakeWire(ret, it)
+                _BRepBuilderAPI_MakeWire__Add__TopoDS_Wire(ret, it)
             }
         }
         ret
     }
 
     MemorySegment toShape() {
-
         println "currentShapeNative $currentShapeNative"
         if (currentShapeNative) currentShapeNative
         else if (currentFaceNative) currentFaceNative
-        else ref_TopoDS_Shape__BRepBuilderAPI_MakeWire__Shape(currentWireNative)
+        else ref_TopoDS_Shape__BRepBuilderAPI_MakeWire__Shape(addCurrentWireNative())
     }
 
     Vec currentLoc
