@@ -63,10 +63,12 @@
 #include <ShapeExtend_WireData.hxx>
 #include <ShapeFix_Wire.hxx>
 #include <ShapeFix_ShapeTolerance.hxx>
+#include <StdFail_NotDone.hxx>
 
 #define TRACE(message) TRACE_IMPL(__FILE__, __LINE__, __PRETTY_FUNCTION__, message)
 void TRACE_IMPL(const char *file, int line, const char *function, const char *message) {
     std::cout << file << " : " << line << " : " << function << " : " << message << "\n";
+    std::cout.flush();
 }
 
 
@@ -481,8 +483,18 @@ extern "C" void _TopExp_Explorer__Next(TopExp_Explorer &explorer) {
 
 extern "C" TopoDS_Edge &ref_TopoDS_Edge__TopoDS_Shape(TopoDS_Shape &shape) {
     TRACE("");
-    return TopoDS::Edge(shape);
+    try {
+        return TopoDS::Edge(shape);
+    } catch (Standard_TypeMismatch& e) {
+        TRACE("Standard_TypeMismatch");
+        throw e;
+    } catch (StdFail_NotDone& e) {
+        TRACE("StdFail_NotDone");
+        throw e;
+    }
 }
+
+
 
 extern "C" void _BRepFilletAPI_MakeFillet__Add__radius_TopoDS_Edge(BRepFilletAPI_MakeFillet &make_fillet, Standard_Real r,
                                                TopoDS_Edge &edge) {
@@ -728,7 +740,13 @@ extern "C" gp_Pln* new_gp_Pln__pt_dir(const gp_Pnt& pt, const gp_Dir& dir) {
 
 extern "C" TopoDS_Shape* new_TopoDS_Shape__Shape__BRepBuilderAPI_MakeShape(BRepBuilderAPI_MakeShape &shape) {
     TRACE("");
-    return new TopoDS_Shape(shape.Shape());
+    try {
+        return new TopoDS_Shape(shape.Shape());
+    } catch (StdFail_NotDone& e) {
+        TRACE(e.GetMessageString());
+        throw e;
+    }
+
 //    return shape.Shape();
 }
 
