@@ -167,9 +167,9 @@ class SketchTest {
 
         cb()
             .from(p1)
-                .edge(p4)
-                .edge(p3)
                 .edge(p2)
+                .edge(p3)
+                .edge(p4)
                 .edge(p1).toWire()
             .from(c1)
                 .arc(c3, c2)

@@ -84,9 +84,7 @@ class Edge extends Vertice implements Selector {
             index++
 
         }
-        this.wireNative = addCurrentWireNative(wireNative)
-        wireNatives.add new_TopoDS_Wire__BRepBuilderAPI_MakeWire__Wire(wireNative)
-//        wireNatives.add(wireNative)
+        wireNatives.add(wireNative)
         this as CadBuilder
     }
 
@@ -95,43 +93,15 @@ class Edge extends Vertice implements Selector {
      * @return
      */
     CadBuilder toFace() {
-
-        currentFaceNative = new_TopoDS_Face__BRepBuilderAPI_MakeFace__TopoDS_Wire(ref_TopoDS_Shape__BRepBuilderAPI_MakeWire__Shape(wireNative))
-//        return this as CadBuilder
-//        def aFace = new_TopoDS_Face__BRepBuilderAPI_MakeFace__TopoDS_Wire(ref_TopoDS_Shape__BRepBuilderAPI_MakeWire__Shape(wireNatives.first))
-//        def aFace = new_TopoDS_Face__BRepBuilderAPI_MakeFace__TopoDS_Wire(wireNatives.first)
-//        def aFace = new_TopoDS_Face__BRepBuilderAPI_MakeFace__gp_Pln(plan.toGpPln())
-        def builder = new_BRep_Builder()
-//
-//        if (wireNatives.size() > 0) {
-////            def fixer = new_ShapeExtend_WireData()
-////            wireNatives.eachWithIndex {MemorySegment it, int i ->
-////                _ShapeExtend_WireData__Add__TopoDS_Wire(fixer, ref_TopoDS_Wire__BRepBuilderAPI_MakeWire__Wire(it), 0)
-////            }
-////            MemorySegment aWireFixed = util_ShapeFix_Wire__Load__ShapeExtend_WireData(fixer)
-////            _TopoDS_Builder__Add__resTopoDS_Shape_toAddTopoDS_Shape(builder, aFace, aWireFixed)
-            wireNatives.eachWithIndex { MemorySegment it, int i ->
-                if (i > 0) {
-
-                _TopoDS_Builder__Add__resTopoDS_Shape_toAddTopoDS_Shape(builder, currentFaceNative, ref_TopoDS_Wire__BRepBuilderAPI_MakeWire__Wire(it))
-//                _TopoDS_Builder__Add__resTopoDS_Shape_toAddTopoDS_Shape(builder, aFace, it)
-//                }
+        MemorySegment wire = ref_TopoDS_Shape__BRepBuilderAPI_MakeWire__Shape(wireNatives.first())
+        currentFaceNative = new_TopoDS_Face__BRepBuilderAPI_MakeFace__TopoDS_Wire(wire)
+        if (wireNatives.size() > 1) {
+            def builder = new_BRep_Builder()
+            for (MemorySegment w in wireNatives[1..wireNatives.size() - 1]) {
+                MemorySegment wire2 = ref_TopoDS_Shape__BRepBuilderAPI_MakeWire__Shape(w)
+                _TopoDS_Builder__Add__resTopoDS_Shape_toAddTopoDS_Shape(builder, currentFaceNative, wire2)
             }
-    }
-//        currentFaceNative = aFace
-
-
-//        def pXY = plan.toGpPln()
-//        def aFace = new_TopoDS_Face__BRepBuilderAPI_MakeFace__gp_Pln(pXY)
-//        def builder = new_BRep_Builder()
-//
-//        if (wireNatives.size() > 0) {
-//            wireNatives.eachWithIndex { MemorySegment it, int i ->
-//                _TopoDS_Builder__Add__resTopoDS_Shape_toAddTopoDS_Shape(builder, aFace, ref_TopoDS_Wire__BRepBuilderAPI_MakeWire__Wire(it))
-//            }
-//        }
-//        currentFaceNative = aFace
-//        currentFaceNative = new_TopoDS_Face__BRepBuilderAPI_MakeFace__TopoDS_Wire(toShape())
+        }
         this as CadBuilder
     }
 
@@ -231,9 +201,9 @@ class Edge extends Vertice implements Selector {
         def aMirroredShape = ref_TopoDS__Wire__TopoDS_Shape(new_TopoDS_Shape__Shape__BRepBuilderAPI_MakeShape(aBRepTrsf))
         def mkWire = new_BRepBuilderAPI_MakeWire()
         _BRepBuilderAPI_MakeWire__Add__TopoDS_Wire(mkWire, aMirroredShape)
-        this.wireNative = addCurrentWireNative(mkWire)
-//        _TopoDS__Shape__Reverse(ref_TopoDS_Shape__BRepBuilderAPI_MakeWire__Shape(mkWire))
-//        wireNatives.add(mkWire)
+        mkWire = addCurrentWireNative(mkWire)
+        wireNatives.pop()
+        wireNatives.push(mkWire)
         this as CadBuilder
     }
 
