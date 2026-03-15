@@ -24,7 +24,11 @@ trait Selector {
     }
 
     MemorySegment toShape() {
-        ref_TopoDS_Shape__BRepBuilderAPI_MakeWire__Shape(currentWireNative)
+
+        println "currentShapeNative $currentShapeNative"
+        if (currentShapeNative) currentShapeNative
+        else if (currentFaceNative) currentFaceNative
+        else ref_TopoDS_Shape__BRepBuilderAPI_MakeWire__Shape(currentWireNative)
     }
 
     Vec currentLoc

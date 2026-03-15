@@ -397,6 +397,11 @@ extern "C" TopoDS_Wire &ref_TopoDS__Wire__TopoDS_Shape(TopoDS_Shape &shape) {
     return TopoDS::Wire(shape);
 }
 
+extern "C" void _TopoDS__Shape__Reverse(TopoDS_Shape &shape) {
+    TRACE("");
+    return shape.Reverse();
+}
+
 extern "C" TopoDS_Face *new_TopoDS_Face__BRepBuilderAPI_MakeFace__TopoDS_Wire(TopoDS_Wire &wire) {
     TRACE("");
     return new TopoDS_Face(BRepBuilderAPI_MakeFace(wire).Face());

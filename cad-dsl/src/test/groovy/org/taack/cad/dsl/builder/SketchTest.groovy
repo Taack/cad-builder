@@ -194,13 +194,7 @@ class SketchTest {
         cb()
             .from(p1)
                 .edge(p4)
-                .edge(p3).toWire().mirror(p1, p3 - p1).toFace().prism().display()//.mirror(new Vec(), new Vec(0,1,0)).display()
-//                .edge(p2)
-//                .edge(p1).toWire()
-//            .from(c1)
-//                .arc(c3, c2)
-//                .arc(c1, c4)
-//                .toWire().toFace().prism().display()
+                .edge(p3).toWire().mirror(p1, p3 - p1).toFace().prism().display()
     }
 
 }

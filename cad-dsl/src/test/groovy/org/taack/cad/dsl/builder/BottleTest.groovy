@@ -25,26 +25,10 @@ class BottleTest {
         Vec v4 = -v1 + v11
         Vec v5 = -v1
 
-
-        cb().from(v1)
+        MemorySegment myBody = cb().from(v1)
                 .edge(v2)
                 .arc(v4, v3)
-                .edge(v5).toWire().toFace().prism().display()
-
-        cb().from(v1)
-                .edge(v2)
-                .arc(v4, v3)
-                .edge(v5).toWire().mirror(new Vec(), new Vec(1,0,0)).toFace().prism().display()
-
-        cb().from(v1)
-                .edge(v2)
-                .arc(v4, v3)
-                .edge(v5).toWire().mirror2(new Vec(), new Vec(1,0,0)).toFace().prism().display()
-
-        MemorySegment aWire = cb().from(v1)
-                .edge(v2)
-                .arc(v4, v3)
-                .edge(v5).toWire().mirror(new Vec(), new Vec(1,0,0)).toShape()
+                .edge(v5).toWire().mirror(new Vec(), new Vec(1,0,0)).toFace().prism(new Vec(myHeight)).toShape()
 
 
 //        def aPnt1 = new_gp_Pnt__x_y_z(-myWidth / 2d, 0, 0)
@@ -81,11 +65,11 @@ class BottleTest {
 
 
 
-        def myFaceProfile = new_TopoDS_Face__BRepBuilderAPI_MakeFace__TopoDS_Wire(aWire)
-        def aPrismVec = new_gp_Vec__x_y_z(0d, 0d, myHeight)
-        def myBody = new_TopoDS_Shape__BRepPrimAPI_MakePrism__TopoDS_Face_gp_Vec(myFaceProfile, aPrismVec)
+//        def myFaceProfile = new_TopoDS_Face__BRepBuilderAPI_MakeFace__TopoDS_Wire(aWire)
+//        def aPrismVec = new_gp_Vec__x_y_z(0d, 0d, myHeight)
+//        def myBody = new_TopoDS_Shape__BRepPrimAPI_MakePrism__TopoDS_Face_gp_Vec(myFaceProfile, aPrismVec)
 
-        visualize(myBody)
+//        visualize(myBody)
 
         println "Body: Apply Fillets"
         def mkFillet = new_BRepFilletAPI_MakeFillet__TopoDS_Shape(myBody)

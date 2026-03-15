@@ -99,22 +99,23 @@ class Edge extends Vertice implements Selector {
      */
     CadBuilder toFace(Vec plan = new Vec(1)) {
 
-//        def aFace = new_TopoDS_Face__BRepBuilderAPI_MakeFace__TopoDS_Wire(wireNatives.first)
-        def aFace = new_TopoDS_Face__BRepBuilderAPI_MakeFace__gp_Pln(plan.toGpPln())
+//        def aFace = new_TopoDS_Face__BRepBuilderAPI_MakeFace__TopoDS_Wire(ref_TopoDS_Shape__BRepBuilderAPI_MakeWire__Shape(currentWireNative))
+        def aFace = new_TopoDS_Face__BRepBuilderAPI_MakeFace__TopoDS_Wire(ref_TopoDS_Shape__BRepBuilderAPI_MakeWire__Shape(wireNatives.first))
+//        def aFace = new_TopoDS_Face__BRepBuilderAPI_MakeFace__gp_Pln(plan.toGpPln())
         def builder = new_BRep_Builder()
-
+//
         if (wireNatives.size() > 0) {
-//            def fixer = new_ShapeExtend_WireData()
-//            wireNatives.eachWithIndex {MemorySegment it, int i ->
-//                _ShapeExtend_WireData__Add__TopoDS_Wire(fixer, ref_TopoDS_Wire__BRepBuilderAPI_MakeWire__Wire(it), 0)
-//            }
-//            MemorySegment aWireFixed = util_ShapeFix_Wire__Load__ShapeExtend_WireData(fixer)
-//            _TopoDS_Builder__Add__resTopoDS_Shape_toAddTopoDS_Shape(builder, aFace, aWireFixed)
+////            def fixer = new_ShapeExtend_WireData()
+////            wireNatives.eachWithIndex {MemorySegment it, int i ->
+////                _ShapeExtend_WireData__Add__TopoDS_Wire(fixer, ref_TopoDS_Wire__BRepBuilderAPI_MakeWire__Wire(it), 0)
+////            }
+////            MemorySegment aWireFixed = util_ShapeFix_Wire__Load__ShapeExtend_WireData(fixer)
+////            _TopoDS_Builder__Add__resTopoDS_Shape_toAddTopoDS_Shape(builder, aFace, aWireFixed)
             wireNatives.eachWithIndex { MemorySegment it, int i ->
-//                if (i > 0) {
+                if (i > 0) {
 
                 _TopoDS_Builder__Add__resTopoDS_Shape_toAddTopoDS_Shape(builder, aFace, ref_TopoDS_Wire__BRepBuilderAPI_MakeWire__Wire(it))
-//                }
+                }
             }
         }
         currentFaceNative = aFace
@@ -224,43 +225,13 @@ class Edge extends Vertice implements Selector {
         _gp_Trsf__SetMirror__gp_Ax1(aTrsf, ax1)
 
         def shape = toShape()
+        _TopoDS__Shape__Reverse(shape)
         def aBRepTrsf = new_BRepBuilderAPI_Transform__TopoDS_Shape_gp_Trsf(shape, aTrsf)
         def aMirroredShape = new_TopoDS_Shape__Shape__BRepBuilderAPI_MakeShape(aBRepTrsf)
         def mkWire = new_BRepBuilderAPI_MakeWire()
         _BRepBuilderAPI_MakeWire__Add__TopoDS_Wire(mkWire, aMirroredShape)
+//        _TopoDS__Shape__Reverse(ref_TopoDS_Shape__BRepBuilderAPI_MakeWire__Shape(mkWire))
         wireNatives.add(mkWire)
         this as CadBuilder
     }
-
-    CadBuilder mirror2(Vec pt, Vec dir) {
-        def ax1 = new_gp_Ax1__p_dir(pt.toGpPnt(), dir.toGpDir())
-        def aTrsf = new_gp_Trsf()
-        _gp_Trsf__SetMirror__gp_Ax1(aTrsf, ax1)
-
-        List<MemorySegment> toAdd = []
-        wireNatives.eachWithIndex { it, i ->
-            def shape = ref_TopoDS_Shape__BRepBuilderAPI_MakeWire__Shape(it)
-            def aBRepTrsf = new_BRepBuilderAPI_Transform__TopoDS_Shape_gp_Trsf(shape, aTrsf)
-            def aMirroredShape = new_TopoDS_Shape__Shape__BRepBuilderAPI_MakeShape(aBRepTrsf)
-            def mkWire = new_BRepBuilderAPI_MakeWire()
-            _BRepBuilderAPI_MakeWire__Add__TopoDS_Wire(mkWire, aMirroredShape)
-            toAdd.add(mkWire)
-        }
-        wireNatives.addAll(toAdd)
-
-
-        def fixer = new_ShapeExtend_WireData()
-        wireNatives.eachWithIndex { MemorySegment it, int i ->
-            _ShapeExtend_WireData__Add__TopoDS_Wire(fixer, ref_TopoDS_Wire__BRepBuilderAPI_MakeWire__Wire(it), i)
-        }
-        MemorySegment aWireFixed = util_ShapeFix_Wire__Load__ShapeExtend_WireData(fixer)
-
-        def aFace = new_TopoDS_Face__BRepBuilderAPI_MakeFace__gp_Pln(new Vec().toGpPln())
-        def builder = new_BRep_Builder()
-
-        _TopoDS_Builder__Add__resTopoDS_Shape_toAddTopoDS_Shape(builder, aFace, aWireFixed)
-
-        this as CadBuilder
-    }
-
 }

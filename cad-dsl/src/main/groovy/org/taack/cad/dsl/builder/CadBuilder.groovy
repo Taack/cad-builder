@@ -87,13 +87,10 @@ class CadBuilder extends Face {
 
     MemorySegment getCurrentNative() {
         if (currentShapeNative) {
-            println "AUO currentShapeNative"
             currentShapeNative
         } else if (currentFaceNative) {
-            println "AUO currentFaceNative"
             currentFaceNative
         } else {
-            println "AUO currentWireNative"
             currentWireNative
         }
     }
