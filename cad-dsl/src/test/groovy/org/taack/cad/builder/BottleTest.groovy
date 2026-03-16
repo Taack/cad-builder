@@ -31,7 +31,7 @@ class BottleTest {
         MemorySegment myBody = cb().from(v1)
                 .edge(v2)
                 .arc(v4, v3)
-                .edge(v5).toWire().mirror(new Vec(), new Vec(1,0,0)).toFace().prism(new Vec(myHeight))
+                .edge(v5).toWire().mirror(new Vec(), new Vec(1, 0, 0)).toFace().prism(new Vec(myHeight))
                 .topZ().fillet(myThickness / 12d).fuse(cb().cylinder(myNeckRadius, myNeckHeight))
                 .topZ().hollowedSolid(-myThickness / 50d).toShape()
 
@@ -69,12 +69,11 @@ class BottleTest {
         println "Body: Prism the Profile"
 
 
-
 //        def myFaceProfile = new_TopoDS_Face__BRepBuilderAPI_MakeFace__TopoDS_Wire(aWire)
 //        def aPrismVec = new_gp_Vec__x_y_z(0d, 0d, myHeight)
 //        def myBody = new_TopoDS_Shape__BRepPrimAPI_MakePrism__TopoDS_Face_gp_Vec(myFaceProfile, aPrismVec)
 
-        visualize(myBody)
+//        visualize(myBody)
 
         println "Body: Apply Fillets"
 //        def mkFillet = new_BRepFilletAPI_MakeFillet__TopoDS_Shape(myBody)
@@ -153,8 +152,24 @@ class BottleTest {
         def anEdge1OnSurf2 = new_TopoDS_Edge__BRepBuilderAPI_MakeEdge__Geom_Curve_Geom_Surface(anArc2, aCyl2)
         def anEdge2OnSurf2 = new_TopoDS_Edge__BRepBuilderAPI_MakeEdge__Geom_Curve_Geom_Surface(aSegment, aCyl2)
 
-        def threadingWire1 = new_TopoDS_Wire__BRepBuilderAPI_MakeWire__TopoDS_Edge1_e2(anEdge1OnSurf1, anEdge2OnSurf1)
-        def threadingWire2 = new_TopoDS_Wire__BRepBuilderAPI_MakeWire__TopoDS_Edge1_e2(anEdge1OnSurf2, anEdge2OnSurf2)
+//        def threadingWire1 = new_TopoDS_Wire__BRepBuilderAPI_MakeWire__TopoDS_Edge1_e2(anEdge1OnSurf1, anEdge2OnSurf1)
+//        def threadingWire2 = new_TopoDS_Wire__BRepBuilderAPI_MakeWire__TopoDS_Edge1_e2(anEdge1OnSurf2, anEdge2OnSurf2)
+        def threadingWire1 = new_BRepBuilderAPI_MakeWire()
+        _BRepBuilderAPI_MakeWire__Add__TopoDS_Edge(threadingWire1, anEdge2OnSurf1)
+        _BRepBuilderAPI_MakeWire__Add__TopoDS_Edge(threadingWire1, anEdge1OnSurf1)
+
+        def threadingWire2 = new_BRepBuilderAPI_MakeWire()
+        _BRepBuilderAPI_MakeWire__Add__TopoDS_Edge(threadingWire2, anEdge2OnSurf2)
+        _BRepBuilderAPI_MakeWire__Add__TopoDS_Edge(threadingWire2, anEdge1OnSurf2)
+//        def threadingWire1 = new_TopoDS_Wire__BRepBuilderAPI_MakeWire__TopoDS_Edge1_e2(anEdge1OnSurf1, anEdge2OnSurf1)
+//        def threadingWire2 = new_TopoDS_Wire__BRepBuilderAPI_MakeWire__TopoDS_Edge1_e2(anEdge1OnSurf2, anEdge2OnSurf2)
+
+
+//        _BRepLib__BuildCurves3d__TopoDS_Shape(threadingWire1)
+//        _BRepLib__BuildCurves3d__TopoDS_Shape(threadingWire2)
+
+        threadingWire1 = ref_TopoDS_Shape__BRepBuilderAPI_MakeWire__Shape threadingWire1
+        threadingWire2 = ref_TopoDS_Shape__BRepBuilderAPI_MakeWire__Shape threadingWire2
 
         _BRepLib__BuildCurves3d__TopoDS_Shape(threadingWire1)
         _BRepLib__BuildCurves3d__TopoDS_Shape(threadingWire2)
@@ -174,10 +189,10 @@ class BottleTest {
         _TopoDS_Builder__Add__resTopoDS_Shape_toAddTopoDS_Shape(aBuilder, aRes, myBody)
         _TopoDS_Builder__Add__resTopoDS_Shape_toAddTopoDS_Shape(aBuilder, aRes, myThreading)
 
-        try (Arena arena = Arena.ofConfined()) {
-            MemorySegment t = arena.allocateFrom('Test.png')
-            dumpShape(myBody, 512, 512, t)
-        }
+//        try (Arena arena = Arena.ofConfined()) {
+//            MemorySegment t = arena.allocateFrom('Test.png')
+//            dumpShape(myBody, 512, 512, t)
+//        }
 
         visualize(aRes)
     }
