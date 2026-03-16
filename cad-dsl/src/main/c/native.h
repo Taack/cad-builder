@@ -1,6 +1,20 @@
+/*
+Replacements from Cpp code to C header source:
+123456789012345
+ \{[^}]*[^ ]\}
+ *
+123456789012
+extern \"C\"
+
+*
+*
+
+),]*
 
 
-void* cMakeBottle(const double, const double, const double);
+
+*/
+
 int visualize(void*);
 
 #define gp_Dir2d void
@@ -25,41 +39,6 @@ int visualize(void*);
 #define Geom_Surface void
 #define BRepBuilderAPI_MakeShape void
 #define Standard_Real double
-
-gp_Dir2d *gp_dir_2d_new(void);
-gp_Ax2d *gp_ax_2d_new_pt_dir(const gp_Pnt2d *theP, const gp_Dir2d *theV);
-gp_Pnt *gp_pnt_new(const Standard_Real theXp, const Standard_Real theYp, const Standard_Real theZp);
-gp_Pnt2d *gp_pnt2d_new(const Standard_Real theXp, const Standard_Real theYp);
-gp_Vec *gp_vec_new(const Standard_Real theXp, const Standard_Real theYp, const Standard_Real theZp);
-gp_Vec2d *gp_vec2d_new(const Standard_Real theXp, const Standard_Real theYp);
-Standard_Real gp_pnt_x(gp_Pnt *pnt);
-Standard_Real gp_pnt_y(gp_Pnt *pnt);
-Standard_Real gp_pnt_z(gp_Pnt *pnt);
-Standard_Real gp_pnt2d_x(gp_Pnt2d *pnt);
-Standard_Real gp_pnt2d_y(gp_Pnt2d *pnt);
-Handle(Geom_TrimmedCurve)* gc_make_arc_of_circle(gp_Pnt *pnt1, gp_Pnt *pnt2, gp_Pnt *pnt3);
-Handle(Geom_TrimmedCurve)* gc_make_arc_of_circle_tan(gp_Pnt *pnt1, gp_Vec *v, gp_Pnt *pnt3);
-Handle(Geom_TrimmedCurve)* gc_make_segment(gp_Pnt *pnt1, gp_Pnt *pnt2);
-const TopoDS_Edge* brep_builderapi_make_edge(Handle(Geom_TrimmedCurve)* segment);
-TopoDS_Shape* brep_builderapi_make_shape_Shape(BRepBuilderAPI_MakeShape *shape);
-TopoDS_Edge *brep_builderapi_make_edge2(Handle(Geom2d_Curve) *curve, Handle(Geom_Surface) *surface);
-const TopoDS_Wire* brep_builderapi_make_wire_topo_ds_wire(TopoDS_Edge* e1, TopoDS_Edge* e2, TopoDS_Edge* e3);
-TopoDS_Wire *brep_builderapi_make_wire_topo_ds_wire2p(TopoDS_Edge* e1, TopoDS_Edge *e2);
-TopoDS_Wire *brep_builderapi_make_wire_topo_ds_wire4p(TopoDS_Edge* e1, TopoDS_Edge* e2, TopoDS_Edge* e3, TopoDS_Edge* e4);
-
-const TopoDS_Wire* brep_builderapi_make_wire_topo_ds_wire2(BRepBuilderAPI_MakeWire* make_wire);
-void brep_builderapi_wire_add(BRepBuilderAPI_MakeWire* mw, TopoDS_Wire* wire);
-const gp_Ax1* gp_ox(void);
-gp_Trsf* gp_trsf(void);
-void gp_trsf_set_mirror(gp_Trsf* trsf, gp_Ax1* ax1);
-BRepBuilderAPI_Transform* brep_builderapi_transform(const TopoDS_Wire* w, gp_Trsf* trsf);
-//const TopoDS_Shape* brep_builderapi_transform_shape(BRepBuilderAPI_Transform *b_rep_transform);
-TopoDS_Wire* topo_ds_wire(TopoDS_Shape* shape);
-TopoDS_Face* brep_builderapi_make_face_from_wire(TopoDS_Wire* wire);
-TopoDS_Face* brep_builderapi_make_face_from_face(TopoDS_Face* face);
-TopoDS_Face* brep_builderapi_make_face_from_plane(gp_Pln *plane);
-TopoDS_Shape* brep_primapi_make_prism(TopoDS_Face* face, gp_Vec* normal);
-
 #define BRepFilletAPI_MakeFillet void
 #define TopExp_Explorer void
 #define TopAbs_ShapeEnum int
@@ -87,165 +66,321 @@ TopoDS_Shape* brep_primapi_make_prism(TopoDS_Face* face, gp_Vec* normal);
 #define BRep_Builder void
 #define BRepPrimAPI_MakeBox void
 #define BRepPrimAPI_MakeShape void
-
-BRepFilletAPI_MakeFillet* brep_filletapi_make_fillet(TopoDS_Shape* body);
-
-TopExp_Explorer* top_exp_explorer(const TopoDS_Shape* S, int ToFind, int ToAvoid);
-
-bool top_exp_explorer_more(TopExp_Explorer* explorer);
-
-TopoDS_Shape* top_exp_explorer_current(TopExp_Explorer* explorer);
-
-TopoDS_Shape* top_exp_explorer_current_face(TopExp_Explorer* explorer);
-
-void top_exp_explorer_next(TopExp_Explorer* explorer);
-
-TopoDS_Edge* topo_ds_edge(TopoDS_Shape* shape);
-
-void brep_filletapi_make_fillet_add(BRepFilletAPI_MakeFillet* make_fillet, Standard_Real r, TopoDS_Edge* edge);
-
-//TopoDS_Shape* brep_filletapi_make_fillet_shape(BRepFilletAPI_MakeFillet* make_fillet);
-
-const gp_Dir* gp_dz(void);
-
-const gp_Ax2* gp_ax2(gp_Pnt* loc, gp_Dir* dir);
-
-BRepPrimAPI_MakeCylinder* brep_primapi_make_cylinder(const gp_Ax2* Axes, const Standard_Real R, const Standard_Real H);
-BRepPrimAPI_MakeBox *brep_primapi_make_box(const Standard_Real x, const Standard_Real y,
-                                                                const Standard_Real z);
-TopoDS_Shape* brep_algoapi_fuse(TopoDS_Shape* s1, TopoDS_Shape* s2);
-
-Handle(Geom_Surface)* brep_tool_surface(TopoDS_Face* face);
-
-int geom_surface_is_geom_plane(Handle(Geom_Surface)*surface);
-
-Handle(Geom_Plane)* downcast_geom_plane(Handle(Geom_Surface)*surface);
-
-gp_Pnt* geom_plane_location(Handle(Geom_Plane)*plane);
-
-
-TopTools_ListOfShape* top_tools_list_of_shape(void);
-void top_tools_list_of_shape_append(TopTools_ListOfShape* l, TopoDS_Face* face);
-void top_tools_list_of_shape_append_edge(TopTools_ListOfShape* l, TopoDS_Edge* edge);
-
-#define BRepBuilderAPI_MakeEdge void
-
-void top_tools_list_of_shape_append_makeedge(TopTools_ListOfShape *l, BRepBuilderAPI_MakeEdge *makeEdge);
-BRepOffsetAPI_MakeThickSolid* brep_offset_api_make_thick_solid(void);
-
-void brep_offset_api_make_thick_solid_join(BRepOffsetAPI_MakeThickSolid* thick_solid, TopTools_ListOfShape* face_to_remove, TopoDS_Shape* shape, Standard_Real thickness, Standard_Real tol);
-
-//TopoDS_Shape* brep_offset_api_make_thick_solid_shape(BRepOffsetAPI_MakeThickSolid* thick_solid);
-
-Handle(Geom_CylindricalSurface)* geom_cylindrical_surface_create(const gp_Ax3* ax2, const Standard_Real radius);
-
-gp_Pnt2d *make_gp_pnt2d(const Standard_Real theXp, const Standard_Real theYp);
-Standard_Real gp_Pnt2d_distance(const gp_Pnt2d *theOne, const gp_Pnt2d *theOther);
-gp_Dir2d *make_gp_dir2d(const Standard_Real theXp, const Standard_Real theYp);
-Handle(Geom2d_Ellipse)* geom2d_ellipse_create(const gp_Ax2d* MajorAxis, const Standard_Real MajorRadius, const Standard_Real MinorRadius, const Standard_Boolean Sense);
-Handle(Geom2d_TrimmedCurve)* geom2d_trimmed_curve_create(const Handle(Geom2d_Curve)* C, const Standard_Real U1, const Standard_Real U2, const Standard_Boolean Sense, const Standard_Boolean theAdjustPeriodic);
-gp_Pnt2d* geom2d_ellipse_value(Handle(Geom2d_Ellipse)* geom2d_ellipse, const Standard_Real U);
-Handle(Geom2d_TrimmedCurve)* gce2d_make_segment(const gp_Pnt2d* P1, const gp_Pnt2d* P2);
-void brep_lib_build_curves_3d(TopoDS_Wire* w1);
-BRepOffsetAPI_ThruSections* brep_tool_thru_sections(const Standard_Boolean isSolid, const Standard_Boolean ruled, const Standard_Real pres3d);
-void brep_tool_thru_sections_add_wire(BRepOffsetAPI_ThruSections* thru_sections, const TopoDS_Wire* w);
-void brep_tool_thru_sections_check_compatibility(BRepOffsetAPI_ThruSections* thru_sections, const Standard_Boolean b);
-//TopoDS_Shape* brep_tool_thru_sections_shape(BRepOffsetAPI_ThruSections* thru_sections);
-TopoDS_Compound* topods_compound_create(void);
-BRep_Builder* brep_builder_create(void);
-void brep_builder_make_compound(BRep_Builder* b, TopoDS_Compound* c);
-void brep_builder_add(BRep_Builder* b, TopoDS_Compound* c, TopoDS_Shape* s);
-TopoDS_Face* topods_face_new(void);
-void topods_shape_assignment_operator(TopoDS_Shape** left, TopoDS_Shape* right);
-
 #define Standard_Integer int
-
-int dumpShape(const TopoDS_Shape* shape, const Standard_Integer width, const Standard_Integer height,
-  const char* fileName);
-
-TopoDS_Shape* make_hole(const TopoDS_Shape* shape, const gp_Ax1* ax1, const Standard_Real Radius, const Standard_Real PFrom, const Standard_Real PTo);
-TopoDS_Shape* make_hole_blind(const TopoDS_Shape* shape, const gp_Ax1* ax1, const Standard_Real Radius, const Standard_Real Length);
-
-gp_Ax1* gp_ax1_new(const gp_Pnt *theP, const gp_Dir *theV);
-
-gp_Dir* gp_dir_new(const Standard_Real theXv, const Standard_Real theYv, const Standard_Real theZv);
-gp_Dir2d* gp_dir2d_new(const Standard_Real theXv, const Standard_Real theYv);
-
-gp_Dir* gp_dir_normal_to_face(const TopoDS_Face* aCurrentFace);
-
-gp_Pnt* gp_pnt_center_of_mass(const TopoDS_Shape* myShape);
-
-Standard_Real gp_dir_x(gp_Dir *dir);
-Standard_Real gp_dir_y(gp_Dir *dir);
-Standard_Real gp_dir_z(gp_Pnt *dir);
-Standard_Real gp_dir2d_x(gp_Dir2d *dir);
-Standard_Real gp_dir2d_y(gp_Dir2d *dir);
-
-TopoDS_Shape* brep_builderapi_make_shere(const gp_Ax2* origin, const Standard_Real radius, const Standard_Real angle1, const Standard_Real angle2);
-TopoDS_Shape* brep_builderapi_make_cylinder(const gp_Ax2* origin, const Standard_Real radius, const Standard_Real height);
-gp_Trsf* gp_trsf_new();
-void gp_trsf_set_translation(gp_Trsf* gp_trsf, const gp_Vec* translation);
-TopoDS_Shape* brep_builderapi_transform_shape(const TopoDS_Shape* shape, const gp_Trsf* gp_trsf, const Standard_Boolean theCopyGeom);
-TopoDS_Shape* brep_algoapi_cut(TopoDS_Shape* result, const TopoDS_Shape* cutter);
-TopoDS_Shape* brep_primapi_make_thorus(const gp_Ax2* origin, const Standard_Real radius1, const Standard_Real radius2);
-gp_Ax2* gp_ax2_dz(void);
-void analyze(const TopoDS_Shape* myShape);
-
+#define BRepBuilderAPI_MakeEdge void
 #define TopTools_ListOfShape void
+#define BRepBuilderAPI_MakeEdge void
+#define gp_Circ2d void
+#define Geom2d_Circle void
+#define Geom2dAPI_InterCurveCurve void
+#define Geom2d_Geometry void
+#define Geom2d_Conic void
+#define TopoDS_Builder void
+#define ShapeExtend_WireData void
 
-//TopTools_ListOfShape* toptools_listofshape_new(void);
-//void toptools_listofshape_append(TopTools_ListOfShape* ls, const TopoDS_Shape* myShape);
+/*
 
-TopoDS_Shape *brep_algoapi_cut_ds_shape(TopoDS_Shape* result, TopoDS_Shape* tool);
+    2D
+
+*/
+
+gp_Pnt2d *new_gp_Pnt2d__x_y(const Standard_Real theXp, const Standard_Real theYp);
+
+gp_Pnt2d *new_gp_Pnt2d__Geom2d_Curve__Value__u(Handle(Geom2d_Conic) *geom2d_conic, const Standard_Real U);
+
+gp_Pnt2d* new_gp_Pnt2d__Geom2d_TrimmedCurve__EndPoint(const Handle(Geom2d_TrimmedCurve)* curve);
+
+gp_Pnt2d* new_gp_Pnt2d__Geom2d_TrimmedCurve__StartPoint(const Handle(Geom2d_TrimmedCurve)* curve);
+
+gp_Vec2d *new_gp_Vec2d__x_y(const Standard_Real theXp, const Standard_Real theYp);
+
+gp_Ax2d *new_gp_Ax2d(void);
+
+gp_Ax2d *new_gp_Ax2d__pt_dir(const gp_Pnt2d *theP, const gp_Dir2d *theV);
+
+gp_Dir2d *new_gp_Dir2d(void);
+
+gp_Dir2d *new_gp_Dir2d__x_y(const Standard_Real theXp, const Standard_Real theYp);
+
+gp_Circ2d* new_gp_Circ2d__ax2d_r(gp_Ax2d *ax2d, Standard_Real theRadius);
+
+Standard_Real gp_Pnt2d__Distance__p1_p2(const gp_Pnt2d *theOne, const gp_Pnt2d *theOther);
+
+Standard_Real gp_Pnt2d__X(gp_Pnt2d *pnt);
+
+Standard_Real gp_Pnt2d__Y(gp_Pnt2d *pnt);
+
+
+Standard_Real gp_Dir2d__X(gp_Dir2d *dir);
+
+Standard_Real gp_Dir2d__Y(gp_Dir2d *dir);
+
+Handle(Geom2d_Ellipse) *handle_Geom2d_Ellipse__a2_majorRadius_minorRadius_sense(const gp_Ax2d *MajorAxis, const Standard_Real MajorRadius,
+                                                         const Standard_Real MinorRadius,
+                                                         const Standard_Boolean Sense);
+
+Handle(Geom2d_TrimmedCurve) *handle_Geom2d_TrimmedCurve__curve_u1_u2(const Handle(Geom2d_Curve) *C,
+                                                                    const Standard_Real U1, const Standard_Real U2,
+                                                                    const Standard_Boolean Sense,
+                                                                    const Standard_Boolean theAdjustPeriodic);
+
+Handle(Geom2d_TrimmedCurve) *handle_Geom2d_TrimmedCurve__GCE2d_MakeSegment__p1_p2(const gp_Pnt2d *P1, const gp_Pnt2d *P2);
+
+Handle(Geom2d_TrimmedCurve)* handle_Geom2d_TrimmedCurve__GCE2d_MakeArcOfCircle__cir2d_p1_p2(gp_Circ2d* circ2d, gp_Pnt2d* p1, gp_Pnt2d* p2);
+
+Handle(Geom2d_TrimmedCurve)* handle_Geom2d_TrimmedCurve__GCE2d_MakeArcOfCircle__cir2d_ang1_ang2(gp_Circ2d* circ2d, Standard_Real angle1, Standard_Real angle2);
+
+Handle(Geom2d_TrimmedCurve)* handle_Geom2d_TrimmedCurve__GCE2d_MakeArcOfCircle__p1_p2_p3(gp_Pnt2d* pt1, gp_Pnt2d* pt2, gp_Pnt2d* pt3);
+
+Handle(Geom2d_TrimmedCurve)* handle_Geom2d_TrimmedCurve__GCE2d_MakeArcOfCircle__cir2d_p1_ang(gp_Circ2d* circ2d, gp_Pnt2d* pt1, Standard_Real angle1);
+
+void _Geom2d_TrimmedCurve__Mirror__ax2(Handle(Geom2d_TrimmedCurve)* curve, gp_Ax2d* ax2d);
+
+void _Geom2d_TrimmedCurve__Reverse(Handle(Geom2d_TrimmedCurve)* curve);
+
+Handle(Geom2d_Circle)* handle_Geom2d_Circle__GCE2d_MakeCircle__cir2d(gp_Circ2d *cir2d);
+
+Geom2dAPI_InterCurveCurve* new_Geom2dAPI_InterCurveCurve__curve1_curve2(const Handle(Geom2d_Curve)* C1, const Handle(Geom2d_Curve)* C2);
+
+Standard_Integer int_Geom2dAPI_InterCurveCurve__NbPoints(const Geom2dAPI_InterCurveCurve *inter_curve_curve);
+
+gp_Pnt2d* new_gp_Pnt2d__Geom2dAPI_InterCurveCurve__Point__i(const Geom2dAPI_InterCurveCurve *inter_curve_curve, const Standard_Integer index);
+
+ Handle(Geom2d_Geometry)*  handle_Geom2d_Geometry__Copy(const Handle(Geom2d_Geometry) *toCpy);
+
+ Handle(Geom_Curve)* handle_Geom_Curve__GeomAPI_To3d__curve_plan(Handle(Geom2d_Curve) *curve, gp_Pln *plan);
+
+/***********************************************************************************************************************
+
+    3D
+
+***********************************************************************************************************************/
+
+gp_Pnt * new_gp_Pnt__x_y_z(const Standard_Real theXp, const Standard_Real theYp, const Standard_Real theZp);
+
+void delete_gp_Pnt(gp_Pnt *pnt);
+
+gp_Vec *new_gp_Vec__x_y_z(const Standard_Real theXp, const Standard_Real theYp, const Standard_Real theZp);
+
+void delete_gp_Vec(gp_Vec *pnt);
+
+Handle(Geom_TrimmedCurve) *handle_Geom_TrimmedCurve__GC_MakeArcOfCircle_p1_p2_p3(gp_Pnt *pnt1, gp_Pnt *pnt2, gp_Pnt *pnt3);
+
+Handle(Geom_TrimmedCurve) *handle_Geom_TrimmedCurve__GC_MakeArcOfCircle_p1_vtangente_p2(gp_Pnt *pnt1, gp_Vec *tan, gp_Pnt *pnt3);
+
+void delete_handle_Geom_TrimmedCurve(Handle(Geom_TrimmedCurve)* ptr);
+
+Handle(Geom_TrimmedCurve) *handle_Geom_TrimmedCurve__GC_MakeSegment__p1_p2(gp_Pnt *pnt1, gp_Pnt *pnt2);
+
+const TopoDS_Edge *new_TopoDS_Edge__BRepBuilderAPI_MakeEdge__Geom_Curve(Handle(Geom_Curve) *segment);
+
+const TopoDS_Edge *new_TopoDS_Edge__BRepBuilderAPI_MakeEdge__Geom_Curve_Geom_Surface(Handle(Geom2d_Curve) *curve, const Handle(Geom_Surface) *surface);
+
+void delete_TopoDS_Edge(TopoDS_Edge *ptr);
+
+const BRepBuilderAPI_MakeEdge *new_BRepBuilderAPI_MakeEdge__ptFrom_ptTo(gp_Pnt* from, gp_Pnt* to);
+
+const BRepBuilderAPI_MakeEdge *new_BRepBuilderAPI_MakeEdge__Geom_Curve(Handle(Geom_Curve)* curve);
+
+const BRepBuilderAPI_MakeWire * new_BRepBuilderAPI_MakeWire(void);
+
+const BRepBuilderAPI_MakeWire *new_BRepBuilderAPI_MakeWire__BRepBuilderAPI_MakeEdge(BRepBuilderAPI_MakeEdge* edge);
+
+void _BRepBuilderAPI_MakeWire__Add__BRepBuilderAPI_MakeEdge(BRepBuilderAPI_MakeWire* wireMaker, BRepBuilderAPI_MakeEdge* edge);
+
+const TopoDS_Wire * new_TopoDS_Wire__BRepBuilderAPI_MakeWire__TopoDS_Edge1_e2_e3(TopoDS_Edge* e1, TopoDS_Edge* e2, TopoDS_Edge* e3);
+
+const TopoDS_Wire *new_TopoDS_Wire__BRepBuilderAPI_MakeWire__TopoDS_Edge1_e2(TopoDS_Edge* e1, TopoDS_Edge* e2);
+
+const TopoDS_Wire *new_TopoDS_Wire__BRepBuilderAPI_MakeWire__TopoDS_Edge1_e2_e3_e4(TopoDS_Edge* e1, TopoDS_Edge* e2, TopoDS_Edge* e3, TopoDS_Edge* e4);
+
+const TopoDS_Wire *new_TopoDS_Wire__BRepBuilderAPI_MakeWire__Wire(BRepBuilderAPI_MakeWire *make_wire);
+
+const TopoDS_Wire *ref_TopoDS_Wire__BRepBuilderAPI_MakeWire__Wire(BRepBuilderAPI_MakeWire *make_wire);
+
+const TopoDS_Shape *ref_TopoDS_Shape__BRepBuilderAPI_MakeWire__Shape(BRepBuilderAPI_MakeWire *make_wire);
+
+void _BRepBuilderAPI_MakeWire__Add__TopoDS_Wire(BRepBuilderAPI_MakeWire *mw, TopoDS_Wire *wire);
+
+void _BRepBuilderAPI_MakeWire__Add__BRepBuilderAPI_MakeWire(BRepBuilderAPI_MakeWire *mw, BRepBuilderAPI_MakeWire *mw2);
+
+void _BRepBuilderAPI_MakeWire__Add__TopoDS_Edge(BRepBuilderAPI_MakeWire *mw, TopoDS_Edge *edge);
+
+void _BRepBuilderAPI_MakeWire__Add__TopTools_ListOfShape(BRepBuilderAPI_MakeWire *mw, TopTools_ListOfShape *listOfShape);
+
+const gp_Ax1 *gp__OX(void);
+
+gp_Trsf *new_gp_Trsf(void);
+
+void _gp_Trsf__SetMirror__gp_Ax1(gp_Trsf *trsf, gp_Ax1 *ax1);
+
+void _gp_Trsf__SetTranslation__gp_Vec(gp_Trsf *gp_trsf, const gp_Vec *translation);
+
+BRepBuilderAPI_Transform *new_BRepBuilderAPI_Transform__TopoDS_Shape_gp_Trsf(const TopoDS_Shape *w, gp_Trsf *trsf);
+
+TopoDS_Wire *ref_TopoDS__Wire__TopoDS_Shape(TopoDS_Shape *shape);
+
+void _TopoDS__Shape__Reverse(TopoDS_Shape *shape);
+
+TopoDS_Face *new_TopoDS_Face__BRepBuilderAPI_MakeFace__TopoDS_Wire(TopoDS_Wire *wire);
+
+TopoDS_Face *new_TopoDS_Face__BRepBuilderAPI_MakeFace__gp_Pln(gp_Pln *plane);
+
+TopoDS_Face *new_TopoDS_Face(void);
+
+TopoDS_Shape *new_TopoDS_Shape__BRepPrimAPI_MakePrism__TopoDS_Face_gp_Vec(TopoDS_Face *face, gp_Vec *normal);
+
+BRepFilletAPI_MakeFillet * new_BRepFilletAPI_MakeFillet__TopoDS_Shape(TopoDS_Shape *body);
+
+TopAbs_ShapeEnum TopAbs_ShapeEnumFromOrdinal(int ordinal);
+
+TopExp_Explorer *new_TopExp_Explorer__TopoDS_Shape_ToFind_ToAvoid(const TopoDS_Shape *S, const /*TopAbs_ShapeEnum*/int ToFind,
+                                             const int ToAvoid);
+
+bool _TopExp_Explorer__More(TopExp_Explorer *explorer);
+
+TopoDS_Shape *new_TopoDS_Shape__TopExp_Explorer__Current(TopExp_Explorer *explorer);
+
+TopoDS_Face * new_TopoDS_Face__TopExp_Explorer__Current(TopExp_Explorer *explorer);
+
+void _TopExp_Explorer__Next(TopExp_Explorer *explorer);
+
+TopoDS_Edge *ref_TopoDS_Edge__TopoDS_Shape(TopoDS_Shape *shape);
+
+void _BRepFilletAPI_MakeFillet__Add__radius_TopoDS_Edge(BRepFilletAPI_MakeFillet *make_fillet, Standard_Real r,
+                                               TopoDS_Edge *edge);
+
+const gp_Dir *new_gp_Dir_DZ(void);
+
+gp_Dir *new_gp_Dir__x_y_z(const Standard_Real theXv, const Standard_Real theYv, const Standard_Real theZv);
+
+gp_Dir *new_gp_Dir__Normal__TopoDS_Face(const TopoDS_Face *aCurrentFace);
+
+
+const gp_Ax2 * new_gp_Ax2__gp_Pnt_gp_Dir(gp_Pnt *loc, gp_Dir *dir);
+
+const gp_Ax2 *new_gp_Ax2_DZ(void);
+
+BRepPrimAPI_MakeCylinder *new_BRepPrimAPI_MakeCylinder__gp_Ax2_r_h(const gp_Ax2 *Axes, const Standard_Real R,
+                                                                const Standard_Real H);
+
+BRepPrimAPI_MakeBox *new_BRepPrimAPI_MakeBox__x_y_z(const Standard_Real x, const Standard_Real y,
+                                                      const Standard_Real z);
+
+Handle(Geom_Surface) *handle_Geom_Surface__TopoDS_Face(TopoDS_Face *face);
+
+Standard_Integer int_Geom_Surface__is__Geom_Plane(Handle(Geom_Surface) *surface);
+
+Handle(Geom_Plane) *handle_Geom_Plane__handle_Geom_Surface(Handle(Geom_Surface) *surface);
+
+gp_Pnt *new_gp_Pnt__Geom_Plane(Handle(Geom_Plane) *plane);
+
+TopTools_ListOfShape *new_TopTools_ListOfShape(void);
+
+void delete_TopTools_ListOfShape(TopTools_ListOfShape* ptr);
+
+void _TopTools_ListOfShape__Append__TopoDS_Shape(TopTools_ListOfShape *l, TopoDS_Shape *face);
+
+BRepOffsetAPI_MakeThickSolid *new_BRepOffsetAPI_MakeThickSolid(void);
+
+void _BRepOffsetAPI_MakeThickSolid__MakeThickSolidByJoin__TopoDS_Shape_TopTools_ListOfShape_thickness_tol(
+                                                      BRepOffsetAPI_MakeThickSolid *thick_solid, TopoDS_Shape *shape,
+                                                      const TopTools_ListOfShape *face_to_remove,
+                                                      Standard_Real thickness, Standard_Real tol);
+
+Handle(Geom_CylindricalSurface) *handle_Geom_CylindricalSurface__ax2_radius(
+    const gp_Ax3 *ax2, const Standard_Real radius);
+
+void _BRepLib__BuildCurves3d__TopoDS_Shape(const TopoDS_Shape *w1);
+
+BRepOffsetAPI_ThruSections *new_BRepOffsetAPI_ThruSections__isSolid_ruled_pres3d(const Standard_Boolean isSolid,
+                                                               const Standard_Boolean ruled,
+                                                               const Standard_Real pres3d);
+
+void _BRepOffsetAPI_ThruSections__AddWire__TopoDS_Wire(BRepOffsetAPI_ThruSections *thru_sections, const TopoDS_Wire *w);
+
+void _BRepOffsetAPI_ThruSections__CheckCompatibility__bool(BRepOffsetAPI_ThruSections *thru_sections,
+                                                            const Standard_Boolean b);
+
+TopoDS_Compound *new_TopoDS_Compound(void);
+
+BRep_Builder *new_BRep_Builder(void);
+
+void _TopoDS_Builder__Add__resTopoDS_Shape_toAddTopoDS_Shape(TopoDS_Builder *builder, TopoDS_Shape *inThis, TopoDS_Shape *toAdd);
+
+void _TopoDS_Builder__MakeCompound__TopoDS_Compound(TopoDS_Builder *b, TopoDS_Compound *c);
+
+gp_Ax1 *new_gp_Ax1__p_dir(const gp_Pnt *theP, const gp_Dir *theV);
+
+gp_Pnt *new_gp_Pnt__CentreOfMass__TopoDS_Shape(const TopoDS_Shape *myShape);
+
+Standard_Real gp_Pnt__X(gp_Pnt *pnt);
+
+Standard_Real gp_Pnt__Y(gp_Pnt *pnt);
+
+Standard_Real gp_Pnt__Z(gp_Pnt *pnt);
+
+Standard_Real gp_Dir__X(gp_Dir *dir);
+
+Standard_Real gp_Dir__Y(gp_Dir *dir);
+
+Standard_Real gp_Dir__Z(gp_Pnt *dir);
+
+TopoDS_Shape *new_TopoDS_Shape__BRepPrimAPI_MakeSphere__gp_Ax2_radius_a1_a2(const gp_Ax2 *origin, const Standard_Real radius,
+                                                    const Standard_Real angle1, const Standard_Real angle2);
+
+TopoDS_Shape *new_TopoDS_Shape__BRepPrimAPI_MakeCylinder__gp_Ax2_radius_height(const gp_Ax2 *origin, const Standard_Real radius,
+                                                       const Standard_Real height);
+
+TopoDS_Shape *new_TopoDS_Shape__BRepBuilderAPI_Transform__Shape__gp_Trsf_bCopy(const TopoDS_Shape *shape, const gp_Trsf *gp_trsf,
+                                                         const Standard_Boolean theCopyGeom);
+
+
+TopoDS_Shape *new_TopoDS_Shape__BRepPrimAPI_MakeTorus__gp_Ax2_r1_r2(const gp_Ax2 *origin, const Standard_Real radius1,
+                                                  const Standard_Real radius2);
+
+
+TopoDS_Shape *new_TopoDS_Shape__BRepPrimAPI_MakeRevol__TopoDS_Face_gp_Ax1(TopoDS_Face* face, gp_Ax1* ax1);
+
+gp_Pln* new_gp_Pln__x_y_z_d(const Standard_Real x, const Standard_Real y, const Standard_Real z, const Standard_Real d);
+
+gp_Pln* new_gp_Pln__pt_dir(const gp_Pnt* pt, const gp_Dir* dir);
+
+TopoDS_Shape* new_TopoDS_Shape__Shape__BRepBuilderAPI_MakeShape(BRepBuilderAPI_MakeShape *shape);
+
+ShapeExtend_WireData* new_ShapeExtend_WireData(void);
+
+void _ShapeExtend_WireData__Add__TopoDS_Edge(ShapeExtend_WireData *data, const TopoDS_Edge *edge, const Standard_Integer atnum);
+
+void _ShapeExtend_WireData__Add__TopoDS_Wire(ShapeExtend_WireData *data, const TopoDS_Wire *edge, const Standard_Integer atnum);
+
+Handle(TopoDS_Wire)* util_ShapeFix_Wire__Load__ShapeExtend_WireData(ShapeExtend_WireData *data);
+
+/*
+
+Composed
+
+*/
+TopoDS_Shape *new_TopoDS_Shape__bBRepAlgoAPI_Cut__s1_s2(TopoDS_Shape *result, TopoDS_Shape *tool);
+
+TopoDS_Shape *new_TopoDS_Shape__brep_algoapi_fuse__s1_s2(TopoDS_Shape *s1, TopoDS_Shape *s2);
+
+TopoDS_Shape *new_TopoDS_Shape__BRepAlgoAPI_Cut__TopoDS_Shape_TopTools_ListOfShape(TopoDS_Shape *result, TopTools_ListOfShape *aLT);
+
+
+TopoDS_Shape *ptrTopoDS_Shape__BRepFeat_MakeCylindricalHole__Perform__TopoDS_Shape_gp_Ax1_r_ptFrom_ptTo(const TopoDS_Shape *shape, const gp_Ax1 *ax1, const Standard_Real Radius,
+                                   const Standard_Real PFrom, const Standard_Real PTo);
+
+TopoDS_Shape *ptrTopoDS_Shape__BRepFeat_MakeCylindricalHole__Perform__TopoDS_Shape_gp_Ax1_r_l(const TopoDS_Shape *shape, const gp_Ax1 *ax1, const Standard_Real Radius,
+                                         const Standard_Real Length);
+
+
+bool dumpShape(const TopoDS_Shape *shape, const Standard_Integer width, const Standard_Integer height,
+                          const char *fileName);
 
 void write_step(const TopoDS_Shape* shape, const char *fileName);
 
 void write_stl(const TopoDS_Shape* shape, const char *fileName);
 
-#define BRepBuilderAPI_MakeEdge void
+void analyze(const TopoDS_Shape *myShape);
 
-const BRepBuilderAPI_MakeEdge *brep_builderapi_make_edge_from_pts(gp_Pnt* from, gp_Pnt* to);
-const BRepBuilderAPI_MakeEdge *brep_builderapi_make_edge_from_curve(Handle(Geom_Curve)* curve);
-const BRepBuilderAPI_MakeWire *brep_builderapi_makewire_new(void);
-const BRepBuilderAPI_MakeWire *brep_builderapi_makewire_new_edge(BRepBuilderAPI_MakeEdge* edge);
-void brep_builderapi_make_wire_add(BRepBuilderAPI_MakeWire* wireMaker, BRepBuilderAPI_MakeEdge* edge);
-
-TopoDS_Shape* brep_primapi_makerevol(TopoDS_Face* face, gp_Ax1* ax1);
-
-void brep_builderapi_wire_add_edge(BRepBuilderAPI_MakeWire* mw, TopoDS_Edge* edge);
-void brep_builderapi_wire_add_Listofshape(BRepBuilderAPI_MakeWire* mw, TopTools_ListOfShape* listOfShape);
-
-
-void gp_pnt_delete(gp_Pnt *pnt);
-void gp_vec_delete(gp_Vec *pnt);
-void brep_builderapi_delete_edge(TopoDS_Edge *ptr);
-void top_tools_list_of_shape_delete(TopTools_ListOfShape* ptr);
-
-void brep_builderapi_wire_add_makeedge(BRepBuilderAPI_MakeWire* mw, BRepBuilderAPI_MakeEdge* edge);
-TopoDS_Face *brep_builderapi_make_face_from_makewire(BRepBuilderAPI_MakeWire *wire);
-
-#define gp_Circ2d void
-#define Geom2d_Circle void
-#define Geom2dAPI_InterCurveCurve void
-#define Geom2d_Geometry void
-
-gp_Circ2d* gp_circ2d_new(gp_Ax2d *ax2d, Standard_Real theRadius);
-Handle(Geom2d_Circle)* gce2d_makecircle(gp_Circ2d *ptr);
-Geom2dAPI_InterCurveCurve* geom2dapi_intercurvecurve_new(const Handle(Geom2d_Curve)* C1, const Handle(Geom2d_Curve)* C2);
-Standard_Integer geom2dapi_intercurvecurve_nbpoints(const Geom2dAPI_InterCurveCurve *inter_curve_curve);
-gp_Pnt2d* geom2dapi_intercurvecurve_point(const Geom2dAPI_InterCurveCurve *inter_curve_curve, const Standard_Integer index);
-Handle(Geom2d_Geometry)* geom2d_geometry_copy(const Handle(Geom2d_Geometry) *toCpy);
-Handle(Geom2d_TrimmedCurve)* gce2d_makearcofcircle(gp_Circ2d* circ2d, gp_Pnt2d* p1, gp_Pnt2d* p2);
-Handle(Geom2d_TrimmedCurve)* gce2d_makearcofcircle_from_angles(gp_Circ2d* circ2d, Standard_Real angle1, Standard_Real angle2);
-Handle(Geom2d_TrimmedCurve)* gce2d_makearcofcircle_from_points(gp_Pnt2d* pt1, gp_Pnt2d* pt2, gp_Pnt2d* pt3);
-Handle(Geom2d_TrimmedCurve)* gce2d_makearcofcircle_from_point_angle(gp_Circ2d* circ2d, gp_Pnt2d* pt1, Standard_Real angle1);
-void geom2d_trimmedcurve_mirror(Geom2d_TrimmedCurve* curve, gp_Ax2d* ax2d);
-void geom2d_trimmedcurve_reverse(Handle(Geom2d_TrimmedCurve)* curve);
-gp_Pnt2d* geom2d_trimmedcurve_endpoint(Geom2d_TrimmedCurve* curve);
-gp_Pnt2d* geom2d_trimmedcurve_startpoint(Geom2d_TrimmedCurve* curve);
-void brep_builderapi_wire_add_wire(BRepBuilderAPI_MakeWire *mw, BRepBuilderAPI_MakeWire *mw2);
-gp_Pln* plane_create(const Standard_Real x, const Standard_Real y, const Standard_Real z, const Standard_Real d);
-gp_Pln* plane_create_pt_dir(const gp_Pnt* pt, const gp_Dir* dir);
-void brep_builder_add_wire(BRep_Builder *builder, TopoDS_Face *aFace, TopoDS_Wire *aWire);
-
- Handle(Geom_Curve)* geomapi_2dto3d(Handle(Geom2d_Curve) *curve, gp_Pln *plan);
