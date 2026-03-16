@@ -389,4 +389,60 @@ class CadBuilder {
         currentShapeNative = new_TopoDS_Shape__Shape__BRepBuilderAPI_MakeShape(aSolidMaker)
         this as CadBuilder
     }
+
+    static MemorySegment cylindricalSurface(Vec pos, Vec direction, Number radius) {
+        def ax2 = new_gp_Ax2__gp_Pnt_gp_Dir(pos.toGpPnt(), direction.toGpDir())
+        handle_Geom_CylindricalSurface__ax2_radius(ax2, radius.toDouble())
+    }
+
+    static MemorySegment ellipse2dCurve(Vec2d pos, Vec2d direction, Number majorRadius, Number minorRadius) {
+        def anAx2d = new_gp_Ax2d__pt_dir(pos.toGpPnt2d(), direction.toGpDir2d())
+        handle_Geom2d_Ellipse__a2_majorRadius_minorRadius_sense(anAx2d, majorRadius.toDouble(), minorRadius.toDouble(), 1)
+    }
+
+    static MemorySegment trimmedCurve(MemorySegment geom2dCurve, Number from, Number to) {
+        handle_Geom2d_TrimmedCurve__curve_u1_u2(geom2dCurve, from.toDouble(), to.doubleValue(), 1, 1)
+    }
+
+    static MemorySegment trimmedCurveSegment(MemorySegment geom2dCurve, Number from, Number to) {
+        def p1 = new_gp_Pnt2d__Geom2d_Curve__Value__u(geom2dCurve, 0.0d)
+        def p2 = new_gp_Pnt2d__Geom2d_Curve__Value__u(geom2dCurve, Math.PI)
+        handle_Geom2d_TrimmedCurve__GCE2d_MakeSegment__p1_p2(p1, p2)
+    }
+
+    static MemorySegment edgeFrom(MemorySegment surface, MemorySegment trimmedCurve) {
+        new_TopoDS_Edge__BRepBuilderAPI_MakeEdge__Geom_Curve_Geom_Surface(surface, trimmedCurve)
+    }
+
+    List<MemorySegment> threadingWires = []
+
+    CadBuilder threadingWireFrom(MemorySegment... edges) {
+        def threadingWire = new_BRepBuilderAPI_MakeWire()
+        for (MemorySegment it : edges) {
+            _BRepBuilderAPI_MakeWire__Add__TopoDS_Edge(threadingWire, it)
+        }
+        threadingWire = ref_TopoDS_Shape__BRepBuilderAPI_MakeWire__Shape(threadingWire)
+        _BRepLib__BuildCurves3d__TopoDS_Shape(threadingWire)
+        threadingWires.add threadingWire
+        this as CadBuilder
+    }
+
+    CadBuilder applyThreading() {
+        if (!threadingWires.empty) {
+            def aTool = new_BRepOffsetAPI_ThruSections__isSolid_ruled_pres3d(1, 0, 1.0e-06d)
+            threadingWires.each {
+                _BRepOffsetAPI_ThruSections__AddWire__TopoDS_Wire(aTool, it)
+            }
+            _BRepOffsetAPI_ThruSections__CheckCompatibility__bool(aTool, 0)
+
+            def myThreading = new_TopoDS_Shape__Shape__BRepBuilderAPI_MakeShape(aTool)
+            def aRes = new_TopoDS_Compound()
+            def aBuilder = new_BRep_Builder()
+            _TopoDS_Builder__MakeCompound__TopoDS_Compound(aBuilder, aRes)
+            _TopoDS_Builder__Add__resTopoDS_Shape_toAddTopoDS_Shape(aBuilder, aRes, currentShapeNative)
+            _TopoDS_Builder__Add__resTopoDS_Shape_toAddTopoDS_Shape(aBuilder, aRes, myThreading)
+            currentShapeNative = aRes
+        }
+        this as CadBuilder
+    }
 }
