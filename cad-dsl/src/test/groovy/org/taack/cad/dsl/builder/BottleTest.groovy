@@ -18,6 +18,9 @@ class BottleTest {
         double myHeight = 70.0
         double myThickness = 30.0
 
+        double myNeckRadius = myThickness / 4
+        double myNeckHeight = myHeight / 10
+
         Vec v1 = new Vec(-myWidth / 2, 0, 0)
         Vec v11 = new Vec(0, -myThickness / 4, 0)
         Vec v2 = v1 + v11
@@ -29,7 +32,7 @@ class BottleTest {
                 .edge(v2)
                 .arc(v4, v3)
                 .edge(v5).toWire().mirror(new Vec(), new Vec(1,0,0)).toFace().prism(new Vec(myHeight))
-                .topZ().fillet(myThickness / 12d).toShape()
+                .topZ().fillet(myThickness / 12d).fuse(cb().cylinder(myNeckRadius, myNeckHeight)).toShape()
 
 
 //        def aPnt1 = new_gp_Pnt__x_y_z(-myWidth / 2d, 0, 0)
@@ -88,14 +91,12 @@ class BottleTest {
         def neckLocation = new_gp_Pnt__x_y_z(0d, 0d, myHeight)
         def neckAxis = new_gp_Dir_DZ()
         def neckAx2 = new_gp_Ax2__gp_Pnt_gp_Dir(neckLocation, neckAxis)
-
-        double myNeckRadius = myThickness / 4
-        double myNeckHeight = myHeight / 10
-
-        def MKCylinder = new_BRepPrimAPI_MakeCylinder__gp_Ax2_r_h(neckAx2, myNeckRadius, myNeckHeight)
-        def myNeck = new_TopoDS_Shape__Shape__BRepBuilderAPI_MakeShape(MKCylinder)
-
-        myBody = new_TopoDS_Shape__brep_algoapi_fuse__s1_s2(myBody, myNeck)
+//
+//
+//        def MKCylinder = new_BRepPrimAPI_MakeCylinder__gp_Ax2_r_h(neckAx2, myNeckRadius, myNeckHeight)
+//        def myNeck = new_TopoDS_Shape__Shape__BRepBuilderAPI_MakeShape(MKCylinder)
+//
+//        myBody = new_TopoDS_Shape__brep_algoapi_fuse__s1_s2(myBody, myNeck)
 
         println "Body: Create a Hollowed Solid"
         double zMax = -1

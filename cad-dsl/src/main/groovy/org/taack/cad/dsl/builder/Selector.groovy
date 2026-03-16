@@ -29,5 +29,5 @@ trait Selector {
         else ref_TopoDS_Shape__BRepBuilderAPI_MakeWire__Shape(addCurrentWireNative())
     }
 
-    Vec currentLoc
+    Vec currentLoc = new Vec()
 }

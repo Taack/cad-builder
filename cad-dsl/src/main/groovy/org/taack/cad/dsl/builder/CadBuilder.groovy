@@ -16,19 +16,22 @@ class CadBuilder extends Face {
         new CadBuilder()
     }
 
-    private Vec loc = new Vec(0.0, 0.0, 0.0)
     private final MemorySegment trsf = new_gp_Trsf()
 
     CadBuilder move(Vec p) {
-        loc = p
-        _gp_Trsf__SetTranslation__gp_Vec(trsf, loc.toGpVec())
+        currentLoc = p
+        _gp_Trsf__SetTranslation__gp_Vec(trsf, currentLoc.toGpVec())
         currentShapeNative = new_TopoDS_Shape__BRepBuilderAPI_Transform__Shape__gp_Trsf_bCopy(currentShapeNative, trsf, 1)
         this
     }
 
     CadBuilder fuse(CadBuilder other) {
-        def res = new_TopoDS_Shape__brep_algoapi_fuse__s1_s2(currentShapeNative, other.currentShapeNative)
-        currentShapeNative = res
+
+        println "currentLoc = $currentLoc"
+        def trsf = new_gp_Trsf()
+        _gp_Trsf__SetTranslation__gp_Vec(trsf, currentLoc.toGpVec())
+        other.currentShapeNative = new_TopoDS_Shape__Shape__BRepBuilderAPI_MakeShape new_BRepBuilderAPI_Transform__TopoDS_Shape_gp_Trsf(other.currentShapeNative, trsf)
+        currentShapeNative = new_TopoDS_Shape__brep_algoapi_fuse__s1_s2(currentShapeNative, other.currentShapeNative)
         this
     }
 
@@ -43,14 +46,19 @@ class CadBuilder extends Face {
     }
 
     CadBuilder sphere(BigDecimal radius, Vec dir = new Vec(1.0), BigDecimal angle1 = null, BigDecimal angle2 = null) {
-        def ax2 = new_gp_Ax2__gp_Pnt_gp_Dir(loc.toGpPnt(), dir.toGpDir())
+        def ax2 = new_gp_Ax2__gp_Pnt_gp_Dir(currentLoc.toGpPnt(), dir.toGpDir())
         currentShapeNative = new_TopoDS_Shape__BRepPrimAPI_MakeSphere__gp_Ax2_radius_a1_a2(ax2, radius.toDouble(), angle1?.toDouble(), angle2?.toDouble())
         return this
     }
 
-    CadBuilder cylinder(BigDecimal radius, BigDecimal height, Vec dir = new Vec(1.0)) {
-        def ax2 = new_gp_Ax2__gp_Pnt_gp_Dir(loc.toGpPnt(), dir.toGpDir())
-        currentShapeNative = new_TopoDS_Shape__BRepPrimAPI_MakeCylinder__gp_Ax2_radius_height(ax2, radius.toDouble(), height.toDouble())
+    CadBuilder cylinder(Number radius, Number height, Vec dir = new Vec(1)) {
+
+        println "cyl : ${currentLoc}"
+
+        def ax2 = new_gp_Ax2__gp_Pnt_gp_Dir(currentLoc.toGpPnt(), dir.toGpDir())
+        def MKCylinder = new_BRepPrimAPI_MakeCylinder__gp_Ax2_r_h(ax2, radius.toDouble(), height.toDouble())
+        currentShapeNative = new_TopoDS_Shape__Shape__BRepBuilderAPI_MakeShape(MKCylinder)
+
         return this
     }
 
@@ -60,7 +68,7 @@ class CadBuilder extends Face {
     }
 
     CadBuilder torus(BigDecimal outerRadius, BigDecimal innerRadius, Vec dir = new Vec(1.0)) {
-        def ax2 = new_gp_Ax2__gp_Pnt_gp_Dir(loc.toGpPnt(), dir.toGpDir())
+        def ax2 = new_gp_Ax2__gp_Pnt_gp_Dir(currentLoc.toGpPnt(), dir.toGpDir())
         currentShapeNative = new_TopoDS_Shape__BRepPrimAPI_MakeTorus__gp_Ax2_r1_r2(ax2, outerRadius.toDouble(), innerRadius.toDouble())
         this
     }

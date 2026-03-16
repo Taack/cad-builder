@@ -110,7 +110,7 @@ class Edge extends Vertice implements Selector {
  * @param operations
  * @return
  */
-    CadBuilder center(@DelegatesTo(value = Edge, strategy = Closure.DELEGATE_FIRST) Closure operations) {
+    CadBuilder center(@DelegatesTo(value = CadBuilder, strategy = Closure.DELEGATE_FIRST) Closure operations) {
         clockwiseLoc = [Vec.fromAPnt(new_gp_Pnt__CentreOfMass__TopoDS_Shape(currentFaceNative))]
         operations.delegate = this
         operations.call()
