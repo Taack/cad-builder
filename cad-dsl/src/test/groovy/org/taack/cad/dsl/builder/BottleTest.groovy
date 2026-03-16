@@ -28,7 +28,8 @@ class BottleTest {
         MemorySegment myBody = cb().from(v1)
                 .edge(v2)
                 .arc(v4, v3)
-                .edge(v5).toWire().mirror(new Vec(), new Vec(1,0,0)).toFace().prism(new Vec(myHeight)).toShape()
+                .edge(v5).toWire().mirror(new Vec(), new Vec(1,0,0)).toFace().prism(new Vec(myHeight))
+                .topZ().fillet(myThickness / 12d).toShape()
 
 
 //        def aPnt1 = new_gp_Pnt__x_y_z(-myWidth / 2d, 0, 0)
@@ -72,16 +73,16 @@ class BottleTest {
         visualize(myBody)
 
         println "Body: Apply Fillets"
-        def mkFillet = new_BRepFilletAPI_MakeFillet__TopoDS_Shape(myBody)
-        def anEdgeExplorer = new_TopExp_Explorer__TopoDS_Shape_ToFind_ToAvoid(myBody, ShapeEnum.TopAbs_EDGE.index, ShapeEnum.TopAbs_SHAPE.index)
-        while (_TopExp_Explorer__More(anEdgeExplorer)) {
-            def anEdge = ref_TopoDS_Edge__TopoDS_Shape(new_TopoDS_Shape__TopExp_Explorer__Current(anEdgeExplorer))
-            //Add edge to fillet algorithm
-            _BRepFilletAPI_MakeFillet__Add__radius_TopoDS_Edge(mkFillet, myThickness / 12d, anEdge)
-            _TopExp_Explorer__Next(anEdgeExplorer)
-        }
-
-        myBody = new_TopoDS_Shape__Shape__BRepBuilderAPI_MakeShape(mkFillet)
+//        def mkFillet = new_BRepFilletAPI_MakeFillet__TopoDS_Shape(myBody)
+//        def anEdgeExplorer = new_TopExp_Explorer__TopoDS_Shape_ToFind_ToAvoid(myBody, ShapeEnum.TopAbs_EDGE.index, ShapeEnum.TopAbs_SHAPE.index)
+//        while (_TopExp_Explorer__More(anEdgeExplorer)) {
+//            def anEdge = ref_TopoDS_Edge__TopoDS_Shape(new_TopoDS_Shape__TopExp_Explorer__Current(anEdgeExplorer))
+//            //Add edge to fillet algorithm
+//            _BRepFilletAPI_MakeFillet__Add__radius_TopoDS_Edge(mkFillet, myThickness / 12d, anEdge)
+//            _TopExp_Explorer__Next(anEdgeExplorer)
+//        }
+//
+//        myBody = new_TopoDS_Shape__Shape__BRepBuilderAPI_MakeShape(mkFillet)
 
         println "Body: Add the Neck"
         def neckLocation = new_gp_Pnt__x_y_z(0d, 0d, myHeight)

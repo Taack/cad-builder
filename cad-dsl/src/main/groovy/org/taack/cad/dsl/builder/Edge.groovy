@@ -207,4 +207,17 @@ class Edge extends Vertice implements Selector {
         this as CadBuilder
     }
 
+    CadBuilder fillet(Number radius) {
+        def mkFillet = new_BRepFilletAPI_MakeFillet__TopoDS_Shape(currentShapeNative)
+        def anEdgeExplorer = new_TopExp_Explorer__TopoDS_Shape_ToFind_ToAvoid(currentFaceNative ?: currentShapeNative, ShapeEnum.TopAbs_EDGE.index, ShapeEnum.TopAbs_SHAPE.index)
+        while (_TopExp_Explorer__More(anEdgeExplorer)) {
+            def anEdge = ref_TopoDS_Edge__TopoDS_Shape(new_TopoDS_Shape__TopExp_Explorer__Current(anEdgeExplorer))
+            //Add edge to fillet algorithm
+            _BRepFilletAPI_MakeFillet__Add__radius_TopoDS_Edge(mkFillet, radius.toDouble(), anEdge)
+            _TopExp_Explorer__Next(anEdgeExplorer)
+        }
+
+        currentShapeNative = new_TopoDS_Shape__Shape__BRepBuilderAPI_MakeShape(mkFillet)
+        this as CadBuilder
+    }
 }

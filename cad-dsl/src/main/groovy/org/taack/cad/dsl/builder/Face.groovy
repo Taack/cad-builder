@@ -45,6 +45,8 @@ class Face extends Edge implements Selector {
 
     CadBuilder prism(Vec dir = new Vec(1)) {
         this.currentShapeNative = new_TopoDS_Shape__BRepPrimAPI_MakePrism__TopoDS_Face_gp_Vec(currentFaceNative, dir.toGpVec())
+        this.currentFaceNative = null
+        this.wireNatives = null
         this as CadBuilder
     }
 }
