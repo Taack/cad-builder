@@ -13,8 +13,6 @@ class BlockTest {
     BigDecimal centerHoleDia = 4.0
     BigDecimal cboreHoleDiameter = 2.4
     BigDecimal cboreInset = 12.0
-    BigDecimal cboreDiameter = 4.4
-    BigDecimal cboreDepth = 2.1
 
     @Test
     void "Basic Box on XY"() {
