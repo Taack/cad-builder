@@ -1,3 +1,5 @@
+import org.apache.tools.ant.taskdefs.condition.Os
+
 plugins {
     id 'cpp-library'
     id 'cpp-unit-test'
@@ -22,7 +24,7 @@ def libs78 = "TKBinL TKBin TKBinTObj TKBinXCAF TKBool TKBO TKBRep TKCAF TKCDF TK
  TKTopTest TKV3d TKVCAF TKViewerTest TKXCAF TKXDEDRAW TKXMesh TKXmlL TKXml TKXmlTObj TKXmlXCAF TKXSBase\
  TKXSDRAWDE TKXSDRAWGLTF TKXSDRAWIGES TKXSDRAWOBJ TKXSDRAWPLY TKXSDRAW TKXSDRAWSTEP TKXSDRAWSTL TKXSDRAWVRML"
 
-def otherLibs = " GL GLU GLX GLEW X11 xcb Xau Xdmcp"
+def otherLibs = Os.isFamily(Os.FAMILY_MAC) ? " X11 xcb Xau Xdmcp" : " GL GLU GLX GLEW X11 xcb Xau Xdmcp"
 
 def linkerLibs = []
 
@@ -30,40 +32,46 @@ def libs = libs78 + otherLibs
 libs.split(' ').each {
     linkerLibs << "-l$it"
 }
+if (Os.isFamily(Os.FAMILY_MAC)) {
+    linkerLibs << "-framework"
+    linkerLibs << "OpenGL"
+}
 
 println "linkerLibs: ${linkerLibs.join(' ')}"
 
 library {
     linkage = [Linkage.SHARED]
-    targetMachines = [
-            machines.linux.x86_64,
-    ]
+    //targetMachines = [
+    //        machines.linux.x86_64, machines.os
+    //]
 }
 
 //ext.nativeLibDir = file(projectDir.path + "build/lib/main/release/")
 
 tasks.withType(CppCompile).configureEach {
     optimized = false
-    includes.from new File("/usr/include/opencascade/").path
+    String[] includePath = Os.isFamily(Os.FAMILY_MAC) ? ["/opt/homebrew/include/", "/opt/homebrew/include/opencascade/"] : ["/usr/include/opencascade/"]
+    includes.from includePath
 }
 
 tasks.withType(LinkSharedLibrary).configureEach {
     // Define toolchain-specific compiler and linker options
-    linkerArgs = ["-Xlinker", "-S", "-Bdirect", "-L/usr/local/lib/"] + linkerLibs
+    linkerArgs = ["-Xlinker", "-S", "-Bdirect", "-L${Os.isFamily(Os.FAMILY_MAC) ? "/opt/homebrew" : "/usr/local"}/lib/"] + linkerLibs
 }
 
 tasks.withType(LinkExecutable).configureEach {
     // Define toolchain-specific compiler and linker options
-    linkerArgs = ["-Xlinker", "-S", "-Bdirect", "-L/usr/local/lib/"] + linkerLibs
+    linkerArgs = ["-Xlinker", "-S", "-Bdirect", "-L${Os.isFamily(Os.FAMILY_MAC) ? "/opt/homebrew" : "/usr/local"}/lib/"] + linkerLibs
 }
 
 tasks.register('listSymsPerLib') {
     doLast {
         println "AUO ++++++++++++++++++++++++++ $libs"
+
         libs.split(' ').each { libName ->
-            "nm -gDC /lib/lib${libName}.so".execute().text.eachLine { symbole ->
-                println "$libName: $symbole"
-            }
+            println "nm -gDC ${Os.isFamily(Os.FAMILY_MAC) ? '/opt/homebrew' : ''}/lib/lib${libName}.${Os.isFamily(Os.FAMILY_MAC) ? 'dylib' : 'so'}"//.execute().text.eachLine { symbole ->
+              //  println "$libName: $symbole"
+            //}
         }
         println "AUO --------------------------"
     }
