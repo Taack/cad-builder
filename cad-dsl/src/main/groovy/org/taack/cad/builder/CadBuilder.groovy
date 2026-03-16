@@ -378,4 +378,15 @@ class CadBuilder {
         this as CadBuilder
     }
 
+    CadBuilder hollowedSolid(Number thickness) {
+        def facesToRemove = new_TopTools_ListOfShape()
+        if (currentFaceNative) {
+            _TopTools_ListOfShape__Append__TopoDS_Shape(facesToRemove, currentFaceNative)
+        }
+        def aSolidMaker = new_BRepOffsetAPI_MakeThickSolid()
+        _BRepOffsetAPI_MakeThickSolid__MakeThickSolidByJoin__TopoDS_Shape_TopTools_ListOfShape_thickness_tol(aSolidMaker, currentShapeNative, facesToRemove, thickness.toDouble(), 0.001d)
+
+        currentShapeNative = new_TopoDS_Shape__Shape__BRepBuilderAPI_MakeShape(aSolidMaker)
+        this as CadBuilder
+    }
 }

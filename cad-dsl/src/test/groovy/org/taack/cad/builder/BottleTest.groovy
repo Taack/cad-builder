@@ -32,7 +32,8 @@ class BottleTest {
                 .edge(v2)
                 .arc(v4, v3)
                 .edge(v5).toWire().mirror(new Vec(), new Vec(1,0,0)).toFace().prism(new Vec(myHeight))
-                .topZ().fillet(myThickness / 12d).fuse(cb().cylinder(myNeckRadius, myNeckHeight)).toShape()
+                .topZ().fillet(myThickness / 12d).fuse(cb().cylinder(myNeckRadius, myNeckHeight))
+                .topZ().hollowedSolid(-myThickness / 50d).toShape()
 
 
 //        def aPnt1 = new_gp_Pnt__x_y_z(-myWidth / 2d, 0, 0)
@@ -99,35 +100,35 @@ class BottleTest {
 //        myBody = new_TopoDS_Shape__brep_algoapi_fuse__s1_s2(myBody, myNeck)
 
         println "Body: Create a Hollowed Solid"
-        double zMax = -1
-        def faceToRemove = new_TopoDS_Face()
+//        double zMax = -1
+//        def faceToRemove = new_TopoDS_Face()
+//
+//        for (def aFaceExplorer = new_TopExp_Explorer__TopoDS_Shape_ToFind_ToAvoid(myBody, ShapeEnum.TopAbs_FACE.ordinal(), ShapeEnum.TopAbs_SHAPE.ordinal()); _TopExp_Explorer__More(aFaceExplorer); _TopExp_Explorer__Next(aFaceExplorer)) {
+//            def aFace = new_TopoDS_Face__TopExp_Explorer__Current(aFaceExplorer)
+//            def aSurface = handle_Geom_Surface__TopoDS_Face(aFace)
+//            if (int_Geom_Surface__is__Geom_Plane(aSurface) == 1) {
+//                def aPlan = handle_Geom_Plane__handle_Geom_Surface(aSurface)
+//                def aPnt = new_gp_Pnt__Geom_Plane(aPlan)
+//                double aZ = gp_Pnt__Z(aPnt)
+//                if (aZ > zMax) {
+//                    zMax = aZ
+//                    faceToRemove = aFace
+//                }
+//            }
+//        }
+//
+//        def facesToRemove = new_TopTools_ListOfShape()
+//        _TopTools_ListOfShape__Append__TopoDS_Shape(facesToRemove, faceToRemove)
+//        def aSolidMaker = new_BRepOffsetAPI_MakeThickSolid()
+//        _BRepOffsetAPI_MakeThickSolid__MakeThickSolidByJoin__TopoDS_Shape_TopTools_ListOfShape_thickness_tol(aSolidMaker, myBody, facesToRemove, -myThickness / 50d, 0.001d)
+//
+//        myBody = new_TopoDS_Shape__Shape__BRepBuilderAPI_MakeShape(aSolidMaker)
 
-        for (def aFaceExplorer = new_TopExp_Explorer__TopoDS_Shape_ToFind_ToAvoid(myBody, ShapeEnum.TopAbs_FACE.ordinal(), ShapeEnum.TopAbs_SHAPE.ordinal()); _TopExp_Explorer__More(aFaceExplorer); _TopExp_Explorer__Next(aFaceExplorer)) {
-            def aFace = new_TopoDS_Face__TopExp_Explorer__Current(aFaceExplorer)
-            def aSurface = handle_Geom_Surface__TopoDS_Face(aFace)
-            if (int_Geom_Surface__is__Geom_Plane(aSurface) == 1) {
-                def aPlan = handle_Geom_Plane__handle_Geom_Surface(aSurface)
-                def aPnt = new_gp_Pnt__Geom_Plane(aPlan)
-                double aZ = gp_Pnt__Z(aPnt)
-                if (aZ > zMax) {
-                    zMax = aZ
-                    faceToRemove = aFace
-                }
-            }
-        }
-
-        def facesToRemove = new_TopTools_ListOfShape()
-        _TopTools_ListOfShape__Append__TopoDS_Shape(facesToRemove, faceToRemove)
-        def aSolidMaker = new_BRepOffsetAPI_MakeThickSolid()
-        _BRepOffsetAPI_MakeThickSolid__MakeThickSolidByJoin__TopoDS_Shape_TopTools_ListOfShape_thickness_tol(aSolidMaker, myBody, facesToRemove, -myThickness / 50d, 0.001d)
-
-        myBody = new_TopoDS_Shape__Shape__BRepBuilderAPI_MakeShape(aSolidMaker)
-
-        // Threading: Create Surfaces
+        println "Threading: Create Surfaces"
         def aCyl1 = handle_Geom_CylindricalSurface__ax2_radius(neckAx2, myNeckRadius * 0.99)
         def aCyl2 = handle_Geom_CylindricalSurface__ax2_radius(neckAx2, myNeckRadius * 1.05)
 
-        // Threading: Define 2D Curves
+        println "Threading: Define 2D Curves"
         def aPnt = new_gp_Pnt2d__x_y(2.0 * Math.PI, myNeckHeight / 2.0d)
         def aDir = new_gp_Dir2d__x_y(2.0 * Math.PI, myNeckHeight / 4.0d)
         def anAx2d = new_gp_Ax2d__pt_dir(aPnt, aDir)
@@ -146,7 +147,7 @@ class BottleTest {
         def anEllipsePnt2 = new_gp_Pnt2d__Geom2d_Curve__Value__u(anEllipse1, Math.PI)
         def aSegment = handle_Geom2d_TrimmedCurve__GCE2d_MakeSegment__p1_p2(anEllipsePnt1, anEllipsePnt2)
 
-        // Threading: Build Edges and Wiresnew
+        println "Threading: Build Edges and Wiresnew"
         def anEdge1OnSurf1 = new_TopoDS_Edge__BRepBuilderAPI_MakeEdge__Geom_Curve_Geom_Surface(anArc1, aCyl1)
         def anEdge2OnSurf1 = new_TopoDS_Edge__BRepBuilderAPI_MakeEdge__Geom_Curve_Geom_Surface(aSegment, aCyl1)
         def anEdge1OnSurf2 = new_TopoDS_Edge__BRepBuilderAPI_MakeEdge__Geom_Curve_Geom_Surface(anArc2, aCyl2)
@@ -158,7 +159,7 @@ class BottleTest {
         _BRepLib__BuildCurves3d__TopoDS_Shape(threadingWire1)
         _BRepLib__BuildCurves3d__TopoDS_Shape(threadingWire2)
 
-        // Create Threading
+        println "Create Threading"
         def aTool = new_BRepOffsetAPI_ThruSections__isSolid_ruled_pres3d(1, 0, 1.0e-06d)
         _BRepOffsetAPI_ThruSections__AddWire__TopoDS_Wire(aTool, threadingWire1)
         _BRepOffsetAPI_ThruSections__AddWire__TopoDS_Wire(aTool, threadingWire2)
@@ -166,7 +167,7 @@ class BottleTest {
 
         def myThreading = new_TopoDS_Shape__Shape__BRepBuilderAPI_MakeShape(aTool)
 
-        // Building the Resulting Compound
+        println "Building the Resulting Compound"
         def aRes = new_TopoDS_Compound()
         def aBuilder = new_BRep_Builder()
         _TopoDS_Builder__MakeCompound__TopoDS_Compound(aBuilder, aRes)
