@@ -18,6 +18,7 @@
 #else
 #include <Xw_Window.hxx>
 #include <X11/Xlib.h>
+#include <Aspect_WindowDefinitionError.hxx>
 #endif
 
 #ifdef _MSC_VER
@@ -56,7 +57,14 @@ public:
                                                  100, 100, 512, 512, Quantity_NOC_BLACK);
     ::SetWindowLongPtrW ((HWND )aWindow->NativeHandle(), GWLP_USERDATA, (LONG_PTR )this);
 #else
-    Handle(Xw_Window) aWindow = new Xw_Window(aDisplay, "OCCT Viewer", 100, 100, 512, 512);
+    Handle(Xw_Window) aWindow;
+    try {
+        aWindow = new Xw_Window(aDisplay, "OCCT Viewer", 100, 100, 512, 512);
+    } catch(Aspect_WindowDefinitionError& e) {
+        std::cout << "Aspect_WindowDefinitionError " << e.GetMessageString() << std::endl;
+        std::cout.flush();
+        throw e;
+    }
     Display *anXDisplay = (Display *) aDisplay->GetDisplayAspect();
     XSelectInput(anXDisplay, (Window) aWindow->NativeHandle(),
                  ExposureMask | KeyPressMask | KeyReleaseMask | FocusChangeMask | StructureNotifyMask
