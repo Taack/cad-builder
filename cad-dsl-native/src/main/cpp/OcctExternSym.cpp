@@ -623,7 +623,12 @@ extern "C" Handle(Geom_SurfaceOfLinearExtrusion) *handle_Geom_SurfaceOfLinearExt
 extern "C" Handle(Geom_SurfaceOfRevolution) *handle_Geom_SurfaceOfRevolution__Geom_Curve_gp_Ax1(
     const Handle(Geom_Curve) &C, const gp_Ax1 &V) {
     TRACE("");
-    return new Handle(Geom_SurfaceOfRevolution)(new Geom_SurfaceOfRevolution(C, V));
+    Geom_SurfaceOfRevolution* surface = new Geom_SurfaceOfRevolution(C, V);
+    if (surface->IsVPeriodic()) TRACE("IsVPeriodic true");
+    if (surface->IsUPeriodic()) TRACE("IsUPeriodic true");
+    if (surface->IsUClosed()) TRACE("IsUClosed true");
+    if (surface->IsVClosed()) TRACE("IsVClosed true");
+    return new Handle(Geom_SurfaceOfRevolution)(surface);
 }
 
 extern "C" Handle(Geom_Ellipse) *handle_Geom_Ellipse__gp_Ax2_rM_rm(const gp_Ax2 &A2, const Standard_Real MajorRadius, const Standard_Real MinorRadius) {
