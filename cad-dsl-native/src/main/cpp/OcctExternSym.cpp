@@ -64,6 +64,8 @@
 #include <ShapeFix_Wire.hxx>
 #include <ShapeFix_ShapeTolerance.hxx>
 #include <StdFail_NotDone.hxx>
+#include <Geom_SurfaceOfLinearExtrusion.hxx>
+#include <Geom_Ellipse.hxx>
 
 #define TRACE(message) TRACE_IMPL(__FILE__, __LINE__, __PRETTY_FUNCTION__, message)
 void TRACE_IMPL(const char *file, int line, const char *function, const char *message) {
@@ -604,6 +606,17 @@ extern "C" Handle(Geom_CylindricalSurface) *handle_Geom_CylindricalSurface__ax2_
     const gp_Ax3 &ax2, const Standard_Real radius) {
     TRACE("");
     return new Handle(Geom_CylindricalSurface)(new Geom_CylindricalSurface(ax2, radius));
+}
+
+extern "C" Handle(Geom_SurfaceOfLinearExtrusion) *handle_Geom_SurfaceOfLinearExtrusion__Geom_Curve_gp_Dir(
+    const Handle(Geom_Curve) &C, const gp_Dir &V) {
+    TRACE("");
+    return new Handle(Geom_SurfaceOfLinearExtrusion)(new Geom_SurfaceOfLinearExtrusion(C, V));
+}
+
+extern "C" Handle(Geom_Ellipse) *handle_Geom_Ellipse__gp_Ax2_rM_rm(const gp_Ax2 &A2, const Standard_Real MajorRadius, const Standard_Real MinorRadius) {
+    TRACE("");
+    return new Handle(Geom_Ellipse)(new Geom_Ellipse(A2, MajorRadius, MinorRadius));
 }
 
 extern "C" void _BRepLib__BuildCurves3d__TopoDS_Shape(const TopoDS_Shape &w1) {

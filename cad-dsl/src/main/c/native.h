@@ -77,6 +77,8 @@ int visualize(void*);
 #define Geom2d_Conic void
 #define TopoDS_Builder void
 #define ShapeExtend_WireData void
+#define Geom_SurfaceOfLinearExtrusion void
+#define Geom_Ellipse void
 
 /*
 
@@ -290,6 +292,12 @@ void _BRepOffsetAPI_MakeThickSolid__MakeThickSolidByJoin__TopoDS_Shape_TopTools_
 
 Handle(Geom_CylindricalSurface) *handle_Geom_CylindricalSurface__ax2_radius(
     const gp_Ax3 *ax2, const Standard_Real radius);
+
+Handle(Geom_SurfaceOfLinearExtrusion) *handle_Geom_SurfaceOfLinearExtrusion__Geom_Curve_gp_Dir(
+    const Handle(Geom_Curve) *C, const gp_Dir *V);
+
+Handle(Geom_Ellipse) *handle_Geom_Ellipse__gp_Ax2_rM_rm(const gp_Ax2 *A2, const Standard_Real MajorRadius, const Standard_Real MinorRadius);
+
 
 void _BRepLib__BuildCurves3d__TopoDS_Shape(const TopoDS_Shape *w1);
 
