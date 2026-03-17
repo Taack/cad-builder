@@ -395,6 +395,20 @@ class CadBuilder {
         handle_Geom_CylindricalSurface__ax2_radius(ax2, radius.toDouble())
     }
 
+    static MemorySegment linearExtrusionSurface(MemorySegment curve, Vec direction) {
+        handle_Geom_SurfaceOfLinearExtrusion__Geom_Curve_gp_Dir(curve, direction.toGpDir())
+    }
+
+    static MemorySegment revolutionSurface(MemorySegment curve, Vec pos, Vec direction) {
+        def ax1 = new_gp_Ax1__p_dir(pos.toGpPnt(), direction.toGpDir())
+        handle_Geom_SurfaceOfRevolution__Geom_Curve_gp_Ax1(curve, ax1)
+    }
+
+    static MemorySegment ellipseCurve(Vec pos, Vec direction, Number majorRadius, Number minorRadius) {
+        def ax2 = new_gp_Ax2__gp_Pnt_gp_Dir(pos.toGpPnt(), direction.toGpDir())
+        handle_Geom_Ellipse__gp_Ax2_rM_rm(ax2, majorRadius.toDouble(), minorRadius.toDouble())
+    }
+
     static MemorySegment ellipse2dCurve(Vec2d pos, Vec2d direction, Number majorRadius, Number minorRadius) {
         def anAx2d = new_gp_Ax2d__pt_dir(pos.toGpPnt2d(), direction.toGpDir2d())
         handle_Geom2d_Ellipse__a2_majorRadius_minorRadius_sense(anAx2d, majorRadius.toDouble(), minorRadius.toDouble(), 1)

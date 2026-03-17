@@ -57,8 +57,11 @@ class BottleTest {
 
     static void otherThreading(CadBuilder mb) {
         MemorySegment innerCyl = cylindricalSurface(new Vec(myHeight), new Vec(1), myNeckRadius * 0.99)
-        MemorySegment outerCyl = cylindricalSurface(new Vec(myHeight), new Vec(1), myNeckRadius * 1.05)
-
+//        MemorySegment outerCyl = cylindricalSurface(new Vec(myHeight), new Vec(1), myNeckRadius * 1.05)
+        Vec dir3d = new Vec(1)
+        Vec pos3d = new Vec(myHeight + myNeckHeight / 2)
+        MemorySegment curve3d = ellipseCurve(pos3d, dir3d, myNeckRadius * 2.15, myNeckRadius * 1.05)
+        MemorySegment outerCyl = linearExtrusionSurface(curve3d, dir3d)
         double aMajor = 4.0 * Math.PI
         double aMinor = myNeckHeight / 10
         Vec2d pos = new Vec2d(2.0 * Math.PI, myNeckHeight / 2.0d)
@@ -76,6 +79,31 @@ class BottleTest {
                 .applyThreading().display()
     }
 
+    static void anotherThreading(CadBuilder mb) {
+        MemorySegment innerCyl = cylindricalSurface(new Vec(myHeight), new Vec(1), myNeckRadius * 0.99)
+//        MemorySegment outerCyl = cylindricalSurface(new Vec(myHeight), new Vec(1), myNeckRadius * 1.05)
+        Vec dir3d = new Vec(1)
+        Vec pos3d = new Vec(myHeight + myNeckHeight / 2)
+        MemorySegment curve3d = ellipseCurve(pos3d, new Vec(0,1,0), myNeckRadius * 1.15, myNeckRadius * 1.15)
+        MemorySegment outerCyl = revolutionSurface(curve3d, pos3d, dir3d)
+        double aMajor = 4 * Math.PI
+        double aMinor = myNeckHeight / 10
+        Vec2d pos = new Vec2d(2.0 * Math.PI, myNeckHeight / 2.0d)
+        Vec2d dir = new Vec2d(2.0 * Math.PI, myNeckHeight / 4.0d)
+
+        MemorySegment ellipse1 = ellipse2dCurve(pos, dir, aMajor, aMinor)
+        MemorySegment ellipse2 = ellipse2dCurve(pos, dir, aMajor, aMinor / 4)
+
+        MemorySegment arc1 = trimmedCurve(ellipse1, 0, Math.PI)
+        MemorySegment seg  = trimmedCurveSegment(ellipse1, 0, Math.PI)
+        MemorySegment seg2  = trimmedCurveSegment(ellipse2, 0, Math.PI)
+        MemorySegment arc2 = trimmedCurve(ellipse2, 0, Math.PI)
+        mb
+                .threadingWireFrom(edgeFrom(arc1, innerCyl), edgeFrom(seg, innerCyl))
+                .threadingWireFrom(edgeFrom(arc2, outerCyl), edgeFrom(seg2, outerCyl))
+                .applyThreading().display()
+    }
+
     @Test
     void "Make Bottle Using Builder API"() {
         def cb = mainBottleBody()
@@ -86,5 +114,11 @@ class BottleTest {
     void "Make Bottle Using Builder API Other Threading"() {
         def cb = mainBottleBody()
         otherThreading(cb)
+    }
+
+    @Test
+    void "Make Bottle Using Builder API Another Threading"() {
+        def cb = mainBottleBody()
+        anotherThreading(cb)
     }
 }

@@ -79,6 +79,7 @@ int visualize(void*);
 #define ShapeExtend_WireData void
 #define Geom_SurfaceOfLinearExtrusion void
 #define Geom_Ellipse void
+#define Geom_SurfaceOfRevolution void
 
 /*
 
@@ -295,6 +296,9 @@ Handle(Geom_CylindricalSurface) *handle_Geom_CylindricalSurface__ax2_radius(
 
 Handle(Geom_SurfaceOfLinearExtrusion) *handle_Geom_SurfaceOfLinearExtrusion__Geom_Curve_gp_Dir(
     const Handle(Geom_Curve) *C, const gp_Dir *V);
+
+Handle(Geom_SurfaceOfRevolution) *handle_Geom_SurfaceOfRevolution__Geom_Curve_gp_Ax1(
+    const Handle(Geom_Curve) *C, const gp_Ax1 *V);
 
 Handle(Geom_Ellipse) *handle_Geom_Ellipse__gp_Ax2_rM_rm(const gp_Ax2 *A2, const Standard_Real MajorRadius, const Standard_Real MinorRadius);
 

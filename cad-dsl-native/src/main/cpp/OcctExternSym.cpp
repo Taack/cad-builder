@@ -66,6 +66,7 @@
 #include <StdFail_NotDone.hxx>
 #include <Geom_SurfaceOfLinearExtrusion.hxx>
 #include <Geom_Ellipse.hxx>
+#include <Geom_SurfaceOfRevolution.hxx>
 
 #define TRACE(message) TRACE_IMPL(__FILE__, __LINE__, __PRETTY_FUNCTION__, message)
 void TRACE_IMPL(const char *file, int line, const char *function, const char *message) {
@@ -612,6 +613,12 @@ extern "C" Handle(Geom_SurfaceOfLinearExtrusion) *handle_Geom_SurfaceOfLinearExt
     const Handle(Geom_Curve) &C, const gp_Dir &V) {
     TRACE("");
     return new Handle(Geom_SurfaceOfLinearExtrusion)(new Geom_SurfaceOfLinearExtrusion(C, V));
+}
+
+extern "C" Handle(Geom_SurfaceOfRevolution) *handle_Geom_SurfaceOfRevolution__Geom_Curve_gp_Ax1(
+    const Handle(Geom_Curve) &C, const gp_Ax1 &V) {
+    TRACE("");
+    return new Handle(Geom_SurfaceOfRevolution)(new Geom_SurfaceOfRevolution(C, V));
 }
 
 extern "C" Handle(Geom_Ellipse) *handle_Geom_Ellipse__gp_Ax2_rM_rm(const gp_Ax2 &A2, const Standard_Real MajorRadius, const Standard_Real MinorRadius) {
