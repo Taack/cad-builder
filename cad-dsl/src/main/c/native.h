@@ -167,6 +167,8 @@ gp_Vec *new_gp_Vec__x_y_z(const Standard_Real theXp, const Standard_Real theYp, 
 
 void delete_gp_Vec(gp_Vec *pnt);
 
+Handle(Geom_TrimmedCurve) *handle_Geom_TrimmedCurve__Geom_Curve_u1_u2(const Handle(Geom_Curve) *C, const Standard_Real U1, const Standard_Real U2);
+
 Handle(Geom_TrimmedCurve) *handle_Geom_TrimmedCurve__GC_MakeArcOfCircle_p1_p2_p3(gp_Pnt *pnt1, gp_Pnt *pnt2, gp_Pnt *pnt3);
 
 Handle(Geom_TrimmedCurve) *handle_Geom_TrimmedCurve__GC_MakeArcOfCircle_p1_vtangente_p2(gp_Pnt *pnt1, gp_Vec *tan, gp_Pnt *pnt3);
@@ -302,6 +304,7 @@ Handle(Geom_SurfaceOfRevolution) *handle_Geom_SurfaceOfRevolution__Geom_Curve_gp
 
 Handle(Geom_Ellipse) *handle_Geom_Ellipse__gp_Ax2_rM_rm(const gp_Ax2 *A2, const Standard_Real MajorRadius, const Standard_Real MinorRadius);
 
+void* R4_Geom_Surface__Bounds(const Geom_Surface *S);
 
 void _BRepLib__BuildCurves3d__TopoDS_Shape(const TopoDS_Shape *w1);
 

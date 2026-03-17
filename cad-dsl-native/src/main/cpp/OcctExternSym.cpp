@@ -267,6 +267,11 @@ extern "C" void delete_gp_Vec(gp_Vec *pnt) {
     delete pnt;
 }
 
+extern "C" Handle(Geom_TrimmedCurve) *handle_Geom_TrimmedCurve__Geom_Curve_u1_u2(const Handle(Geom_Curve) &C, const Standard_Real U1, const Standard_Real U2) {
+    TRACE("");
+    return new Handle(Geom_TrimmedCurve)(new Geom_TrimmedCurve(C, U1, U2));
+}
+
 extern "C" Handle(Geom_TrimmedCurve) *handle_Geom_TrimmedCurve__GC_MakeArcOfCircle_p1_p2_p3(gp_Pnt *pnt1, gp_Pnt *pnt2, gp_Pnt *pnt3) {
     TRACE("");
     return new Handle(Geom_TrimmedCurve)(GC_MakeArcOfCircle(*pnt1, *pnt2, *pnt3).Value());
@@ -624,6 +629,18 @@ extern "C" Handle(Geom_SurfaceOfRevolution) *handle_Geom_SurfaceOfRevolution__Ge
 extern "C" Handle(Geom_Ellipse) *handle_Geom_Ellipse__gp_Ax2_rM_rm(const gp_Ax2 &A2, const Standard_Real MajorRadius, const Standard_Real MinorRadius) {
     TRACE("");
     return new Handle(Geom_Ellipse)(new Geom_Ellipse(A2, MajorRadius, MinorRadius));
+}
+
+extern "C" Standard_Real* R4_Geom_Surface__Bounds(const Handle(Geom_Surface) &S) {
+    TRACE("");
+    Standard_Real U1;
+    Standard_Real U2;
+    Standard_Real V1;
+    Standard_Real V2;
+
+    S->Bounds(U1, U2, V1, V2);
+    Standard_Real* res = new Standard_Real[4] {U1, U2, V1, V2};
+    return res;
 }
 
 extern "C" void _BRepLib__BuildCurves3d__TopoDS_Shape(const TopoDS_Shape &w1) {

@@ -101,7 +101,7 @@ class CadBuilder {
     }
 
 
-    void display(String fileName = null, int w = 640, int h = 480) {
+    void display(String fileName = null, int w = 1920, int h = 1080) {
         if (fileName) {
             try (Arena arena = Arena.ofConfined()) {
                 MemorySegment t = arena.allocateFrom(fileName)
@@ -404,6 +404,10 @@ class CadBuilder {
         handle_Geom_SurfaceOfRevolution__Geom_Curve_gp_Ax1(curve, ax1)
     }
 
+    static SurfaceBounds surfaceGetBounds(MemorySegment surface) {
+        new SurfaceBounds(R4_Geom_Surface__Bounds(surface))
+    }
+
     static MemorySegment ellipseCurve(Vec pos, Vec direction, Number majorRadius, Number minorRadius) {
         def ax2 = new_gp_Ax2__gp_Pnt_gp_Dir(pos.toGpPnt(), direction.toGpDir())
         handle_Geom_Ellipse__gp_Ax2_rM_rm(ax2, majorRadius.toDouble(), minorRadius.toDouble())
@@ -414,11 +418,15 @@ class CadBuilder {
         handle_Geom2d_Ellipse__a2_majorRadius_minorRadius_sense(anAx2d, majorRadius.toDouble(), minorRadius.toDouble(), 1)
     }
 
-    static MemorySegment trimmedCurve(MemorySegment geom2dCurve, Number from, Number to) {
+    static MemorySegment trimmedCurve(MemorySegment geomCurve, Number from, Number to) {
+        handle_Geom_TrimmedCurve__Geom_Curve_u1_u2(geomCurve, from.toDouble(), to.doubleValue())
+    }
+
+    static MemorySegment trimmedCurve2d(MemorySegment geom2dCurve, Number from, Number to) {
         handle_Geom2d_TrimmedCurve__curve_u1_u2(geom2dCurve, from.toDouble(), to.doubleValue(), 1, 1)
     }
 
-    static MemorySegment trimmedCurveSegment(MemorySegment geom2dCurve, Number from, Number to) {
+    static MemorySegment trimmedCurveSegment2d(MemorySegment geom2dCurve, Number from, Number to) {
         def p1 = new_gp_Pnt2d__Geom2d_Curve__Value__u(geom2dCurve, 0.0d)
         def p2 = new_gp_Pnt2d__Geom2d_Curve__Value__u(geom2dCurve, Math.PI)
         handle_Geom2d_TrimmedCurve__GCE2d_MakeSegment__p1_p2(p1, p2)
