@@ -337,7 +337,29 @@ extern "C" const BRepBuilderAPI_MakeWire *new_BRepBuilderAPI_MakeWire__BRepBuild
 
 extern "C" void _BRepBuilderAPI_MakeWire__Add__BRepBuilderAPI_MakeEdge(BRepBuilderAPI_MakeWire& wireMaker, BRepBuilderAPI_MakeEdge& edge) {
     TRACE("");
-    wireMaker.Add(edge);
+
+    try {
+        wireMaker.Add(edge);
+    } catch(StdFail_NotDone &e) {
+        TRACE(e.GetMessageString());
+        BRepBuilderAPI_WireError error = wireMaker.Error();
+        switch(error) {
+            case BRepBuilderAPI_WireDone:
+                TRACE("BRepBuilderAPI_WireDone");
+                break;
+            case BRepBuilderAPI_EmptyWire:
+                TRACE("BRepBuilderAPI_EmptyWire");
+                break;
+            case BRepBuilderAPI_DisconnectedWire :
+                TRACE("BRepBuilderAPI_DisconnectedWire ");
+                break;
+            case BRepBuilderAPI_NonManifoldWire:
+                TRACE("BRepBuilderAPI_NonManifoldWire");
+                break;
+
+        }
+        throw e;
+    }
 }
 
 extern "C" const TopoDS_Wire * new_TopoDS_Wire__BRepBuilderAPI_MakeWire__TopoDS_Edge1_e2_e3(TopoDS_Edge& e1, TopoDS_Edge& e2, TopoDS_Edge& e3) {

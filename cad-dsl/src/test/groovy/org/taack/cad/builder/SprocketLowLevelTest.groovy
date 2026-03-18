@@ -207,15 +207,15 @@ class SprocketLowLevelTest {
 
         println "Calculate extra points used to construct lines"
         Vec p1v = new Vec(p2d_1v.x, 0, p2d_1v.y)
-        def p1 = p1v.toGpPnt2d()
+        def p1 = p1v.toGpPnt()
         Vec p2v = new Vec(p2d_2v.x, 0, p2d_2v.y)
-        def p2 = p2v.toGpPnt2d()
+        def p2 = p2v.toGpPnt()
         Vec p3v = new Vec(p2d_2v.x + 1, 0, p2d_2v.y)
-        def p3 = p3v.toGpPnt2d()
+        def p3 = p3v.toGpPnt()
         Vec p4v = new Vec(p2d_2v.x + 1, 0, p2d_1v.y - 1)
-        def p4 = p4v.toGpPnt2d()
+        def p4 = p4v.toGpPnt()
         Vec p5v = new Vec(p2d_1v.x, 0, p2d_1v.y - 1)
-        def p5 = p5v.toGpPnt2d()
+        def p5 = p5v.toGpPnt()
 
         println "Convert the arc and four extra lines into 3D edges"
         def plane = new_gp_Pln__gp_Ax3(new_gp_Ax3__p_dN_dX(new Vec().toGpPnt(), new Vec(0,1,0).toGpDir(), new Vec(1,0,0).toGpDir()))
@@ -233,7 +233,7 @@ class SprocketLowLevelTest {
         _BRepBuilderAPI_MakeWire__Add__BRepBuilderAPI_MakeEdge(round_wire, lin4)
 
         println "Turn the wire into a face"
-        def round_face = new_TopoDS_Face__BRepBuilderAPI_MakeFace__TopoDS_Wire(round_wire)
+        def round_face = new_TopoDS_Face__BRepBuilderAPI_MakeFace__TopoDS_Wire(new_TopoDS_Wire__BRepBuilderAPI_MakeWire__Wire(round_wire))
 
         println "Revolve the face around the Z axis over the tooth angle"
         def rounding_cut_1 = new_TopoDS_Shape__BRepPrimAPI_MakeRevol__TopoDS_Face_gp_Ax1_ang(round_face, new_gp_Ax1__p_dir(new Vec().toGpPnt(), new Vec(1).toGpDir()), tooth_angle)
