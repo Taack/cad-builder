@@ -80,6 +80,8 @@ int visualize(void*);
 #define Geom_SurfaceOfLinearExtrusion void
 #define Geom_Ellipse void
 #define Geom_SurfaceOfRevolution void
+#define GccAna_Circ2d2TanRad void
+#define gp_Ax22d void
 
 /*
 
@@ -370,6 +372,16 @@ void _ShapeExtend_WireData__Add__TopoDS_Edge(ShapeExtend_WireData *data, const T
 void _ShapeExtend_WireData__Add__TopoDS_Wire(ShapeExtend_WireData *data, const TopoDS_Wire *edge, const Standard_Integer atnum);
 
 Handle(TopoDS_Wire)* util_ShapeFix_Wire__Load__ShapeExtend_WireData(ShapeExtend_WireData *data);
+
+GccAna_Circ2d2TanRad *new_GccAna_Circ2d2TanRad__p2d1_p2d2_roundRadius(const gp_Pnt2d *Point1, const gp_Pnt2d *Point2, const Standard_Real Radius, const Standard_Real Tolerance);
+
+Standard_Integer i_GccAna_Circ2d2TanRad__NbSolutions(GccAna_Circ2d2TanRad* circ2d2TanRad);
+
+gp_Circ2d* ref_gp_Circ2d__GccAna_Circ2d2TanRad__ThisSolution__index(GccAna_Circ2d2TanRad* circ2d2TanRad, Standard_Integer numStartingAt1);
+
+const gp_Ax22d *ref_Position__gp_Circ2d__Position(gp_Circ2d *cir2d);
+
+const gp_Pnt2d *ref_gp_Pnt2d__gp_Ax22d__Location(gp_Ax22d *ax22d);
 
 /*
 

@@ -67,6 +67,9 @@
 #include <Geom_SurfaceOfLinearExtrusion.hxx>
 #include <Geom_Ellipse.hxx>
 #include <Geom_SurfaceOfRevolution.hxx>
+#include <GccAna_Circ2d2TanRad.hxx>
+#include <gp_Ax22d.hxx>
+
 
 #define TRACE(message) TRACE_IMPL(__FILE__, __LINE__, __PRETTY_FUNCTION__, message)
 void TRACE_IMPL(const char *file, int line, const char *function, const char *message) {
@@ -839,6 +842,26 @@ extern "C" TopoDS_Wire* util_ShapeFix_Wire__Load__ShapeExtend_WireData(const Han
 
     TopoDS_Wire aWire = aMakeWire.Wire();
     return new TopoDS_Wire(aWire);
+}
+
+GccAna_Circ2d2TanRad *new_GccAna_Circ2d2TanRad__p2d1_p2d2_roundRadius(const gp_Pnt2d &Point1, const gp_Pnt2d &Point2, const Standard_Real Radius, const Standard_Real Tolerance) {
+    return new GccAna_Circ2d2TanRad(Point1, Point2, Radius, Tolerance);
+}
+
+Standard_Integer i_GccAna_Circ2d2TanRad__NbSolutions(GccAna_Circ2d2TanRad& circ2d2TanRad) {
+    return circ2d2TanRad.NbSolutions();
+}
+
+gp_Circ2d* ref_gp_Circ2d__GccAna_Circ2d2TanRad__ThisSolution__index(GccAna_Circ2d2TanRad* circ2d2TanRad, Standard_Integer numStartingAt1) {
+    return new gp_Circ2d(circ2d2TanRad->ThisSolution(numStartingAt1));
+}
+
+const gp_Ax22d &ref_Position__gp_Circ2d__Position(gp_Circ2d &cir2d) {
+    return cir2d.Position();
+}
+
+const gp_Pnt2d &ref_gp_Pnt2d__gp_Ax22d__Location(gp_Ax22d &ax22d) {
+    return ax22d.Location();
 }
 
 /*

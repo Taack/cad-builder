@@ -185,16 +185,40 @@ class SprocketLowLevelTest {
 
         println "Determine where the circle used for rounding has to start and stop"
         Vec2d p2d_1v = new Vec2d(top_radius - round_x, 0)
+        def p2d_1 = p2d_1v.toGpPnt2d()
         Vec2d p2d_2v = new Vec2d(top_radius, round_z)
-
+        def p2d_2 = p2d_2v.toGpPnt2d()
         println "Construct the rounding circle"
-//        def round_circle
+        def round_circle = new_GccAna_Circ2d2TanRad__p2d1_p2d2_roundRadius(p2d_1, p2d_2, round_radius, 0.01d)
+        if (i_GccAna_Circ2d2TanRad__NbSolutions(round_circle) != 2)
+            throw new RuntimeException()
+
+        def round_circle_2d_1 = ref_gp_Circ2d__GccAna_Circ2d2TanRad__ThisSolution__index(round_circle, 1)
+        def round_circle_2d_2 = ref_gp_Circ2d__GccAna_Circ2d2TanRad__ThisSolution__index(round_circle, 2)
+        MemorySegment round_circle_2d
+        Vec2d roundP1 = Vec2d.fromAPnt ref_gp_Pnt2d__gp_Ax22d__Location(ref_Position__gp_Circ2d__Position(round_circle_2d_1))
+        if (roundP1.y >= 0)
+            round_circle_2d = round_circle_2d_1
+        else
+            round_circle_2d = round_circle_2d_2
+
+        println "Remove the arc used for rounding"
+        def trimmed_circle = handle_Geom2d_TrimmedCurve__GCE2d_MakeArcOfCircle__cir2d_p1_p2(round_circle_2d, p2d_1, p2d_2)
+
+        println "Calculate extra points used to construct lines"
+        Vec p1v = new Vec(p2d_1v.x, 0, p2d_1v.y)
+        Vec p2v = new Vec(p2d_2v.x, 0, p2d_2v.y)
+        Vec p3v = new Vec(p2d_2v.x + 1, 0, p2d_2v.y)
+        Vec p4v = new Vec(p2d_2v.x + 1, 0, p2d_1v.y - 1)
+        Vec p5v = new Vec(p2d_1v.x, 0, p2d_1v.y - 1)
+
+        println "Convert the arc and four extra lines into 3D edges"
     }
 
 
     @Test
     void "Build Tooth"() {
         def tooth = buildTooth()
-        visualize(tooth)
+        roundTooth(tooth)
     }
 }
