@@ -48,7 +48,7 @@ class CadBuilder {
     CadBuilder move(Vec p) {
         currentLoc = p
         _gp_Trsf__SetTranslation__gp_Vec(trsf, currentLoc.toGpVec())
-        currentShapeNative = new_TopoDS_Shape__BRepBuilderAPI_Transform__Shape__gp_Trsf_bCopy(currentShapeNative, trsf, 1)
+        currentShapeNative = new_TopoDS_Shape__BRepBuilderAPI_Transform__Shape_gp_Trsf_bCopy(currentShapeNative, trsf, 1)
         this
     }
 
@@ -337,7 +337,7 @@ class CadBuilder {
         MemorySegment trsf = new_gp_Trsf()
         println "cut currentLoc = $currentLoc, other.currentLoc = ${other.currentLoc}"
         _gp_Trsf__SetTranslation__gp_Vec(trsf, (new Vec(0.0) - currentLoc).toGpVec())
-        def toolNative = new_TopoDS_Shape__BRepBuilderAPI_Transform__Shape__gp_Trsf_bCopy(other.currentShapeNative, trsf, 1)
+        def toolNative = new_TopoDS_Shape__BRepBuilderAPI_Transform__Shape_gp_Trsf_bCopy(other.currentShapeNative, trsf, 1)
         def cutNative = new_TopoDS_Shape__bBRepAlgoAPI_Cut__s1_s2(currentShapeNative, toolNative)
         currentShapeNative = cutNative
         this as CadBuilder

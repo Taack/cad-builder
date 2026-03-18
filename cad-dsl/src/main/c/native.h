@@ -82,6 +82,7 @@ int visualize(void*);
 #define Geom_SurfaceOfRevolution void
 #define GccAna_Circ2d2TanRad void
 #define gp_Ax22d void
+#define BRepAlgoAPI_Cut void
 
 /*
 
@@ -221,6 +222,8 @@ gp_Trsf *new_gp_Trsf(void);
 
 void _gp_Trsf__SetMirror__gp_Ax1(gp_Trsf *trsf, gp_Ax1 *ax1);
 
+void _gp_Trsf__SetMirror__gp_Ax2(gp_Trsf *trsf, gp_Ax2 *ax2);
+
 void _gp_Trsf__SetTranslation__gp_Vec(gp_Trsf *gp_trsf, const gp_Vec *translation);
 
 BRepBuilderAPI_Transform *new_BRepBuilderAPI_Transform__TopoDS_Shape_gp_Trsf(const TopoDS_Shape *w, gp_Trsf *trsf);
@@ -265,6 +268,8 @@ gp_Dir *new_gp_Dir__Normal__TopoDS_Face(const TopoDS_Face *aCurrentFace);
 
 
 const gp_Ax2 * new_gp_Ax2__gp_Pnt_gp_Dir(gp_Pnt *loc, gp_Dir *dir);
+
+const gp_Ax3 * new_gp_Ax3__p_dN_dX(gp_Pnt *loc, gp_Dir *dirN, gp_Dir *dirX);
 
 const gp_Ax2 *new_gp_Ax2_DZ(void);
 
@@ -349,7 +354,7 @@ TopoDS_Shape *new_TopoDS_Shape__BRepPrimAPI_MakeSphere__gp_Ax2_radius_a1_a2(cons
 TopoDS_Shape *new_TopoDS_Shape__BRepPrimAPI_MakeCylinder__gp_Ax2_radius_height(const gp_Ax2 *origin, const Standard_Real radius,
                                                        const Standard_Real height);
 
-TopoDS_Shape *new_TopoDS_Shape__BRepBuilderAPI_Transform__Shape__gp_Trsf_bCopy(const TopoDS_Shape *shape, const gp_Trsf *gp_trsf,
+TopoDS_Shape *new_TopoDS_Shape__BRepBuilderAPI_Transform__Shape_gp_Trsf_bCopy(const TopoDS_Shape *shape, const gp_Trsf *gp_trsf,
                                                          const Standard_Boolean theCopyGeom);
 
 
@@ -359,9 +364,13 @@ TopoDS_Shape *new_TopoDS_Shape__BRepPrimAPI_MakeTorus__gp_Ax2_r1_r2(const gp_Ax2
 
 TopoDS_Shape *new_TopoDS_Shape__BRepPrimAPI_MakeRevol__TopoDS_Face_gp_Ax1(TopoDS_Face* face, gp_Ax1* ax1);
 
+TopoDS_Shape *new_TopoDS_Shape__BRepPrimAPI_MakeRevol__TopoDS_Face_gp_Ax1_ang(TopoDS_Face* face, gp_Ax1* ax1, Standard_Real angle);
+
 gp_Pln* new_gp_Pln__x_y_z_d(const Standard_Real x, const Standard_Real y, const Standard_Real z, const Standard_Real d);
 
 gp_Pln* new_gp_Pln__pt_dir(const gp_Pnt* pt, const gp_Dir* dir);
+
+gp_Pln* new_gp_Pln__gp_Ax3(const gp_Ax3* ax3);
 
 TopoDS_Shape* new_TopoDS_Shape__Shape__BRepBuilderAPI_MakeShape(BRepBuilderAPI_MakeShape *shape);
 
@@ -383,6 +392,7 @@ const gp_Ax22d *ref_Position__gp_Circ2d__Position(gp_Circ2d *cir2d);
 
 const gp_Pnt2d *ref_gp_Pnt2d__gp_Ax22d__Location(gp_Ax22d *ax22d);
 
+BRepAlgoAPI_Cut *new_BRepAlgoAPI_Cut__s1_s2(TopoDS_Shape *result, TopoDS_Shape *tool);
 /*
 
 Composed

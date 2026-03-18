@@ -405,6 +405,11 @@ extern "C" void _gp_Trsf__SetMirror__gp_Ax1(gp_Trsf *trsf, gp_Ax1 *ax1) {
     trsf->SetMirror(*ax1);
 }
 
+extern "C" void _gp_Trsf__SetMirror__gp_Ax2(gp_Trsf *trsf, gp_Ax2 *ax2) {
+    TRACE("");
+    trsf->SetMirror(*ax2);
+}
+
 extern "C" void _gp_Trsf__SetTranslation__gp_Vec(gp_Trsf &gp_trsf, const gp_Vec &translation) {
     TRACE("");
     return gp_trsf.SetTranslation(translation);
@@ -549,6 +554,11 @@ extern "C" gp_Dir *new_gp_Dir__Normal__TopoDS_Face(const TopoDS_Face &aCurrentFa
 extern "C" const gp_Ax2 * new_gp_Ax2__gp_Pnt_gp_Dir(gp_Pnt &loc, gp_Dir &dir) {
     TRACE("");
     return new gp_Ax2(loc, dir);
+}
+
+extern "C" const gp_Ax3 * new_gp_Ax3__p_dN_dX(gp_Pnt &loc, gp_Dir &dirN, gp_Dir &dirX) {
+    TRACE("");
+    return new gp_Ax3(loc, dirN, dirX);
 }
 
 extern "C" const gp_Ax2 *new_gp_Ax2_DZ() {
@@ -759,7 +769,7 @@ extern "C" TopoDS_Shape *new_TopoDS_Shape__BRepPrimAPI_MakeCylinder__gp_Ax2_radi
 //    return BRepPrimAPI_MakeCylinder(origin, radius, height).Shape();erreur: ne peut convertir «const TopoDS_Shape» en «TopoDS_Shape*» dans le retour
 }
 
-extern "C" TopoDS_Shape *new_TopoDS_Shape__BRepBuilderAPI_Transform__Shape__gp_Trsf_bCopy(const TopoDS_Shape &shape, const gp_Trsf &gp_trsf,
+extern "C" TopoDS_Shape *new_TopoDS_Shape__BRepBuilderAPI_Transform__Shape_gp_Trsf_bCopy(const TopoDS_Shape &shape, const gp_Trsf &gp_trsf,
                                                          const Standard_Boolean theCopyGeom) {
     TRACE("");
     return new TopoDS_Shape(BRepBuilderAPI_Transform(shape, gp_trsf, theCopyGeom).Shape());
@@ -783,6 +793,11 @@ extern "C" TopoDS_Shape *new_TopoDS_Shape__BRepPrimAPI_MakeRevol__TopoDS_Face_gp
 //    return BRepPrimAPI_MakeRevol(face, ax1).Shape();
 }
 
+extern "C" TopoDS_Shape *new_TopoDS_Shape__BRepPrimAPI_MakeRevol__TopoDS_Face_gp_Ax1_ang(TopoDS_Face& face, gp_Ax1& ax1, Standard_Real angle) {
+    TRACE("");
+    return new TopoDS_Shape(BRepPrimAPI_MakeRevol(face, ax1, angle).Shape());
+}
+
 extern "C" gp_Pln* new_gp_Pln__x_y_z_d(const Standard_Real x, const Standard_Real y, const Standard_Real z, const Standard_Real d) {
     TRACE("");
     return new gp_Pln(x, y, z, d);
@@ -791,6 +806,11 @@ extern "C" gp_Pln* new_gp_Pln__x_y_z_d(const Standard_Real x, const Standard_Rea
 extern "C" gp_Pln* new_gp_Pln__pt_dir(const gp_Pnt& pt, const gp_Dir& dir) {
     TRACE("");
     return new gp_Pln(pt, dir);
+}
+
+extern "C" gp_Pln* new_gp_Pln__gp_Ax3(const gp_Ax3& ax3) {
+    TRACE("");
+    return new gp_Pln(ax3);
 }
 
 extern "C" TopoDS_Shape* new_TopoDS_Shape__Shape__BRepBuilderAPI_MakeShape(BRepBuilderAPI_MakeShape &shape) {
@@ -844,24 +864,31 @@ extern "C" TopoDS_Wire* util_ShapeFix_Wire__Load__ShapeExtend_WireData(const Han
     return new TopoDS_Wire(aWire);
 }
 
-GccAna_Circ2d2TanRad *new_GccAna_Circ2d2TanRad__p2d1_p2d2_roundRadius(const gp_Pnt2d &Point1, const gp_Pnt2d &Point2, const Standard_Real Radius, const Standard_Real Tolerance) {
+extern "C" GccAna_Circ2d2TanRad *new_GccAna_Circ2d2TanRad__p2d1_p2d2_roundRadius(const gp_Pnt2d &Point1, const gp_Pnt2d &Point2, const Standard_Real Radius, const Standard_Real Tolerance) {
     return new GccAna_Circ2d2TanRad(Point1, Point2, Radius, Tolerance);
 }
 
-Standard_Integer i_GccAna_Circ2d2TanRad__NbSolutions(GccAna_Circ2d2TanRad& circ2d2TanRad) {
+extern "C" Standard_Integer i_GccAna_Circ2d2TanRad__NbSolutions(GccAna_Circ2d2TanRad& circ2d2TanRad) {
     return circ2d2TanRad.NbSolutions();
 }
 
-gp_Circ2d* ref_gp_Circ2d__GccAna_Circ2d2TanRad__ThisSolution__index(GccAna_Circ2d2TanRad* circ2d2TanRad, Standard_Integer numStartingAt1) {
+extern "C" gp_Circ2d* ref_gp_Circ2d__GccAna_Circ2d2TanRad__ThisSolution__index(GccAna_Circ2d2TanRad* circ2d2TanRad, Standard_Integer numStartingAt1) {
     return new gp_Circ2d(circ2d2TanRad->ThisSolution(numStartingAt1));
 }
 
-const gp_Ax22d &ref_Position__gp_Circ2d__Position(gp_Circ2d &cir2d) {
+extern "C" const gp_Ax22d &ref_Position__gp_Circ2d__Position(gp_Circ2d &cir2d) {
     return cir2d.Position();
 }
 
-const gp_Pnt2d &ref_gp_Pnt2d__gp_Ax22d__Location(gp_Ax22d &ax22d) {
+extern "C" const gp_Pnt2d &ref_gp_Pnt2d__gp_Ax22d__Location(gp_Ax22d &ax22d) {
     return ax22d.Location();
+}
+
+extern "C" BRepAlgoAPI_Cut *new_BRepAlgoAPI_Cut__s1_s2(TopoDS_Shape &result, TopoDS_Shape &tool) {
+    BRepAlgoAPI_Cut* cut = new BRepAlgoAPI_Cut(result, tool);
+    cut->Build();
+    cut->SimplifyResult();
+    return cut;
 }
 
 /*
