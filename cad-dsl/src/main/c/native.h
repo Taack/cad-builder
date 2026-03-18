@@ -151,7 +151,7 @@ gp_Pnt2d* new_gp_Pnt2d__Geom2dAPI_InterCurveCurve__Point__i(const Geom2dAPI_Inte
 
  Handle(Geom2d_Geometry)*  handle_Geom2d_Geometry__Copy(const Handle(Geom2d_Geometry) *toCpy);
 
- Handle(Geom_Curve)* handle_Geom_Curve__GeomAPI_To3d__curve_plan(Handle(Geom2d_Curve) *curve, gp_Pln *plan);
+ Handle(Geom_Curve)* handle_Geom_Curve__GeomAPI_To3d__Geom2d_Curve_gp_Pln(Handle(Geom2d_Curve) *curve, gp_Pln *plan);
 
 /***********************************************************************************************************************
 

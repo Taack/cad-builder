@@ -95,4 +95,11 @@ class Vec2d {
         }
     }
 
+    @Override
+    String toString() {
+        return "Vec2d{" +
+                "x=" + x +
+                ", y=" + y +
+                '}';
+    }
 }

@@ -236,9 +236,14 @@ extern "C"  Handle(Geom2d_Geometry)*  handle_Geom2d_Geometry__Copy(const Handle(
     return new Handle(Geom2d_Geometry)(toCpy->Copy());
 }
 
-extern "C"  Handle(Geom_Curve)* handle_Geom_Curve__GeomAPI_To3d__curve_plan(Handle(Geom2d_Curve) &curve, gp_Pln &plan) {
+extern "C"  Handle(Geom_Curve)* handle_Geom_Curve__GeomAPI_To3d__Geom2d_Curve_gp_Pln(Handle(Geom2d_Curve) &curve, gp_Pln &plan) {
     TRACE("");
-    return new Handle(Geom_Curve)(GeomAPI::To3d(curve, plan));
+    try {
+        return new Handle(Geom_Curve)(GeomAPI::To3d(curve, plan).get());
+    } catch(Standard_ConstructionError &e) {
+        TRACE(e.GetMessageString());
+        throw e;
+    }
 }
 
 /***********************************************************************************************************************
