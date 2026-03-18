@@ -84,50 +84,7 @@ g++ -I /usr/include/opencascade/ -lTKBinL -lTKBin -lTKBinTObj -lTKBinXCAF -lTKBo
 
 using namespace std;
 
-
-void visualize(const TopoDS_Shape& aShape) {
-     cout << "huh1" << endl;
-    Handle(Aspect_DisplayConnection) aDisplay = new Aspect_DisplayConnection();
-    Handle(Graphic3d_GraphicDriver) aDriver = new OpenGl_GraphicDriver(aDisplay);
-    Handle(V3d_Viewer) aViewer = new V3d_Viewer(aDriver);
-    Handle(V3d_View) aView =  new V3d_View(aViewer);
-     cout << "huh2" << endl;
-    Handle(AIS_InteractiveContext) aContext = new AIS_InteractiveContext (aViewer);
-     cout << "huh3" << endl;
-    Handle(AIS_Shape) aShapePrs = new AIS_Shape (aShape); // creation of the presentable object
-     cout << "huh4" << endl;
-    aContext->Display (aShapePrs, AIS_Shaded, 0, true);   // display the presentable object and redraw 3d viewer
-    aView->FitAll(0.01, false);
-    Handle(Xw_Window) aWindow = new Xw_Window(aDisplay, "OCCT Viewer", 100, 100, 512, 512);
-        Display *anXDisplay = (Display *) aDisplay->GetDisplayAspect();
-        XSelectInput(anXDisplay, (Window) aWindow->NativeHandle(),
-                     ExposureMask | KeyPressMask | KeyReleaseMask | FocusChangeMask | StructureNotifyMask
-                     | ButtonPressMask | ButtonReleaseMask | PointerMotionMask | Button1MotionMask | Button2MotionMask |
-                     Button3MotionMask);
-        Atom aDelWinAtom = aDisplay->GetAtom(Aspect_XA_DELETE_WINDOW);
-        XSetWMProtocols(anXDisplay, (Window) aWindow->NativeHandle(), &aDelWinAtom, 1);
-    aView->SetWindow(aWindow);
-    aView->SetBackgroundColor(Quantity_NOC_GRAY50);
-    aView->TriedronDisplay(Aspect_TOTP_LEFT_LOWER, Quantity_NOC_WHITE, 0.1);
-    aView->ChangeRenderingParams().RenderResolutionScale = 2.0f;
-
-    aWindow->Map();
-    aView->Redraw();
-      // X11 event loop
-      Handle(Xw_Window) axWindow = Handle(Xw_Window)::DownCast(aView->Window());
-      Handle(Aspect_DisplayConnection) aDispConn = aView->Viewer()->Driver()->GetDisplayConnection();
-//      Display *anXDisplay = (Display *) aDispConn->GetDisplayAspect();
-      for (;;) {
-        XEvent anXEvent;
-        XNextEvent(anXDisplay, &anXEvent);
-//        axWindow->ProcessMessage(new AIS_ViewController(), anXEvent);
-//        if (anXEvent.type == ClientMessage && (Atom) anXEvent.xclient.data.l[0] == aDispConn->GetAtom(
-//              Aspect_XA_DELETE_WINDOW)) {
-//          return ; // exit when window is closed
-//        }
-      }
-
-}
+extern "C" int visualize(const TopoDS_Shape& truc);
 
 // The basic inputs needed to build a sprocket
 Standard_Real roller_diameter = 10.2;
@@ -303,7 +260,7 @@ TopoDS_Shape BuildTooth()
     // Finally, extrude the face
     BRepPrimAPI_MakePrism wedge(face.Shape(), gp_Vec(0.0, 0.0, thickness));
 
-    visualize(wedge);
+    visualize(wedge.Shape());
 
     return wedge.Shape();
 }
@@ -572,6 +529,8 @@ int mainSprocket()
 
      // Build a wedge containing one tooth
      TopoDS_Shape wedge = BuildTooth();
+
+//     visualize(wedge);
      cout << "Start2" << endl;
 
      // Round off the tooth
@@ -589,6 +548,7 @@ int mainSprocket()
      // Remove material to reduce weight
      TopoDS_Shape finished_sprocket = Cutout(mountable_disc);
 
+    visualize(finished_sprocket);
      // Write the result to a brep file
      BRepTools::Write(finished_sprocket, "sprocket.brep");
 
@@ -596,3 +556,12 @@ int mainSprocket()
 
      return 0;
 }
+
+int main() {
+    return mainSprocket();
+}
+
+/*
+g++ -I /usr/include/opencascade/ -lTKBinL -lTKBin -lTKBinTObj -lTKBinXCAF -lTKBool -lTKBO -lTKBRep -lTKCAF -lTKCDF -lTKDCAF -lTKDECascade -lTKDEGLTF -lTKDEIGES -lTKDEOBJ -lTKDEPLY -lTKDE -lTKDESTEP -lTKDESTL -lTKDEVRML -lTKDraw -lTKernel -lTKExpress -lTKFeat -lTKFillet -lTKG2d -lTKG3d -lTKGeomAlgo -lTKGeomBase -lTKHLR -lTKLCAF -lTKMath -lTKMesh -lTKMeshVS -lTKOffset -lTKOpenGl -lTKOpenGlTest -lTKPrim -lTKQADraw -lTKRWMesh -lTKService -lTKShHealing -lTKStdL -lTKStd -lTKTObjDRAW -lTKTObj -lTKTopAlgo -lTKTopTest -lTKV3d
+ -lTKVCAF -lTKViewerTest -lTKXCAF -lTKXDEDRAW -lTKXMesh -lTKXmlL -lTKXml -lTKXmlTObj -lTKXmlXCAF -lTKXSBase -lTKXSDRAWDE -lTKXSDRAWGLTF -lTKXSDRAWIGES -lTKXSDRAWOBJ -lTKXSDRAWPLY -lTKXSDRAW -lTKXSDRAWSTEP -lTKXSDRAWSTL -lTKXSDRAWVRML -lGL -lGLU -lGLX -lGLEW -lX11 -lxcb -lXau -lXdmcp OcctAisHello.cpp sprocket.cpp -o sprocket
+ */
