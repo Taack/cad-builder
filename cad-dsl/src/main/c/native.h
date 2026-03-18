@@ -83,6 +83,7 @@ int visualize(void*);
 #define GccAna_Circ2d2TanRad void
 #define gp_Ax22d void
 #define BRepAlgoAPI_Cut void
+#define BRepBuilderAPI_MakeFace void
 
 /*
 
@@ -233,6 +234,10 @@ TopoDS_Wire *ref_TopoDS__Wire__TopoDS_Shape(TopoDS_Shape *shape);
 void _TopoDS__Shape__Reverse(TopoDS_Shape *shape);
 
 TopoDS_Face *new_TopoDS_Face__BRepBuilderAPI_MakeFace__TopoDS_Wire(TopoDS_Wire *wire);
+
+BRepBuilderAPI_MakeFace *new_BRepBuilderAPI_MakeFace__BRepBuilderAPI_MakeWire(BRepBuilderAPI_MakeWire *wire);
+
+TopoDS_Face *new_TopoDS_Face__BRepBuilderAPI_MakeFace(BRepBuilderAPI_MakeFace *face);
 
 TopoDS_Face *new_TopoDS_Face__BRepBuilderAPI_MakeFace__gp_Pln(gp_Pln *plane);
 

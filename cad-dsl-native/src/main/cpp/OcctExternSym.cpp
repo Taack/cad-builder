@@ -457,6 +457,16 @@ extern "C" TopoDS_Face *new_TopoDS_Face__BRepBuilderAPI_MakeFace__TopoDS_Wire(To
     return new TopoDS_Face(BRepBuilderAPI_MakeFace(wire).Face());
 }
 
+extern "C" BRepBuilderAPI_MakeFace *new_BRepBuilderAPI_MakeFace__BRepBuilderAPI_MakeWire(BRepBuilderAPI_MakeWire &wire) {
+    TRACE("");
+    return new BRepBuilderAPI_MakeFace(wire.Wire());
+}
+
+extern "C" TopoDS_Face *new_TopoDS_Face__BRepBuilderAPI_MakeFace(BRepBuilderAPI_MakeFace &face) {
+    TRACE("");
+    return new TopoDS_Face(face.Face());
+}
+
 extern "C" TopoDS_Face *new_TopoDS_Face__BRepBuilderAPI_MakeFace__gp_Pln(gp_Pln &plane) {
     TRACE("");
     return new TopoDS_Face(BRepBuilderAPI_MakeFace(plane).Face());
