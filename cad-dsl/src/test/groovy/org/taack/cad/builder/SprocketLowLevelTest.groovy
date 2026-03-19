@@ -229,7 +229,7 @@ class SprocketLowLevelTest {
         def p5 = p5v.toGpPnt()
 
         println "Convert the arc and four extra lines into 3D edges"
-        def plane = new_gp_Pln__gp_Ax3(new_gp_Ax3__p_dN_dX(new Vec().toGpPnt(), new Vec(0, 1, 0).toGpDir(), new Vec(1, 0, 0).toGpDir()))
+        def plane = new_gp_Pln__gp_Ax3(new_gp_Ax3__p_dN_dX(new Vec().toGpPnt(), new Vec(0, -1, 0).toGpDir(), new Vec(1, 0, 0).toGpDir()))
         def arc1 = new_BRepBuilderAPI_MakeEdge__Geom_Curve(handle_Geom_Curve__GeomAPI_To3d__Geom2d_Curve_gp_Pln(trimmed_circle, plane))
         def lin1 = new_BRepBuilderAPI_MakeEdge__ptFrom_ptTo(p2, p3)
         def lin2 = new_BRepBuilderAPI_MakeEdge__ptFrom_ptTo(p3, p4)
@@ -244,9 +244,7 @@ class SprocketLowLevelTest {
         _BRepBuilderAPI_MakeWire__Add__BRepBuilderAPI_MakeEdge(round_wire, lin4)
 
         println "Turn the wire into a face"
-        def round_face = new_TopoDS_Face__BRepBuilderAPI_MakeFace__TopoDS_Wire(new_TopoDS_Wire__BRepBuilderAPI_MakeWire__Wire(round_wire))
-
-        visualize(round_face)
+        def round_face = new_TopoDS_Face__BRepBuilderAPI_MakeFace(new_BRepBuilderAPI_MakeFace__BRepBuilderAPI_MakeWire(round_wire))
 
         println "Revolve the face around the Z axis over the tooth angle"
         def rounding_cut_1 = new_TopoDS_Shape__BRepPrimAPI_MakeRevol__TopoDS_Face_gp_Ax1_ang(round_face, new_gp_Ax1__p_dir(new Vec().toGpPnt(), new Vec(1).toGpDir()), tooth_angle)
@@ -263,13 +261,9 @@ class SprocketLowLevelTest {
         def rounding_cut_2 = new_TopoDS_Shape__BRepBuilderAPI_Transform__Shape_gp_Trsf_bCopy(mirrored_cut_1, translate, 0)
 
         println "Cut the wedge using the first and second cutting shape"
-visualize(rounding_cut_1)
-visualize(rounding_cut_2)
         def cut_1 = new_TopoDS_Shape__bBRepAlgoAPI_Cut__s1_s2(wedge, rounding_cut_1)
 
-        visualize(cut_1)
         def cut_2 = new_TopoDS_Shape__bBRepAlgoAPI_Cut__s1_s2(cut_1, rounding_cut_2)
-        visualize(cut_2)
         cut_2
 
 //        BRepAlgoAPI_Cut cut_1(wedge, rounding_cut_1);

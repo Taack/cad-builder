@@ -332,8 +332,6 @@ TopoDS_Shape RoundTooth(TopoDS_Shape wedge)
     // Turn the wire into a face
     BRepBuilderAPI_MakeFace round_face(round_wire);
 
-visualize(round_face.Shape());
-
     // Revolve the face around the Z axis over the tooth angle
     TopoDS_Shape rounding_cut_1 =
             BRepPrimAPI_MakeRevol(round_face, gp::OZ(), tooth_angle).Shape();
@@ -349,15 +347,11 @@ visualize(round_face.Shape());
     translate.SetTranslation(gp_Vec(0, 0, thickness));
     TopoDS_Shape rounding_cut_2 =
             BRepBuilderAPI_Transform(mirrored_cut_1, translate, false).Shape();
-visualize(rounding_cut_1);
-visualize(rounding_cut_2);
 
     // Cut the wedge using the first and second cutting shape
     BRepAlgoAPI_Cut cut_1(wedge, rounding_cut_1);
-    visualize(cut_1.Shape());
 
     BRepAlgoAPI_Cut cut_2(cut_1, rounding_cut_2);
-visualize(cut_2.Shape());
 
     // Return the result
     return cut_2.Shape();
