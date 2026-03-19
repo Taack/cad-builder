@@ -84,6 +84,15 @@ int visualize(void*);
 #define gp_Ax22d void
 #define BRepAlgoAPI_Cut void
 #define BRepBuilderAPI_MakeFace void
+#define BRepBuilderAPI_MakePolygon void
+#define BRepTools_WireExplorer void
+#define GeomPlate_BuildPlateSurface void
+#define BRepAdaptor_Curve void
+#define BRepFill_CurveConstraint void
+#define Adaptor3d_Curve void
+#define GeomPlate_PointConstraint void
+#define GeomPlate_MakeApprox void
+#define GeomPlate_Surface void
 
 /*
 
@@ -189,6 +198,46 @@ void delete_TopoDS_Edge(TopoDS_Edge *ptr);
 
 const BRepBuilderAPI_MakeEdge *new_BRepBuilderAPI_MakeEdge__ptFrom_ptTo(gp_Pnt* from, gp_Pnt* to);
 
+const BRepBuilderAPI_MakePolygon *new_BRepBuilderAPI_MakePolygon(void);
+
+void _BRepBuilderAPI_MakePolygon__Add__pt(BRepBuilderAPI_MakePolygon* poly, gp_Pnt* pt);
+
+const BRepTools_WireExplorer *new_BRepTools_WireExplorer(void);
+
+void _BRepTools_WireExplorer__Init__TopoDS_Wire(BRepTools_WireExplorer *e, const TopoDS_Wire *W);
+
+void _BRepTools_WireExplorer__Init__BRepBuilderAPI_MakePolygon(BRepTools_WireExplorer *e, const BRepBuilderAPI_MakePolygon *W);
+
+Standard_Boolean b_BRepTools_WireExplorer__More(BRepTools_WireExplorer *e);
+
+const void _BRepTools_WireExplorer__Next(BRepTools_WireExplorer *e);
+
+const Handle(TopoDS_Edge)* _BRepTools_WireExplorer__Current(BRepTools_WireExplorer *e);
+
+GeomPlate_BuildPlateSurface* new_GeomPlate_BuildPlateSurface__degree_NbPt_NbIter(const Standard_Integer	Degree, const Standard_Integer	NbPtsOnCur, const Standard_Integer	NbIter);
+
+Handle(GeomPlate_PointConstraint)* handle_GeomPlate_PointConstraint__gp_Pnt_order(gp_Pnt *p, Standard_Integer order);
+
+void _GeomPlate_BuildPlateSurface__Add__Cont(GeomPlate_BuildPlateSurface* s, const Handle(GeomPlate_PointConstraint) *Cont);
+
+void _GeomPlate_BuildPlateSurface__Perform(GeomPlate_BuildPlateSurface* s);
+
+Handle(GeomPlate_Surface)* handle_GeomPlate_Surface__GeomPlate_BuildPlateSurface__Surface(GeomPlate_BuildPlateSurface *s);
+
+Standard_Real r_GeomPlate_BuildPlateSurface__G0Error(GeomPlate_BuildPlateSurface *s);
+
+Standard_Real* r4_GeomPlate_Surface__Bounds(GeomPlate_Surface *s);
+
+Handle(BRepAdaptor_Curve) *handle_BRepAdaptor_Curve(void);
+
+void _BRepAdaptor_Curve__Initialize(BRepAdaptor_Curve* adaptor, TopoDS_Edge *edge);
+
+Handle(BRepFill_CurveConstraint)* handle_BRepFill_CurveConstraint__Adaptor3d_Curve_Tang(const Handle(Adaptor3d_Curve) *Boundary, const Standard_Integer Tang);
+
+GeomPlate_MakeApprox* new_GeomPlate_MakeApprox__SurfPlate_Tol3d_Nbmax_dgmax_dmax_CritOrder(const Handle(GeomPlate_Surface) *SurfPlate, const Standard_Real Tol3d, const Standard_Integer Nbmax, const Standard_Integer dgmax, const Standard_Real dmax, const Standard_Integer CritOrder);
+
+Handle(Geom_Surface) *handle_Geom_Surface__GeomPlate_MakeApprox__Surface(GeomPlate_MakeApprox *mApp);
+
 const BRepBuilderAPI_MakeEdge *new_BRepBuilderAPI_MakeEdge__Geom_Curve(Handle(Geom_Curve)* curve);
 
 const BRepBuilderAPI_MakeWire * new_BRepBuilderAPI_MakeWire(void);
@@ -238,6 +287,8 @@ void _TopoDS__Shape__Reverse(TopoDS_Shape *shape);
 TopoDS_Face *new_TopoDS_Face__BRepBuilderAPI_MakeFace__TopoDS_Wire(TopoDS_Wire *wire);
 
 BRepBuilderAPI_MakeFace *new_BRepBuilderAPI_MakeFace__BRepBuilderAPI_MakeWire(BRepBuilderAPI_MakeWire *wire);
+
+BRepBuilderAPI_MakeFace *new_BRepBuilderAPI_MakeFace__s_um_uM_vm_vM_Tol(const Handle(Geom_Surface) *S, const Standard_Real UMin, const Standard_Real UMax, const Standard_Real VMin, const Standard_Real VMax, const Standard_Real TolDegen);
 
 TopoDS_Face *new_TopoDS_Face__BRepBuilderAPI_MakeFace(BRepBuilderAPI_MakeFace *face);
 

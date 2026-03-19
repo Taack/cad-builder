@@ -1,7 +1,9 @@
-package org.taack.cad.builder
+package org.taack.cad.binding
 
 import groovy.transform.CompileStatic
 import org.junit.jupiter.api.Test
+import org.taack.cad.builder.Vec
+import org.taack.cad.builder.Vec2d
 
 import java.lang.foreign.MemorySegment
 

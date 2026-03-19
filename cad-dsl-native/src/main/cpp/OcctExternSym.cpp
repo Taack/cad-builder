@@ -70,6 +70,13 @@
 #include <GccAna_Circ2d2TanRad.hxx>
 #include <gp_Ax22d.hxx>
 #include <BRepPrimAPI_MakeCone.hxx>
+#include <BRepBuilderAPI_MakePolygon.hxx>
+#include <GeomPlate_BuildPlateSurface.hxx>
+#include <BRepTools_WireExplorer.hxx>
+#include <BRepAdaptor_Curve.hxx>
+#include <BRepFill_CurveConstraint.hxx>
+#include <GeomPlate_MakeApprox.hxx>
+#include <GeomPlate_Surface.hxx>
 
 
 #define TRACE(message) TRACE_IMPL(__FILE__, __LINE__, __PRETTY_FUNCTION__, message)
@@ -321,6 +328,121 @@ extern "C" const BRepBuilderAPI_MakeEdge *new_BRepBuilderAPI_MakeEdge__ptFrom_pt
     return new BRepBuilderAPI_MakeEdge(from, to);
 }
 
+extern "C" const BRepBuilderAPI_MakePolygon *new_BRepBuilderAPI_MakePolygon(void) {
+    TRACE("");
+    return new BRepBuilderAPI_MakePolygon();
+}
+
+extern "C" const void _BRepBuilderAPI_MakePolygon__Add__pt(BRepBuilderAPI_MakePolygon& poly, gp_Pnt& pt) {
+    TRACE("");
+    poly.Add(pt);
+}
+
+extern "C" const BRepTools_WireExplorer *new_BRepTools_WireExplorer(void) {
+    TRACE("");
+    return new BRepTools_WireExplorer();
+}
+
+extern "C" void _BRepTools_WireExplorer__Init__TopoDS_Wire(BRepTools_WireExplorer &e, const TopoDS_Wire &W) {
+    TRACE("");
+    return e.Init(W);
+}
+
+extern "C" void _BRepTools_WireExplorer__Init__BRepBuilderAPI_MakePolygon(BRepTools_WireExplorer &e, BRepBuilderAPI_MakePolygon &W) {
+    TRACE("");
+    return e.Init(W.Wire());
+}
+
+extern "C" Standard_Boolean b_BRepTools_WireExplorer__More(BRepTools_WireExplorer &e) {
+    TRACE("");
+    return e.More();
+}
+
+extern "C" const void _BRepTools_WireExplorer__Next(BRepTools_WireExplorer &e) {
+    TRACE("");
+    e.Next();
+}
+
+extern "C" const TopoDS_Edge* _BRepTools_WireExplorer__Current(BRepTools_WireExplorer &e) {
+    TRACE("");
+    return new TopoDS_Edge(e.Current());
+}
+
+extern "C" GeomPlate_BuildPlateSurface* new_GeomPlate_BuildPlateSurface__degree_NbPt_NbIter(const Standard_Integer	Degree, const Standard_Integer	NbPtsOnCur, const Standard_Integer	NbIter) {
+    TRACE("");
+    return new GeomPlate_BuildPlateSurface(Degree, NbPtsOnCur, NbIter);
+}
+
+extern "C" Handle(GeomPlate_PointConstraint)* handle_GeomPlate_PointConstraint__gp_Pnt_order(gp_Pnt &p, Standard_Integer order) {
+    TRACE("");
+    return new Handle(GeomPlate_PointConstraint)(new GeomPlate_PointConstraint(p, order));
+}
+
+extern "C" void _GeomPlate_BuildPlateSurface__Add__Cont(GeomPlate_BuildPlateSurface& s, const Handle(GeomPlate_PointConstraint) &Cont) {
+    TRACE("");
+    s.Add(Cont);
+}
+
+extern "C" void _GeomPlate_BuildPlateSurface__Perform(GeomPlate_BuildPlateSurface& s) {
+    TRACE("");
+    try {
+        s.Perform();
+    } catch(Standard_RangeError& e) {
+        TRACE(e.GetMessageString());
+        throw e;
+    } catch(Standard_ConstructionError& e) {
+        TRACE(e.GetMessageString());
+        throw e;
+    }
+}
+
+extern "C" Handle(GeomPlate_Surface)* handle_GeomPlate_Surface__GeomPlate_BuildPlateSurface__Surface(GeomPlate_BuildPlateSurface &s) {
+    TRACE("");
+    return new  Handle(GeomPlate_Surface)(s.Surface());
+}
+
+extern "C" Standard_Real r_GeomPlate_BuildPlateSurface__G0Error(GeomPlate_BuildPlateSurface &s) {
+    TRACE("");
+    return s.G0Error();
+}
+
+extern "C" Standard_Real* r4_GeomPlate_Surface__Bounds(GeomPlate_Surface &s) {
+    TRACE("");
+    Standard_Real U1;
+    Standard_Real U2;
+    Standard_Real V1;
+    Standard_Real V2;
+
+    s.Bounds(U1, U2, V1, V2);
+    Standard_Real* res = new Standard_Real[4] {U1, U2, V1, V2};
+    return res;
+}
+
+extern "C" Handle(BRepAdaptor_Curve) *handle_BRepAdaptor_Curve(void) {
+    TRACE("");
+    return new Handle(BRepAdaptor_Curve)(new BRepAdaptor_Curve());
+}
+
+extern "C" void _BRepAdaptor_Curve__Initialize(Handle(BRepAdaptor_Curve)& adaptor, TopoDS_Edge &edge) {
+    TRACE("");
+    adaptor->Initialize(edge);
+}
+
+extern "C" Handle(BRepFill_CurveConstraint)* handle_BRepFill_CurveConstraint__Adaptor3d_Curve_Tang(const Handle(Adaptor3d_Curve) &	Boundary, const Standard_Integer	Tang) {
+    TRACE("");
+    return new Handle(BRepFill_CurveConstraint)(new BRepFill_CurveConstraint(Boundary, Tang));
+}
+
+extern "C" GeomPlate_MakeApprox* new_GeomPlate_MakeApprox__SurfPlate_Tol3d_Nbmax_dgmax_dmax_CritOrder(const Handle(GeomPlate_Surface) &SurfPlate, const Standard_Real Tol3d, const Standard_Integer Nbmax, const Standard_Integer dgmax, const Standard_Real dmax, const Standard_Integer CritOrder) {
+    TRACE("");
+    return new GeomPlate_MakeApprox(SurfPlate, Tol3d, Nbmax, dgmax, dmax, CritOrder);
+}
+
+extern "C" Handle(Geom_BSplineSurface) *handle_Geom_Surface__GeomPlate_MakeApprox__Surface(GeomPlate_MakeApprox &mApp) {
+    TRACE("");
+    return new Handle(Geom_BSplineSurface)(mApp.Surface());
+}
+
 extern "C" const BRepBuilderAPI_MakeEdge *new_BRepBuilderAPI_MakeEdge__Geom_Curve(Handle(Geom_Curve)& curve) {
     TRACE("");
     return new BRepBuilderAPI_MakeEdge(curve);
@@ -466,6 +588,11 @@ extern "C" TopoDS_Face *new_TopoDS_Face__BRepBuilderAPI_MakeFace__TopoDS_Wire(To
 extern "C" BRepBuilderAPI_MakeFace *new_BRepBuilderAPI_MakeFace__BRepBuilderAPI_MakeWire(BRepBuilderAPI_MakeWire &wire) {
     TRACE("");
     return new BRepBuilderAPI_MakeFace(wire.Wire());
+}
+
+extern "C" BRepBuilderAPI_MakeFace *new_BRepBuilderAPI_MakeFace__s_um_uM_vm_vM_Tol(const Handle(Geom_Surface) &S, const Standard_Real UMin, const Standard_Real UMax, const Standard_Real VMin, const Standard_Real VMax, const Standard_Real TolDegen) {
+    TRACE("");
+    return new BRepBuilderAPI_MakeFace(S, UMin, UMax, VMin, VMax, TolDegen);
 }
 
 extern "C" TopoDS_Face *new_TopoDS_Face__BRepBuilderAPI_MakeFace(BRepBuilderAPI_MakeFace &face) {

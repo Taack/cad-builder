@@ -42,15 +42,14 @@ int main() {
     BRepTools_WireExplorer anExp;
     for(anExp.Init(W); anExp.More(); anExp.Next())
     {
-    TopoDS_Edge E = anExp.Current();
-    Handle(BRepAdaptor_Curve) C = new BRepAdaptor_Curve();
-    C->Initialize(E);
-    Handle(BRepFill_CurveConstraint) Cont= new BRepFill_CurveConstraint(C,0);
-    BPSurf.Add(Cont);
+        TopoDS_Edge E = anExp.Current();
+        Handle(BRepAdaptor_Curve) C = new BRepAdaptor_Curve();
+        C->Initialize(E);
+        Handle(BRepFill_CurveConstraint) Cont= new BRepFill_CurveConstraint(C,0);
+        BPSurf.Add(Cont);
     }
     // Point constraint
-    Handle(GeomPlate_PointConstraint) PCont= new
-    GeomPlate_PointConstraint(P5,0);
+    Handle(GeomPlate_PointConstraint) PCont= new GeomPlate_PointConstraint(P5,0);
     BPSurf.Add(PCont);
     // Compute the Plate surface
     BPSurf.Perform();
@@ -62,8 +61,7 @@ int main() {
     Handle(GeomPlate_Surface) PSurf = BPSurf.Surface();
     dmax = Max(0.0001,10*BPSurf.G0Error());
     Tol=0.0001;
-    GeomPlate_MakeApprox
-    Mapp(PSurf,Tol,MaxSeg,MaxDegree,dmax,CritOrder);
+    GeomPlate_MakeApprox Mapp(PSurf,Tol,MaxSeg,MaxDegree,dmax,CritOrder);
     Handle (Geom_Surface) Surf (Mapp.Surface());
     // create a face corresponding to the approximated Plate Surface
     Standard_Real Umin, Umax, Vmin, Vmax;
