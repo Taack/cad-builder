@@ -437,9 +437,14 @@ extern "C" void _gp_Trsf__SetTranslation__gp_Vec(gp_Trsf &gp_trsf, const gp_Vec 
     return gp_trsf.SetTranslation(translation);
 }
 
-extern "C" BRepBuilderAPI_Transform *new_BRepBuilderAPI_Transform__TopoDS_Shape_gp_Trsf(const TopoDS_Shape &w, gp_Trsf &trsf) {
+extern "C" void _gp_Trsf__SetRotation__gp_Vec(gp_Trsf &gp_trsf, const gp_Ax1 &ax1, Standard_Real angle) {
     TRACE("");
-    return new BRepBuilderAPI_Transform(w, trsf, 0, 0);
+    return gp_trsf.SetRotation(ax1, angle);
+}
+
+extern "C" BRepBuilderAPI_Transform *new_BRepBuilderAPI_Transform__TopoDS_Shape_gp_Trsf(const TopoDS_Shape &w, gp_Trsf &trsf, const Standard_Boolean theCopyGeom, const Standard_Boolean theCopyMesh) {
+    TRACE("");
+    return new BRepBuilderAPI_Transform(w, trsf, theCopyGeom, theCopyMesh);
 }
 
 extern "C" TopoDS_Wire &ref_TopoDS__Wire__TopoDS_Shape(TopoDS_Shape &shape) {
@@ -939,8 +944,8 @@ extern "C" TopoDS_Shape *new_TopoDS_Shape__bBRepAlgoAPI_Cut__s1_s2(TopoDS_Shape 
 extern "C" TopoDS_Shape *new_TopoDS_Shape__brep_algoapi_fuse__s1_s2(TopoDS_Shape &s1, TopoDS_Shape &s2) {
     TRACE("");
     const auto fuse = new BRepAlgoAPI_Fuse(s1, s2);
-    fuse->Build();
-    fuse->SimplifyResult();
+//    fuse->Build();
+//    fuse->SimplifyResult();
     return new TopoDS_Shape(fuse->Shape());
 }
 

@@ -57,7 +57,7 @@ class CadBuilder {
         println "currentLoc = $currentLoc"
         def trsf = new_gp_Trsf()
         _gp_Trsf__SetTranslation__gp_Vec(trsf, currentLoc.toGpVec())
-        other.currentShapeNative = new_TopoDS_Shape__Shape__BRepBuilderAPI_MakeShape new_BRepBuilderAPI_Transform__TopoDS_Shape_gp_Trsf(other.currentShapeNative, trsf)
+        other.currentShapeNative = new_TopoDS_Shape__Shape__BRepBuilderAPI_MakeShape new_BRepBuilderAPI_Transform__TopoDS_Shape_gp_Trsf(other.currentShapeNative, trsf, 0, 0)
         currentShapeNative = new_TopoDS_Shape__brep_algoapi_fuse__s1_s2(currentShapeNative, other.currentShapeNative)
         this
     }
@@ -354,7 +354,7 @@ class CadBuilder {
 
         def shape = toShape()
         _TopoDS__Shape__Reverse(shape)
-        def aBRepTrsf = new_BRepBuilderAPI_Transform__TopoDS_Shape_gp_Trsf(shape, aTrsf)
+        def aBRepTrsf = new_BRepBuilderAPI_Transform__TopoDS_Shape_gp_Trsf(shape, aTrsf, 0, 0)
         def aMirroredShape = ref_TopoDS__Wire__TopoDS_Shape(new_TopoDS_Shape__Shape__BRepBuilderAPI_MakeShape(aBRepTrsf))
         def mkWire = new_BRepBuilderAPI_MakeWire()
         _BRepBuilderAPI_MakeWire__Add__TopoDS_Wire(mkWire, aMirroredShape)

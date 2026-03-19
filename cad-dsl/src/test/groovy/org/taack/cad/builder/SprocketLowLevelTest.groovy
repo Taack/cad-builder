@@ -265,19 +265,58 @@ class SprocketLowLevelTest {
 
         def cut_2 = new_TopoDS_Shape__bBRepAlgoAPI_Cut__s1_s2(cut_1, rounding_cut_2)
         cut_2
-
-//        BRepAlgoAPI_Cut cut_1(wedge, rounding_cut_1);
-//        BRepAlgoAPI_Cut cut_2(cut_1, rounding_cut_2);
-//
-//        // Return the result
-//        return cut_2.Shape();
-
     }
 
+    MemorySegment cloneTooth(MemorySegment base_shape) {
+        def clone = new_gp_Trsf()
+        println "TopoDS_Shape aggregated_shape = base_shape"
+        def grouped_shape = base_shape
+
+        println "Find a divisor, between 1 and 8, for the number_of teeth"
+        int multiplier = 1
+        int max_multiplier = 1
+
+        for (int current_multiplier = 1;
+             current_multiplier <= 8;
+             current_multiplier++) {
+            if ((num_teeth % multiplier) == 0)
+                max_multiplier = current_multiplier
+        }
+
+        multiplier = max_multiplier
+        def gp_OZ = new_gp_Ax1__p_dir(new Vec().toGpPnt(), new Vec(1).toGpDir())
+        for (int i = 1; i < multiplier; i++) {
+            _gp_Trsf__SetRotation__gp_Vec(clone, gp_OZ, -i * tooth_angle)
+
+            def rotated_shape = new_TopoDS_Shape__BRepBuilderAPI_Transform__Shape_gp_Trsf_bCopy(base_shape, clone, 1)
+            grouped_shape = new_TopoDS_Shape__brep_algoapi_fuse__s1_s2(grouped_shape, rotated_shape)
+            println i
+        }
+
+        def aggregated_shape = grouped_shape
+
+        println "Rotate the basic tooth and fuse together"
+        for (int i = 1; i < num_teeth / multiplier; i++) {
+            _gp_Trsf__SetRotation__gp_Vec(clone, gp_OZ, -i * multiplier * tooth_angle)
+            def rotated_shape = new_TopoDS_Shape__BRepBuilderAPI_Transform__Shape_gp_Trsf_bCopy(grouped_shape, clone, 1)
+            aggregated_shape = new_TopoDS_Shape__brep_algoapi_fuse__s1_s2(aggregated_shape, rotated_shape)
+            println i
+        }
+
+        println "Fuse a disc to fill in the center"
+        def cylinder = new_TopoDS_Shape__BRepPrimAPI_MakeCylinder__gp_Ax2_radius_height(new_gp_Ax2_DZ(),
+                top_radius - roller_diameter,
+                thickness)
+        aggregated_shape = new_TopoDS_Shape__brep_algoapi_fuse__s1_s2(aggregated_shape, cylinder)
+
+        return aggregated_shape
+
+    }
 
     @Test
     void "Build Tooth"() {
         def tooth = buildTooth()
-        visualize(roundTooth(tooth))
+        def roundTooth = roundTooth(tooth)
+        visualize cloneTooth(roundTooth)
     }
 }

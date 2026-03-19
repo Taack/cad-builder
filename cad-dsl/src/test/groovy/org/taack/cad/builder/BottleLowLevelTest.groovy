@@ -37,7 +37,7 @@ class BottleLowLevelTest {
         def aTrsf = new_gp_Trsf()
         _gp_Trsf__SetMirror__gp_Ax1(aTrsf, xAxis)
 
-        def aBRepTrsf = new_BRepBuilderAPI_Transform__TopoDS_Shape_gp_Trsf(aWire, aTrsf)
+        def aBRepTrsf = new_BRepBuilderAPI_Transform__TopoDS_Shape_gp_Trsf(aWire, aTrsf, 0, 0)
         def aMirroredShape = new_TopoDS_Shape__Shape__BRepBuilderAPI_MakeShape(aBRepTrsf)
         def aMirroredWire = ref_TopoDS__Wire__TopoDS_Shape(aMirroredShape)
 

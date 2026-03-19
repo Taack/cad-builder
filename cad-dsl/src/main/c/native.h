@@ -227,7 +227,9 @@ void _gp_Trsf__SetMirror__gp_Ax2(gp_Trsf *trsf, gp_Ax2 *ax2);
 
 void _gp_Trsf__SetTranslation__gp_Vec(gp_Trsf *gp_trsf, const gp_Vec *translation);
 
-BRepBuilderAPI_Transform *new_BRepBuilderAPI_Transform__TopoDS_Shape_gp_Trsf(const TopoDS_Shape *w, gp_Trsf *trsf);
+void _gp_Trsf__SetRotation__gp_Vec(gp_Trsf *gp_trsf, const gp_Ax1 *ax1, Standard_Real angle);
+
+BRepBuilderAPI_Transform *new_BRepBuilderAPI_Transform__TopoDS_Shape_gp_Trsf(const TopoDS_Shape *w, gp_Trsf *trsf, const Standard_Boolean theCopyGeom, const Standard_Boolean theCopyMesh);
 
 TopoDS_Wire *ref_TopoDS__Wire__TopoDS_Shape(TopoDS_Shape *shape);
 
