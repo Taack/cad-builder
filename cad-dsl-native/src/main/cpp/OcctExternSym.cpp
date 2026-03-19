@@ -69,6 +69,7 @@
 #include <Geom_SurfaceOfRevolution.hxx>
 #include <GccAna_Circ2d2TanRad.hxx>
 #include <gp_Ax22d.hxx>
+#include <BRepPrimAPI_MakeCone.hxx>
 
 
 #define TRACE(message) TRACE_IMPL(__FILE__, __LINE__, __PRETTY_FUNCTION__, message)
@@ -803,7 +804,16 @@ extern "C" TopoDS_Shape *new_TopoDS_Shape__BRepPrimAPI_MakeCylinder__gp_Ax2_radi
     return new TopoDS_Shape(BRepPrimAPI_MakeCylinder(origin,
                                                      radius,
                                                      height));
-//    return BRepPrimAPI_MakeCylinder(origin, radius, height).Shape();erreur: ne peut convertir «const TopoDS_Shape» en «TopoDS_Shape*» dans le retour
+}
+
+extern "C" TopoDS_Shape *new_TopoDS_Shape__BRepPrimAPI_MakeCone__gp_Ax2_R1_R2_H_angle(const gp_Ax2 &origin, const Standard_Real R1, const Standard_Real R2, const Standard_Real H, const Standard_Real angle) {
+    TRACE("");
+    return new TopoDS_Shape(BRepPrimAPI_MakeCone(origin, R1, R2, H, angle));
+}
+
+extern "C" TopoDS_Shape *new_TopoDS_Shape__BRepPrimAPI_MakeCone__gp_Ax2_R1_R2_H(const gp_Ax2 &origin, const Standard_Real R1, const Standard_Real R2, const Standard_Real H) {
+    TRACE("");
+    return new TopoDS_Shape(BRepPrimAPI_MakeCone(origin, R1, R2, H));
 }
 
 extern "C" TopoDS_Shape *new_TopoDS_Shape__BRepBuilderAPI_Transform__Shape_gp_Trsf_bCopy(const TopoDS_Shape &shape, const gp_Trsf &gp_trsf,

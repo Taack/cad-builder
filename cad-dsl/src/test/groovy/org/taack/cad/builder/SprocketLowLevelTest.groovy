@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Test
 import java.lang.foreign.MemorySegment
 
 import static org.taack.occt.NativeLib.*
+import static java.lang.Math.*
 
 // https://algotopia.com/contents/opencascade/opencascade_sprocket
 @CompileStatic
@@ -19,20 +20,20 @@ class SprocketLowLevelTest {
 
     // Dimensions derived from the provided inputs
     double roller_radius = roller_diameter / 2.0
-    double tooth_angle = (2.0d * Math.PI) / num_teeth.toDouble()
-    double pitch_circle_diameter = pitch / Math.sin(tooth_angle.toDouble() / 2.0)
+    double tooth_angle = (2.0d * PI) / num_teeth.toDouble()
+    double pitch_circle_diameter = pitch / sin(tooth_angle.toDouble() / 2.0)
     double pitch_circle_radius = pitch_circle_diameter / 2.0
 
     double roller_contact_angle_min =
-            (Math.PI * 120 / 180) - ((Math.PI / 2) / num_teeth)
+            (PI * 120 / 180) - ((PI / 2) / num_teeth)
     double roller_contact_angle_max =
-            (Math.PI * 140 / 180) - ((Math.PI / 2) / num_teeth)
+            (PI * 140 / 180) - ((PI / 2) / num_teeth)
     double roller_contact_angle =
             (roller_contact_angle_min + roller_contact_angle_max) / 2.0
 
     double tooth_radius_min = 0.505 * roller_diameter
     double tooth_radius_max =
-            tooth_radius_min + (0.069 * Math.pow(roller_diameter.toDouble(), 1.0d / 3.0))
+            tooth_radius_min + (0.069 * pow(roller_diameter.toDouble(), 1.0d / 3.0))
     double tooth_radius = (tooth_radius_min + tooth_radius_max) / 2.0
 
     double profile_radius = 0.12 * roller_diameter * (num_teeth + 2)
@@ -59,14 +60,14 @@ class SprocketLowLevelTest {
         Vec2d base_center = new Vec2d(pitch_circle_radius + (tooth_radius - roller_radius), 0)
         def base_circle = new_gp_Circ2d__ax2d_r(new_gp_Ax2d__pt_dir(base_center.toGpPnt2d(), new_gp_Dir2d()),
                 tooth_radius)
-        def trimmed_base = handle_Geom2d_TrimmedCurve__GCE2d_MakeArcOfCircle__cir2d_ang1_ang2(base_circle, Math.PI - (roller_contact_angle / 2.0), Math.PI)
+        def trimmed_base = handle_Geom2d_TrimmedCurve__GCE2d_MakeArcOfCircle__cir2d_ang1_ang2(base_circle, PI - (roller_contact_angle / 2.0), PI)
         _Geom2d_TrimmedCurve__Reverse(trimmed_base)
         def p0 = new_gp_Pnt2d__Geom2d_TrimmedCurve__StartPoint(trimmed_base)
         def p1 = new_gp_Pnt2d__Geom2d_TrimmedCurve__EndPoint(trimmed_base)
 
         println "Determine the center of the profile circle"
-        double x_distance = Math.cos(roller_contact_angle / 2d) * (profile_radius + tooth_radius)
-        double y_distance = Math.sin(roller_contact_angle / 2d) * (profile_radius + tooth_radius)
+        double x_distance = cos(roller_contact_angle / 2d) * (profile_radius + tooth_radius)
+        double y_distance = sin(roller_contact_angle / 2d) * (profile_radius + tooth_radius)
         def profile_center = new Vec2d(pitch_circle_radius - x_distance, y_distance).toGpPnt2d()
 
         println "x_distance $x_distance"
@@ -110,7 +111,7 @@ class SprocketLowLevelTest {
         def trimmed_profile = handle_Geom2d_TrimmedCurve__GCE2d_MakeArcOfCircle__cir2d_p1_p2(profile_circle, p1, p2)
 
         println "Calculate the outermost point"
-        Vec2d vP3 = new Vec2d(Math.cos(tooth_angle / 2d) * top_radius, Math.sin(tooth_angle / 2d) * top_radius)
+        Vec2d vP3 = new Vec2d(cos(tooth_angle / 2d) * top_radius, sin(tooth_angle / 2d) * top_radius)
         println "vP3: $vP3"
 
         println "and use it to create the third arc"
@@ -330,7 +331,26 @@ class SprocketLowLevelTest {
      * @param shape
      * @return
      */
-    MemorySegment mountingHoles(MemorySegment shape) {
+    MemorySegment mountingHoles(MemorySegment base) {
+        def result = base
+        for (int i = 0; i < mounting_hole_count; i++) {
+            Vec centerVec = new Vec(
+                    cos(i * PI / 3) * mounting_radius,
+                    sin(i * PI / 3) * mounting_radius,
+                    0.0)
+            MemorySegment center_axis = new_gp_Ax2__gp_Pnt_gp_Dir(centerVec.toGpPnt(), new Vec(1).toGpDir())
+            def cylinder = new_TopoDS_Shape__BRepPrimAPI_MakeCylinder__gp_Ax2_radius_height(center_axis, hole_radius, thickness)
+
+            result = new_TopoDS_Shape__bBRepAlgoAPI_Cut__s1_s2(result, cylinder)
+
+            def cone = new_TopoDS_Shape__BRepPrimAPI_MakeCone__gp_Ax2_R1_R2_H(
+                    center_axis,
+                    (hole_radius + thickness / 2.0d),
+                    hole_radius, thickness / 2.0d)
+            result = new_TopoDS_Shape__bBRepAlgoAPI_Cut__s1_s2(result, cone)
+        }
+
+        return result
 
     }
 
@@ -339,6 +359,7 @@ class SprocketLowLevelTest {
         def tooth = buildTooth()
         def roundTooth = roundTooth(tooth)
         def manyTooth = cloneTooth(roundTooth)
-        visualize centerHole(manyTooth)
+        def manyToothWithCenterHole = centerHole(manyTooth)
+        visualize mountingHoles(manyToothWithCenterHole)
     }
 }

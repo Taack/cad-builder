@@ -361,6 +361,10 @@ TopoDS_Shape *new_TopoDS_Shape__BRepPrimAPI_MakeSphere__gp_Ax2_radius_a1_a2(cons
 TopoDS_Shape *new_TopoDS_Shape__BRepPrimAPI_MakeCylinder__gp_Ax2_radius_height(const gp_Ax2 *origin, const Standard_Real radius,
                                                        const Standard_Real height);
 
+TopoDS_Shape *new_TopoDS_Shape__BRepPrimAPI_MakeCone__gp_Ax2_R1_R2_H_angle(const gp_Ax2 *origin, const Standard_Real R1, const Standard_Real R2, const Standard_Real H, const Standard_Real angle);
+
+TopoDS_Shape *new_TopoDS_Shape__BRepPrimAPI_MakeCone__gp_Ax2_R1_R2_H(const gp_Ax2 *origin, const Standard_Real R1, const Standard_Real R2, const Standard_Real H);
+
 TopoDS_Shape *new_TopoDS_Shape__BRepBuilderAPI_Transform__Shape_gp_Trsf_bCopy(const TopoDS_Shape *shape, const gp_Trsf *gp_trsf,
                                                          const Standard_Boolean theCopyGeom);
 
