@@ -266,7 +266,12 @@ class SprocketLowLevelTest {
         def cut_2 = new_TopoDS_Shape__bBRepAlgoAPI_Cut__s1_s2(cut_1, rounding_cut_2)
         cut_2
     }
-
+    /**
+     * Copy a single tooth to form a complete sprocket
+     * This is done in two stages to speed up the fusing
+     * @param base_shape
+     * @return
+     */
     MemorySegment cloneTooth(MemorySegment base_shape) {
         def clone = new_gp_Trsf()
         println "TopoDS_Shape aggregated_shape = base_shape"
@@ -307,9 +312,25 @@ class SprocketLowLevelTest {
         def cylinder = new_TopoDS_Shape__BRepPrimAPI_MakeCylinder__gp_Ax2_radius_height(new_gp_Ax2_DZ(),
                 top_radius - roller_diameter,
                 thickness)
-        aggregated_shape = new_TopoDS_Shape__brep_algoapi_fuse__s1_s2(aggregated_shape, cylinder)
+        new_TopoDS_Shape__brep_algoapi_fuse__s1_s2(aggregated_shape, cylinder)
+    }
 
-        return aggregated_shape
+    /**
+     * Create a hole in the center of the sprocket
+     * @param shape
+     * @return
+     */
+    MemorySegment centerHole(MemorySegment shape) {
+        def cylinder = new_TopoDS_Shape__BRepPrimAPI_MakeCylinder__gp_Ax2_radius_height(new_gp_Ax2_DZ(), center_radius, thickness)
+        new_TopoDS_Shape__bBRepAlgoAPI_Cut__s1_s2(shape, cylinder)
+    }
+
+    /**
+     * Provide chamfered mounting holes
+     * @param shape
+     * @return
+     */
+    MemorySegment mountingHoles(MemorySegment shape) {
 
     }
 
@@ -317,6 +338,7 @@ class SprocketLowLevelTest {
     void "Build Tooth"() {
         def tooth = buildTooth()
         def roundTooth = roundTooth(tooth)
-        visualize cloneTooth(roundTooth)
+        def manyTooth = cloneTooth(roundTooth)
+        visualize centerHole(manyTooth)
     }
 }
