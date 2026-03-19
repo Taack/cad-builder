@@ -20,7 +20,7 @@
 
 extern "C" int visualize(const TopoDS_Shape& truc);
 
-int main() {
+int TaperedPrismMain() {
     TopoDS_Shape S = BRepPrimAPI_MakeBox(400.,250.,300.);
     TopExp_Explorer Ex;
     Ex.Init(S,TopAbs_FACE);
