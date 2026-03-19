@@ -140,12 +140,10 @@ class SprocketLowLevelTest {
         println "Outer Arc ${Vec2d.fromAPnt(outer_start)} ${Vec2d.fromAPnt(outer_mid)} ${Vec2d.fromAPnt(outer_end)}"
 
         println "Create an arc for the inside of the wedge"
-        def inner_circle = new_gp_Circ2d__ax2d_r(new_gp_Ax2__gp_Pnt_gp_Dir(new Vec2d().toGpPnt2d(), new Vec2d(1, 0).toGpDir2d()), top_radius - roller_diameter)
+        def inner_circle = new_gp_Circ2d__ax2d_r(new_gp_Ax2d__pt_dir(new Vec2d().toGpPnt2d(), new Vec2d(1, 0).toGpDir2d()), top_radius - roller_diameter)
         Vec2d innerStartVec2d = new Vec2d(top_radius - roller_diameter, 0)
         def inner_arc = handle_Geom2d_TrimmedCurve__GCE2d_MakeArcOfCircle__cir2d_p1_ang(inner_circle, innerStartVec2d.toGpPnt2d(), tooth_angle)
         _Geom2d_TrimmedCurve__Reverse(inner_arc)
-
-        println "chqpt: ${top_radius - roller_diameter} inner_start = ${innerStartVec2d} tooth_angle = $tooth_angle"
 
         println "Convert the 2D arcs and two extra lines to 3D edges"
         def plane = new_gp_Pln__pt_dir(new Vec().toGpPnt(), new Vec(0, 0, 1).toGpDir())
@@ -159,8 +157,6 @@ class SprocketLowLevelTest {
         Vec2d p4v2d = Vec2d.fromAPnt(p4)
         def p5 = new_gp_Pnt2d__Geom2d_TrimmedCurve__StartPoint(inner_arc)
         Vec2d p5v2d = Vec2d.fromAPnt(p5)
-        println "p4v2d: ${p4v2d}"
-        println "p5v2d: ${p5v2d}"
         def lin1 = new_BRepBuilderAPI_MakeEdge__ptFrom_ptTo(new Vec(p4v2d).toGpPnt(), new Vec(p5v2d).toGpPnt())
         def arc6 = new_BRepBuilderAPI_MakeEdge__Geom_Curve handle_Geom_Curve__GeomAPI_To3d__Geom2d_Curve_gp_Pln(inner_arc, plane)
         def p6 = new_gp_Pnt2d__Geom2d_TrimmedCurve__EndPoint(inner_arc)
@@ -175,21 +171,14 @@ class SprocketLowLevelTest {
         _BRepBuilderAPI_MakeWire__Add__BRepBuilderAPI_MakeEdge(wire, arc4)
         _BRepBuilderAPI_MakeWire__Add__BRepBuilderAPI_MakeEdge(wire, arc5)
         _BRepBuilderAPI_MakeWire__Add__BRepBuilderAPI_MakeEdge(wire, lin1)
-        visualize(new_TopoDS_Shape__Shape__BRepBuilderAPI_MakeShape wire)
         _BRepBuilderAPI_MakeWire__Add__BRepBuilderAPI_MakeEdge(wire, arc6)
-        visualize(new_TopoDS_Shape__Shape__BRepBuilderAPI_MakeShape wire)
         _BRepBuilderAPI_MakeWire__Add__BRepBuilderAPI_MakeEdge(wire, lin2)
-        visualize(new_TopoDS_Shape__Shape__BRepBuilderAPI_MakeShape wire)
 
         println "Convert the wire into a face"
         def face = new_TopoDS_Face__BRepBuilderAPI_MakeFace__TopoDS_Wire(new_TopoDS_Wire__BRepBuilderAPI_MakeWire__Wire(wire))
 
-        visualize(face)
-
         println "Finally, extrude the face"
         def wedge = new_TopoDS_Shape__BRepPrimAPI_MakePrism__TopoDS_Face_gp_Vec(face, new Vec(0, 0, thickness).toGpVec())
-
-        visualize(wedge)
 
         return wedge
     }
@@ -207,6 +196,7 @@ class SprocketLowLevelTest {
         def p2d_1 = p2d_1v.toGpPnt2d()
         Vec2d p2d_2v = new Vec2d(top_radius, round_z)
         def p2d_2 = p2d_2v.toGpPnt2d()
+
         println "Construct the rounding circle"
         def round_circle = new_GccAna_Circ2d2TanRad__p2d1_p2d2_roundRadius(p2d_1, p2d_2, round_radius, 0.01d)
         if (i_GccAna_Circ2d2TanRad__NbSolutions(round_circle) != 2)
@@ -216,6 +206,8 @@ class SprocketLowLevelTest {
         def round_circle_2d_2 = ref_gp_Circ2d__GccAna_Circ2d2TanRad__ThisSolution__index(round_circle, 2)
         MemorySegment round_circle_2d
         Vec2d roundP1 = Vec2d.fromAPnt ref_gp_Pnt2d__gp_Ax22d__Location(ref_Position__gp_Circ2d__Position(round_circle_2d_1))
+
+        println "round_circle_2d_1; ${roundP1.y}"
         if (roundP1.y >= 0)
             round_circle_2d = round_circle_2d_1
         else
@@ -254,6 +246,8 @@ class SprocketLowLevelTest {
         println "Turn the wire into a face"
         def round_face = new_TopoDS_Face__BRepBuilderAPI_MakeFace__TopoDS_Wire(new_TopoDS_Wire__BRepBuilderAPI_MakeWire__Wire(round_wire))
 
+        visualize(round_face)
+
         println "Revolve the face around the Z axis over the tooth angle"
         def rounding_cut_1 = new_TopoDS_Shape__BRepPrimAPI_MakeRevol__TopoDS_Face_gp_Ax1_ang(round_face, new_gp_Ax1__p_dir(new Vec().toGpPnt(), new Vec(1).toGpDir()), tooth_angle)
 
@@ -269,9 +263,14 @@ class SprocketLowLevelTest {
         def rounding_cut_2 = new_TopoDS_Shape__BRepBuilderAPI_Transform__Shape_gp_Trsf_bCopy(mirrored_cut_1, translate, 0)
 
         println "Cut the wedge using the first and second cutting shape"
-
+visualize(rounding_cut_1)
+visualize(rounding_cut_2)
         def cut_1 = new_TopoDS_Shape__bBRepAlgoAPI_Cut__s1_s2(wedge, rounding_cut_1)
-        new_TopoDS_Shape__bBRepAlgoAPI_Cut__s1_s2(cut_1, rounding_cut_2)
+
+        visualize(cut_1)
+        def cut_2 = new_TopoDS_Shape__bBRepAlgoAPI_Cut__s1_s2(cut_1, rounding_cut_2)
+        visualize(cut_2)
+        cut_2
 
 //        BRepAlgoAPI_Cut cut_1(wedge, rounding_cut_1);
 //        BRepAlgoAPI_Cut cut_2(cut_1, rounding_cut_2);

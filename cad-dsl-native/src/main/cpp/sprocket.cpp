@@ -173,22 +173,17 @@ TopoDS_Shape BuildTooth()
     Standard_Integer num_points = inter.NbPoints();
     gp_Pnt2d p2;
 
-    std::cout << "num_points = " << num_points << std::endl;
-
     if (num_points == 2)
     {
         if (p1.Distance(inter.Point(1)) < p1.Distance(inter.Point(2))) {
             p2 = inter.Point(1);
-            std::cout << "p2 point 1 " << p2.X() << " " << p2.Y() << std::endl;
         } else {
             p2 = inter.Point(2);
-            std::cout << "p2 point 2 " << p2.X() << " " << p2.Y() << std::endl;
         }
     }
     else if (num_points == 1)
     {
         p2 = inter.Point(1);
-        std::cout << "p2 point 1 " << p2.X() << " " << p2.Y() << std::endl;
     }
     else
         throw;
@@ -234,8 +229,6 @@ TopoDS_Shape BuildTooth()
     Handle(Geom2d_TrimmedCurve) outer_arc =
             GCE2d_MakeArcOfCircle(outer_start, outer_mid, outer_end);
 
-    std::cout << "Outer Arc " << outer_start.X() << ":" << outer_start.Y() << ", " << outer_mid.X() << ":" << outer_mid.Y() << ", " << outer_end.X() << ":" << outer_end.Y() << std::endl;
-
     // Create an arc for the inside of the wedge
     gp_Circ2d inner_circle(gp_Ax2d(gp_Pnt2d(0, 0), gp_Dir2d()),
                            top_radius - roller_diameter);
@@ -243,8 +236,6 @@ TopoDS_Shape BuildTooth()
     Handle(Geom2d_TrimmedCurve) inner_arc =
             GCE2d_MakeArcOfCircle(inner_circle, inner_start , tooth_angle);
     inner_arc->Reverse();
-
-    std::cout << "chqpt: " << top_radius - roller_diameter << " tooth_angle = " << tooth_angle << std::endl;
 
     //Convert the 2D arcs and two extra lines to 3D edges
     gp_Pln plane = gp_Pln(gp::Origin(), gp::DZ());
@@ -255,9 +246,6 @@ TopoDS_Shape BuildTooth()
     BRepBuilderAPI_MakeEdge arc5(GeomAPI::To3d(mirror_base, plane));
     gp_Pnt2d p4 = mirror_base->EndPoint();
     gp_Pnt2d p5 = inner_arc->StartPoint();
-
-    std::cout << "p4: " << p4.X() << " " << p4.Y() << std::endl;
-    std::cout << "p5: " << p5.X() << " " << p5.Y() << std::endl;
 
     BRepBuilderAPI_MakeEdge lin1(gp_Pnt(p4.X(), p4.Y(), 0),
                                  gp_Pnt(p5.X(), p5.Y(), 0));
@@ -272,11 +260,7 @@ TopoDS_Shape BuildTooth()
     wire.Add(arc3);
     wire.Add(arc4);
     wire.Add(arc5);
-    visualize(wire.Shape());
     wire.Add(lin1);
-    visualize(wire.Shape());
-
-    visualize(wire.Shape());
     wire.Add(arc6);
     wire.Add(lin2);
 
@@ -285,8 +269,6 @@ TopoDS_Shape BuildTooth()
 
     // Finally, extrude the face
     BRepPrimAPI_MakePrism wedge(face.Shape(), gp_Vec(0.0, 0.0, thickness));
-
-    visualize(wedge.Shape());
 
     return wedge.Shape();
 }
@@ -313,6 +295,8 @@ TopoDS_Shape RoundTooth(TopoDS_Shape wedge)
     gp_Circ2d round_circle_2d_1 = round_circle.ThisSolution(1);
     gp_Circ2d round_circle_2d_2 = round_circle.ThisSolution(2);
     gp_Circ2d round_circle_2d;
+
+    std::cout << "round_circle_2d_1:" << round_circle_2d_1.Position().Location().Coord().Y() << std::endl;
 
     if (round_circle_2d_1.Position().Location().Coord().Y() >= 0)
         round_circle_2d = round_circle_2d_1;
@@ -348,6 +332,8 @@ TopoDS_Shape RoundTooth(TopoDS_Shape wedge)
     // Turn the wire into a face
     BRepBuilderAPI_MakeFace round_face(round_wire);
 
+visualize(round_face.Shape());
+
     // Revolve the face around the Z axis over the tooth angle
     TopoDS_Shape rounding_cut_1 =
             BRepPrimAPI_MakeRevol(round_face, gp::OZ(), tooth_angle).Shape();
@@ -363,10 +349,15 @@ TopoDS_Shape RoundTooth(TopoDS_Shape wedge)
     translate.SetTranslation(gp_Vec(0, 0, thickness));
     TopoDS_Shape rounding_cut_2 =
             BRepBuilderAPI_Transform(mirrored_cut_1, translate, false).Shape();
+visualize(rounding_cut_1);
+visualize(rounding_cut_2);
 
     // Cut the wedge using the first and second cutting shape
     BRepAlgoAPI_Cut cut_1(wedge, rounding_cut_1);
+    visualize(cut_1.Shape());
+
     BRepAlgoAPI_Cut cut_2(cut_1, rounding_cut_2);
+visualize(cut_2.Shape());
 
     // Return the result
     return cut_2.Shape();
@@ -588,6 +579,5 @@ int main() {
 }
 
 /*
-g++ -I /usr/include/opencascade/ -lTKBinL -lTKBin -lTKBinTObj -lTKBinXCAF -lTKBool -lTKBO -lTKBRep -lTKCAF -lTKCDF -lTKDCAF -lTKDECascade -lTKDEGLTF -lTKDEIGES -lTKDEOBJ -lTKDEPLY -lTKDE -lTKDESTEP -lTKDESTL -lTKDEVRML -lTKDraw -lTKernel -lTKExpress -lTKFeat -lTKFillet -lTKG2d -lTKG3d -lTKGeomAlgo -lTKGeomBase -lTKHLR -lTKLCAF -lTKMath -lTKMesh -lTKMeshVS -lTKOffset -lTKOpenGl -lTKOpenGlTest -lTKPrim -lTKQADraw -lTKRWMesh -lTKService -lTKShHealing -lTKStdL -lTKStd -lTKTObjDRAW -lTKTObj -lTKTopAlgo -lTKTopTest -lTKV3d
- -lTKVCAF -lTKViewerTest -lTKXCAF -lTKXDEDRAW -lTKXMesh -lTKXmlL -lTKXml -lTKXmlTObj -lTKXmlXCAF -lTKXSBase -lTKXSDRAWDE -lTKXSDRAWGLTF -lTKXSDRAWIGES -lTKXSDRAWOBJ -lTKXSDRAWPLY -lTKXSDRAW -lTKXSDRAWSTEP -lTKXSDRAWSTL -lTKXSDRAWVRML -lGL -lGLU -lGLX -lGLEW -lX11 -lxcb -lXau -lXdmcp OcctAisHello.cpp sprocket.cpp -o sprocket
+g++ -I /usr/include/opencascade/ -lTKBinL -lTKBin -lTKBinTObj -lTKBinXCAF -lTKBool -lTKBO -lTKBRep -lTKCAF -lTKCDF -lTKDCAF -lTKDECascade -lTKDEGLTF -lTKDEIGES -lTKDEOBJ -lTKDEPLY -lTKDE -lTKDESTEP -lTKDESTL -lTKDEVRML -lTKDraw -lTKernel -lTKExpress -lTKFeat -lTKFillet -lTKG2d -lTKG3d -lTKGeomAlgo -lTKGeomBase -lTKHLR -lTKLCAF -lTKMath -lTKMesh -lTKMeshVS -lTKOffset -lTKOpenGl -lTKOpenGlTest -lTKPrim -lTKQADraw -lTKRWMesh -lTKService -lTKShHealing -lTKStdL -lTKStd -lTKTObjDRAW -lTKTObj -lTKTopAlgo -lTKTopTest -lTKV3d  -lTKVCAF -lTKViewerTest -lTKXCAF -lTKXDEDRAW -lTKXMesh -lTKXmlL -lTKXml -lTKXmlTObj -lTKXmlXCAF -lTKXSBase -lTKXSDRAWDE -lTKXSDRAWGLTF -lTKXSDRAWIGES -lTKXSDRAWOBJ -lTKXSDRAWPLY -lTKXSDRAW -lTKXSDRAWSTEP -lTKXSDRAWSTL -lTKXSDRAWVRML -lGL -lGLU -lGLX -lGLEW -lX11 -lxcb -lXau -lXdmcp OcctAisHello.cpp sprocket.cpp -o sprocket
  */

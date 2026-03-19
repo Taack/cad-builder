@@ -181,27 +181,27 @@ extern "C" Handle(Geom2d_TrimmedCurve) *handle_Geom2d_TrimmedCurve__curve_u1_u2(
 
 extern "C" Handle(Geom2d_TrimmedCurve) *handle_Geom2d_TrimmedCurve__GCE2d_MakeSegment__p1_p2(const gp_Pnt2d &P1, const gp_Pnt2d &P2) {
     TRACE("");
-    return new Handle(Geom2d_TrimmedCurve)(GCE2d_MakeSegment(P1, P2));
+    return new Handle(Geom2d_TrimmedCurve)(GCE2d_MakeSegment(P1, P2).Value());
 }
 
 extern "C" Handle(Geom2d_TrimmedCurve)* handle_Geom2d_TrimmedCurve__GCE2d_MakeArcOfCircle__cir2d_p1_p2(gp_Circ2d& circ2d, gp_Pnt2d& p1, gp_Pnt2d& p2) {
     TRACE("");
-    return new Handle(Geom2d_TrimmedCurve)(GCE2d_MakeArcOfCircle(circ2d, p1, p2));
+    return new Handle(Geom2d_TrimmedCurve)(GCE2d_MakeArcOfCircle(circ2d, p1, p2).Value());
 }
 
 extern "C" Handle(Geom2d_TrimmedCurve)* handle_Geom2d_TrimmedCurve__GCE2d_MakeArcOfCircle__cir2d_ang1_ang2(gp_Circ2d& circ2d, Standard_Real angle1, Standard_Real angle2) {
     TRACE("");
-    return new Handle(Geom2d_TrimmedCurve)(GCE2d_MakeArcOfCircle(circ2d, angle1, angle2));
+    return new Handle(Geom2d_TrimmedCurve)(GCE2d_MakeArcOfCircle(circ2d, angle1, angle2).Value());
 }
 
 extern "C" Handle(Geom2d_TrimmedCurve)* handle_Geom2d_TrimmedCurve__GCE2d_MakeArcOfCircle__p1_p2_p3(gp_Pnt2d& pt1, gp_Pnt2d& pt2, gp_Pnt2d& pt3) {
     TRACE("");
-    return new Handle(Geom2d_TrimmedCurve)(GCE2d_MakeArcOfCircle(pt1, pt2, pt3));
+    return new Handle(Geom2d_TrimmedCurve)(GCE2d_MakeArcOfCircle(pt1, pt2, pt3).Value());
 }
 
 extern "C" Handle(Geom2d_TrimmedCurve)* handle_Geom2d_TrimmedCurve__GCE2d_MakeArcOfCircle__cir2d_p1_ang(gp_Circ2d& circ2d, gp_Pnt2d& pt1, Standard_Real angle1) {
     TRACE("");
-    return new Handle(Geom2d_TrimmedCurve)(GCE2d_MakeArcOfCircle(circ2d, pt1, angle1));
+    return new Handle(Geom2d_TrimmedCurve)(GCE2d_MakeArcOfCircle(circ2d, pt1, angle1).Value());
 }
 
 extern "C" void _Geom2d_TrimmedCurve__Mirror__ax2(Handle(Geom2d_TrimmedCurve)& curve, gp_Ax2d& ax2d) {
