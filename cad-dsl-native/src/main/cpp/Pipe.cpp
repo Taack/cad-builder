@@ -18,7 +18,7 @@
 
 extern "C" int visualize(const TopoDS_Shape& truc);
 
-int pipeMain() {
+int main() {
     TopoDS_Shape S = BRepPrimAPI_MakeBox(400.,250.,300.);
     TopExp_Explorer Ex;
     Ex.Init(S,TopAbs_FACE);
@@ -55,8 +55,7 @@ int pipeMain() {
     CurvePoles(2) = pt;
     pt = gp_Pnt(150.,200.,150.);
     CurvePoles(3) = pt;
-    Handle(Geom_BezierCurve) curve = new Geom_BezierCurve
-    (CurvePoles);
+    Handle(Geom_BezierCurve) curve = new Geom_BezierCurve(CurvePoles);
     TopoDS_Edge E = BRepBuilderAPI_MakeEdge(curve);
     TopoDS_Wire W = BRepBuilderAPI_MakeWire(E);
     BRepFeat_MakePipe MKPipe (S,FP,F1,W,Standard_False,

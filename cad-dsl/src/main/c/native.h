@@ -93,6 +93,10 @@ int visualize(void*);
 #define GeomPlate_PointConstraint void
 #define GeomPlate_MakeApprox void
 #define GeomPlate_Surface void
+#define Geom2d_Line void
+#define TColgp_Array1OfPnt void
+#define Geom_BezierCurve void
+#define BRepFeat_MakePipe void
 
 /*
 
@@ -162,10 +166,11 @@ Standard_Integer int_Geom2dAPI_InterCurveCurve__NbPoints(const Geom2dAPI_InterCu
 
 gp_Pnt2d* new_gp_Pnt2d__Geom2dAPI_InterCurveCurve__Point__i(const Geom2dAPI_InterCurveCurve *inter_curve_curve, const Standard_Integer index);
 
- Handle(Geom2d_Geometry)*  handle_Geom2d_Geometry__Copy(const Handle(Geom2d_Geometry) *toCpy);
+Handle(Geom2d_Geometry)*  handle_Geom2d_Geometry__Copy(const Handle(Geom2d_Geometry) *toCpy);
 
- Handle(Geom_Curve)* handle_Geom_Curve__GeomAPI_To3d__Geom2d_Curve_gp_Pln(Handle(Geom2d_Curve) *curve, gp_Pln *plan);
+Handle(Geom_Curve)* handle_Geom_Curve__GeomAPI_To3d__Geom2d_Curve_gp_Pln(Handle(Geom2d_Curve) *curve, gp_Pln *plan);
 
+Handle(Geom2d_Line) *handle_Geom2d_Line__GCE2d_MakeLine__p1_p2(gp_Pnt2d* p1, gp_Pnt2d* p2);
 /***********************************************************************************************************************
 
     3D
@@ -242,6 +247,8 @@ Handle(Geom_Surface) *handle_Geom_Surface__GeomPlate_MakeApprox__Surface(GeomPla
 
 const BRepBuilderAPI_MakeEdge *new_BRepBuilderAPI_MakeEdge__Geom_Curve(Handle(Geom_Curve)* curve);
 
+const BRepBuilderAPI_MakeEdge *new_BRepBuilderAPI_MakeEdge__Geom2d_Curve_Geom_Surface_p1_p2(const Handle(Geom2d_Curve)* curve2d, const Handle(Geom_Surface)* S, const Standard_Real	p1,const Standard_Real	p2);
+
 const BRepBuilderAPI_MakeWire * new_BRepBuilderAPI_MakeWire(void);
 
 const BRepBuilderAPI_MakeWire *new_BRepBuilderAPI_MakeWire__BRepBuilderAPI_MakeEdge(BRepBuilderAPI_MakeEdge* edge);
@@ -251,6 +258,12 @@ void _BRepBuilderAPI_MakeWire__Add__BRepBuilderAPI_MakeEdge(BRepBuilderAPI_MakeW
 const TopoDS_Wire * new_TopoDS_Wire__BRepBuilderAPI_MakeWire__TopoDS_Edge1_e2_e3(TopoDS_Edge* e1, TopoDS_Edge* e2, TopoDS_Edge* e3);
 
 const TopoDS_Wire *new_TopoDS_Wire__BRepBuilderAPI_MakeWire__TopoDS_Edge1_e2(TopoDS_Edge* e1, TopoDS_Edge* e2);
+
+const TopoDS_Wire *new_TopoDS_Wire__BRepBuilderAPI_MakeWire__TopoDS_Edge1(TopoDS_Edge* e1);
+
+BRepFeat_MakePipe *new_BRepFeat_MakePipe__Sbase_Pbase_SkFace_Spine_Fuse_Modify(const TopoDS_Shape *Sbase, const TopoDS_Shape *Pbase, const TopoDS_Face *Skface, const TopoDS_Wire *Spine, const Standard_Integer Fuse, const Standard_Boolean Modify);
+
+void _BRepFeat_MakePipe__Perform(BRepFeat_MakePipe *p);
 
 const TopoDS_Wire *new_TopoDS_Wire__BRepBuilderAPI_MakeWire__TopoDS_Edge1_e2_e3_e4(TopoDS_Edge* e1, TopoDS_Edge* e2, TopoDS_Edge* e3, TopoDS_Edge* e4);
 
@@ -291,6 +304,20 @@ TopoDS_Face *new_TopoDS_Face__BRepBuilderAPI_MakeFace__TopoDS_Wire(TopoDS_Wire *
 BRepBuilderAPI_MakeFace *new_BRepBuilderAPI_MakeFace__BRepBuilderAPI_MakeWire(BRepBuilderAPI_MakeWire *wire);
 
 BRepBuilderAPI_MakeFace *new_BRepBuilderAPI_MakeFace__s_um_uM_vm_vM_Tol(const Handle(Geom_Surface) *S, const Standard_Real UMin, const Standard_Real UMax, const Standard_Real VMin, const Standard_Real VMax, const Standard_Real TolDegen);
+
+BRepBuilderAPI_MakeFace *new_BRepBuilderAPI_MakeFace(void);
+
+TopoDS_Face *TopoDS_Face__BRepBuilderAPI_MakeFace__Face(BRepBuilderAPI_MakeFace *MKF1);
+
+void _BRepBuilderAPI_MakeFace__Init(BRepBuilderAPI_MakeFace *MF, const Handle(Geom_Surface) *S, const Standard_Boolean Bound, const Standard_Real	TolDegen );
+
+void _BRepBuilderAPI_MakeFace__Add__BRepBuilderAPI_MakeWire(BRepBuilderAPI_MakeFace *MF, BRepBuilderAPI_MakeWire *W);
+
+TColgp_Array1OfPnt* new_TColgp_Array1OfPnt__Low_Up(const Standard_Integer 	Low, const Standard_Integer 	Up);
+
+void _TColgp_Array1OfPnt__Ar_Pt_Indx(TColgp_Array1OfPnt* ar, gp_Pnt* pt, Standard_Integer indx);
+
+Handle(Geom_BezierCurve) *handle_Geom_BezierCurve__TColgp_Array1OfPnt(TColgp_Array1OfPnt* CurvePoles);
 
 TopoDS_Face *new_TopoDS_Face__BRepBuilderAPI_MakeFace(BRepBuilderAPI_MakeFace *face);
 

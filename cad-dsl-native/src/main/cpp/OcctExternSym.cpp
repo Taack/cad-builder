@@ -77,6 +77,10 @@
 #include <BRepFill_CurveConstraint.hxx>
 #include <GeomPlate_MakeApprox.hxx>
 #include <GeomPlate_Surface.hxx>
+#include <Geom2d_Line.hxx>
+#include <GCE2d_MakeLine.hxx>
+#include <Geom_BezierCurve.hxx>
+#include <BRepFeat_MakePipe.hxx>
 
 
 #define TRACE(message) TRACE_IMPL(__FILE__, __LINE__, __PRETTY_FUNCTION__, message)
@@ -255,6 +259,11 @@ extern "C"  Handle(Geom_Curve)* handle_Geom_Curve__GeomAPI_To3d__Geom2d_Curve_gp
         TRACE(e.GetMessageString());
         throw e;
     }
+}
+
+extern "C" Handle(Geom2d_Line) *handle_Geom2d_Line__GCE2d_MakeLine__p1_p2(gp_Pnt2d& p1, gp_Pnt2d& p2) {
+    TRACE("");
+    return new Handle(Geom2d_Line)(GCE2d_MakeLine(p1,p2).Value());
 }
 
 /***********************************************************************************************************************
@@ -453,6 +462,11 @@ extern "C" const BRepBuilderAPI_MakeEdge *new_BRepBuilderAPI_MakeEdge__Geom_Curv
     return new BRepBuilderAPI_MakeEdge(curve);
 }
 
+extern "C" const BRepBuilderAPI_MakeEdge *new_BRepBuilderAPI_MakeEdge__Geom2d_Curve_Geom_Surface_p1_p2(const Handle(Geom2d_Curve)& curve2d, const Handle(Geom_Surface)& S, const Standard_Real	p1,const Standard_Real	p2) {
+    TRACE("");
+    return new BRepBuilderAPI_MakeEdge(curve2d, S, p1, p2);
+}
+
 extern "C" const BRepBuilderAPI_MakeWire * new_BRepBuilderAPI_MakeWire() {
     TRACE("");
     return new BRepBuilderAPI_MakeWire();
@@ -498,6 +512,21 @@ extern "C" const TopoDS_Wire * new_TopoDS_Wire__BRepBuilderAPI_MakeWire__TopoDS_
 extern "C" const TopoDS_Wire *new_TopoDS_Wire__BRepBuilderAPI_MakeWire__TopoDS_Edge1_e2(TopoDS_Edge& e1, TopoDS_Edge& e2) {
     TRACE("");
     return new TopoDS_Wire(BRepBuilderAPI_MakeWire(e1, e2).Wire());
+}
+
+extern "C" const TopoDS_Wire *new_TopoDS_Wire__BRepBuilderAPI_MakeWire__TopoDS_Edge1(TopoDS_Edge& e1) {
+    TRACE("");
+    return new TopoDS_Wire(BRepBuilderAPI_MakeWire(e1).Wire());
+}
+
+extern "C" BRepFeat_MakePipe *new_BRepFeat_MakePipe__Sbase_Pbase_Skface_Spine_Fuse_Modify(const TopoDS_Shape &Sbase, const TopoDS_Shape &Pbase, const TopoDS_Face &Skface, const TopoDS_Wire &Spine, const Standard_Integer Fuse, const Standard_Boolean Modify) {
+    TRACE("");
+    return new BRepFeat_MakePipe(Sbase, Pbase, Skface, Spine, Fuse, Modify);
+}
+
+extern "C" void _BRepFeat_MakePipe__Perform(BRepFeat_MakePipe *p) {
+    TRACE("");
+    p->Perform();
 }
 
 extern "C" const TopoDS_Wire *new_TopoDS_Wire__BRepBuilderAPI_MakeWire__TopoDS_Edge1_e2_e3_e4(TopoDS_Edge& e1, TopoDS_Edge& e2, TopoDS_Edge& e3, TopoDS_Edge& e4) {
@@ -598,6 +627,40 @@ extern "C" BRepBuilderAPI_MakeFace *new_BRepBuilderAPI_MakeFace__BRepBuilderAPI_
 extern "C" BRepBuilderAPI_MakeFace *new_BRepBuilderAPI_MakeFace__s_um_uM_vm_vM_Tol(const Handle(Geom_Surface) &S, const Standard_Real UMin, const Standard_Real UMax, const Standard_Real VMin, const Standard_Real VMax, const Standard_Real TolDegen) {
     TRACE("");
     return new BRepBuilderAPI_MakeFace(S, UMin, UMax, VMin, VMax, TolDegen);
+}
+
+extern "C" BRepBuilderAPI_MakeFace *new_BRepBuilderAPI_MakeFace(void) {
+    TRACE("");
+    return new BRepBuilderAPI_MakeFace();
+}
+
+extern "C" TopoDS_Face *TopoDS_Face__BRepBuilderAPI_MakeFace__Face(BRepBuilderAPI_MakeFace &MKF1) {
+    TRACE("");
+    return new TopoDS_Face(MKF1.Face());
+}
+
+extern "C" void _BRepBuilderAPI_MakeFace__Init(BRepBuilderAPI_MakeFace *MF, const Handle(Geom_Surface) &	S, const Standard_Boolean Bound, const Standard_Real	TolDegen ) {
+    TRACE("");
+    MF->Init(S, Bound, TolDegen);
+}
+
+extern "C" void _BRepBuilderAPI_MakeFace__Add__BRepBuilderAPI_MakeWire(BRepBuilderAPI_MakeFace *MF, BRepBuilderAPI_MakeWire &W) {
+    TRACE("");
+    MF->Add(W.Wire());
+}
+
+extern "C" TColgp_Array1OfPnt* new_TColgp_Array1OfPnt__Low_Up(const Standard_Integer 	Low, const Standard_Integer 	Up) {
+    TRACE("");
+    return new TColgp_Array1OfPnt(Low, Up);
+}
+extern "C" void _TColgp_Array1OfPnt__Ar_Pt_Indx(TColgp_Array1OfPnt& ar, gp_Pnt& pt, Standard_Integer indx) {
+    TRACE("");
+    ar(indx) = pt;
+}
+
+extern "C" Handle(Geom_BezierCurve) *handle_Geom_BezierCurve__TColgp_Array1OfPnt(TColgp_Array1OfPnt& CurvePoles) {
+    TRACE("");
+    return new Handle(Geom_BezierCurve)(new Geom_BezierCurve(CurvePoles));
 }
 
 extern "C" TopoDS_Face *new_TopoDS_Face__BRepBuilderAPI_MakeFace(BRepBuilderAPI_MakeFace &face) {

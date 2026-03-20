@@ -22,7 +22,7 @@ using namespace std;
 
 extern "C" int visualize(const TopoDS_Shape& truc);
 
-int main() {
+int mainPlateSurface() {
     Standard_Integer NbCurFront=4,
     NbPointConstraint=1;
     gp_Pnt P1(0.,0.,0.);
