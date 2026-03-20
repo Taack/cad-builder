@@ -383,6 +383,11 @@ extern "C" void _GeomPlate_BuildPlateSurface__Add__Cont(GeomPlate_BuildPlateSurf
     s.Add(Cont);
 }
 
+extern "C" void _GeomPlate_BuildPlateSurface__Add__BRepFill_CurveConstraint(GeomPlate_BuildPlateSurface& s, const Handle(BRepFill_CurveConstraint) &Cont) {
+    TRACE("");
+    s.Add(Cont);
+}
+
 extern "C" void _GeomPlate_BuildPlateSurface__Perform(GeomPlate_BuildPlateSurface& s) {
     TRACE("");
     try {
@@ -406,14 +411,14 @@ extern "C" Standard_Real r_GeomPlate_BuildPlateSurface__G0Error(GeomPlate_BuildP
     return s.G0Error();
 }
 
-extern "C" Standard_Real* r4_GeomPlate_Surface__Bounds(GeomPlate_Surface &s) {
+extern "C" Standard_Real* r4_GeomPlate_Surface__Bounds(Handle(GeomPlate_Surface) &s) {
     TRACE("");
     Standard_Real U1;
     Standard_Real U2;
     Standard_Real V1;
     Standard_Real V2;
 
-    s.Bounds(U1, U2, V1, V2);
+    s->Bounds(U1, U2, V1, V2);
     Standard_Real* res = new Standard_Real[4] {U1, U2, V1, V2};
     return res;
 }

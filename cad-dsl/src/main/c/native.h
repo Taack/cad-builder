@@ -220,6 +220,8 @@ Handle(GeomPlate_PointConstraint)* handle_GeomPlate_PointConstraint__gp_Pnt_orde
 
 void _GeomPlate_BuildPlateSurface__Add__Cont(GeomPlate_BuildPlateSurface* s, const Handle(GeomPlate_PointConstraint) *Cont);
 
+void _GeomPlate_BuildPlateSurface__Add__BRepFill_CurveConstraint(GeomPlate_BuildPlateSurface* s, const Handle(BRepFill_CurveConstraint) *Cont);
+
 void _GeomPlate_BuildPlateSurface__Perform(GeomPlate_BuildPlateSurface* s);
 
 Handle(GeomPlate_Surface)* handle_GeomPlate_Surface__GeomPlate_BuildPlateSurface__Surface(GeomPlate_BuildPlateSurface *s);

@@ -13,7 +13,7 @@ class PlateSurfaceLowLevelTest {
     void "Build Plate Surface"() {
         int NbCurFront = 4,
             NbPointConstraint = 1
-        Vec P1c = new Vec()
+        Vec P1c = new Vec(0, 0, 0)
         Vec P2c = new Vec(0, 10, 0)
         Vec P3c = new Vec(0, 10, 10)
         Vec P4c = new Vec(0, 0, 10)
@@ -35,15 +35,13 @@ class PlateSurfaceLowLevelTest {
         _BRepTools_WireExplorer__Init__BRepBuilderAPI_MakePolygon(anExp, W)
         int c = b_BRepTools_WireExplorer__More(anExp) // /PPPFfff
         while (b_BRepTools_WireExplorer__More(anExp) == c) {
-            println b_BRepTools_WireExplorer__More(anExp)
             def E = _BRepTools_WireExplorer__Current(anExp)
             def C = handle_BRepAdaptor_Curve()
             _BRepAdaptor_Curve__Initialize(C, E)
             def Cont = handle_BRepFill_CurveConstraint__Adaptor3d_Curve_Tang(C, 0)
-            _GeomPlate_BuildPlateSurface__Add__Cont(BPSurf, Cont)
+            _GeomPlate_BuildPlateSurface__Add__BRepFill_CurveConstraint(BPSurf, Cont)
             _BRepTools_WireExplorer__Next(anExp)
         }
-
         println "Point constraint"
         def PCont = handle_GeomPlate_PointConstraint__gp_Pnt_order(P5c.toGpPnt(), 0)
         _GeomPlate_BuildPlateSurface__Add__Cont(BPSurf, PCont)
@@ -62,6 +60,7 @@ class PlateSurfaceLowLevelTest {
         Tol = 0.0001
         def Mapp = new_GeomPlate_MakeApprox__SurfPlate_Tol3d_Nbmax_dgmax_dmax_CritOrder(PSurf, Tol, MaxSeg, MaxDegree, dmax, CritOrder)
         def Surf = handle_Geom_Surface__GeomPlate_MakeApprox__Surface(Mapp)
+
         println "create a face corresponding to the approximated Plate Surface"
         def s = new SurfaceBounds(r4_GeomPlate_Surface__Bounds(PSurf))
 
