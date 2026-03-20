@@ -7,6 +7,8 @@ import org.taack.cad.builder.SurfaceBounds
 import org.taack.cad.builder.Vec
 import org.taack.cad.builder.Vec2d
 
+import java.lang.foreign.MemorySegment
+
 import static java.lang.Math.max
 import static org.taack.occt.NativeLib.*
 
@@ -14,7 +16,7 @@ import static org.taack.occt.NativeLib.*
 class PipeLowLevelTest {
     @Test
     void "Build Pipe"() {
-        def S = new_BRepPrimAPI_MakeBox__x_y_z(400, 250, 300)
+        MemorySegment S = new_TopoDS_Shape__Shape__BRepBuilderAPI_MakeShape(new_BRepPrimAPI_MakeBox__x_y_z(400, 250, 300))
         def Ex = new_TopExp_Explorer__TopoDS_Shape_ToFind_ToAvoid(S, ShapeEnum.TopAbs_FACE.ordinal(), ShapeEnum.TopAbs_SHAPE.ordinal())
         _TopExp_Explorer__Next(Ex)
         _TopExp_Explorer__Next(Ex)
@@ -49,7 +51,8 @@ class PipeLowLevelTest {
         def E = new_TopoDS_Edge__BRepBuilderAPI_MakeEdge__Geom_Curve curve
         def W = new_TopoDS_Wire__BRepBuilderAPI_MakeWire__TopoDS_Edge1 E
 
-        def MKPipe = new_BRepFeat_MakePipe__Sbase_Pbase_SkFace_Spine_Fuse_Modify(S,FP,F1,W,0,1)
+        def MKPipe = new_BRepFeat_MakePipe__Sbase_Pbase_Skface_Spine_Fuse_Modify(S,FP,F1,W,0,1)
+        _BRepFeat_MakePipe__Perform(MKPipe)
         def res1 = new_TopoDS_Shape__Shape__BRepBuilderAPI_MakeShape MKPipe
 
         visualize(res1)

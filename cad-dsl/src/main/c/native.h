@@ -261,7 +261,7 @@ const TopoDS_Wire *new_TopoDS_Wire__BRepBuilderAPI_MakeWire__TopoDS_Edge1_e2(Top
 
 const TopoDS_Wire *new_TopoDS_Wire__BRepBuilderAPI_MakeWire__TopoDS_Edge1(TopoDS_Edge* e1);
 
-BRepFeat_MakePipe *new_BRepFeat_MakePipe__Sbase_Pbase_SkFace_Spine_Fuse_Modify(const TopoDS_Shape *Sbase, const TopoDS_Shape *Pbase, const TopoDS_Face *Skface, const TopoDS_Wire *Spine, const Standard_Integer Fuse, const Standard_Boolean Modify);
+BRepFeat_MakePipe *new_BRepFeat_MakePipe__Sbase_Pbase_Skface_Spine_Fuse_Modify(const TopoDS_Shape *Sbase, const TopoDS_Shape *Pbase, const TopoDS_Face *Skface, const TopoDS_Wire *Spine, const Standard_Integer Fuse, const Standard_Boolean Modify);
 
 void _BRepFeat_MakePipe__Perform(BRepFeat_MakePipe *p);
 
