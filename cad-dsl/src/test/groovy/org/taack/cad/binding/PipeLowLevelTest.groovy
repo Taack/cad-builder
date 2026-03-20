@@ -3,13 +3,11 @@ package org.taack.cad.binding
 import groovy.transform.CompileStatic
 import org.junit.jupiter.api.Test
 import org.taack.cad.builder.ShapeEnum
-import org.taack.cad.builder.SurfaceBounds
 import org.taack.cad.builder.Vec
 import org.taack.cad.builder.Vec2d
 
 import java.lang.foreign.MemorySegment
 
-import static java.lang.Math.max
 import static org.taack.occt.NativeLib.*
 
 @CompileStatic

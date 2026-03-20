@@ -97,6 +97,7 @@ int visualize(void*);
 #define TColgp_Array1OfPnt void
 #define Geom_BezierCurve void
 #define BRepFeat_MakePipe void
+#define BRepFeat_MakeDPrism void
 
 /*
 
@@ -326,6 +327,10 @@ TopoDS_Face *new_TopoDS_Face__BRepBuilderAPI_MakeFace__gp_Pln(gp_Pln *plane);
 TopoDS_Face *new_TopoDS_Face(void);
 
 TopoDS_Shape *new_TopoDS_Shape__BRepPrimAPI_MakePrism__TopoDS_Face_gp_Vec(TopoDS_Face *face, gp_Vec *normal);
+
+BRepFeat_MakeDPrism *new_BRepFeat_MakeDPrism__Sbase_Pbase_Skface_Angle_Fuse_Modify(const TopoDS_Shape *Sbase, const TopoDS_Face *Pbase, const TopoDS_Face *Skface, const Standard_Real Angle, const Standard_Integer Fuse, const Standard_Boolean Modify);
+
+void _BRepFeat_MakeDPrism__Perform__Height(BRepFeat_MakeDPrism *p, Standard_Real height);
 
 BRepFilletAPI_MakeFillet * new_BRepFilletAPI_MakeFillet__TopoDS_Shape(TopoDS_Shape *body);
 

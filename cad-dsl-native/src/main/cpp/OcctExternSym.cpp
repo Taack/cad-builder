@@ -81,6 +81,7 @@
 #include <GCE2d_MakeLine.hxx>
 #include <Geom_BezierCurve.hxx>
 #include <BRepFeat_MakePipe.hxx>
+#include <BRepFeat_MakeDPrism.hxx>
 
 
 #define TRACE(message) TRACE_IMPL(__FILE__, __LINE__, __PRETTY_FUNCTION__, message)
@@ -683,12 +684,22 @@ extern "C" TopoDS_Shape *new_TopoDS_Shape__BRepPrimAPI_MakePrism__TopoDS_Face_gp
     return new TopoDS_Shape(BRepPrimAPI_MakePrism(face, normal));
 }
 
+extern "C" BRepFeat_MakeDPrism *new_BRepFeat_MakeDPrism__Sbase_Pbase_Skface_Angle_Fuse_Modify(const TopoDS_Shape &Sbase, const TopoDS_Face &Pbase, const TopoDS_Face &Skface, const Standard_Real Angle, const Standard_Integer Fuse, const Standard_Boolean Modify) {
+    TRACE("");
+    return new BRepFeat_MakeDPrism(Sbase, Pbase, Skface, Angle, Fuse, Modify);
+}
+
+extern "C" void _BRepFeat_MakeDPrism__Perform__Height(BRepFeat_MakeDPrism &p, Standard_Real height) {
+    TRACE("");
+    p.Perform(height);
+}
+
 extern "C" BRepFilletAPI_MakeFillet * new_BRepFilletAPI_MakeFillet__TopoDS_Shape(TopoDS_Shape &body) {
     TRACE("");
     return new BRepFilletAPI_MakeFillet(body);
 }
 
-TopAbs_ShapeEnum TopAbs_ShapeEnumFromOrdinal(int ordinal) {
+extern "C" TopAbs_ShapeEnum TopAbs_ShapeEnumFromOrdinal(int ordinal) {
     TRACE("");
     switch (ordinal) {
     case 0:
