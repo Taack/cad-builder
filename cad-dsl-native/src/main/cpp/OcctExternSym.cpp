@@ -323,7 +323,7 @@ extern "C" const TopoDS_Edge *new_TopoDS_Edge__BRepBuilderAPI_MakeEdge__Geom_Cur
     return new TopoDS_Edge(BRepBuilderAPI_MakeEdge(segment).Edge());
 }
 
-extern "C" const TopoDS_Edge *new_TopoDS_Edge__BRepBuilderAPI_MakeEdge__Geom_Curve_Geom_Surface(Handle(Geom2d_Curve) &curve, const Handle(Geom_Surface) &surface) {
+extern "C" const TopoDS_Edge *new_TopoDS_Edge__BRepBuilderAPI_MakeEdge__Geom2d_Curve_Geom_Surface(Handle(Geom2d_Curve) &curve, const Handle(Geom_Surface) &surface) {
     TRACE("");
     return new TopoDS_Edge(BRepBuilderAPI_MakeEdge(curve, surface));
 }

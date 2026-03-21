@@ -86,13 +86,8 @@ class Vec2d {
         new_gp_Vec2d__x_y(x, y)
     }
 
-    BigDecimal cord(Axe axe) {
-        switch (axe) {
-            case Axe.X:
-                return x
-            case Axe.Y:
-                return y
-        }
+    double cord(Vec axe) {
+        axe.x * x + axe.y * y
     }
 
     @Override

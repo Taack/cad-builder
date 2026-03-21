@@ -114,15 +114,8 @@ final class Vec extends Vec2d {
         new_gp_Pln__x_y_z_d(x, y, z, t.toDouble())
     }
 
-    BigDecimal cord(Axe axe) {
-        switch (axe) {
-            case Axe.X:
-                return x
-            case Axe.Y:
-                return y
-            case Axe.Z:
-                return z
-        }
+    double cord(Vec axe) {
+        axe.x * x + axe.y * y + axe.z * z
     }
 
     @Override

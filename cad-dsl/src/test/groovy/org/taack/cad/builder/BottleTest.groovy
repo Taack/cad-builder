@@ -78,54 +78,6 @@ class BottleTest {
                 .applyThreading().display()
     }
 
-    static void anotherThreading(CadBuilder mb) {
-
-        double ellipseCurveMajRadius = myNeckRadius * 3.45
-        double ellipseCurveMinRadius = myNeckRadius * 2.15
-
-        MemorySegment innerCyl = cylindricalSurface(new Vec(myHeight), new Vec(1), myNeckRadius * 0.99)
-        Vec dir3d = new Vec(5)
-        Vec pos3d = new Vec(myHeight + myNeckHeight / 2)
-//        MemorySegment curve3d = ellipseCurve(pos3d, dir3d/* new Vec(0,1,0)*/, ellipseCurveMajRadius, ellipseCurveMinRadius)
-        MemorySegment curve3d = ellipseCurve(pos3d, new Vec(1,0,0), ellipseCurveMajRadius, ellipseCurveMinRadius)
-//        MemorySegment curve3d = ellipseCurve(pos3d, new Vec(0,1,0), ellipseCurveMajRadius, ellipseCurveMinRadius)
-//        def curve3dTrimmed = trimmedCurve(curve3d, Math.PI / 4, 2 * Math.PI / 4)
-        MemorySegment outerCyl = revolutionSurface(curve3d, pos3d, dir3d)
-
-        SurfaceBounds sb = surfaceGetBounds(innerCyl)
-        println sb
-        sb = surfaceGetBounds(outerCyl)
-        println sb
-
-        double aMajor = 2 * Math.PI
-        double aMinor = myNeckHeight / 10
-        Vec2d pos = new Vec2d(2.0 * Math.PI, myNeckHeight / 2.0d)
-        Vec2d dir = new Vec2d(2.0 * Math.PI, myNeckHeight / 4.0d)
-
-        MemorySegment ellipse1 = ellipse2dCurve(pos, dir, aMajor, aMinor)
-
-        MemorySegment arc1 = trimmedCurve2d(ellipse1, 0, Math.PI)
-        MemorySegment seg  = trimmedCurveSegment2d(ellipse1, 0, Math.PI)
-
-        double trimmedCurve2Min = 0//Math.PI / 4
-        double trimmedCurve2Max = 1.0 * Math.PI - trimmedCurve2Min
-        double aMajor2 = 8 * Math.PI
-        double aMinor2 = Math.PI / 2
-        Vec2d pos2 = new Vec2d(2.0 * Math.PI, aMinor2 / 2.0d)
-        Vec2d dir2 = new Vec2d(2.0 * Math.PI, aMinor2 / 4.0d)
-
-        MemorySegment ellipse2 = ellipse2dCurve(pos2, dir2, aMajor2, aMinor2 / 4)
-        MemorySegment seg2  = trimmedCurveSegment2d(ellipse2, trimmedCurve2Min, trimmedCurve2Max)
-        MemorySegment arc2 = trimmedCurve2d(ellipse2, trimmedCurve2Min, trimmedCurve2Max)
-        mb
-//                .threadingWireFrom(edgeFrom(arc1, innerCyl), edgeFrom(seg, innerCyl))
-//                .threadingWireFrom(edgeFrom(arc2, outerCyl), edgeFrom(seg2, outerCyl))
-                .threadingWireFrom(edgeFrom(arc1, innerCyl), edgeFrom(seg, innerCyl))
-                .threadingWireFrom(edgeFrom(arc2, outerCyl), edgeFrom(seg2, outerCyl))
-//                .applyThreading().display("tutu-${aMajor}-${aMinor}-${ellipseCurveMajRadius}-${ellipseCurveMinRadius}-${trimmedCurve2Min}-${trimmedCurve2Max}.png")
-                .applyThreading().display()
-    }
-
     @Test
     void "Make Bottle Using Builder API"() {
         def cb = mainBottleBody()
@@ -136,11 +88,5 @@ class BottleTest {
     void "Make Bottle Using Builder API Other Threading"() {
         def cb = mainBottleBody()
         otherThreading(cb)
-    }
-
-    @Test
-    void "Make Bottle Using Builder API Another Threading"() {
-        def cb = mainBottleBody()
-        anotherThreading(cb)
     }
 }

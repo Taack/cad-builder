@@ -89,7 +89,7 @@ class CadBuilder {
         return this
     }
 
-    CadBuilder box(BigDecimal x, BigDecimal y, BigDecimal z) {
+    CadBuilder box(Number x, Number y, Number z) {
         currentShapeNative = new_TopoDS_Shape__Shape__BRepBuilderAPI_MakeShape(new_BRepPrimAPI_MakeBox__x_y_z(x.doubleValue(), y.doubleValue(), z.doubleValue()))
         return this
     }
@@ -130,11 +130,24 @@ class CadBuilder {
         }
     }
 
-    CadBuilder topZ(@DelegatesTo(value = CadBuilder, strategy = Closure.DELEGATE_FIRST) c = null) {
-        face(Axe.Z, c) as CadBuilder
+    CadBuilder topX(@DelegatesTo(value = CadBuilder, strategy = Closure.DELEGATE_FIRST) c = null) {
+        face(new Vec(1, 0, 0), c) as CadBuilder
     }
 
-    CadBuilder face(Axe axe, @DelegatesTo(value = CadBuilder, strategy = Closure.DELEGATE_ONLY) operations = null) {
+    CadBuilder topY(@DelegatesTo(value = CadBuilder, strategy = Closure.DELEGATE_FIRST) c = null) {
+        face(new Vec(0, 1, 0), c) as CadBuilder
+    }
+
+    CadBuilder topZ(@DelegatesTo(value = CadBuilder, strategy = Closure.DELEGATE_FIRST) c = null) {
+        face(new Vec(1), c) as CadBuilder
+    }
+
+
+    CadBuilder butZ(@DelegatesTo(value = CadBuilder, strategy = Closure.DELEGATE_FIRST) c = null) {
+        face(new Vec(-1), c) as CadBuilder
+    }
+
+    CadBuilder face(Vec axe, @DelegatesTo(value = CadBuilder, strategy = Closure.DELEGATE_ONLY) operations = null) {
         double positionMax = -1
 
         for (def aFaceExplorer = new_TopExp_Explorer__TopoDS_Shape_ToFind_ToAvoid(currentShapeNative, ShapeEnum.TopAbs_FACE.ordinal(), ShapeEnum.TopAbs_SHAPE.ordinal());
@@ -200,12 +213,6 @@ class CadBuilder {
         edge(new Vec(toPosition))
     }
 
-    /**
-     * Add an Arc to the current wire
-     * @param toPosition
-     * @param radius
-     * @return
-     */
     CadBuilder arc(Vec toPosition, Vec center) {
         edges.add toPosition
         arcCenter.add center
@@ -432,8 +439,8 @@ class CadBuilder {
         handle_Geom2d_TrimmedCurve__GCE2d_MakeSegment__p1_p2(p1, p2)
     }
 
-    static MemorySegment edgeFrom(MemorySegment surface, MemorySegment trimmedCurve) {
-        new_TopoDS_Edge__BRepBuilderAPI_MakeEdge__Geom_Curve_Geom_Surface(surface, trimmedCurve)
+    static MemorySegment edgeFrom(MemorySegment curve2d, MemorySegment surface) {
+        new_TopoDS_Edge__BRepBuilderAPI_MakeEdge__Geom2d_Curve_Geom_Surface(curve2d, surface)
     }
 
     List<MemorySegment> threadingWires = []

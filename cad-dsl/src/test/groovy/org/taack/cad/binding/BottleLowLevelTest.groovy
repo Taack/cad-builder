@@ -126,10 +126,10 @@ class BottleLowLevelTest {
         def aSegment = handle_Geom2d_TrimmedCurve__GCE2d_MakeSegment__p1_p2(anEllipsePnt1, anEllipsePnt2)
 
         // Threading: Build Edges and Wiresnew
-        def anEdge1OnSurf1 = new_TopoDS_Edge__BRepBuilderAPI_MakeEdge__Geom_Curve_Geom_Surface(anArc1, aCyl1)
-        def anEdge2OnSurf1 = new_TopoDS_Edge__BRepBuilderAPI_MakeEdge__Geom_Curve_Geom_Surface(aSegment, aCyl1)
-        def anEdge1OnSurf2 = new_TopoDS_Edge__BRepBuilderAPI_MakeEdge__Geom_Curve_Geom_Surface(anArc2, aCyl2)
-        def anEdge2OnSurf2 = new_TopoDS_Edge__BRepBuilderAPI_MakeEdge__Geom_Curve_Geom_Surface(aSegment, aCyl2)
+        def anEdge1OnSurf1 = new_TopoDS_Edge__BRepBuilderAPI_MakeEdge__Geom2d_Curve_Geom_Surface(anArc1, aCyl1)
+        def anEdge2OnSurf1 = new_TopoDS_Edge__BRepBuilderAPI_MakeEdge__Geom2d_Curve_Geom_Surface(aSegment, aCyl1)
+        def anEdge1OnSurf2 = new_TopoDS_Edge__BRepBuilderAPI_MakeEdge__Geom2d_Curve_Geom_Surface(anArc2, aCyl2)
+        def anEdge2OnSurf2 = new_TopoDS_Edge__BRepBuilderAPI_MakeEdge__Geom2d_Curve_Geom_Surface(aSegment, aCyl2)
 
         def threadingWire1 = new_TopoDS_Wire__BRepBuilderAPI_MakeWire__TopoDS_Edge1_e2(anEdge1OnSurf1, anEdge2OnSurf1)
         def threadingWire2 = new_TopoDS_Wire__BRepBuilderAPI_MakeWire__TopoDS_Edge1_e2(anEdge1OnSurf2, anEdge2OnSurf2)

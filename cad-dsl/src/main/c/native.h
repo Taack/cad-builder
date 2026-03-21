@@ -198,7 +198,7 @@ Handle(Geom_TrimmedCurve) *handle_Geom_TrimmedCurve__GC_MakeSegment__p1_p2(gp_Pn
 
 const TopoDS_Edge *new_TopoDS_Edge__BRepBuilderAPI_MakeEdge__Geom_Curve(Handle(Geom_Curve) *segment);
 
-const TopoDS_Edge *new_TopoDS_Edge__BRepBuilderAPI_MakeEdge__Geom_Curve_Geom_Surface(Handle(Geom2d_Curve) *curve, const Handle(Geom_Surface) *surface);
+const TopoDS_Edge *new_TopoDS_Edge__BRepBuilderAPI_MakeEdge__Geom2d_Curve_Geom_Surface(Handle(Geom2d_Curve) *curve, const Handle(Geom_Surface) *surface);
 
 void delete_TopoDS_Edge(TopoDS_Edge *ptr);
 
