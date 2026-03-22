@@ -822,6 +822,11 @@ extern "C" BRepPrimAPI_MakeBox *new_BRepPrimAPI_MakeBox__x_y_z(const Standard_Re
     return new BRepPrimAPI_MakeBox(x, y, z);
 }
 
+extern "C" BRepPrimAPI_MakeBox *new_BRepPrimAPI_MakeBox__Ax2_x_y_z(const gp_Ax2 &Axes, const Standard_Real dx, const Standard_Real dy, const Standard_Real dz) {
+    TRACE("");
+    return new BRepPrimAPI_MakeBox(Axes, dx, dy, dz);
+}
+
 extern "C" Handle(Geom_Surface) *handle_Geom_Surface__TopoDS_Face(TopoDS_Face &face) {
     TRACE("");
     return new Handle(Geom_Surface)(BRep_Tool::Surface(face));

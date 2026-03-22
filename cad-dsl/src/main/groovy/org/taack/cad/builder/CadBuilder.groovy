@@ -130,20 +130,20 @@ class CadBuilder {
         }
     }
 
-    CadBuilder topX(@DelegatesTo(value = CadBuilder, strategy = Closure.DELEGATE_FIRST) c = null) {
+    CadBuilder topX(@DelegatesTo(value = CadBuilder, strategy = Closure.DELEGATE_FIRST) Closure c = null) {
         face(new Vec(1, 0, 0), c) as CadBuilder
     }
 
-    CadBuilder topY(@DelegatesTo(value = CadBuilder, strategy = Closure.DELEGATE_FIRST) c = null) {
+    CadBuilder topY(@DelegatesTo(value = CadBuilder, strategy = Closure.DELEGATE_FIRST) Closure c = null) {
         face(new Vec(0, 1, 0), c) as CadBuilder
     }
 
-    CadBuilder topZ(@DelegatesTo(value = CadBuilder, strategy = Closure.DELEGATE_FIRST) c = null) {
+    CadBuilder topZ(@DelegatesTo(value = CadBuilder, strategy = Closure.DELEGATE_FIRST) Closure c = null) {
         face(new Vec(1), c) as CadBuilder
     }
 
 
-    CadBuilder butZ(@DelegatesTo(value = CadBuilder, strategy = Closure.DELEGATE_FIRST) c = null) {
+    CadBuilder butZ(@DelegatesTo(value = CadBuilder, strategy = Closure.DELEGATE_FIRST) Closure c = null) {
         face(new Vec(-1), c) as CadBuilder
     }
 

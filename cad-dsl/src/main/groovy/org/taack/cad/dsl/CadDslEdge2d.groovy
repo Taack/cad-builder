@@ -8,7 +8,7 @@ import org.taack.cad.builder.Vec2d
  * Manage Drawing in face, directly or via construction closures
  */
 @CompileStatic
-class CadDslEdge2d {
+class CadDslEdge2d implements CadDslBase {
 
     /**
      * Move to new position on this face.
@@ -42,11 +42,11 @@ class CadDslEdge2d {
      * @param sY    Size in Y coords
      * @param c     If not null, convert edges of this rectangle into construction points
      */
-    void rect(Number sX, Number sY, @DelegatesTo(value = CadDslEdge2d, strategy = Closure.DELEGATE_FIRST) c = null) {}
+    void rect(Number sX, Number sY, @DelegatesTo(value = CadDslEdge2d, strategy = Closure.DELEGATE_FIRST) Closure c = null) {}
 
     /**
      * Transform Edges into construction points
      * @param c     If not null, convert edges of this rectangle into construction points
      */
-    void edges(@DelegatesTo(value = CadDslEdge2d, strategy = Closure.DELEGATE_FIRST) c = null) {}
+    void edges(@DelegatesTo(value = CadDslEdge2d, strategy = Closure.DELEGATE_FIRST) Closure c = null) {}
 }

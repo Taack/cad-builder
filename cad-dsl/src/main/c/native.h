@@ -371,6 +371,8 @@ BRepPrimAPI_MakeCylinder *new_BRepPrimAPI_MakeCylinder__gp_Ax2_r_h(const gp_Ax2 
 BRepPrimAPI_MakeBox *new_BRepPrimAPI_MakeBox__x_y_z(const Standard_Real x, const Standard_Real y,
                                                       const Standard_Real z);
 
+BRepPrimAPI_MakeBox *new_BRepPrimAPI_MakeBox__Ax2_x_y_z(const gp_Ax2 *Axes, const Standard_Real dx, const Standard_Real dy, const Standard_Real dz);
+
 Handle(Geom_Surface) *handle_Geom_Surface__TopoDS_Face(TopoDS_Face *face);
 
 Standard_Integer int_Geom_Surface__is__Geom_Plane(Handle(Geom_Surface) *surface);

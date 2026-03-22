@@ -4,7 +4,7 @@ import groovy.transform.CompileStatic
 import org.taack.cad.builder.Vec
 
 @CompileStatic
-class CadDslFace {
+class CadDslFace implements CadDslBase {
 
     CadDslSolid revolution(Vec from = new Vec(), Vec dir = new Vec(1)) {}
 
@@ -12,7 +12,7 @@ class CadDslFace {
 
     CadDslSolid hole(Number depth) {}
 
-    CadDslFace center(@DelegatesTo(value = CadDslEdge2d, strategy = Closure.DELEGATE_FIRST) c = null) {}
+    CadDslFace center(@DelegatesTo(value = CadDslEdge2d, strategy = Closure.DELEGATE_FIRST) Closure c = null) {}
 
 
 }
