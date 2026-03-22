@@ -24,7 +24,7 @@ class BlockTest {
     void "Block With Bored Center Hole"() {
         cd().box(length, height, thickness).topZ().center {
             circle(centerHoleDia)
-        }.hole(thickness).display()
+        }.hole(thickness * 1.1).display()
     }
 
     @Test

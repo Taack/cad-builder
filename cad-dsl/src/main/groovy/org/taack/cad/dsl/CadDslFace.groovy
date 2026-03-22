@@ -10,9 +10,20 @@ class CadDslFace implements CadDslBase {
 
     CadDslSolid prism(Vec dir = new Vec(1)) {}
 
-    CadDslSolid hole(Number depth) {}
+    CadDslSolid hole(Number depth) {
+        visitor.visitHole(depth)
+        new CadDslSolid(visitor: visitor)
+    }
 
-    CadDslFace center(@DelegatesTo(value = CadDslEdge2d, strategy = Closure.DELEGATE_FIRST) Closure c = null) {}
+    CadDslFace center(@DelegatesTo(value = CadDslEdge2d, strategy = Closure.DELEGATE_FIRST) Closure c = null) {
+        visitor.visitCenter()
+        if (c) {
+            c.delegate = new CadDslEdge2d(visitor: visitor)
+            c.call()
+        }
+        visitor.visitCenterEnd()
+        this
+    }
 
 
 }

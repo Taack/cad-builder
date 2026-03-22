@@ -250,6 +250,8 @@ const BRepBuilderAPI_MakeEdge *new_BRepBuilderAPI_MakeEdge__Geom_Curve(Handle(Ge
 
 const BRepBuilderAPI_MakeEdge *new_BRepBuilderAPI_MakeEdge__Geom2d_Curve_Geom_Surface_p1_p2(const Handle(Geom2d_Curve)* curve2d, const Handle(Geom_Surface)* S, const Standard_Real	p1,const Standard_Real	p2);
 
+const BRepBuilderAPI_MakeEdge *new_BRepBuilderAPI_MakeEdge__Geom2d_Curve_Geom_Surface(const Handle(Geom2d_Curve)* curve2d, const Handle(Geom_Surface)* S);
+
 const BRepBuilderAPI_MakeWire * new_BRepBuilderAPI_MakeWire(void);
 
 const BRepBuilderAPI_MakeWire *new_BRepBuilderAPI_MakeWire__BRepBuilderAPI_MakeEdge(BRepBuilderAPI_MakeEdge* edge);

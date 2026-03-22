@@ -9,7 +9,7 @@ import static java.lang.Math.*
 @CompileStatic
 class CadDsl implements CadDslBase {
     static CadDsl cd() {
-        new CadDsl()
+        new CadDsl(visitor: new CadDslVisitor())
     }
 
     CadDslWire from(Vec pos, @DelegatesTo(value = CadDslEdge, strategy = Closure.DELEGATE_FIRST) Closure c = null) {
@@ -89,6 +89,6 @@ class CadDsl implements CadDslBase {
     }
 
     void display(String fileName = null) {
-
+        visitor.display(fileName)
     }
 }

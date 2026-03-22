@@ -34,7 +34,9 @@ class CadDslEdge2d implements CadDslBase {
      * Draw a closed circle at the last position
      * @param diameter  Diameter of the circle
      */
-    void circle(Number diameter) {}
+    void circle(Number diameter) {
+        visitor.visiteCircle(diameter)
+    }
 
     /**
      * Draw a closed rectangle whose center is the last position

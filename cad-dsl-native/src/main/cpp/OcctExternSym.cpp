@@ -468,6 +468,11 @@ extern "C" const BRepBuilderAPI_MakeEdge *new_BRepBuilderAPI_MakeEdge__Geom2d_Cu
     return new BRepBuilderAPI_MakeEdge(curve2d, S, p1, p2);
 }
 
+extern "C" const BRepBuilderAPI_MakeEdge *new_BRepBuilderAPI_MakeEdge__Geom2d_Curve_Geom_Surface(const Handle(Geom2d_Curve)& curve2d, const Handle(Geom_Surface)& S) {
+    TRACE("");
+    return new BRepBuilderAPI_MakeEdge(curve2d, S);
+}
+
 extern "C" const BRepBuilderAPI_MakeWire * new_BRepBuilderAPI_MakeWire() {
     TRACE("");
     return new BRepBuilderAPI_MakeWire();
