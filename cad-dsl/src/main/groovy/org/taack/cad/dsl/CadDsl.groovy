@@ -12,15 +12,11 @@ class CadDsl {
         new CadDsl()
     }
 
-    CadDsl from(Vec pos, @DelegatesTo(value = CadDslEdge, strategy = Closure.DELEGATE_FIRST) c = null) {
+    CadDslWire from(Vec pos, @DelegatesTo(value = CadDslEdge, strategy = Closure.DELEGATE_FIRST) c = null) {
 
     }
 
-    CadDsl from(Vec2d pos, @DelegatesTo(value = CadDslEdge2d, strategy = Closure.DELEGATE_FIRST) c = null) {
-
-    }
-
-    CadDslWire toWire() {
+    CadDslWire2d from(Vec2d pos, @DelegatesTo(value = CadDslEdge2d, strategy = Closure.DELEGATE_FIRST) c = null) {
 
     }
 
@@ -63,4 +59,6 @@ class CadDsl {
     CadDslSolid fuse(@DelegatesTo(value = CadDsl, strategy = Closure.DELEGATE_FIRST) c = null) {
 
     }
+
+    void display(String fileName = null) {}
 }

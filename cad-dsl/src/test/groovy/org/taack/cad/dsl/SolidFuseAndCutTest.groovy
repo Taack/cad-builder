@@ -53,46 +53,37 @@ class SolidFuseAndCutTest {
         // the input shape.
         BigDecimal face_inner_radius = 0.8
 
-//        other.topZ().center {
-//            cut {
-//                from(new Vec(face_inner_radius - 0.05, 0.0, -0.05)) {
-//                    edge(new Vec(face_inner_radius - 0.10, 0.0, -0.025))
-//                    edge(new Vec(face_inner_radius - 0.10, 0.0, 0.025))
-//                    edge(new Vec(face_inner_radius + 0.10, 0.0, 0.025))
-//                    edge(new Vec(face_inner_radius + 0.10, 0.0, -0.025))
-//                    edge(new Vec(face_inner_radius + 0.05, 0.0, -0.05))
-//                    edge(new Vec(face_inner_radius - 0.05, 0.0, -0.05))
-//
-//                }.toWire().toFace().from(new Vec(0.0)).revolution()
-//            }
-//        }
+        other.cut {
+            from(new Vec(face_inner_radius - 0.05, 0.0, -0.05)) {
+                edge(new Vec(face_inner_radius - 0.10, 0.0, -0.025))
+                edge(new Vec(face_inner_radius - 0.10, 0.0, 0.025))
+                edge(new Vec(face_inner_radius + 0.10, 0.0, 0.025))
+                edge(new Vec(face_inner_radius + 0.10, 0.0, -0.025))
+                edge(new Vec(face_inner_radius + 0.05, 0.0, -0.05))
+                edge(new Vec(face_inner_radius - 0.05, 0.0, -0.05))
+            }.toFace().revolution(new Vec(), new Vec(1))
+        }
 
         return other
     }
 
     @Test
     void "Build Basic Shape Cut"() {
-//        cylindersCut2(generateSphere()).display()
-    }
-
-
-    @Test
-    void "Build Basic Shape Cut2"() {
-//        cylindersCut(generateSphere()).display()
+        cylindersCut(generateSphere()).display()
     }
 
     @Test
     void "Build Basic Shape Fuse"() {
-//        fuseTorus(cylindersCut2(generateSphere())).display()
+        fuseTorus(cylindersCut(generateSphere())).display()
     }
 
     @Test
     void "Build Basic Shape STEP"() {
-//        fuseTorus(cylindersCut2(generateSphere())).display("test.step")
+        fuseTorus(cylindersCut(generateSphere())).display("test.step")
     }
 
     @Test
     void "Build Basic Shape Revolution"() {
-//        revolvedCut(fuseTorus(cylindersCut2(generateSphere()))).display()
+        revolvedCut(fuseTorus(cylindersCut(generateSphere()))).display()
     }
 }

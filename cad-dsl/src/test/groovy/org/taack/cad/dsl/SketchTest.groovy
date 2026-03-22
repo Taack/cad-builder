@@ -21,7 +21,7 @@ class SketchTest {
             edge(new Vec(face_inner_radius + 0.10, 0.0, -0.025))
             edge(new Vec(face_inner_radius + 0.05, 0.0, -0.05))
             edge(new Vec(face_inner_radius - 0.05, 0.0, -0.05))
-        }.toWire().toFace().revolution(new Vec(1.0)).display()
+        }.toFace().revolution(new Vec(1.0)).display()
     }
 
     @Test
@@ -48,7 +48,7 @@ class SketchTest {
             arc(p5, new Vec2d(innerRadius + 0.15, -0.029))
             edge(p6)
             edge(p7)
-        }.toWire().toFace().revolution().display()
+        }.toFace().revolution().display()
     }
 
     @Test
@@ -70,10 +70,10 @@ class SketchTest {
             edge(p3)
             edge(p2)
             edge(p1)
-        }.from(c1) {
+        }.move(c1) {
             arc(c3, c2)
             arc(c1, c4)
-        }.toWire().toFace().prism().display()
+        }.toFace().prism().display()
     }
 
     @Test
@@ -88,7 +88,7 @@ class SketchTest {
         cd().from(p1) {
             edge(p4)
             edge(p3)
-        }.toWire().mirror(p1, p3 - p1).toFace().prism().display()
+        }.mirror(p1, p3 - p1).toFace().prism().display()
 
     }
 
