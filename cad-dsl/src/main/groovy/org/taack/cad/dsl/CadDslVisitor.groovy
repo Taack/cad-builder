@@ -16,11 +16,21 @@ class CadDslVisitor implements ICadDslVisitor {
 
     MemorySegment shape
     MemorySegment face
-    MemorySegment surf
-    MemorySegment makeFace
-    MemorySegment MW
 
     Vec fromVec = new Vec()
+    Vec2d fromVec2d = new Vec2d()
+
+    class Circle {
+        final Vec2d pos
+        final double radius
+
+        Circle(Vec2d pos, double radius) {
+            this.pos = pos
+            this.radius = radius
+        }
+    }
+    List<Circle> circles = []
+
     @Override
     void visitFrom(Vec pos) {
         fromVec = pos
@@ -33,6 +43,7 @@ class CadDslVisitor implements ICadDslVisitor {
 
     @Override
     void visitFrom(Vec2d pos) {
+        fromVec2d = pos
     }
 
     @Override
@@ -124,41 +135,69 @@ class CadDslVisitor implements ICadDslVisitor {
     @Override
     void visitCenter() {
         fromVec = Vec.fromAPnt(new_gp_Pnt__CentreOfMass__TopoDS_Shape(face))
-        MW = new_BRepBuilderAPI_MakeWire()
+        fromVec2d = new Vec2d(fromVec.x, fromVec.y)
     }
 
     @Override
     void visitCenterEnd() {
-        makeFace = new_BRepBuilderAPI_MakeFace()
-        _BRepBuilderAPI_MakeFace__Init(makeFace, surf, 0, 0.01d)
     }
 
     @Override
     void visiteCircle(Number radius) {
-        def c = new_gp_Circ2d__ax2d_r(new_gp_Ax2d__pt_dir(fromVec.toGpPnt2d(), fromVec.toGpDir2d()), radius.toDouble())
-        def aline = handle_Geom2d_Circle__GCE2d_MakeCircle__cir2d(c)
-        surf = handle_Geom_Surface__TopoDS_Face(face)
-        _BRepBuilderAPI_MakeWire__Add__BRepBuilderAPI_MakeEdge(MW, new_BRepBuilderAPI_MakeEdge__Geom2d_Curve_Geom_Surface(aline, surf))
+        circles << new Circle(fromVec2d, radius.toDouble())
     }
 
     @Override
     void visitHole(Number depth) {
-        _BRepBuilderAPI_MakeFace__Add__BRepBuilderAPI_MakeWire(makeFace, MW)
-        def FP = TopoDS_Face__BRepBuilderAPI_MakeFace__Face(makeFace)
-        _BRepLib__BuildCurves3d__TopoDS_Shape FP
-        def CurvePoles = new_TColgp_Array1OfPnt__Low_Up(1,3)
-        _TColgp_Array1OfPnt__Ar_Pt_Indx(CurvePoles, new Vec(150,0,150).toGpPnt(), 1)
-        _TColgp_Array1OfPnt__Ar_Pt_Indx(CurvePoles, new Vec(200,100,150).toGpPnt(), 2)
-        _TColgp_Array1OfPnt__Ar_Pt_Indx(CurvePoles, new Vec(150,200,150).toGpPnt(), 3)
-        def curve = handle_Geom_BezierCurve__TColgp_Array1OfPnt(CurvePoles)
-        def E = new_TopoDS_Edge__BRepBuilderAPI_MakeEdge__Geom_Curve curve
-        def W = new_TopoDS_Wire__BRepBuilderAPI_MakeWire__TopoDS_Edge1 E
+        def surf = handle_Geom_Surface__TopoDS_Face(face)
+        def makeFace = new_BRepBuilderAPI_MakeFace()
+        circles.each {
+
+            def MW = new_BRepBuilderAPI_MakeWire()
+            def c = new_gp_Circ2d__ax2d_r(new_gp_Ax2d__pt_dir(it.pos.toGpPnt2d(), it.pos.toGpDir2d()), it.radius)
+            def aline = handle_Geom2d_Circle__GCE2d_MakeCircle__cir2d(c)
+            _BRepBuilderAPI_MakeWire__Add__BRepBuilderAPI_MakeEdge(MW, new_BRepBuilderAPI_MakeEdge__Geom2d_Curve_Geom_Surface(aline, surf))
+            _BRepBuilderAPI_MakeFace__Init(makeFace, surf, 0, 0.01d)
+            _BRepBuilderAPI_MakeFace__Add__BRepBuilderAPI_MakeWire(makeFace, MW)
+            def FP = TopoDS_Face__BRepBuilderAPI_MakeFace__Face(makeFace)
+            _BRepLib__BuildCurves3d__TopoDS_Shape FP
+
+//        def CurvePoles = new_TColgp_Array1OfPnt__Low_Up(1,3)
+//        _TColgp_Array1OfPnt__Ar_Pt_Indx(CurvePoles, new Vec(150,0,150).toGpPnt(), 1)
+//        _TColgp_Array1OfPnt__Ar_Pt_Indx(CurvePoles, new Vec(200,100,150).toGpPnt(), 2)
+//        _TColgp_Array1OfPnt__Ar_Pt_Indx(CurvePoles, new Vec(150,200,150).toGpPnt(), 3)
+//        def curve = handle_Geom_BezierCurve__TColgp_Array1OfPnt(CurvePoles)
+//        def E = new_TopoDS_Edge__BRepBuilderAPI_MakeEdge__Geom_Curve curve
+//        def W = new_TopoDS_Wire__BRepBuilderAPI_MakeWire__TopoDS_Edge1 E
 
 //        def MKDP = new_BRepFeat_MakePipe__Sbase_Pbase_Skface_Spine_Fuse_Modify(shape,FP,face,W,0,1)
 
-        def MKDP = new_BRepFeat_MakeDPrism__Sbase_Pbase_Skface_Angle_Fuse_Modify(shape, FP, surf, 0, 0, 1)
-        _BRepFeat_MakeDPrism__Perform__Height(MKDP, -depth.toDouble())
+            def MKDP = new_BRepFeat_MakeDPrism__Sbase_Pbase_Skface_Angle_Fuse_Modify(shape, FP, surf, 0, 0, 1)
+            _BRepFeat_MakeDPrism__Perform__Height(MKDP, -depth.toDouble())
 //        _BRepFeat_MakePipe__Perform(MKDP)
-        shape = new_TopoDS_Shape__Shape__BRepBuilderAPI_MakeShape MKDP
+            shape = new_TopoDS_Shape__Shape__BRepBuilderAPI_MakeShape MKDP
+        }
+    }
+
+    @Override
+    void rect(Number sX, Number sY, Closure c) {
+        if (c) {
+            double sYd = sY.toDouble()
+            double sXd = sX.toDouble()
+            Vec2d oldFromVec = fromVec2d
+            fromVec2d += new Vec2d(sXd / 2, sYd / 2)
+            c.delegate = new CadDslEdge2d(visitor: this)
+            c.call()
+            fromVec2d = oldFromVec + new Vec2d(sXd / 2, -sYd.toDouble() / 2)
+            c.delegate = new CadDslEdge2d(visitor: this)
+            c.call()
+            fromVec2d = oldFromVec + new Vec2d(-sXd / 2, -sYd / 2)
+            c.delegate = new CadDslEdge2d(visitor: this)
+            c.call()
+            fromVec2d = oldFromVec + new Vec2d(-sXd / 2, sYd / 2)
+            c.delegate = new CadDslEdge2d(visitor: this)
+            c.call()
+        }
+
     }
 }

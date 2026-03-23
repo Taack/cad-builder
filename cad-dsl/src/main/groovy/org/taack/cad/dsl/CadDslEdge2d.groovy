@@ -44,7 +44,9 @@ class CadDslEdge2d implements CadDslBase {
      * @param sY    Size in Y coords
      * @param c     If not null, convert edges of this rectangle into construction points
      */
-    void rect(Number sX, Number sY, @DelegatesTo(value = CadDslEdge2d, strategy = Closure.DELEGATE_FIRST) Closure c = null) {}
+    void rect(Number sX, Number sY, @DelegatesTo(value = CadDslEdge2d, strategy = Closure.DELEGATE_FIRST) Closure c = null) {
+        visitor.rect(sX, sY, c)
+    }
 
     /**
      * Transform Edges into construction points

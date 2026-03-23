@@ -39,4 +39,6 @@ interface ICadDslVisitor {
     void visiteCircle(Number diameter)
 
     void visitHole(Number depth)
+
+    void rect(Number sX, Number sY,  @DelegatesTo(value = CadDslEdge2d, strategy = Closure.DELEGATE_FIRST)Closure c)
 }
