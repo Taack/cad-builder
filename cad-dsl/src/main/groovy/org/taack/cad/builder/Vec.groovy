@@ -128,7 +128,7 @@ final class Vec extends Vec2d {
         Vec sign = new Vec(sx, sy, sz)
         Vec absDir = new Vec(abs(direction.x), abs(direction.y), abs(direction.z))
         Vec d = absDir
-        Vec2d r = new Vec2d(d.z * y + d.x * y + d.y * x, d.z * x + d.x * z + d.y * z) * sign
+        Vec2d r = new Vec2d(d.z * x + d.x * y + d.y * x, d.z * y + d.x * z + d.y * z) * sign
 
         println "r: $r"
 //        new Vec2d(sy * abs(direction.z) * y + sy * abs(direction.x) * y + sx * abs(direction.y) * x, sx * abs(direction.z) * x + sz * abs(direction.x) * z + sz * abs(direction.y) * z)
