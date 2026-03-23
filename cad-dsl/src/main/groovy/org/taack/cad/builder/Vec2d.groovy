@@ -10,6 +10,11 @@ class Vec2d {
     final double x
     final double y
 
+    Vec2d(Vec v) {
+        this.x = v.x
+        this.y = v.y
+    }
+
     Vec2d(Number x, Number y) {
         this.x = x.toDouble()
         this.y = y.toDouble()

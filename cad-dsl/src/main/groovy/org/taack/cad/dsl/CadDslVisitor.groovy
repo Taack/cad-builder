@@ -19,6 +19,7 @@ class CadDslVisitor implements ICadDslVisitor {
 
     Vec fromVec = new Vec()
     Vec2d fromVec2d = new Vec2d()
+    Vec direction = new Vec(1)
 
     class Circle {
         final Vec2d pos
@@ -97,7 +98,7 @@ class CadDslVisitor implements ICadDslVisitor {
     @Override
     void visitFace(Vec direction) {
         double positionMax = -1
-
+        this.direction = direction
         for (def aFaceExplorer = new_TopExp_Explorer__TopoDS_Shape_ToFind_ToAvoid(shape, ShapeEnum.TopAbs_FACE.ordinal(), ShapeEnum.TopAbs_SHAPE.ordinal());
              _TopExp_Explorer__More(aFaceExplorer);
              _TopExp_Explorer__Next(aFaceExplorer)) {
@@ -135,7 +136,7 @@ class CadDslVisitor implements ICadDslVisitor {
     @Override
     void visitCenter() {
         fromVec = Vec.fromAPnt(new_gp_Pnt__CentreOfMass__TopoDS_Shape(face))
-        fromVec2d = new Vec2d(fromVec.x, fromVec.y)
+        fromVec2d = fromVec.coordsProjection(direction)
     }
 
     @Override
@@ -180,22 +181,27 @@ class CadDslVisitor implements ICadDslVisitor {
     }
 
     @Override
-    void rect(Number sX, Number sY, Closure c) {
+    void visitRect(Number sX, Number sY, Closure c) {
         if (c) {
             double sYd = sY.toDouble()
             double sXd = sX.toDouble()
             Vec2d oldFromVec = fromVec2d
+            println fromVec2d
             fromVec2d += new Vec2d(sXd / 2, sYd / 2)
             c.delegate = new CadDslEdge2d(visitor: this)
+            println fromVec2d
             c.call()
             fromVec2d = oldFromVec + new Vec2d(sXd / 2, -sYd.toDouble() / 2)
             c.delegate = new CadDslEdge2d(visitor: this)
+            println fromVec2d
             c.call()
             fromVec2d = oldFromVec + new Vec2d(-sXd / 2, -sYd / 2)
             c.delegate = new CadDslEdge2d(visitor: this)
+            println fromVec2d
             c.call()
             fromVec2d = oldFromVec + new Vec2d(-sXd / 2, sYd / 2)
             c.delegate = new CadDslEdge2d(visitor: this)
+            println fromVec2d
             c.call()
         }
 

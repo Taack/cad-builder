@@ -9,7 +9,10 @@ class CadDslSolid implements CadDslBase {
 
     CadDslFace topX() {}
 
-    CadDslFace topY() {}
+    CadDslFace topY() {
+        visitor.visitFace(new Vec(0, 1, 0))
+        new CadDslFace(visitor: visitor)
+    }
 
     CadDslFace topZ() {
         visitor.visitFace(new Vec(1))

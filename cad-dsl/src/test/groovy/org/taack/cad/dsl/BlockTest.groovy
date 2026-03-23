@@ -37,4 +37,22 @@ class BlockTest {
             circle(centerHoleDia)
         }.hole(cboreHoleDiameter).display()
     }
+
+    @Test
+    void "Pillow Block With Counterbored Holes TopY"() {
+        cd().box(length, length, length).topY().center {
+            rect((length - cboreInset), (length - cboreInset)) {
+                circle(centerHoleDia)
+            }
+        }.hole(cboreHoleDiameter).display()
+    }
+
+    @Test
+    void "A Die"() {
+        cd().box(length, length, length).topY().center {
+            rect((length - cboreInset), (length - cboreInset)) {
+                circle(centerHoleDia)
+            }
+        }.hole(cboreHoleDiameter).display()
+    }
 }

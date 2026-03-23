@@ -118,6 +118,10 @@ final class Vec extends Vec2d {
         axe.x * x + axe.y * y + axe.z * z
     }
 
+    Vec2d coordsProjection(Vec direction) {
+        new Vec2d(x * direction.z + x * direction.y, y * direction.z + y * direction.x + z * direction.y)
+    }
+
     @Override
     String toString() {
         return "Loc{" + "x=" + x + ", y=" + y + ", z=" + z + '}';
