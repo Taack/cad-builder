@@ -2,6 +2,7 @@ package org.taack.cad.dsl
 
 import groovy.transform.CompileStatic
 import org.taack.cad.builder.ShapeEnum
+import org.taack.cad.builder.SurfaceBounds
 import org.taack.cad.builder.Vec
 import org.taack.cad.builder.Vec2d
 
@@ -20,6 +21,8 @@ class CadDslVisitor implements ICadDslVisitor {
     Vec2d fromVec2d = new Vec2d()
     Vec2d oldFromVec2d
     Vec direction = new Vec(1)
+    SurfaceBounds bounds
+    Vec ptParam11
 
     interface ClosedShape2D {
         MemorySegment makeWireAdd(MemorySegment makeWire)
@@ -84,7 +87,6 @@ class CadDslVisitor implements ICadDslVisitor {
             return MW
         }
     }
-    List<Circle> rects = []
 
     @Override
     void visitFrom(Vec pos) {
@@ -165,14 +167,19 @@ class CadDslVisitor implements ICadDslVisitor {
                 fromVec = Vec.fromAPnt(aPnt)
                 double aZ = fromVec.cord(direction)
 
-                println "fromVec = $fromVec"
-                println "direction = $direction"
-                println "aZ = $aZ, positionMax = $positionMax"
-
                 if (aZ > positionMax) {
                     positionMax = aZ
+                    println "SET FACE"
+                    bounds = new SurfaceBounds(R4_Geom_Surface__Bounds(aSurface))
+                    println bounds
+                    def pt = gp_Pnt__Geom_Surface__Value(aSurface, 1d, 1d)
+                    ptParam11 = Vec.fromAPnt(pt)
                     face = aFace
+                    println "ptParam11 = $ptParam11"
+                    println "fromVec = $fromVec"
+                    println "direction = $direction"
                 }
+                println "aZ = $aZ, positionMax = $positionMax"
             }
         }
     }
@@ -196,7 +203,8 @@ class CadDslVisitor implements ICadDslVisitor {
     @Override
     void visitCenter() {
         fromVec = Vec.fromAPnt(new_gp_Pnt__CentreOfMass__TopoDS_Shape(face))
-        fromVec2d = fromVec.coordsProjection(direction)
+        fromVec2d = fromVec.coordsProjection(direction, ptParam11)
+        println "center: $fromVec, $fromVec2d"
     }
 
     @Override

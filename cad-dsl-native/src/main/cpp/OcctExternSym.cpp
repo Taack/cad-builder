@@ -925,6 +925,11 @@ extern "C" Standard_Real* R4_Geom_Surface__Bounds(const Handle(Geom_Surface) &S)
     return res;
 }
 
+extern "C" gp_Pnt* gp_Pnt__Geom_Surface__Value(const Handle(Geom_Surface) &S, const Standard_Real U, const Standard_Real V) {
+    TRACE("");
+    return new gp_Pnt(S->Value(U, V));
+}
+
 extern "C" void _BRepLib__BuildCurves3d__TopoDS_Shape(const TopoDS_Shape &w1) {
     TRACE("");
     BRepLib::BuildCurves3d(w1);

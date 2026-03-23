@@ -409,6 +409,8 @@ Handle(Geom_Ellipse) *handle_Geom_Ellipse__gp_Ax2_rM_rm(const gp_Ax2 *A2, const 
 
 void* R4_Geom_Surface__Bounds(const Geom_Surface *S);
 
+gp_Pnt* gp_Pnt__Geom_Surface__Value(const Handle(Geom_Surface) *S, const Standard_Real U, const Standard_Real V);
+
 void _BRepLib__BuildCurves3d__TopoDS_Shape(const TopoDS_Shape *w1);
 
 BRepOffsetAPI_ThruSections *new_BRepOffsetAPI_ThruSections__isSolid_ruled_pres3d(const Standard_Boolean isSolid,

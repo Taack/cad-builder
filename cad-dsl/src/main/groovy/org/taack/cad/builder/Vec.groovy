@@ -5,6 +5,7 @@ import groovy.transform.CompileStatic
 import java.lang.foreign.MemorySegment
 
 import static org.taack.occt.NativeLib.*
+import static java.lang.Math.*
 
 
 @CompileStatic
@@ -118,8 +119,21 @@ final class Vec extends Vec2d {
         axe.x * x + axe.y * y + axe.z * z
     }
 
-    Vec2d coordsProjection(Vec direction) {
-        new Vec2d(x * direction.z + x * direction.x + x * direction.y, y * direction.z + y * direction.y + y * direction.x)
+    Vec2d coordsProjection(Vec direction, Vec paramsValue11) {
+//        new Vec2d( direction.z * (-x) + direction.x * z + direction.y * z, direction.z * y + direction.x * y + direction.y * (-x))
+//        new Vec2d( direction.z * y + direction.x * y + direction.y * x, direction.z * x + direction.x * z + direction.y * (z))
+        double sx = signum(paramsValue11.x) < 0 ? -1d : 1d
+        double sy = signum(paramsValue11.y) < 0 ? -1d : 1d
+        double sz = signum(paramsValue11.z) < 0 ? -1d : 1d
+        Vec sign = new Vec(sx, sy, sz)
+        Vec absDir = new Vec(abs(direction.x), abs(direction.y), abs(direction.z))
+        Vec d = absDir
+        Vec2d r = new Vec2d(d.z * y + d.x * y + d.y * x, d.z * x + d.x * z + d.y * z) * sign
+
+        println "r: $r"
+//        new Vec2d(sy * abs(direction.z) * y + sy * abs(direction.x) * y + sx * abs(direction.y) * x, sx * abs(direction.z) * x + sz * abs(direction.x) * z + sz * abs(direction.y) * z)
+//        new Vec2d( direction.z * y + direction.x * y + direction.y * x, direction.z * -x - direction.x * z + direction.y * (-z))
+        r
     }
 
     @Override

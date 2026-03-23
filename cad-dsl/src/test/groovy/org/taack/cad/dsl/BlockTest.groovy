@@ -51,14 +51,14 @@ class BlockTest {
     @Test
     void "Squared hole"() {
         cd().box(length, length, length).butZ().center {
-            to(new Vec2d(length / 2,length / 2 ))
+            to(new Vec2d(length / 2, length / 2))
             rect(centerHoleDia, centerHoleDia)
         }.hole(cboreHoleDiameter).display()
     }
 
     @Test
     void "A Die"() {
-        cd().box(length, length, length).topZ().center { // 6 face
+        cd().box(length, length, length).topZ().center { // 6 faces
             to(new Vec2d(cboreInset, cboreInset))
             circle(centerHoleDia)
             move(new Vec2d(length / 2 - cboreInset, 0))
@@ -72,28 +72,33 @@ class BlockTest {
             move(new Vec2d(+length / 2 - cboreInset, 0))
             circle(centerHoleDia)
         }.hole(cboreHoleDiameter).butZ().center { // 1 face
-            to(new Vec2d(length / 2,length / 2 ))
+            to(new Vec2d(length / 2, length / 2))
             rect(centerHoleDia, centerHoleDia)
-        }.hole(cboreHoleDiameter).topY().center { // 4 face
-            to(new Vec2d(length / 2,length / 2 ))
+        }.hole(cboreHoleDiameter).topY().center { // 4 faces
+            to(new Vec2d(length / 2, length / 2))
             rect(length / 2, length / 2) {
                 rect(centerHoleDia, centerHoleDia)
             }
-        }.hole(cboreHoleDiameter).butY().center { // 4 face
-            to(new Vec2d(length / 2,length / 2 ))
+        }.hole(cboreHoleDiameter).butY().center { // 3 faces
+            to(new Vec2d(length / 2, length / 2))
             circle(centerHoleDia)
             move(new Vec2d(-length / 2 + cboreInset, -length / 2 + cboreInset))
             circle(centerHoleDia)
-            to(new Vec2d(length / 2,length / 2 ))
+            to(new Vec2d(length / 2, length / 2))
             move(new Vec2d(length / 2 - cboreInset, length / 2 - cboreInset))
             circle(centerHoleDia)
-//        }.hole(cboreHoleDiameter).topX().center { // 4 face
-//
-//            println "TOP XXXXXXXXXXXXXXXXXXXXXx"
-//            to(new Vec2d(length / 2,length / 2 ))
-//            rect(length / 2, length / 2) {
-//                rect(centerHoleDia, centerHoleDia)
-//            }
+        }.hole(cboreHoleDiameter).butX().center { // 5 faces
+            rect(length / 2, length / 2) {
+                rect(centerHoleDia, centerHoleDia)
+            }
+            circle(centerHoleDia)
+
+        }.hole(cboreHoleDiameter).topX().center { // 2 face
+            move(new Vec2d(-length / 2 + cboreInset, -length / 2 + cboreInset))
+            circle(centerHoleDia)
+            move(new Vec2d(length / 2 - cboreInset, length / 2 - cboreInset))
+            move(new Vec2d(length / 2 - cboreInset, length / 2 - cboreInset))
+            circle(centerHoleDia)
         }.hole(cboreHoleDiameter).display()
     }
 
