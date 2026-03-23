@@ -12,7 +12,7 @@ class SketchTest {
 
     @Test
     void "Revolut Edges 3D Vectors"() {
-        BigDecimal face_inner_radius = 0.8
+        double face_inner_radius = 0.8
 
         cd().from(new Vec(face_inner_radius - 0.05, 0.0, -0.05)) {
             edge(new Vec(face_inner_radius - 0.10, 0.0, -0.025))
@@ -26,11 +26,11 @@ class SketchTest {
 
     @Test
     void "Revolut Edges with arcs from 2D Vectors"() {
-        BigDecimal innerRadius = 0.8
-        BigDecimal xValue1 = 0.05
-        BigDecimal xValue2 = xValue1 * 2.0
-        BigDecimal yValue1 = 0.025
-        BigDecimal yValue2 = yValue1 * 2.0
+        double innerRadius = 0.8
+        double xValue1 = 0.05
+        double xValue2 = xValue1 * 2.0
+        double yValue1 = 0.025
+        double yValue2 = yValue1 * 2.0
 
 
         Vec2d p1 = new Vec2d(innerRadius - xValue1, -yValue2)
@@ -53,7 +53,7 @@ class SketchTest {
 
     @Test
     void "Extrude Square Face with Hole using 2D Vectors"() {
-        BigDecimal length = 0.1
+        double length = 0.1
 
         Vec2d p1 = new Vec2d(-length, -length)
         Vec2d p2 = new Vec2d(-length, length)
@@ -78,7 +78,7 @@ class SketchTest {
 
     @Test
     void "Extrude Square Face with Hole using 2D Vectors with mirror"() {
-        BigDecimal length = 0.1
+        double length = 0.1
 
         Vec2d p1 = new Vec2d(-length, -length)
         Vec2d p2 = new Vec2d(-length, length)
