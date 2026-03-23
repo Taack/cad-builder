@@ -119,7 +119,7 @@ final class Vec extends Vec2d {
     }
 
     Vec2d coordsProjection(Vec direction) {
-        new Vec2d(x * direction.z + x * direction.y, y * direction.z + y * direction.x + z * direction.y)
+        new Vec2d(x * direction.z + x * direction.x + x * direction.y, y * direction.z + y * direction.y + y * direction.x)
     }
 
     @Override

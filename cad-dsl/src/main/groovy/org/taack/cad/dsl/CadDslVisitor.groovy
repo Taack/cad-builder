@@ -9,7 +9,6 @@ import java.lang.foreign.Arena
 import java.lang.foreign.MemorySegment
 
 import static org.taack.occt.NativeLib.*
-import static java.lang.Math.*
 
 @CompileStatic
 class CadDslVisitor implements ICadDslVisitor {
@@ -22,7 +21,11 @@ class CadDslVisitor implements ICadDslVisitor {
     Vec2d oldFromVec2d
     Vec direction = new Vec(1)
 
-    class Circle {
+    interface ClosedShape2D {
+        MemorySegment makeWireAdd(MemorySegment makeWire)
+    }
+
+    class Circle implements ClosedShape2D {
         final Vec2d pos
         final double radius
 
@@ -30,8 +33,58 @@ class CadDslVisitor implements ICadDslVisitor {
             this.pos = pos
             this.radius = radius
         }
+
+        @Override
+        MemorySegment makeWireAdd(MemorySegment surf) {
+            def MW = new_BRepBuilderAPI_MakeWire()
+            def c = new_gp_Circ2d__ax2d_r(new_gp_Ax2d__pt_dir(pos.toGpPnt2d(), pos.toGpDir2d()), radius)
+            def aline = handle_Geom2d_Circle__GCE2d_MakeCircle__cir2d(c)
+            _BRepBuilderAPI_MakeWire__Add__BRepBuilderAPI_MakeEdge(MW, new_BRepBuilderAPI_MakeEdge__Geom2d_Curve_Geom_Surface(aline, surf))
+            return MW
+        }
     }
-    List<Circle> circles = []
+    List<ClosedShape2D> closedShape2dList = []
+
+    class Rectangle implements ClosedShape2D {
+        final double sX
+        final double sY
+        final Vec2d pos
+
+        Rectangle(double sX, double sY, Vec2d pos, Vec2d dir) {
+            this.sX = sX
+            this.sY = sY
+            this.pos = pos
+        }
+
+        @Override
+        MemorySegment makeWireAdd(MemorySegment surf) {
+            def MW = new_BRepBuilderAPI_MakeWire()
+
+            Vec2d p1v = pos - new Vec2d(-sX / 2, -sY/2)
+            Vec2d p2v = pos - new Vec2d(sX / 2, -sY/2)
+            Vec2d p3v = pos - new Vec2d(sX / 2, sY/2)
+            Vec2d p4v = pos - new Vec2d(-sX / 2, sY/2)
+
+            println "pos: $pos $p1v, $p2v, $p3v, $p4v"
+
+            MemorySegment p1 = p1v.toGpPnt2d()
+            MemorySegment p2 = p2v.toGpPnt2d()
+            MemorySegment p3 = p3v.toGpPnt2d()
+            MemorySegment p4 = p4v.toGpPnt2d()
+
+            def e1 = handle_Geom2d_Line__GCE2d_MakeLine__p1_p2(p1, p2)
+            _BRepBuilderAPI_MakeWire__Add__BRepBuilderAPI_MakeEdge(MW, new_BRepBuilderAPI_MakeEdge__Geom2d_Curve_Geom_Surface_p1_p2(e1, surf, 0d, gp_Pnt2d__Distance__p1_p2(p1, p2)))
+            def e2 = handle_Geom2d_Line__GCE2d_MakeLine__p1_p2(p2, p3)
+            _BRepBuilderAPI_MakeWire__Add__BRepBuilderAPI_MakeEdge(MW, new_BRepBuilderAPI_MakeEdge__Geom2d_Curve_Geom_Surface_p1_p2(e2, surf, 0d, gp_Pnt2d__Distance__p1_p2(p2, p3)))
+            def e3 = handle_Geom2d_Line__GCE2d_MakeLine__p1_p2(p3, p4)
+            _BRepBuilderAPI_MakeWire__Add__BRepBuilderAPI_MakeEdge(MW, new_BRepBuilderAPI_MakeEdge__Geom2d_Curve_Geom_Surface_p1_p2(e3, surf, 0d, gp_Pnt2d__Distance__p1_p2(p3, p4)))
+            def e4 = handle_Geom2d_Line__GCE2d_MakeLine__p1_p2(p4, p1)
+            _BRepBuilderAPI_MakeWire__Add__BRepBuilderAPI_MakeEdge(MW, new_BRepBuilderAPI_MakeEdge__Geom2d_Curve_Geom_Surface_p1_p2(e4, surf, 0d, gp_Pnt2d__Distance__p1_p2(p4, p1)))
+
+            return MW
+        }
+    }
+    List<Circle> rects = []
 
     @Override
     void visitFrom(Vec pos) {
@@ -152,19 +205,19 @@ class CadDslVisitor implements ICadDslVisitor {
 
     @Override
     void visiteCircle(Number radius) {
-        circles << new Circle(fromVec2d, radius.toDouble())
+        closedShape2dList << new Circle(fromVec2d, radius.toDouble())
     }
 
     @Override
     void visitHole(Number depth) {
         def surf = handle_Geom_Surface__TopoDS_Face(face)
         def makeFace = new_BRepBuilderAPI_MakeFace()
-        circles.each {
-
-            def MW = new_BRepBuilderAPI_MakeWire()
-            def c = new_gp_Circ2d__ax2d_r(new_gp_Ax2d__pt_dir(it.pos.toGpPnt2d(), it.pos.toGpDir2d()), it.radius)
-            def aline = handle_Geom2d_Circle__GCE2d_MakeCircle__cir2d(c)
-            _BRepBuilderAPI_MakeWire__Add__BRepBuilderAPI_MakeEdge(MW, new_BRepBuilderAPI_MakeEdge__Geom2d_Curve_Geom_Surface(aline, surf))
+        closedShape2dList.each {
+            def MW = it.makeWireAdd(surf)
+//            def MW = new_BRepBuilderAPI_MakeWire()
+//            def c = new_gp_Circ2d__ax2d_r(new_gp_Ax2d__pt_dir(it.pos.toGpPnt2d(), it.pos.toGpDir2d()), it.radius)
+//            def aline = handle_Geom2d_Circle__GCE2d_MakeCircle__cir2d(c)
+//            _BRepBuilderAPI_MakeWire__Add__BRepBuilderAPI_MakeEdge(MW, new_BRepBuilderAPI_MakeEdge__Geom2d_Curve_Geom_Surface(aline, surf))
             _BRepBuilderAPI_MakeFace__Init(makeFace, surf, 0, 0.01d)
             _BRepBuilderAPI_MakeFace__Add__BRepBuilderAPI_MakeWire(makeFace, MW)
             def FP = TopoDS_Face__BRepBuilderAPI_MakeFace__Face(makeFace)
@@ -181,38 +234,36 @@ class CadDslVisitor implements ICadDslVisitor {
 //        def MKDP = new_BRepFeat_MakePipe__Sbase_Pbase_Skface_Spine_Fuse_Modify(shape,FP,face,W,0,1)
 
             def MKDP = new_BRepFeat_MakeDPrism__Sbase_Pbase_Skface_Angle_Fuse_Modify(shape, FP, surf, 0, 0, 1)
-            _BRepFeat_MakeDPrism__Perform__Height(MKDP, -depth.toDouble())
+            _BRepFeat_MakeDPrism__Perform__Height(MKDP, -(direction.z + direction.y + direction.x) * depth.toDouble())
+//            _BRepFeat_MakeDPrism__Perform__Height(MKDP, depth.toDouble())
 //        _BRepFeat_MakePipe__Perform(MKDP)
             shape = new_TopoDS_Shape__Shape__BRepBuilderAPI_MakeShape MKDP
         }
+        closedShape2dList.clear()
     }
 
     @Override
     void visitRect(Number sX, Number sY, Closure c) {
-        if (c) {
+        if (c) { // Construction points
             double sYd = sY.toDouble()
             double sXd = sX.toDouble()
             oldFromVec2d = fromVec2d
-            println fromVec2d
             fromVec2d += new Vec2d(sXd / 2, sYd / 2)
             c.delegate = new CadDslEdge2d(visitor: this)
-            println fromVec2d
             c.call()
             fromVec2d = oldFromVec2d + new Vec2d(sXd / 2, -sYd.toDouble() / 2)
             c.delegate = new CadDslEdge2d(visitor: this)
-            println fromVec2d
             c.call()
             fromVec2d = oldFromVec2d + new Vec2d(-sXd / 2, -sYd / 2)
             c.delegate = new CadDslEdge2d(visitor: this)
-            println fromVec2d
             c.call()
             fromVec2d = oldFromVec2d + new Vec2d(-sXd / 2, sYd / 2)
             c.delegate = new CadDslEdge2d(visitor: this)
-            println fromVec2d
             c.call()
             fromVec2d = oldFromVec2d
+        } else {
+            closedShape2dList << new Rectangle(sX.toDouble(), sY.toDouble(), fromVec2d, direction)
         }
-
     }
 
     @Override

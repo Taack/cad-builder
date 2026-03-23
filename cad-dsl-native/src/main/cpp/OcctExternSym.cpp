@@ -652,7 +652,12 @@ extern "C" void _BRepBuilderAPI_MakeFace__Init(BRepBuilderAPI_MakeFace *MF, cons
 
 extern "C" void _BRepBuilderAPI_MakeFace__Add__BRepBuilderAPI_MakeWire(BRepBuilderAPI_MakeFace *MF, BRepBuilderAPI_MakeWire &W) {
     TRACE("");
-    MF->Add(W.Wire());
+    try {
+        MF->Add(W.Wire());
+    } catch (StdFail_NotDone& e) {
+        TRACE(e.GetMessageString());
+        throw e;
+    }
 }
 
 extern "C" TColgp_Array1OfPnt* new_TColgp_Array1OfPnt__Low_Up(const Standard_Integer 	Low, const Standard_Integer 	Up) {
