@@ -19,6 +19,7 @@ class CadDslVisitor implements ICadDslVisitor {
 
     Vec fromVec = new Vec()
     Vec2d fromVec2d = new Vec2d()
+    Vec2d oldFromVec2d
     Vec direction = new Vec(1)
 
     class Circle {
@@ -105,10 +106,16 @@ class CadDslVisitor implements ICadDslVisitor {
             def aFace = new_TopoDS_Face__TopExp_Explorer__Current(aFaceExplorer)
             def aSurface = handle_Geom_Surface__TopoDS_Face(aFace)
             if (int_Geom_Surface__is__Geom_Plane(aSurface) == 1) {
-                def aPlan = handle_Geom_Plane__handle_Geom_Surface(aSurface)
-                def aPnt = new_gp_Pnt__Geom_Plane(aPlan)
+//                def aPlan = handle_Geom_Plane__handle_Geom_Surface(aSurface)
+//                def aPnt = new_gp_Pnt__Geom_Plane(aPlan)
+                def aPnt = new_gp_Pnt__CentreOfMass__TopoDS_Shape(aFace)
                 fromVec = Vec.fromAPnt(aPnt)
                 double aZ = fromVec.cord(direction)
+
+                println "fromVec = $fromVec"
+                println "direction = $direction"
+                println "aZ = $aZ, positionMax = $positionMax"
+
                 if (aZ > positionMax) {
                     positionMax = aZ
                     face = aFace
@@ -185,25 +192,36 @@ class CadDslVisitor implements ICadDslVisitor {
         if (c) {
             double sYd = sY.toDouble()
             double sXd = sX.toDouble()
-            Vec2d oldFromVec = fromVec2d
+            oldFromVec2d = fromVec2d
             println fromVec2d
             fromVec2d += new Vec2d(sXd / 2, sYd / 2)
             c.delegate = new CadDslEdge2d(visitor: this)
             println fromVec2d
             c.call()
-            fromVec2d = oldFromVec + new Vec2d(sXd / 2, -sYd.toDouble() / 2)
+            fromVec2d = oldFromVec2d + new Vec2d(sXd / 2, -sYd.toDouble() / 2)
             c.delegate = new CadDslEdge2d(visitor: this)
             println fromVec2d
             c.call()
-            fromVec2d = oldFromVec + new Vec2d(-sXd / 2, -sYd / 2)
+            fromVec2d = oldFromVec2d + new Vec2d(-sXd / 2, -sYd / 2)
             c.delegate = new CadDslEdge2d(visitor: this)
             println fromVec2d
             c.call()
-            fromVec2d = oldFromVec + new Vec2d(-sXd / 2, sYd / 2)
+            fromVec2d = oldFromVec2d + new Vec2d(-sXd / 2, sYd / 2)
             c.delegate = new CadDslEdge2d(visitor: this)
             println fromVec2d
             c.call()
+            fromVec2d = oldFromVec2d
         }
 
+    }
+
+    @Override
+    void visitMove(Vec2d to) {
+        fromVec2d = to + fromVec2d
+    }
+
+    @Override
+    void visitTo(Vec2d to) {
+        fromVec2d = to
     }
 }

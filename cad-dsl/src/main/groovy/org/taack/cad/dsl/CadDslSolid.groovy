@@ -23,7 +23,10 @@ class CadDslSolid implements CadDslBase {
 
     CadDslFace butY() {}
 
-    CadDslFace butZ() {}
+    CadDslFace butZ() {
+        visitor.visitFace(new Vec(-1))
+        new CadDslFace(visitor: visitor)
+    }
 
     void display(String fileName = null) {
         visitor.display(fileName)

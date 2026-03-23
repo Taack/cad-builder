@@ -11,10 +11,20 @@ import org.taack.cad.builder.Vec2d
 class CadDslEdge2d implements CadDslBase {
 
     /**
+     * Displace new position on this face.
+     * @param to    Move, starting from the old position
+     */
+    void move(Vec2d to) {
+        visitor.visitMove(to)
+    }
+
+    /**
      * Move to new position on this face.
      * @param to    New start positon
      */
-    void to(Vec2d to) {}
+    void to(Vec2d to) {
+        visitor.visitTo(to)
+    }
 
     /**
      * Draw an Edge from the last position to the "to" position (which will become the last position).

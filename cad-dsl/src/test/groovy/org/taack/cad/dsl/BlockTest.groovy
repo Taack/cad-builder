@@ -2,18 +2,19 @@ package org.taack.cad.dsl
 
 import groovy.transform.CompileStatic
 import org.junit.jupiter.api.Test
+import org.taack.cad.builder.Vec2d
 
 import static org.taack.cad.dsl.CadDsl.cd
 
 @CompileStatic
 class BlockTest {
 
-    BigDecimal length = 80.0
-    BigDecimal height = 60.0
-    BigDecimal thickness = 10.0
-    BigDecimal centerHoleDia = 4.0
-    BigDecimal cboreHoleDiameter = 2.4
-    BigDecimal cboreInset = 12.0
+    double length = 80.0
+    double height = 60.0
+    double thickness = 10.0
+    double centerHoleDia = 4.0
+    double cboreHoleDiameter = 2.4
+    double cboreInset = 12.0
 
     @Test
     void "Basic Box on XY"() {
@@ -49,10 +50,22 @@ class BlockTest {
 
     @Test
     void "A Die"() {
-        cd().box(length, length, length).topY().center {
-            rect((length - cboreInset), (length - cboreInset)) {
-                circle(centerHoleDia)
-            }
+        cd().box(length, length, length).topZ().center {
+            to(new Vec2d(cboreInset, cboreInset))
+            circle(centerHoleDia)
+            move(new Vec2d(length / 2 - cboreInset, 0))
+            circle(centerHoleDia)
+            move(new Vec2d(length / 2 - cboreInset, 0))
+            circle(centerHoleDia)
+            to(new Vec2d(cboreInset, length - cboreInset))
+            circle(centerHoleDia)
+            move(new Vec2d(+length / 2 - cboreInset, 0))
+            circle(centerHoleDia)
+            move(new Vec2d(+length / 2 - cboreInset, 0))
+            circle(centerHoleDia)
+        }.hole(cboreHoleDiameter).butZ().center {
+            to(new Vec2d(length / 2,length / 2 ))
+            circle(centerHoleDia)
         }.hole(cboreHoleDiameter).display()
     }
 }
