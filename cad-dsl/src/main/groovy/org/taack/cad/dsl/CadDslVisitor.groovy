@@ -24,6 +24,7 @@ class CadDslVisitor implements ICadDslVisitor {
     Vec direction = new Vec(1)
     SurfaceBounds bounds
     Vec ptParam11
+    Vec ptParam00
     List<OpenShape2D> openShape2DList = []
     List<ClosedShape2D> closedShape2dList = []
 
@@ -46,7 +47,6 @@ class CadDslVisitor implements ICadDslVisitor {
 
         @Override
         MemorySegment makeWireAdd(Vec2d fromLocal) {
-            println "makeWireAdd $fromLocal $to"
             return handle_Geom2d_TrimmedCurve__GCE2d_MakeSegment__p1_p2(fromLocal.toGpPnt2d(), to.toGpPnt2d())
         }
 
@@ -120,8 +120,6 @@ class CadDslVisitor implements ICadDslVisitor {
             Vec2d p3v = pos - new Vec2d(sX / 2, sY/2)
             Vec2d p4v = pos - new Vec2d(-sX / 2, sY/2)
 
-            println "pos: $pos $p1v, $p2v, $p3v, $p4v"
-
             MemorySegment p1 = p1v.toGpPnt2d()
             MemorySegment p2 = p2v.toGpPnt2d()
             MemorySegment p3 = p3v.toGpPnt2d()
@@ -160,7 +158,6 @@ class CadDslVisitor implements ICadDslVisitor {
         def makeWire = new_BRepBuilderAPI_MakeWire()
         for (OpenShape2D s2d in openShape2DList) {
             def trimmedCurve = s2d.makeWireAdd(pos)
-            println "s2d: $s2d, pos: $pos"
             pos = s2d.to
 //            def arcEdge = new_TopoDS_Edge__BRepBuilderAPI_MakeEdge__Geom2d_Curve_Geom_Surface(trimmedCurve, handle_Geom_Plan__gp_Pln(new Vec(0, 1, 0).toGpPln()))
             def arcEdge = new_TopoDS_Edge__BRepBuilderAPI_MakeEdge2d__Geom2d_Curve(trimmedCurve)
@@ -231,17 +228,13 @@ class CadDslVisitor implements ICadDslVisitor {
 
                 if (aZ > positionMax) {
                     positionMax = aZ
-                    println "SET FACE"
                     bounds = new SurfaceBounds(R4_Geom_Surface__Bounds(aSurface))
-                    println bounds
                     def pt = gp_Pnt__Geom_Surface__Value(aSurface, 1d, 1d)
                     ptParam11 = Vec.fromAPnt(pt)
+                    pt = gp_Pnt__Geom_Surface__Value(aSurface, 0d, 0d)
+                    ptParam00 = Vec.fromAPnt(pt)
                     face = aFace
-                    println "ptParam11 = $ptParam11"
-                    println "fromVec = $fromVec"
-                    println "direction = $direction"
                 }
-                println "aZ = $aZ, positionMax = $positionMax"
             }
         }
     }
@@ -265,8 +258,7 @@ class CadDslVisitor implements ICadDslVisitor {
     @Override
     void visitCenter() {
         fromVec = Vec.fromAPnt(new_gp_Pnt__CentreOfMass__TopoDS_Shape(face))
-        fromVec2d = fromVec.coordsProjection(direction, ptParam11)
-        println "center: $fromVec, $fromVec2d"
+        fromVec2d = fromVec.coordsProjection(direction, ptParam11, ptParam00)
     }
 
     @Override
@@ -358,7 +350,6 @@ class CadDslVisitor implements ICadDslVisitor {
 
     @Override
     void visitToFace() {
-        println "makeWires: $makeWires"
         MemorySegment wire = ref_TopoDS_Shape__BRepBuilderAPI_MakeWire__Shape(makeWires.first())
         face = new_TopoDS_Face__BRepBuilderAPI_MakeFace__TopoDS_Wire(wire)
         if (makeWires.size() > 1) {
