@@ -45,4 +45,12 @@ interface ICadDslVisitor {
     void visitMove(Vec2d to)
 
     void visitTo(Vec2d to)
+
+    void visitEdge(Vec2d to)
+
+    void visitArc(Vec2d to, Vec2d via)
+
+    void visitToFace()
+
+    void visitRevolution(Vec from, Vec dir)
 }

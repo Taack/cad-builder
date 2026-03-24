@@ -6,7 +6,10 @@ import org.taack.cad.builder.Vec
 @CompileStatic
 class CadDslFace implements CadDslBase {
 
-    CadDslSolid revolution(Vec from = new Vec(), Vec dir = new Vec(1)) {}
+    CadDslSolid revolution(Vec from = new Vec(), Vec dir = new Vec(1)) {
+        visitor.visitRevolution(from, dir)
+        new CadDslSolid(visitor: visitor)
+    }
 
     CadDslSolid prism(Vec dir = new Vec(1)) {}
 

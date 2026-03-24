@@ -30,7 +30,9 @@ class CadDslEdge2d implements CadDslBase {
      * Draw an Edge from the last position to the "to" position (which will become the last position).
      * @param to    End of the Edge
      */
-    void edge(Vec2d to) {}
+    void edge(Vec2d to) {
+        visitor.visitEdge(to)
+    }
 
     /**
      * Draw an arc from the last position to the "to" position (which will become the last position)
@@ -38,7 +40,9 @@ class CadDslEdge2d implements CadDslBase {
      * @param to    End of the arc
      * @param via   Middle point of the arc
      */
-    void arc(Vec2d to, Vec2d via) {}
+    void arc(Vec2d to, Vec2d via) {
+        visitor.visitArc(to, via)
+    }
 
     /**
      * Draw a closed circle at the last position

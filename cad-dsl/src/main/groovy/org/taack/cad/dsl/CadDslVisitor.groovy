@@ -16,6 +16,7 @@ class CadDslVisitor implements ICadDslVisitor {
 
     MemorySegment shape
     MemorySegment face
+    List<MemorySegment> makeWires = []
 
     Vec fromVec = new Vec()
     Vec2d fromVec2d = new Vec2d()
@@ -23,9 +24,46 @@ class CadDslVisitor implements ICadDslVisitor {
     Vec direction = new Vec(1)
     SurfaceBounds bounds
     Vec ptParam11
+    List<OpenShape2D> openShape2DList = []
+    List<ClosedShape2D> closedShape2dList = []
 
     interface ClosedShape2D {
         MemorySegment makeWireAdd(MemorySegment makeWire)
+    }
+
+    interface OpenShape2D {
+        MemorySegment makeWireAdd(Vec2d fromLocal)
+        Vec2d getTo()
+    }
+
+
+    class Edge implements OpenShape2D {
+        Vec2d to
+
+        Edge(Vec2d to) {
+            this.to = to
+        }
+
+        @Override
+        MemorySegment makeWireAdd(Vec2d fromLocal) {
+            println "makeWireAdd $fromLocal $to"
+            return handle_Geom2d_TrimmedCurve__GCE2d_MakeSegment__p1_p2(fromLocal.toGpPnt2d(), to.toGpPnt2d())
+        }
+    }
+
+    class Arc implements OpenShape2D {
+        Vec2d to
+        Vec2d center
+
+        Arc(Vec2d to, Vec2d center) {
+            this.to = to
+            this.center = center
+        }
+
+        @Override
+        MemorySegment makeWireAdd(Vec2d fromLocal) {
+            return handle_Geom2d_TrimmedCurve__GCE2d_MakeArcOfCircle__p1_p2_p3(fromLocal.toGpPnt2d(), center.toGpPnt2d(), to.toGpPnt2d())
+        }
     }
 
     class Circle implements ClosedShape2D {
@@ -46,7 +84,6 @@ class CadDslVisitor implements ICadDslVisitor {
             return MW
         }
     }
-    List<ClosedShape2D> closedShape2dList = []
 
     class Rectangle implements ClosedShape2D {
         final double sX
@@ -95,7 +132,6 @@ class CadDslVisitor implements ICadDslVisitor {
 
     @Override
     void visitFromEnd(Vec pos) {
-
     }
 
     @Override
@@ -105,7 +141,14 @@ class CadDslVisitor implements ICadDslVisitor {
 
     @Override
     void visitFromEnd(Vec2d pos) {
-
+        def makeWire = new_BRepBuilderAPI_MakeWire()
+        for (OpenShape2D s2d in openShape2DList) {
+            def trimmedCurve = s2d.makeWireAdd(pos)
+            pos = s2d.to
+            def arcEdge = new_TopoDS_Edge__BRepBuilderAPI_MakeEdge__Geom_Curve trimmedCurve
+            _BRepBuilderAPI_MakeWire__Add__TopoDS_Edge(makeWire, arcEdge)
+        }
+        makeWires << makeWire
     }
 
     @Override
@@ -282,5 +325,34 @@ class CadDslVisitor implements ICadDslVisitor {
     @Override
     void visitTo(Vec2d to) {
         fromVec2d = to
+    }
+
+    @Override
+    void visitEdge(Vec2d to) {
+        openShape2DList << new Edge(to)
+    }
+
+    @Override
+    void visitArc(Vec2d to, Vec2d via) {
+        openShape2DList << new Arc(to, via)
+    }
+
+    @Override
+    void visitToFace() {
+        MemorySegment wire = ref_TopoDS_Shape__BRepBuilderAPI_MakeWire__Shape(makeWires.first())
+        face = new_TopoDS_Face__BRepBuilderAPI_MakeFace__TopoDS_Wire(wire)
+        if (makeWires.size() > 1) {
+            def builder = new_BRep_Builder()
+            for (MemorySegment w in makeWires[1..makeWires.size() - 1]) {
+                MemorySegment wire2 = ref_TopoDS_Shape__BRepBuilderAPI_MakeWire__Shape(w)
+                _TopoDS_Builder__Add__resTopoDS_Shape_toAddTopoDS_Shape(builder, face, wire2)
+            }
+        }
+    }
+
+    @Override
+    void visitRevolution(Vec from, Vec dir) {
+        def ax1 = new_gp_Ax1__p_dir(from.toGpPnt(), dir.toGpDir())
+        shape = new_TopoDS_Shape__BRepPrimAPI_MakeRevol__TopoDS_Face_gp_Ax1(face, ax1)
     }
 }
