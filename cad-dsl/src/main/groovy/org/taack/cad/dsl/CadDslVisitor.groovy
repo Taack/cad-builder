@@ -145,7 +145,8 @@ class CadDslVisitor implements ICadDslVisitor {
         for (OpenShape2D s2d in openShape2DList) {
             def trimmedCurve = s2d.makeWireAdd(pos)
             pos = s2d.to
-            def arcEdge = new_TopoDS_Edge__BRepBuilderAPI_MakeEdge__Geom2d_Curve_Geom_Surface(trimmedCurve, handle_Geom_Plan__gp_Pln(new Vec(1).toGpPln()))
+//            def arcEdge = new_TopoDS_Edge__BRepBuilderAPI_MakeEdge__Geom2d_Curve_Geom_Surface(trimmedCurve, handle_Geom_Plan__gp_Pln(new Vec(0, 1, 0).toGpPln()))
+            def arcEdge = new_TopoDS_Edge__BRepBuilderAPI_MakeEdge2d__Geom2d_Curve(trimmedCurve)
             _BRepBuilderAPI_MakeWire__Add__TopoDS_Edge(makeWire, arcEdge)
         }
         makeWires << makeWire
@@ -339,7 +340,8 @@ class CadDslVisitor implements ICadDslVisitor {
 
     @Override
     void visitToFace() {
-        MemorySegment wire = ref_TopoDS_Shape__BRepBuilderAPI_MakeWire__Shape(makeWires.first())
+        println "makeWires: $makeWires"
+        MemorySegment wire = new_TopoDS_Wire__BRepBuilderAPI_MakeWire__Wire(makeWires.first())
         face = new_TopoDS_Face__BRepBuilderAPI_MakeFace__TopoDS_Wire(wire)
         if (makeWires.size() > 1) {
             def builder = new_BRep_Builder()

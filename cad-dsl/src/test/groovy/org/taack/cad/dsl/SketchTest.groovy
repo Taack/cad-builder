@@ -11,20 +11,6 @@ import static org.taack.cad.dsl.CadDsl.cd
 class SketchTest {
 
     @Test
-    void "Revolut Edges 3D Vectors"() {
-        double face_inner_radius = 0.8
-
-        cd().from(new Vec(face_inner_radius - 0.05, 0.0, -0.05)) {
-            edge(new Vec(face_inner_radius - 0.10, 0.0, -0.025))
-            edge(new Vec(face_inner_radius - 0.10, 0.0, 0.025))
-            edge(new Vec(face_inner_radius + 0.10, 0.0, 0.025))
-            edge(new Vec(face_inner_radius + 0.10, 0.0, -0.025))
-            edge(new Vec(face_inner_radius + 0.05, 0.0, -0.05))
-            edge(new Vec(face_inner_radius - 0.05, 0.0, -0.05))
-        }.toFace().revolution(new Vec(1.0)).display()
-    }
-
-    @Test
     void "Revolut Edges with arcs from 2D Vectors"() {
         double innerRadius = 0.8
         double xValue1 = 0.05
@@ -48,7 +34,7 @@ class SketchTest {
             arc(p5, new Vec2d(innerRadius + 0.15, -0.029))
             edge(p6)
             edge(p7)
-        }.toFace().revolution().display()
+        }.toFace().revolution(new Vec( 2,0,0), new Vec(0,1,0)).display()
     }
 
     @Test

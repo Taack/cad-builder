@@ -82,6 +82,7 @@
 #include <Geom_BezierCurve.hxx>
 #include <BRepFeat_MakePipe.hxx>
 #include <BRepFeat_MakeDPrism.hxx>
+#include <BRepBuilderAPI_MakeEdge2d.hxx>
 
 
 #define TRACE(message) TRACE_IMPL(__FILE__, __LINE__, __PRETTY_FUNCTION__, message)
@@ -325,7 +326,12 @@ extern "C" const TopoDS_Edge *new_TopoDS_Edge__BRepBuilderAPI_MakeEdge__Geom_Cur
 
 extern "C" const TopoDS_Edge *new_TopoDS_Edge__BRepBuilderAPI_MakeEdge__Geom2d_Curve_Geom_Surface(Handle(Geom2d_Curve) &curve, const Handle(Geom_Surface) &surface) {
     TRACE("");
-    return new TopoDS_Edge(BRepBuilderAPI_MakeEdge(curve, surface));
+    return new TopoDS_Edge(BRepBuilderAPI_MakeEdge(curve, surface).Edge());
+}
+
+extern "C" const TopoDS_Edge *new_TopoDS_Edge__BRepBuilderAPI_MakeEdge2d__Geom2d_Curve(Handle(Geom2d_Curve) &curve) {
+    TRACE("");
+    return new TopoDS_Edge(BRepBuilderAPI_MakeEdge2d(curve).Edge());
 }
 
 extern "C" void delete_TopoDS_Edge(TopoDS_Edge *ptr) {
@@ -621,8 +627,24 @@ extern "C" void _TopoDS__Shape__Reverse(TopoDS_Shape &shape) {
 }
 
 extern "C" TopoDS_Face *new_TopoDS_Face__BRepBuilderAPI_MakeFace__TopoDS_Wire(TopoDS_Wire &wire) {
-    TRACE("");
-    return new TopoDS_Face(BRepBuilderAPI_MakeFace(wire).Face());
+    TRACE(wire.IsNull() ? "NULL" : "NOT NULL");
+    TRACE(wire.Closed() ? "Closed" : "NOT Closed");
+    TRACE(wire.Infinite() ? "Infinite" : "NOT Infinite");
+    TRACE(wire.Convex() ? "Convex" : "NOT Convex");
+//    return new TopoDS_Face(wire);
+//    return new TopoDS_Face(BRepBuilderAPI_MakeFace(wire).Face());
+    BRepBuilderAPI_MakeFace* mf;
+    try {
+        mf = new BRepBuilderAPI_MakeFace(wire);
+    } catch(Standard_NullObject &e) {
+        TRACE("Standard_NullObject");
+        TRACE(e.GetMessageString());
+        throw e;
+    }
+    TRACE("mf");
+    const TopoDS_Face & face = mf->Face();
+    TRACE("face");
+    return new TopoDS_Face(face);
 }
 
 extern "C" BRepBuilderAPI_MakeFace *new_BRepBuilderAPI_MakeFace__BRepBuilderAPI_MakeWire(BRepBuilderAPI_MakeWire &wire) {

@@ -200,6 +200,8 @@ const TopoDS_Edge *new_TopoDS_Edge__BRepBuilderAPI_MakeEdge__Geom_Curve(Handle(G
 
 const TopoDS_Edge *new_TopoDS_Edge__BRepBuilderAPI_MakeEdge__Geom2d_Curve_Geom_Surface(Handle(Geom2d_Curve) *curve, const Handle(Geom_Surface) *surface);
 
+const TopoDS_Edge *new_TopoDS_Edge__BRepBuilderAPI_MakeEdge2d__Geom2d_Curve(Handle(Geom2d_Curve) *curve);
+
 void delete_TopoDS_Edge(TopoDS_Edge *ptr);
 
 const BRepBuilderAPI_MakeEdge *new_BRepBuilderAPI_MakeEdge__ptFrom_ptTo(gp_Pnt* from, gp_Pnt* to);
