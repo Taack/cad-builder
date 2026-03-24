@@ -63,6 +63,38 @@ class SketchTest {
     }
 
     @Test
+    void "Extrude Square Face with Hole using 2D Vectors with hole"() {
+        double length = 0.1
+
+        Vec2d p1 = new Vec2d(-length, -length)
+        Vec2d p2 = new Vec2d(-length, length)
+        Vec2d p3 = -p1
+        Vec2d p4 = -p2
+
+        Vec2d c1 = p1 * .2
+        Vec2d c2 = p2 * .2
+        Vec2d c3 = p3 * .2
+        Vec2d c4 = p4 * .2
+
+        cd().from(p1) {
+            edge(p4)
+            edge(p3)
+            edge(p2)
+            edge(p1)
+        }.move(c1) {
+            arc(c3, c2)
+            arc(c1, c4)
+        }.toFace().prism().topY().center {
+            to(new Vec2d(-0.01,-0.01))
+            circle(0.02)
+            to(new Vec2d(0.02,-0.01))
+            circle(0.02)
+//            to(new Vec2d(-0.02,-0.01))
+//            rect(0.02, 0.02)
+        }.hole(-0.02).display()
+    }
+
+    @Test
     void "Extrude Square Face with Hole using 2D Vectors with mirror"() {
         double length = 0.1
 
