@@ -381,4 +381,40 @@ class CadDslVisitor implements ICadDslVisitor {
         shape = new_TopoDS_Shape__BRepPrimAPI_MakePrism__TopoDS_Face_gp_Vec(face, dir.toGpVec())
         face = null
     }
+
+    @Override
+    void visitMirror(Vec2d pos, Vec2d dir) {
+        visitMirror(new Vec(pos), new Vec(dir))
+    }
+    private MemorySegment addCurrentWireNative(MemorySegment wireNative = null) {
+        MemorySegment ret = wireNative ?: new_BRepBuilderAPI_MakeWire()
+        if (makeWires.size() > 0) {
+            makeWires.eachWithIndex { MemorySegment it, int i ->
+                _BRepBuilderAPI_MakeWire__Add__BRepBuilderAPI_MakeWire(ret, it)
+            }
+        }
+        ret
+    }
+
+    MemorySegment toShape() {
+        if (shape) shape
+        else if (face) face
+        else ref_TopoDS_Shape__BRepBuilderAPI_MakeWire__Shape(addCurrentWireNative())
+    }
+
+    @Override
+    void visitMirror(Vec pt, Vec dir) {
+        def ax1 = new_gp_Ax1__p_dir(pt.toGpPnt(), dir.toGpDir())
+        def aTrsf = new_gp_Trsf()
+        _gp_Trsf__SetMirror__gp_Ax1(aTrsf, ax1)
+        def shape = toShape()
+        _TopoDS__Shape__Reverse(shape)
+        def aBRepTrsf = new_BRepBuilderAPI_Transform__TopoDS_Shape_gp_Trsf(shape, aTrsf, 0, 0)
+        def aMirroredShape = ref_TopoDS__Wire__TopoDS_Shape(new_TopoDS_Shape__Shape__BRepBuilderAPI_MakeShape(aBRepTrsf))
+        def mkWire = new_BRepBuilderAPI_MakeWire()
+        _BRepBuilderAPI_MakeWire__Add__TopoDS_Wire(mkWire, aMirroredShape)
+        mkWire = addCurrentWireNative(mkWire)
+        makeWires.pop()
+        makeWires.push(mkWire)
+    }
 }

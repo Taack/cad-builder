@@ -55,4 +55,8 @@ interface ICadDslVisitor {
     void visitRevolution(Vec from, Vec dir)
 
     void visitPrism(Vec dir)
+
+    void visitMirror(Vec2d pos, Vec2d dir)
+
+    void visitMirror(Vec pos, Vec dir)
 }
