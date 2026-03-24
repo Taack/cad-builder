@@ -123,34 +123,14 @@ final class Vec extends Vec2d {
         new Vec(abs(toAbs.x), abs(toAbs.y), abs(toAbs.z))
     }
 
-    Vec2d coordsProjection(Vec direction, Vec paramsValue11, Vec paramsValue00) {
-//        new Vec2d( direction.z * (-x) + direction.x * z + direction.y * z, direction.z * y + direction.x * y + direction.y * (-x))
-//        new Vec2d( direction.z * y + direction.x * y + direction.y * x, direction.z * x + direction.x * z + direction.y * (z))
-//        double sx = signum(paramsValue00.x - paramsValue11.x) < 0 ? -1d : 1d
-//        double sy = signum(paramsValue00.y - paramsValue11.y) < 0 ? -1d : 1d
-//        double sz = signum(paramsValue00.z - paramsValue11.z) < 0 ? -1d : 1d
+    Vec2d coordsProjection(Vec direction, Vec paramsValue00) {
         double sx = signum(this.x - paramsValue00.x) < 0 ? -1d : 1d
-        double sy = signum(this.y - paramsValue00.y) < 0 ? -1d : 1d
-        double sz = signum(this.z - paramsValue00.z) < 0 ? -1d : 1d
-//        double sx = signum(paramsValue11.x) < 0 ? -1d : 1d
-//        double sy = signum(paramsValue11.y) < 0 ? -1d : 1d
-//        double sz = signum(paramsValue11.z) < 0 ? -1d : 1d
-        Vec sign = new Vec(sx, sy, sz)
-        Vec absDir = new Vec(abs(direction.x), abs(direction.y), abs(direction.z))
-//        Vec absThis = new Vec(abs(this.x), abs(this.y), abs(this.z))
         Vec d = vAbs direction
-        Vec thisAdapted = vAbs((this - paramsValue00)) * sign
-//        Vec thisAdapted = (paramsValue00 - this) * sign
+        Vec thisAdapted = this - paramsValue00
         Vec2d r = new Vec2d(
-                 d.z * thisAdapted.x + d.x * thisAdapted.y + d.y * thisAdapted.x,
-                 d.z * thisAdapted.y - d.x * thisAdapted.z + d.y * thisAdapted.z)
-//        Vec2d r = new Vec2d(
-//                 d.z * thisAdapted.x - d.x * thisAdapted.y + d.y * thisAdapted.x,
-//                 d.z * thisAdapted.y - d.x * thisAdapted.z + d.y * thisAdapted.z) //* sign
-
-        println "r: $r, direction: $direction, sign: $sign, this: $this, paramsValue11: $paramsValue11, paramsValue00: $paramsValue00, thisAdapted: $thisAdapted"
-//        new Vec2d(sy * abs(direction.z) * y + sy * abs(direction.x) * y + sx * abs(direction.y) * x, sx * abs(direction.z) * x + sz * abs(direction.x) * z + sz * abs(direction.y) * z)
-//        new Vec2d( direction.z * y + direction.x * y + direction.y * x, direction.z * -x - direction.x * z + direction.y * (-z))
+                 d.z * thisAdapted.x + d.x * thisAdapted.y + sx * d.y * thisAdapted.x,
+                 d.z * thisAdapted.y - d.x * thisAdapted.z + sx * d.y * thisAdapted.z)
+        println "r: $r, direction: $direction, this: $this, paramsValue00: $paramsValue00, thisAdapted: $thisAdapted"
         r
     }
 

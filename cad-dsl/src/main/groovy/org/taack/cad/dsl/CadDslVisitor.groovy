@@ -258,7 +258,7 @@ class CadDslVisitor implements ICadDslVisitor {
     @Override
     void visitCenter() {
         fromVec = Vec.fromAPnt(new_gp_Pnt__CentreOfMass__TopoDS_Shape(face))
-        fromVec2d = fromVec.coordsProjection(direction, ptParam11, ptParam00)
+        fromVec2d = fromVec.coordsProjection(direction, ptParam00)
     }
 
     @Override

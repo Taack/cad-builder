@@ -60,7 +60,6 @@ class BlockTest {
     void "A Die"() {
         cd().box(length, length, length).topZ().center {
             println "Face 6 topZ 40,40"
-            circle(centerHoleDia)
             to(new Vec2d(cboreInset, cboreInset))
             circle(centerHoleDia)
             move(new Vec2d(length / 2 - cboreInset, 0))
@@ -75,17 +74,14 @@ class BlockTest {
             circle(centerHoleDia)
         }.hole(cboreHoleDiameter).butZ().center {
             println "Face 1 butZ 40,40"
-//            to(new Vec2d(length / 2, length / 2))
             rect(centerHoleDia, centerHoleDia)
         }.hole(cboreHoleDiameter).topY().center {
             println "Face 4 topY 40,40"
-//            to(new Vec2d(length / 2, length / 2))
             rect(length / 2, length / 2) {
                 rect(centerHoleDia, centerHoleDia)
             }
         }.hole(cboreHoleDiameter).butY().center {
             println "Face 3 butY 40,40"
-//            to(new Vec2d(length / 2, length / 2))
             circle(centerHoleDia)
             move(new Vec2d(-length / 2 + cboreInset, -length / 2 + cboreInset))
             circle(centerHoleDia)
@@ -93,7 +89,6 @@ class BlockTest {
             move(new Vec2d(length / 2 - cboreInset, length / 2 - cboreInset))
             circle(centerHoleDia)
         }.hole(cboreHoleDiameter).butX().center {
-//            to (new Vec2d(40, -40))
             println "Face 5 butX 40,-40"
             rect(length / 2, length / 2) {
                 rect(centerHoleDia, centerHoleDia)
@@ -101,8 +96,6 @@ class BlockTest {
             circle(centerHoleDia)
 
         }.hole(cboreHoleDiameter).topX().center {
-//            to (new Vec2d(40, -40))
-
             println "Face 2 topX 40,-40"
             move(new Vec2d(-length / 2 + cboreInset, -length / 2 + cboreInset))
             circle(centerHoleDia)
