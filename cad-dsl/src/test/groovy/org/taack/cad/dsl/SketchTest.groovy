@@ -34,7 +34,7 @@ class SketchTest {
             arc(p5, new Vec2d(innerRadius + 0.15, -0.029))
             edge(p6)
             edge(p7)
-        }.toFace().revolution(new Vec( 2,0,0), new Vec(0,1,0)).display()
+        }.toFace().revolution(new Vec(2, 0, 0), new Vec(0, 1, 0)).display()
     }
 
     @Test

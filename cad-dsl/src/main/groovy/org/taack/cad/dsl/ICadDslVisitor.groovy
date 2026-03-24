@@ -53,4 +53,6 @@ interface ICadDslVisitor {
     void visitToFace()
 
     void visitRevolution(Vec from, Vec dir)
+
+    void visitPrism(Vec dir)
 }

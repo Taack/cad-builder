@@ -11,7 +11,10 @@ class CadDslFace implements CadDslBase {
         new CadDslSolid(visitor: visitor)
     }
 
-    CadDslSolid prism(Vec dir = new Vec(1)) {}
+    CadDslSolid prism(Vec dir = new Vec(1)) {
+        visitor.visitPrism(dir)
+        new CadDslSolid(visitor: visitor)
+    }
 
     CadDslSolid hole(Number depth) {
         visitor.visitHole(depth)

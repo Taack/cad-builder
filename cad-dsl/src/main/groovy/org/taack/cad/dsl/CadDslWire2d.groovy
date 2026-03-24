@@ -16,5 +16,12 @@ class CadDslWire2d implements CadDslBase {
     }
 
     CadDslWire2d move(Vec2d pos, @DelegatesTo(value = CadDslEdge2d, strategy = Closure.DELEGATE_FIRST) Closure c = null) {
+        visitor.visitFrom(pos)
+        if (c) {
+            c.delegate = new CadDslEdge2d(visitor: visitor)
+            c.call()
+        }
+        visitor.visitFromEnd(pos)
+        this
     }
 }
