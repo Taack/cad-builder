@@ -145,7 +145,7 @@ class CadDslVisitor implements ICadDslVisitor {
         for (OpenShape2D s2d in openShape2DList) {
             def trimmedCurve = s2d.makeWireAdd(pos)
             pos = s2d.to
-            def arcEdge = new_TopoDS_Edge__BRepBuilderAPI_MakeEdge__Geom_Curve trimmedCurve
+            def arcEdge = new_TopoDS_Edge__BRepBuilderAPI_MakeEdge__Geom2d_Curve_Geom_Surface(trimmedCurve, handle_Geom_Plan__gp_Pln(new Vec(1).toGpPln()))
             _BRepBuilderAPI_MakeWire__Add__TopoDS_Edge(makeWire, arcEdge)
         }
         makeWires << makeWire

@@ -842,6 +842,11 @@ extern "C" Handle(Geom_Surface) *handle_Geom_Surface__TopoDS_Face(TopoDS_Face &f
     return new Handle(Geom_Surface)(BRep_Tool::Surface(face));
 }
 
+extern "C" Handle(Geom_Plane) *handle_Geom_Plan__gp_Pln(gp_Pln &pln) {
+    TRACE("");
+    return new Handle(Geom_Plane)(new Geom_Plane(pln));
+}
+
 extern "C" Standard_Integer int_Geom_Surface__is__Geom_Plane(Handle(Geom_Surface) &surface) {
     TRACE("");
     return surface->DynamicType() == STANDARD_TYPE(Geom_Plane) ? 1 : 0;

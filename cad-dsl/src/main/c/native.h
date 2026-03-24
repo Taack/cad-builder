@@ -377,6 +377,8 @@ BRepPrimAPI_MakeBox *new_BRepPrimAPI_MakeBox__Ax2_x_y_z(const gp_Ax2 *Axes, cons
 
 Handle(Geom_Surface) *handle_Geom_Surface__TopoDS_Face(TopoDS_Face *face);
 
+Handle(Geom_Plane) *handle_Geom_Plan__gp_Pln(gp_Pln *pln);
+
 Standard_Integer int_Geom_Surface__is__Geom_Plane(Handle(Geom_Surface) *surface);
 
 Handle(Geom_Plane) *handle_Geom_Plane__handle_Geom_Surface(Handle(Geom_Surface) *surface);
