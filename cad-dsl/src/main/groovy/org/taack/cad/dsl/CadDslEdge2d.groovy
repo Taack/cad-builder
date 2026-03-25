@@ -49,7 +49,7 @@ class CadDslEdge2d implements CadDslBase {
      * @param diameter  Diameter of the circle
      */
     void circle(Number diameter) {
-        visitor.visiteCircle(diameter)
+        visitor.visiteCircle2d(diameter)
     }
 
     /**
@@ -59,12 +59,6 @@ class CadDslEdge2d implements CadDslBase {
      * @param c     If not null, convert edges of this rectangle into construction points
      */
     void rect(Number sX, Number sY, @DelegatesTo(value = CadDslEdge2d, strategy = Closure.DELEGATE_FIRST) Closure c = null) {
-        visitor.visitRect(sX, sY, c)
+        visitor.visitRect2d(sX, sY, c)
     }
-
-    /**
-     * Transform Edges into construction points
-     * @param c     If not null, convert edges of this rectangle into construction points
-     */
-    void edges(@DelegatesTo(value = CadDslEdge2d, strategy = Closure.DELEGATE_FIRST) Closure c = null) {}
 }

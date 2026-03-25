@@ -40,7 +40,7 @@ class SolidFuseAndCutTest {
     static CadDsl fuseTorus(CadDsl other) {
         BigDecimal ringRadius = 1.0
         BigDecimal torusRadius = 4.0 - ringRadius
-        other.fuse {
+        other.position(new Vec()).fuse {
             torus(torusRadius, ringRadius)
         }
         return other

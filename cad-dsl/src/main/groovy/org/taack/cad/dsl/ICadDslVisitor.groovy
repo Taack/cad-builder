@@ -36,19 +36,27 @@ interface ICadDslVisitor {
 
     void visitCenterEnd()
 
-    void visiteCircle(Number diameter)
+    void visiteCircle2d(Number diameter)
 
     void visitHole(Number depth)
 
-    void visitRect(Number sX, Number sY, @DelegatesTo(value = CadDslEdge2d, strategy = Closure.DELEGATE_FIRST)Closure c)
+    void visitRect2d(Number sX, Number sY, @DelegatesTo(value = CadDslEdge2d, strategy = Closure.DELEGATE_FIRST)Closure c)
 
     void visitMove(Vec2d to)
 
+    void visitMove(Vec to)
+
     void visitTo(Vec2d to)
+
+    void visitTo(Vec to)
 
     void visitEdge(Vec2d to)
 
+    void visitEdge(Vec to)
+
     void visitArc(Vec2d to, Vec2d via)
+
+    void visitArc(Vec to, Vec via)
 
     void visitToFace()
 
@@ -65,4 +73,5 @@ interface ICadDslVisitor {
     void visitCommon()
 
     void visitCommonEnd()
+
 }
