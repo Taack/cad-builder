@@ -124,7 +124,7 @@ class BlockTest {
                 direction(new Vec(1))
                 box(500, 500, 500)
             }
-        }.display().butZ().center {
+        }.butZ().center {
             circle(3)
         }.hole(20).display()
     }
