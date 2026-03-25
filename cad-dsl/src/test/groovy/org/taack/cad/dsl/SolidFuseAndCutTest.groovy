@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test
 import org.taack.cad.builder.Vec
 
 import static org.taack.cad.dsl.CadDsl.cd
+import static java.lang.Math.*
 
 @CompileStatic
 class SolidFuseAndCutTest {
@@ -12,7 +13,7 @@ class SolidFuseAndCutTest {
     static final BigDecimal radius = 4.0
 
     static CadDsl generateSphere() {
-        BigDecimal angle = Math.atan(radianSphere)
+        BigDecimal angle = atan(radianSphere)
         BigDecimal featureDiameter = 0.5
 
         def c = cd().sphere(radius, -angle, angle).topZ().center {
@@ -29,19 +30,22 @@ class SolidFuseAndCutTest {
 
         other.cut {
             for (i in 0..7) {
-                double angle = i * Math.PI / 4.0
-                position(new Vec(-height / 2.0) + new Vec(Math.cos(angle) * cloneRadius, Math.sin(angle) * cloneRadius, 0.0))
-                cylinder(cylinderRadius, height)
+                double angle = i * PI / 4.0
+                position(new Vec(-height / 2.0) + new Vec(cos(angle) * cloneRadius, sin(angle) * cloneRadius, 0.0)) {
+                    cylinder(cylinderRadius, height)
+                }
             }
         }
         return other
     }
-    
+
     static CadDsl fuseTorus(CadDsl other) {
         BigDecimal ringRadius = 1.0
         BigDecimal torusRadius = 4.0 - ringRadius
-        other.position(new Vec()).fuse {
-            torus(torusRadius, ringRadius)
+        other.fuse {
+            position(new Vec()) {
+                torus(torusRadius, ringRadius)
+            }
         }
         return other
     }
@@ -52,18 +56,31 @@ class SolidFuseAndCutTest {
         // the input shape.
         BigDecimal face_inner_radius = 0.8
 
+        double angle = PI / 4.0
         other.cut {
-            wireFrom(new Vec(face_inner_radius - 0.05, 0.0, -0.05)) {
-                edge(new Vec(face_inner_radius - 0.10, 0.0, -0.025))
-                edge(new Vec(face_inner_radius - 0.10, 0.0, 0.025))
-                edge(new Vec(face_inner_radius + 0.10, 0.0, 0.025))
-                edge(new Vec(face_inner_radius + 0.10, 0.0, -0.025))
-                edge(new Vec(face_inner_radius + 0.05, 0.0, -0.05))
-                edge(new Vec(face_inner_radius - 0.05, 0.0, -0.05))
-            }.toFace().revolution(new Vec(), new Vec(1))
-        }
+//            position(new Vec(-height / 2.0) + new Vec(cos(angle) * cloneRadius, sin(angle) * cloneRadius, .1)) {
+                wireFrom(new Vec(face_inner_radius - 0.05, 0.0, -0.05)) {
+                    edge(new Vec(face_inner_radius - 0.10, 0.0, -0.025))
+                    edge(new Vec(face_inner_radius - 0.10, 0.0, 0.025))
+                    edge(new Vec(face_inner_radius + 0.10, 0.0, 0.025))
+                    edge(new Vec(face_inner_radius + 0.10, 0.0, -0.025))
+                    edge(new Vec(face_inner_radius + 0.05, 0.0, -0.05))
+                    edge(new Vec(face_inner_radius - 0.05, 0.0, -0.05))
+                }.toFace().revolution().display()
+//            }
+//            position(new Vec(-height / 2.0) + new Vec(cos(angle) * cloneRadius, sin(angle) * cloneRadius, 0.0)) {
+//                wireFrom(new Vec(face_inner_radius - 0.05, 0.0, -0.05)) {
+//                    edge(new Vec(face_inner_radius - 0.10, 0.0, -0.025))
+//                    edge(new Vec(face_inner_radius - 0.10, 0.0, 0.025))
+//                    edge(new Vec(face_inner_radius + 0.10, 0.0, 0.025))
+//                    edge(new Vec(face_inner_radius + 0.10, 0.0, -0.025))
+//                    edge(new Vec(face_inner_radius + 0.05, 0.0, -0.05))
+//                    edge(new Vec(face_inner_radius - 0.05, 0.0, -0.05))
+//                }.toFace().revolution()
+//            }
+        }.display()
 
-        return other
+        return other.toCadDsl()
     }
 
     @Test

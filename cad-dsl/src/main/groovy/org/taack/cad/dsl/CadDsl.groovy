@@ -32,8 +32,14 @@ class CadDsl implements CadDslBase {
         new CadDslWire2d(visitor: visitor)
     }
 
-    CadDsl position(Vec pos) {
+    CadDsl position(Vec pos, @DelegatesTo(value = CadDslEdge2d, strategy = Closure.DELEGATE_FIRST) Closure c = null) {
         visitor.visitFrom(pos)
+        if (c) {
+            c.delegate = new CadDslEdge2d(visitor: visitor)
+            c.call()
+        }
+        visitor.visitFromEnd(pos)
+
         this
     }
 
@@ -95,6 +101,10 @@ class CadDsl implements CadDslBase {
             c.call()
         }
         visitor.visitFuseEnd()
+        new CadDslSolid(visitor: visitor)
+    }
+
+    CadDslSolid currentSolid() {
         new CadDslSolid(visitor: visitor)
     }
 
