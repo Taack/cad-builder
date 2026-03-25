@@ -333,13 +333,13 @@ class CadDslVisitor implements ICadDslVisitor {
     @Override
     void visitCutEnd() {
         if (boolShapes.last().empty) return
-        def cutLasts = boolShapes.last()
+        def cutLasts = boolShapes.last()[0..boolShapes.last().size() - 2]
         def firstShape = shape//cutLasts.first()
         Tr.cur "cutLasts: $cutLasts"
-        if (cutLasts.size() > 0)
-            for (def otherShape in cutLasts[0..cutLasts.size() - 1]) {
-                firstShape = new_TopoDS_Shape__bBRepAlgoAPI_Cut__s1_s2(firstShape, otherShape)
-            }
+        for (def otherShape in cutLasts) {
+            println "cutting; $firstShape, $otherShape"
+            firstShape = new_TopoDS_Shape__bBRepAlgoAPI_Cut__s1_s2(firstShape, otherShape)
+        }
         shape = firstShape
         boolShapes.pop()
 //        boolShapes.last().removeFirst()
@@ -361,12 +361,11 @@ class CadDslVisitor implements ICadDslVisitor {
     void visitFuseEnd() {
         if (boolShapes.last().empty) return
         def firstShape = shape// boolShapes.last().first()
-        def fuseLasts = boolShapes.last()
+        def fuseLasts = boolShapes.last()[0..boolShapes.last().size() - 1]
         Tr.cur "fuseLasts: $fuseLasts"
-        if (fuseLasts.size() > 0)
-            for (def otherShape in fuseLasts[0..fuseLasts.size() - 1]) {
-                firstShape = new_TopoDS_Shape__brep_algoapi_fuse__s1_s2(firstShape, otherShape)
-            }
+        for (def otherShape in fuseLasts) {
+            firstShape = new_TopoDS_Shape__brep_algoapi_fuse__s1_s2(firstShape, otherShape)
+        }
         shape = firstShape
         boolShapes.pop()
 //        boolShapes.last().removeFirst()
@@ -388,9 +387,9 @@ class CadDslVisitor implements ICadDslVisitor {
     void visitCommonEnd() {
         if (boolShapes.last().empty) return
         def firstShape = shape //boolShapes.last().first()
-        def commonLasts = boolShapes.last()
+        def commonLasts = boolShapes.last()[0..boolShapes.last().size() - 2]
         Tr.cur "commonLasts: $commonLasts"
-        for (def otherShape in commonLasts[0..commonLasts.size() - 1]) {
+        for (def otherShape in commonLasts) {
             firstShape = new_TopoDS_Shape__brep_algoapi_common__s1_s2(firstShape, otherShape)
         }
         shape = firstShape
