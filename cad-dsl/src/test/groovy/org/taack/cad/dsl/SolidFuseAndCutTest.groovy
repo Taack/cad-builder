@@ -56,9 +56,8 @@ class SolidFuseAndCutTest {
         // the input shape.
         BigDecimal face_inner_radius = 0.8
 
-        double angle = PI / 4.0
         other.cut {
-//            position(new Vec(-height / 2.0) + new Vec(cos(angle) * cloneRadius, sin(angle) * cloneRadius, .1)) {
+            position(new Vec(radius * sin(radianSphere) - 0.1)) {
                 wireFrom(new Vec(face_inner_radius - 0.05, 0.0, -0.05)) {
                     edge(new Vec(face_inner_radius - 0.10, 0.0, -0.025))
                     edge(new Vec(face_inner_radius - 0.10, 0.0, 0.025))
@@ -66,19 +65,9 @@ class SolidFuseAndCutTest {
                     edge(new Vec(face_inner_radius + 0.10, 0.0, -0.025))
                     edge(new Vec(face_inner_radius + 0.05, 0.0, -0.05))
                     edge(new Vec(face_inner_radius - 0.05, 0.0, -0.05))
-                }.toFace().revolution().display()
-//            }
-//            position(new Vec(-height / 2.0) + new Vec(cos(angle) * cloneRadius, sin(angle) * cloneRadius, 0.0)) {
-//                wireFrom(new Vec(face_inner_radius - 0.05, 0.0, -0.05)) {
-//                    edge(new Vec(face_inner_radius - 0.10, 0.0, -0.025))
-//                    edge(new Vec(face_inner_radius - 0.10, 0.0, 0.025))
-//                    edge(new Vec(face_inner_radius + 0.10, 0.0, 0.025))
-//                    edge(new Vec(face_inner_radius + 0.10, 0.0, -0.025))
-//                    edge(new Vec(face_inner_radius + 0.05, 0.0, -0.05))
-//                    edge(new Vec(face_inner_radius - 0.05, 0.0, -0.05))
-//                }.toFace().revolution()
-//            }
-        }.display()
+                }.toFace().revolution()
+            }
+        }
 
         return other.toCadDsl()
     }

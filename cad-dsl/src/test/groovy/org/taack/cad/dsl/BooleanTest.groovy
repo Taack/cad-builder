@@ -119,7 +119,7 @@ class BooleanTest {
     }
 
     @Test
-    void "Test mix fuse - common - cut terddd"() {
+    void "Test mix fuse - common - cut quad"() {
         cd().box(1, 1, 1).toCadDsl().cut {
             position(new Vec(1, 1, 1) * 0.3) {
                 cylinder(1 / 3, 3)
@@ -128,7 +128,7 @@ class BooleanTest {
     }
 
     @Test
-    void "Test mix fuse - common - cut terddd2"() {
+    void "Test mix fuse - common - cut cinq"() {
         cd().box(1 / 3, 3, 1).toCadDsl().cut {
             position(new Vec(1, 1, 1) * 0.3) {
                 box(1, 1, 1)
