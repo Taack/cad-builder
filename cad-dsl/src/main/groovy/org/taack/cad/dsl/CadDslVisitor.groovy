@@ -369,8 +369,8 @@ class CadDslVisitor implements ICadDslVisitor {
         }
         shape = firstShape
         boolShapes.pop()
-//        boolShapes.last().removeFirst()
-//        boolShapes.last().addFirst(shape)
+        boolShapes.last().removeFirst()
+        boolShapes.last().addFirst(shape)
         Tr.dec("visitFuseEnd $shape")
     }
 

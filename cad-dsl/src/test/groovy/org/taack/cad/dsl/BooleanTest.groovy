@@ -71,7 +71,7 @@ class BooleanTest {
 
     @Test
     void "Test mix fuse - common - cut"() {
-        cd().box(1, 1, 1).toCadDsl().cut {
+        cd().box(2, 2, 1).toCadDsl().cut {
             position(new Vec(1, 1, 1) * 0.4) {
                 box(1, 1, 1).toCadDsl().fuse {
                     position(new Vec(1, 1, 1) * 0.3) {
