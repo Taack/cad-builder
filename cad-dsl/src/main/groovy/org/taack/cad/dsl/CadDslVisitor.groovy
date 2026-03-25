@@ -231,7 +231,7 @@ class CadDslVisitor implements ICadDslVisitor {
 
     @Override
     void visitFace(Vec direction) {
-        double positionMax = -1
+        double positionMax = Double.NEGATIVE_INFINITY
         this.direction = direction
         for (def aFaceExplorer = new_TopExp_Explorer__TopoDS_Shape_ToFind_ToAvoid(shape, ShapeEnum.TopAbs_FACE.ordinal(), ShapeEnum.TopAbs_SHAPE.ordinal());
              _TopExp_Explorer__More(aFaceExplorer);
@@ -246,6 +246,7 @@ class CadDslVisitor implements ICadDslVisitor {
                 double aZ = fromVec.cord(direction)
 
                 if (aZ > positionMax) {
+                    println "Face Selected"
                     positionMax = aZ
                     bounds = new SurfaceBounds(R4_Geom_Surface__Bounds(aSurface))
                     def pt = gp_Pnt__Geom_Surface__Value(aSurface, 1d, 1d)
@@ -254,6 +255,7 @@ class CadDslVisitor implements ICadDslVisitor {
                     ptParam00 = Vec.fromAPnt(pt)
                     face = aFace
                 }
+                println "aZ: $aZ, positionMax: $positionMax"
             }
         }
     }

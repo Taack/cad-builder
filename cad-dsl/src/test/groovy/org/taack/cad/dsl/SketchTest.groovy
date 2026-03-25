@@ -18,7 +18,6 @@ class SketchTest {
         double yValue1 = 0.025
         double yValue2 = yValue1 * 2.0
 
-
         Vec2d p1 = new Vec2d(innerRadius - xValue1, -yValue2)
         Vec2d p2 = new Vec2d(innerRadius - xValue2, -yValue1)
         Vec2d p3 = new Vec2d(innerRadius - xValue2, yValue1)
@@ -86,12 +85,7 @@ class SketchTest {
             arc(c1, c4)
         }.toFace().prism().topY().center {
             println "Circle topY 0.1,-0.5"
-//            to(new Vec2d(-0.01,-0.01))
-//            circle(0.02)
-//            to(new Vec2d(0.1,-0.5))
             circle(0.02)
-//            to(new Vec2d(-0.02,-0.01))
-//            rect(0.02, 0.02)
         }.hole(-0.02).display()
     }
 
