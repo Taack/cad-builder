@@ -109,8 +109,8 @@ class BlockTest {
 
     @Test
     void "Tetrahedron"() {
-        cd().box(length, length, length).toCadDsl().fuse {
-            position(new Vec(2, 0, 0)).direction(new Vec(1,1,1)).box(length, length * 5, length * 5)
+        cd().direction(new Vec(1, 1, 1)).box(length, length, length).toCadDsl().common {
+            position(new Vec(100, 100, 100) * (2/10 * 1/sqrt(2))).direction(new Vec(1)).box(3*length, length * 5, length * 5)
         }.display()
     }
 }
