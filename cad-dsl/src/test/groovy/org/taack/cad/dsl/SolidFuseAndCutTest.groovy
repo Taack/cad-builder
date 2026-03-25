@@ -57,7 +57,7 @@ class SolidFuseAndCutTest {
         BigDecimal face_inner_radius = 0.8
 
         other.cut {
-            position(new Vec(radius * sin(radianSphere) - 0.1)) {
+            topZ().center {
                 wireFrom(new Vec(face_inner_radius - 0.05, 0.0, -0.05)) {
                     edge(new Vec(face_inner_radius - 0.10, 0.0, -0.025))
                     edge(new Vec(face_inner_radius - 0.10, 0.0, 0.025))

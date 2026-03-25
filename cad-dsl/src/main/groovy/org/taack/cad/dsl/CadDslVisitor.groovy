@@ -336,7 +336,7 @@ class CadDslVisitor implements ICadDslVisitor {
         if (shape) {
             shapeCutBase = shape
         } else Tr.cur "visitCut: Empty shape !!"
-        shape = null
+//        shape = null
     }
 
     @Override
@@ -363,7 +363,7 @@ class CadDslVisitor implements ICadDslVisitor {
         Tr.cur("shape: $shape")
         if (shape) boolShapes.peek() << shape
         else Tr.cur "visitFuse: Empty shape !!"
-        shape = null
+//        shape = null
     }
 
     @Override
@@ -389,7 +389,7 @@ class CadDslVisitor implements ICadDslVisitor {
         Tr.cur("shape: $shape")
         if (shape) boolShapes.peek() << shape
         else Tr.cur "visitCommon: Empty shape !!"
-        shape = null
+//        shape = null
     }
 
     @Override

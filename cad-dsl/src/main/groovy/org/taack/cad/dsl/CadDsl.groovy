@@ -7,7 +7,7 @@ import org.taack.cad.builder.Vec2d
 import static java.lang.Math.*
 
 @CompileStatic
-class CadDsl implements CadDslBase {
+class CadDsl extends CadDslSolid implements CadDslBase {
     static CadDsl cd() {
         new CadDsl(visitor: new CadDslVisitor())
     }
@@ -118,7 +118,7 @@ class CadDsl implements CadDslBase {
         new CadDslSolid(visitor: visitor)
     }
 
-    void display(String fileName = null) {
-        visitor.display(fileName)
-    }
+//    void display(String fileName = null) {
+//        visitor.display(fileName)
+//    }
 }
