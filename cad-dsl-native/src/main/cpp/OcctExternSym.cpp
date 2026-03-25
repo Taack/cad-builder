@@ -83,6 +83,7 @@
 #include <BRepFeat_MakePipe.hxx>
 #include <BRepFeat_MakeDPrism.hxx>
 #include <BRepBuilderAPI_MakeEdge2d.hxx>
+#include <BRepAlgoAPI_Common.hxx>
 
 
 #define TRACE(message) TRACE_IMPL(__FILE__, __LINE__, __PRETTY_FUNCTION__, message)
@@ -832,6 +833,11 @@ extern "C" const gp_Ax2 * new_gp_Ax2__gp_Pnt_gp_Dir(gp_Pnt &loc, gp_Dir &dir) {
     return new gp_Ax2(loc, dir);
 }
 
+extern "C" const gp_Ax2 * new_gp_Ax2__gp_Pnt_gp_Dir_Normal(gp_Pnt &loc, gp_Dir &dir, gp_Dir &normal) {
+    TRACE("");
+    return new gp_Ax2(loc, dir, normal);
+}
+
 extern "C" const gp_Ax3 * new_gp_Ax3__p_dN_dX(gp_Pnt &loc, gp_Dir &dirN, gp_Dir &dirX) {
     TRACE("");
     return new gp_Ax3(loc, dirN, dirX);
@@ -1199,8 +1205,8 @@ Composed
 extern "C" TopoDS_Shape *new_TopoDS_Shape__bBRepAlgoAPI_Cut__s1_s2(TopoDS_Shape &result, TopoDS_Shape &tool) {
     TRACE("");
     const auto cut = new BRepAlgoAPI_Cut(result, tool);
-    cut->Build();
-    cut->SimplifyResult();
+//    cut->Build();
+//    cut->SimplifyResult();
     return new TopoDS_Shape(cut->Shape());
 }
 
@@ -1210,6 +1216,14 @@ extern "C" TopoDS_Shape *new_TopoDS_Shape__brep_algoapi_fuse__s1_s2(TopoDS_Shape
 //    fuse->Build();
 //    fuse->SimplifyResult();
     return new TopoDS_Shape(fuse->Shape());
+}
+
+extern "C" TopoDS_Shape *new_TopoDS_Shape__brep_algoapi_common__s1_s2(TopoDS_Shape &s1, TopoDS_Shape &s2) {
+    TRACE("");
+    const auto common = new BRepAlgoAPI_Common(s1, s2);
+//    fuse->Build();
+//    fuse->SimplifyResult();
+    return new TopoDS_Shape(common->Shape());
 }
 
 extern "C" TopoDS_Shape *new_TopoDS_Shape__BRepAlgoAPI_Cut__TopoDS_Shape_TopTools_ListOfShape(TopoDS_Shape &result, TopTools_ListOfShape &aLT) {

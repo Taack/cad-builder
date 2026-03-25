@@ -2,9 +2,11 @@ package org.taack.cad.dsl
 
 import groovy.transform.CompileStatic
 import org.junit.jupiter.api.Test
+import org.taack.cad.builder.Vec
 import org.taack.cad.builder.Vec2d
 
 import static org.taack.cad.dsl.CadDsl.cd
+import static java.lang.Math.*
 
 @CompileStatic
 class BlockTest {
@@ -105,4 +107,10 @@ class BlockTest {
         }.hole(cboreHoleDiameter).display()
     }
 
+    @Test
+    void "Tetrahedron"() {
+        cd().box(length, length, length).toCadDsl().fuse {
+            position(new Vec(2, 0, 0)).direction(new Vec(1,1,1)).box(length, length * 5, length * 5)
+        }.display()
+    }
 }

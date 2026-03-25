@@ -2,7 +2,6 @@ package org.taack.cad.dsl
 
 import groovy.transform.CompileStatic
 import org.junit.jupiter.api.Test
-import org.taack.cad.builder.CadBuilder
 import org.taack.cad.builder.Vec
 
 import static org.taack.cad.dsl.CadDsl.cd
@@ -16,7 +15,7 @@ class SolidFuseAndCutTest {
         BigDecimal angle = Math.atan(radianSphere)
         BigDecimal featureDiameter = 0.5
 
-        def c = cd().sphere(radius, new Vec(1.0), -angle, angle).topZ().center {
+        def c = cd().sphere(radius, -angle, angle).topZ().center {
             circle featureDiameter
         }.hole(100)
         c.toCadDsl()
@@ -31,7 +30,7 @@ class SolidFuseAndCutTest {
         other.cut {
             for (i in 0..7) {
                 double angle = i * Math.PI / 4.0
-                from(new Vec(-height / 2.0) + new Vec(Math.cos(angle) * cloneRadius, Math.sin(angle) * cloneRadius, 0.0))
+                wireFrom(new Vec(-height / 2.0) + new Vec(Math.cos(angle) * cloneRadius, Math.sin(angle) * cloneRadius, 0.0))
                 cylinder(cylinderRadius, height)
             }
         }
@@ -54,7 +53,7 @@ class SolidFuseAndCutTest {
         BigDecimal face_inner_radius = 0.8
 
         other.cut {
-            from(new Vec(face_inner_radius - 0.05, 0.0, -0.05)) {
+            wireFrom(new Vec(face_inner_radius - 0.05, 0.0, -0.05)) {
                 edge(new Vec(face_inner_radius - 0.10, 0.0, -0.025))
                 edge(new Vec(face_inner_radius - 0.10, 0.0, 0.025))
                 edge(new Vec(face_inner_radius + 0.10, 0.0, 0.025))

@@ -22,11 +22,13 @@ class CadDslVisitor implements ICadDslVisitor {
     Vec2d fromVec2d = new Vec2d()
     Vec2d oldFromVec2d
     Vec direction = new Vec(1)
+    Vec directionNormal = null
     SurfaceBounds bounds
     Vec ptParam11
     Vec ptParam00
     List<OpenShape2D> openShape2DList = []
     List<ClosedShape2D> closedShape2dList = []
+    List<MemorySegment> boolShape = []
 
     interface ClosedShape2D {
         MemorySegment makeWireAdd(MemorySegment makeWire)
@@ -169,45 +171,62 @@ class CadDslVisitor implements ICadDslVisitor {
     }
 
     @Override
-    void visitBox(Number length, Number height, Number thickness, Vec direction) {
-        def ax2 = new_gp_Ax2__gp_Pnt_gp_Dir(fromVec.toGpPnt(), direction.toGpDir())
+    void visitBox(Number length, Number height, Number thickness) {
+        println "box($length, $height, $thickness) from: $fromVec, direction: $direction, directionNormal: $directionNormal"
+        def ax2 = directionNormal ?new_gp_Ax2__gp_Pnt_gp_Dir_Normal(fromVec.toGpPnt(), direction.toGpDir(), directionNormal.toGpDir()) : new_gp_Ax2__gp_Pnt_gp_Dir(fromVec.toGpPnt(), direction.toGpDir())
         shape = new_TopoDS_Shape__Shape__BRepBuilderAPI_MakeShape(new_BRepPrimAPI_MakeBox__Ax2_x_y_z(ax2, length.toDouble(), height.toDouble(), thickness.toDouble()))
+        if (boolShape.size() > 0) boolShape << shape
     }
 
     @Override
-    void visitSphere(Number radius, Vec direction) {
-
-    }
-
-    @Override
-    void visitCylinder(Number radius, Number height, Vec direction) {
+    void visitSphere(Number radius) {
 
     }
 
     @Override
-    void visitTorus(Number torusRadius, Number ringRadius, Vec direction) {
+    void visitCylinder(Number radius, Number height) {
+
+    }
+
+    @Override
+    void visitTorus(Number torusRadius, Number ringRadius) {
         def ax2 = new_gp_Ax2__gp_Pnt_gp_Dir(fromVec.toGpPnt(), direction.toGpDir())
         shape = new_TopoDS_Shape__BRepPrimAPI_MakeTorus__gp_Ax2_r1_r2(ax2, torusRadius.toDouble(), ringRadius.toDouble())
+        if (boolShape.size() > 0) boolShape << shape
     }
 
     @Override
     void visitCut() {
-
+        boolShape << shape
+        shape = null
     }
 
     @Override
     void visitCutEnd() {
-
+        def firstShape = boolShape.first()
+        println boolShape
+        for (def otherShape in boolShape[1..boolShape.size() - 1]) {
+            firstShape = new_TopoDS_Shape__bBRepAlgoAPI_Cut__s1_s2(firstShape, otherShape)
+        }
+        shape = firstShape
+        boolShape.clear()
     }
 
     @Override
     void visitFuse() {
-
+        boolShape << shape
+        shape = null
     }
 
     @Override
     void visitFuseEnd() {
-
+        def firstShape = boolShape.first()
+        println boolShape
+        for (def otherShape in boolShape[1..boolShape.size() - 1]) {
+            firstShape = new_TopoDS_Shape__brep_algoapi_fuse__s1_s2(firstShape, otherShape)
+        }
+        shape = firstShape
+        boolShape.clear()
     }
 
     @Override
@@ -407,5 +426,28 @@ class CadDslVisitor implements ICadDslVisitor {
         mkWire = addCurrentWireNative(mkWire)
         makeWires.pop()
         makeWires.push(mkWire)
+    }
+
+    @Override
+    void visitDirection(Vec axis, Vec normal) {
+        direction = axis
+    }
+
+    @Override
+    void visitCommon() {
+        boolShape << shape
+        shape = null
+    }
+
+    @Override
+    void visitCommonEnd() {
+        def firstShape = boolShape.first()
+        println boolShape
+        for (def otherShape in boolShape[1..boolShape.size() - 1]) {
+            firstShape = new_TopoDS_Shape__brep_algoapi_common__s1_s2(firstShape, otherShape)
+        }
+        shape = firstShape
+        boolShape.clear()
+
     }
 }

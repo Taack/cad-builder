@@ -365,6 +365,8 @@ gp_Dir *new_gp_Dir__Normal__TopoDS_Face(const TopoDS_Face *aCurrentFace);
 
 const gp_Ax2 * new_gp_Ax2__gp_Pnt_gp_Dir(gp_Pnt *loc, gp_Dir *dir);
 
+const gp_Ax2 * new_gp_Ax2__gp_Pnt_gp_Dir_Normal(gp_Pnt *loc, gp_Dir *dir, gp_Dir *n);
+
 const gp_Ax3 * new_gp_Ax3__p_dN_dX(gp_Pnt *loc, gp_Dir *dirN, gp_Dir *dirX);
 
 const gp_Ax2 *new_gp_Ax2_DZ(void);
@@ -507,6 +509,8 @@ Composed
 TopoDS_Shape *new_TopoDS_Shape__bBRepAlgoAPI_Cut__s1_s2(TopoDS_Shape *result, TopoDS_Shape *tool);
 
 TopoDS_Shape *new_TopoDS_Shape__brep_algoapi_fuse__s1_s2(TopoDS_Shape *s1, TopoDS_Shape *s2);
+
+TopoDS_Shape *new_TopoDS_Shape__brep_algoapi_common__s1_s2(TopoDS_Shape *s1, TopoDS_Shape *s2);
 
 TopoDS_Shape *new_TopoDS_Shape__BRepAlgoAPI_Cut__TopoDS_Shape_TopTools_ListOfShape(TopoDS_Shape *result, TopTools_ListOfShape *aLT);
 

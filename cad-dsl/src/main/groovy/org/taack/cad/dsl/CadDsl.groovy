@@ -12,7 +12,7 @@ class CadDsl implements CadDslBase {
         new CadDsl(visitor: new CadDslVisitor())
     }
 
-    CadDslWire from(Vec pos, @DelegatesTo(value = CadDslEdge, strategy = Closure.DELEGATE_FIRST) Closure c = null) {
+    CadDslWire wireFrom(Vec pos, @DelegatesTo(value = CadDslEdge, strategy = Closure.DELEGATE_FIRST) Closure c = null) {
         visitor.visitFrom(pos)
         if (c) {
             c.delegate = new CadDslEdge(visitor: visitor)
@@ -22,7 +22,7 @@ class CadDsl implements CadDslBase {
         new CadDslWire(visitor: visitor)
     }
 
-    CadDslWire2d from(Vec2d pos, @DelegatesTo(value = CadDslEdge2d, strategy = Closure.DELEGATE_FIRST) Closure c = null) {
+    CadDslWire2d wireFrom(Vec2d pos, @DelegatesTo(value = CadDslEdge2d, strategy = Closure.DELEGATE_FIRST) Closure c = null) {
         visitor.visitFrom(pos)
         if (c) {
             c.delegate = new CadDslEdge2d(visitor: visitor)
@@ -32,8 +32,18 @@ class CadDsl implements CadDslBase {
         new CadDslWire2d(visitor: visitor)
     }
 
-    CadDslSolid box(Number length, Number height, Number thickness, Vec direction = new Vec(1)) {
-        visitor.visitBox(length, height, thickness, direction)
+    CadDsl position(Vec pos) {
+        visitor.visitFrom(pos)
+        this
+    }
+
+    CadDsl direction(Vec axis, Vec normal = null) {
+        visitor.visitDirection(axis, normal)
+        this
+    }
+
+    CadDslSolid box(Number length, Number height, Number thickness) {
+        visitor.visitBox(length, height, thickness)
         new CadDslSolid(visitor: visitor)
     }
 
@@ -46,8 +56,8 @@ class CadDsl implements CadDslBase {
      * @param angleTo   second angle defining a spherical segment
      * @return
      */
-    CadDslSolid sphere(Number radius, Vec direction = new Vec(1), Number angleFrom = 0, Number angleTo = 2 * PI) {
-        visitor.visitSphere(radius, direction)
+    CadDslSolid sphere(Number radius, Number angleFrom = 0, Number angleTo = 2 * PI) {
+        visitor.visitSphere(radius)
         new CadDslSolid(visitor: visitor)
     }
 
@@ -58,13 +68,13 @@ class CadDsl implements CadDslBase {
      * @param direction
      * @return
      */
-    CadDslSolid cylinder(Number radius, Number height, Vec direction = new Vec(1)) {
-        visitor.visitCylinder(radius, height, direction)
+    CadDslSolid cylinder(Number radius, Number height) {
+        visitor.visitCylinder(radius, height)
         new CadDslSolid(visitor: visitor)
     }
 
-    CadDslSolid torus(Number torusRadius, Number ringRadius, Vec direction = new Vec(1)) {
-        visitor.visitTorus(torusRadius, ringRadius, direction)
+    CadDslSolid torus(Number torusRadius, Number ringRadius) {
+        visitor.visitTorus(torusRadius, ringRadius)
         new CadDslSolid(visitor: visitor)
     }
 
@@ -85,6 +95,16 @@ class CadDsl implements CadDslBase {
             c.call()
         }
         visitor.visitFuseEnd()
+        new CadDslSolid(visitor: visitor)
+    }
+
+    CadDslSolid common(@DelegatesTo(value = CadDsl, strategy = Closure.DELEGATE_FIRST) Closure c = null) {
+        visitor.visitCommon()
+        if (c) {
+            c.delegate = this
+            c.call()
+        }
+        visitor.visitCommonEnd()
         new CadDslSolid(visitor: visitor)
     }
 

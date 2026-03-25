@@ -27,7 +27,7 @@ class SketchTest {
         Vec2d p6 = new Vec2d(innerRadius + xValue1, -yValue2)
         Vec2d p7 = p1
 
-        cd().from(p1) {
+        cd().wireFrom(p1) {
             edge(p2)
             edge(p3)
             edge(p4)
@@ -51,7 +51,7 @@ class SketchTest {
         Vec2d c3 = p3 * .2
         Vec2d c4 = p4 * .2
 
-        cd().from(p1) {
+        cd().wireFrom(p1) {
             edge(p4)
             edge(p3)
             edge(p2)
@@ -76,7 +76,7 @@ class SketchTest {
         Vec2d c3 = p3 * .2
         Vec2d c4 = p4 * .2
 
-        cd().from(p1) {
+        cd().wireFrom(p1) {
             edge(p4)
             edge(p3)
             edge(p2)
@@ -104,11 +104,10 @@ class SketchTest {
         Vec2d p3 = -p1
         Vec2d p4 = -p2
 
-        cd().from(p1) {
+        cd().wireFrom(p1) {
             edge(p4)
             edge(p3)
         }.mirror(p1, p3 - p1).toFace().prism().display()
-
     }
 
 }

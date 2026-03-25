@@ -12,13 +12,13 @@ interface ICadDslVisitor {
 
     void visitFromEnd(Vec2d pos)
 
-    void visitBox(Number length, Number height, Number thickness, Vec direction)
+    void visitBox(Number length, Number height, Number thickness)
 
-    void visitSphere(Number radius, Vec direction)
+    void visitSphere(Number radius)
 
-    void visitCylinder(Number radius, Number height, Vec direction)
+    void visitCylinder(Number radius, Number height)
 
-    void visitTorus(Number torusRadius, Number ringRadius, Vec direction)
+    void visitTorus(Number torusRadius, Number ringRadius)
 
     void visitCut()
 
@@ -59,4 +59,10 @@ interface ICadDslVisitor {
     void visitMirror(Vec2d pos, Vec2d dir)
 
     void visitMirror(Vec pos, Vec dir)
+
+    void visitDirection(Vec axis, Vec normal)
+
+    void visitCommon()
+
+    void visitCommonEnd()
 }
