@@ -117,7 +117,7 @@ class BlockTest {
     @Test
     void "Tetrahedron and Hole"() {
         cd().direction(new Vec(1, 1, 1)).box(length, length, length).toCadDsl().common {
-            position(new Vec(100, 100, 100) * (2/10 * 1/sqrt(2))).direction(new Vec(1)).box(3*length, length * 5, length * 5)
+            position(new Vec(length, length, length) * 0.25).direction(new Vec(1)).box(3*length, length * 5d, length * 5d)
         }.butZ().center {
             circle(10)
         }.hole(20).display()

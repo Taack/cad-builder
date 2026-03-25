@@ -30,7 +30,7 @@ class SolidFuseAndCutTest {
         other.cut {
             for (i in 0..7) {
                 double angle = i * Math.PI / 4.0
-                wireFrom(new Vec(-height / 2.0) + new Vec(Math.cos(angle) * cloneRadius, Math.sin(angle) * cloneRadius, 0.0))
+                position(new Vec(-height / 2.0) + new Vec(Math.cos(angle) * cloneRadius, Math.sin(angle) * cloneRadius, 0.0))
                 cylinder(cylinderRadius, height)
             }
         }

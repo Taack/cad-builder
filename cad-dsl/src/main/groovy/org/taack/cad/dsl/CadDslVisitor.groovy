@@ -179,13 +179,21 @@ class CadDslVisitor implements ICadDslVisitor {
     }
 
     @Override
-    void visitSphere(Number radius) {
+    void visitSphere(Number radius, Number radian1, Number radian2) {
+        println "sphere($radius, $radian1, $radian2) from: $fromVec, direction: $direction, directionNormal: $directionNormal"
 
+        def ax2 = new_gp_Ax2__gp_Pnt_gp_Dir(fromVec.toGpPnt(), direction.toGpDir())
+        shape = new_TopoDS_Shape__BRepPrimAPI_MakeSphere__gp_Ax2_radius_a1_a2(ax2, radius.toDouble(), radian1.toDouble(), radian2.toDouble())
+        if (boolShape.size() > 0) boolShape << shape
     }
 
     @Override
     void visitCylinder(Number radius, Number height) {
+        println "cylinder($radius, $height) from: $fromVec, direction: $direction, directionNormal: $directionNormal"
 
+        def ax2 = new_gp_Ax2__gp_Pnt_gp_Dir(fromVec.toGpPnt(), direction.toGpDir())
+        shape = new_TopoDS_Shape__BRepPrimAPI_MakeCylinder__gp_Ax2_radius_height(ax2, radius.toDouble(), height.toDouble())
+        if (boolShape.size() > 0) boolShape << shape
     }
 
     @Override

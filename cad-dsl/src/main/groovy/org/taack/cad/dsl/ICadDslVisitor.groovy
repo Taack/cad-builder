@@ -14,7 +14,7 @@ interface ICadDslVisitor {
 
     void visitBox(Number length, Number height, Number thickness)
 
-    void visitSphere(Number radius)
+    void visitSphere(Number radius, Number radian1, Number radian2)
 
     void visitCylinder(Number radius, Number height)
 

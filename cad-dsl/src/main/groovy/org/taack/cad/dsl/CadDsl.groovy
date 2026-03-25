@@ -57,7 +57,7 @@ class CadDsl implements CadDslBase {
      * @return
      */
     CadDslSolid sphere(Number radius, Number angleFrom = 0, Number angleTo = 2 * PI) {
-        visitor.visitSphere(radius)
+        visitor.visitSphere(radius, angleFrom, angleTo)
         new CadDslSolid(visitor: visitor)
     }
 
