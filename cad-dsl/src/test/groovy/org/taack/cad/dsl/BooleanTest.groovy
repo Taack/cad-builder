@@ -47,7 +47,7 @@ class BooleanTest {
     void "Test common 3 boxes"() {
         cd().box(1, 1, 1).toCadDsl().common {
             position(new Vec(1.2, 1, 1) * 0.4) {
-                direction(new Vec(1,1,1))
+                direction(new Vec(1, 1, 1))
                 box(1, 1, 1)
             }
             position(new Vec(1, 1, 1) * 0.2) {
@@ -71,15 +71,16 @@ class BooleanTest {
 
     @Test
     void "Test mix fuse - common - cut"() {
+        Vec diagonal = new Vec(1, 1, 1)
+
         cd().box(2, 2, 1).toCadDsl().cut {
-            position(new Vec(1, 1, 1) * 0.4) {
-                box(1, 1, 1).toCadDsl().fuse {
-                    position(new Vec(1, 1, 1) * 0.3) {
-                        cylinder(1 / 2, 3)
-                    }
+            position(diagonal * 0.4) {
+                box(1, 1, 1)
+                position(diagonal * 0.3) {
+                    cylinder(1 / 2, 3)
                 }
             }
-            position(new Vec(1, 1, 1) * 0.6) {
+            position(diagonal * 0.6) {
                 box(1, 1, 1)
             }
         }.display()
@@ -88,17 +89,13 @@ class BooleanTest {
     @Test
     void "Test mix fuse - common - cut bis"() {
         cd().box(1, 1, 1).toCadDsl().common {
-//            position(new Vec(1, 1, 1) * 0.4) {
-                box(1, 1, 1).toCadDsl().cut {
-                    position(new Vec(1, 1, 1) * 0.3) {
-                        cylinder(1 / 2, 3)
-                    }
-                }.display()
-//            }
-//            position(new Vec(1, 1, 1) * 0.6) {
-                direction(new Vec(0.1, 2, 1))
-                box(1, 1, 1)
-//            }
+            box(1, 1, 1).toCadDsl().cut {
+                position(new Vec(1, 1, 1) * 0.3) {
+                    cylinder(1 / 2, 3)
+                }
+            }
+            direction(new Vec(0.1, 2, 1))
+            box(1, 1, 1)
         }.display()
     }
 
@@ -110,7 +107,7 @@ class BooleanTest {
                     position(new Vec(1, 1, 1) * 0.3) {
                         cylinder(1 / 3, 3)
                     }
-                }.display()
+                }
             }
             position(new Vec(1, 1, 1) * 0.6) {
                 box(1, 1, 1)
