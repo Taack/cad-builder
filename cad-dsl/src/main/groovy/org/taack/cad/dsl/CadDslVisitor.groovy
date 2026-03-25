@@ -30,6 +30,7 @@ class CadDslVisitor implements ICadDslVisitor {
         }
     }
     MemorySegment shape
+    MemorySegment shapeCutBase = null
     MemorySegment face
     List<MemorySegment> makeWires = []
 
@@ -325,7 +326,7 @@ class CadDslVisitor implements ICadDslVisitor {
         boolShapes.push([])
         Tr.cur "shape: $shape"
         if (shape) {
-            boolShapes.last() << shape
+            shapeCutBase = shape
         } else Tr.cur "visitCut: Empty shape !!"
         shape = null
     }
@@ -333,8 +334,8 @@ class CadDslVisitor implements ICadDslVisitor {
     @Override
     void visitCutEnd() {
         if (boolShapes.last().empty) return
-        def cutLasts = boolShapes.last()[0..boolShapes.last().size() - 2]
-        def firstShape = shape//cutLasts.first()
+        def cutLasts = boolShapes.last()
+        def firstShape = shapeCutBase//cutLasts.first()
         Tr.cur "cutLasts: $cutLasts"
         for (def otherShape in cutLasts) {
             println "cutting; $firstShape, $otherShape"
@@ -387,7 +388,7 @@ class CadDslVisitor implements ICadDslVisitor {
     void visitCommonEnd() {
         if (boolShapes.last().empty) return
         def firstShape = shape //boolShapes.last().first()
-        def commonLasts = boolShapes.last()[0..boolShapes.last().size() - 2]
+        def commonLasts = boolShapes.last()
         Tr.cur "commonLasts: $commonLasts"
         for (def otherShape in commonLasts) {
             firstShape = new_TopoDS_Shape__brep_algoapi_common__s1_s2(firstShape, otherShape)

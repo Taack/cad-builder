@@ -46,10 +46,11 @@ class BooleanTest {
     @Test
     void "Test common 3 boxes"() {
         cd().box(1, 1, 1).toCadDsl().common {
-            position(new Vec(1, 1, 1) * 0.4) {
+            position(new Vec(1.2, 1, 1) * 0.4) {
+                direction(new Vec(1,1,1))
                 box(1, 1, 1)
             }
-            position(new Vec(1, 1, 1) * -0.4) {
+            position(new Vec(1, 1, 1) * 0.2) {
                 box(1, 1, 1)
             }
         }.display()
