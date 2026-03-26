@@ -25,7 +25,7 @@ ls /usr/include/opencascade | wc
 .Launch Main App
 [groovy]
 ----
-./gradlew cad-dsl:run
+./gradlew cad-dsl:test
 ----
 
 .Output
@@ -40,15 +40,16 @@ Get inspiration from CAD Query, but using Groovy DSL.
 ----
 @Test
 void "Pillow Block With Counterbored Holes"() {
-    cb().box(length, height, thickness).topZ()
-        .rect(length - diameter, height - diameter) {
-            hole(diameter)
-    }.display("test3.png", 640, 480)
+    cb().box(length, height, thickness).topZ().rect(length - cboreInset, height - cboreInset) {
+        hole(cboreHoleDiameter)
+    }.center {
+        hole(centerHoleDia)
+    }.display()
 }
 ----
 
 
-WARNING: ATM `counterboredHole` is implemented as a simple `hole`
+WARNING: DSL is not definitive
 
 .Renderer
 image::https://github.com/Taack/cad-builder/blob/main/test3.png?raw=true[]
