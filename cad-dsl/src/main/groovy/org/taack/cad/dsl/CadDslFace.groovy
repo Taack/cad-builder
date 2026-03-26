@@ -31,5 +31,11 @@ class CadDslFace implements CadDslBase {
         this
     }
 
+    CadDsl fillet(Number length) {
 
+    }
+
+    CadDsl hollowedSolid(Number thickness) {
+
+    }
 }

@@ -409,6 +409,16 @@ class CadDslVisitor implements ICadDslVisitor {
     }
 
     @Override
+    void visitMirrorWire2d(Vec2d pos, Vec2d dir) {
+        visitMirror(new Vec(pos), new Vec(dir))
+    }
+
+    @Override
+    void visitMirrorWire(Vec pos, Vec dir) {
+        visitMirror(pos, dir)
+    }
+
+    @Override
     void visitFace(Vec direction) {
         double positionMax = Double.NEGATIVE_INFINITY
         this.direction = direction
@@ -576,7 +586,7 @@ class CadDslVisitor implements ICadDslVisitor {
     @Override
     void visitToFace() {
         Tr.cur("visitToFace: makeWires: $makeWires")
-        MemorySegment wire = ref_TopoDS_Shape__BRepBuilderAPI_MakeWire__Shape(makeWires.first())
+        MemorySegment wire = ref_TopoDS_Wire__BRepBuilderAPI_MakeWire__Wire(makeWires.first())
         face = new_TopoDS_Face__BRepBuilderAPI_MakeFace__TopoDS_Wire(wire)
         if (makeWires.size() > 1) {
             def builder = new_BRep_Builder()
@@ -606,7 +616,7 @@ class CadDslVisitor implements ICadDslVisitor {
     void visitPrism(Vec dir) {
         def shape = new_TopoDS_Shape__BRepPrimAPI_MakePrism__TopoDS_Face_gp_Vec(face, dir.toGpVec())
         face = null
-
+        makeWires = null
         Tr.cur "prism($dir) from: $fromVec, direction: $direction, directionNormal: $directionNormal, shape: $shape"
 
         boolShapes.peek() << shape
@@ -628,23 +638,24 @@ class CadDslVisitor implements ICadDslVisitor {
         ret
     }
 
-    MemorySegment toShape() {
-        if (shape) shape
-        else if (face) face
-        else ref_TopoDS_Shape__BRepBuilderAPI_MakeWire__Shape(addCurrentWireNative())
-    }
+//    MemorySegment toShape() {
+//        if (shape) shape
+//        else if (face) face
+//        else ref_TopoDS_Shape__BRepBuilderAPI_MakeWire__Shape(addCurrentWireNative())
+//    }
 
     @Override
     void visitMirror(Vec pt, Vec dir) {
+        Tr.cur("visitMirror($pt, $dir)")
         def ax1 = new_gp_Ax1__p_dir(pt.toGpPnt(), dir.toGpDir())
         def aTrsf = new_gp_Trsf()
         _gp_Trsf__SetMirror__gp_Ax1(aTrsf, ax1)
-        def shape = toShape()
-        _TopoDS__Shape__Reverse(shape)
-        def aBRepTrsf = new_BRepBuilderAPI_Transform__TopoDS_Shape_gp_Trsf(shape, aTrsf, 0, 0)
-        def aMirroredShape = ref_TopoDS__Wire__TopoDS_Shape(new_TopoDS_Shape__Shape__BRepBuilderAPI_MakeShape(aBRepTrsf))
+        def topoWire = ref_TopoDS_Wire__BRepBuilderAPI_MakeWire__Wire(addCurrentWireNative())
+        _TopoDS__Shape__Reverse(topoWire)
+        def aBRepTrsf = new_BRepBuilderAPI_Transform__TopoDS_Shape_gp_Trsf(topoWire, aTrsf, 0, 0)
+        def aMirroredWire = ref_TopoDS__Wire__TopoDS_Shape(new_TopoDS_Shape__Shape__BRepBuilderAPI_MakeShape(aBRepTrsf))
         def mkWire = new_BRepBuilderAPI_MakeWire()
-        _BRepBuilderAPI_MakeWire__Add__TopoDS_Wire(mkWire, aMirroredShape)
+        _BRepBuilderAPI_MakeWire__Add__TopoDS_Wire(mkWire, aMirroredWire)
         mkWire = addCurrentWireNative(mkWire)
         makeWires.pop()
         makeWires.push(mkWire)

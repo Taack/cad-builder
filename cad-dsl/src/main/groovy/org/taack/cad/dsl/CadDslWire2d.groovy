@@ -1,6 +1,7 @@
 package org.taack.cad.dsl
 
 import groovy.transform.CompileStatic
+import org.taack.cad.builder.Vec
 import org.taack.cad.builder.Vec2d
 
 @CompileStatic
@@ -20,4 +21,10 @@ class CadDslWire2d implements CadDslBase {
         visitor.visitFromEnd(pos)
         this
     }
+
+    CadDslWire2d mirror(Vec2d pos, Vec2d dir) {
+        visitor.visitMirrorWire2d(pos, dir)
+        this
+    }
+
 }

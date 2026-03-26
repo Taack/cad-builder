@@ -21,4 +21,8 @@ class CadDslWire implements CadDslBase {
         this
 
     }
+
+    CadDslWire mirror(Vec pos, Vec dir) {
+        visitor.visitMirrorWire(pos, dir)
+    }
 }

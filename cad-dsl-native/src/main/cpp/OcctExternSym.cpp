@@ -85,6 +85,14 @@
 #include <BRepBuilderAPI_MakeEdge2d.hxx>
 #include <BRepAlgoAPI_Common.hxx>
 
+#include <string>       // std::string
+#include <sstream>      // std::ostringstream
+
+#define TRACE2(message) TRACE_IMPL2(__FILE__, __LINE__, __PRETTY_FUNCTION__, message)
+void TRACE_IMPL2(const char *file, int line, const char *function, std::ostringstream message) {
+    std::cout << /*file << " : " <<*/ line << " : " << function << " : " << message.str() << "\n";
+    std::cout.flush();
+}
 
 #define TRACE(message) TRACE_IMPL(__FILE__, __LINE__, __PRETTY_FUNCTION__, message)
 void TRACE_IMPL(const char *file, int line, const char *function, const char *message) {
@@ -103,7 +111,7 @@ OcctExternSym::OcctExternSym() {
 */
 
 extern "C" gp_Pnt2d *new_gp_Pnt2d__x_y(const Standard_Real theXp, const Standard_Real theYp) {
-    TRACE("");
+    TRACE2(std::ostringstream{} << " theXp " << theXp << " theYp " << theYp);
     return new gp_Pnt2d(theXp, theYp);
 }
 
@@ -123,7 +131,7 @@ extern "C" gp_Pnt2d* new_gp_Pnt2d__Geom2d_TrimmedCurve__StartPoint(const Handle(
 }
 
 extern "C" gp_Vec2d *new_gp_Vec2d__x_y(const Standard_Real theXp, const Standard_Real theYp) {
-    TRACE("");
+    TRACE2(std::ostringstream{} << " theXp " << theXp << " theYp " << theYp);
     return new gp_Vec2d(theXp, theYp);
 }
 
@@ -133,7 +141,7 @@ extern "C" gp_Ax2d *new_gp_Ax2d() {
 }
 
 extern "C" gp_Ax2d *new_gp_Ax2d__pt_dir(const gp_Pnt2d &theP, const gp_Dir2d &theV) {
-    TRACE("");
+    TRACE2(std::ostringstream{} << " theP " << &theP << " theV " << &theV);
     return new gp_Ax2d(theP, theV);
 }
 
@@ -143,12 +151,12 @@ extern "C" gp_Dir2d *new_gp_Dir2d() {
 }
 
 extern "C" gp_Dir2d *new_gp_Dir2d__x_y(const Standard_Real theXp, const Standard_Real theYp) {
-    TRACE("");
+    TRACE2(std::ostringstream{} << " theXp " << theXp << " theYp " << theYp);
     return new gp_Dir2d(theXp, theYp);
 }
 
 extern "C" gp_Circ2d* new_gp_Circ2d__ax2d_r(gp_Ax2d &ax2d, Standard_Real theRadius) {
-    TRACE("");
+    TRACE2(std::ostringstream{} << " ax2d " << &ax2d << " theRadius " << theRadius);
     return new gp_Circ2d(ax2d, theRadius);
 }
 
@@ -276,7 +284,7 @@ extern "C" Handle(Geom2d_Line) *handle_Geom2d_Line__GCE2d_MakeLine__p1_p2(gp_Pnt
 ***********************************************************************************************************************/
 
 extern "C" gp_Pnt * new_gp_Pnt__x_y_z(const Standard_Real theXp, const Standard_Real theYp, const Standard_Real theZp) {
-    TRACE("");
+    TRACE2(std::ostringstream{} << " theXp " << theXp << " theYp " << theYp << " theZp " << theZp);
     return new gp_Pnt(theXp, theYp, theZp);
 }
 
@@ -286,7 +294,7 @@ extern "C" void delete_gp_Pnt(gp_Pnt *pnt) {
 }
 
 extern "C" gp_Vec *new_gp_Vec__x_y_z(const Standard_Real theXp, const Standard_Real theYp, const Standard_Real theZp) {
-    TRACE("");
+    TRACE2(std::ostringstream{} << " theXp " << theXp << " theYp " << theYp << " theZp " << theZp);
     return new gp_Vec(theXp, theYp, theZp);
 }
 
@@ -811,7 +819,7 @@ extern "C" const gp_Dir *new_gp_Dir_DZ() {
 }
 
 extern "C" gp_Dir *new_gp_Dir__x_y_z(const Standard_Real theXv, const Standard_Real theYv, const Standard_Real theZv) {
-    TRACE("");
+    TRACE2(std::ostringstream{} << " theXv " << theXv << " theYv " << theYv << " theZv " << theZv);
     return new gp_Dir(theXv, theYv, theZv);
 }
 

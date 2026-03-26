@@ -74,4 +74,6 @@ interface ICadDslVisitor {
 
     void visitCommonEnd()
 
+    void visitMirrorWire2d(Vec2d pos, Vec2d dir)
+    void visitMirrorWire(Vec pos, Vec dir)
 }
