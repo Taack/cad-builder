@@ -53,3 +53,69 @@ WARNING: DSL is not definitive
 
 .Renderer
 image::https://github.com/Taack/cad-builder/blob/main/test3.png?raw=true[]
+
+== Packages
+
+There are 3 main packages in `cad-dsl` src folder (both for tests and implementation).
+
+* `org.taack.cad.binding` classes use direct OCCT symbol binding to draw. It is considered low-level, and should not be used when composing a new body.
+* `org.taack.cad.builder` using the builder pattern, quick way to test builder limitation, this step helps to build a good DSL. This package should not be directly used.
+* `org.taack.cad.dsl` using the visitor pattern to build the DSL. This should be used in production.
+
+== DSL Tests
+
+DSL Tests are localised `cad-dsl/src/test/groovy/org/taack/cad/dsl` it could give an overview of `cad-dsl`.
+
+.Cut Version
+[source,groovy]
+----
+@Test
+void "Test mix fuse - common - cut"() {
+    Vec diagonal = new Vec(1, 1, 1)
+
+    cd().box(2, 2, 1).toCadDsl().cut {
+        position(diagonal * 0.4) {
+            box(1, 1, 1)
+            position(diagonal * 0.3) {
+                cylinder(1 / 2, 3)
+            }
+        }
+        position(diagonal * 0.6) {
+            box(1, 1, 1)
+        }
+    }.display()
+}
+----
+
+.Image Displayed
+image::cad-cut.png[]
+
+.Fuse Version
+[source,groovy]
+----
+@Test
+void "Test mix fuse - common - fuse"() {
+    Vec diagonal = new Vec(1, 1, 1)
+
+    cd().box(2, 2, 1).toCadDsl().fuse {
+        position(diagonal * 0.4) {
+            box(1, 1, 1)
+            position(diagonal * 0.3) {
+                cylinder(1 / 2, 3)
+            }
+        }
+        position(diagonal * 0.6) {
+            box(1, 1, 1)
+        }
+    }.display()
+}
+----
+
+.Fuse Results
+image::cad-fuse.png[]
+
+== Distribution and Usage
+
+`cad-dsl` is not yet published on maven. The only way to use it is to fork the source and save the model in STEP file ().
+
+Change `display()` into `display('File.step')` or `display('File.brep')` or `display('File.png')`.
