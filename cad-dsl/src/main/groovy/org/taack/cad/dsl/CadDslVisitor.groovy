@@ -241,6 +241,7 @@ class CadDslVisitor implements ICadDslVisitor {
 
     @Override
     void visitFrom(Vec pos) {
+        Tr.ind("visitFrom $pos")
         fromVecStack << pos
     }
 
@@ -259,6 +260,7 @@ class CadDslVisitor implements ICadDslVisitor {
         }
         openShapeList.clear()
         fromVecStack.pop()
+        Tr.dec("visitFromEnd $pos")
     }
 
     @Override
@@ -462,21 +464,21 @@ class CadDslVisitor implements ICadDslVisitor {
                 } else
                     dumpShape(shape, 1920, 1080, t)
             }
-        } else visualize(shape)
+        } else visualize(shape ?: face ?: ref_TopoDS_Shape__BRepBuilderAPI_MakeWire__Shape(addCurrentWireNative()))
 
     }
 
     @Override
     void visitCenter() {
-        Tr.ind("visitCenter")
         fromVecStack << Vec.fromAPnt(new_gp_Pnt__CentreOfMass__TopoDS_Shape(face))
         fromVec2d = fromVec.coordsProjection(direction, ptParam00)
+        Tr.ind("visitCenter $fromVecStack $fromVec2d")
     }
 
     @Override
     void visitCenterEnd() {
         fromVecStack.pop()
-        Tr.dec("visitCenterEnd")
+        Tr.dec("visitCenterEnd $fromVecStack")
     }
 
     @Override
@@ -591,6 +593,22 @@ class CadDslVisitor implements ICadDslVisitor {
         if (makeWires.size() > 1) {
             def builder = new_BRep_Builder()
             for (MemorySegment w in makeWires[1..makeWires.size() - 1]) {
+                MemorySegment wire2 = ref_TopoDS_Shape__BRepBuilderAPI_MakeWire__Shape(w)
+                _TopoDS_Builder__Add__resTopoDS_Shape_toAddTopoDS_Shape(builder, face, wire2)
+            }
+        }
+    }
+
+    @Override
+    void visitToFaceFrom2d() {
+        Tr.cur("visitToFace: makeWires: $makeWires")
+//        MemorySegment wire = ref_TopoDS_Wire__BRepBuilderAPI_MakeWire__Wire(makeWires.first())
+//        face = new_TopoDS_Face__BRepBuilderAPI_MakeFace__TopoDS_Wire(wire)
+        face = new_TopoDS_Face__BRepBuilderAPI_MakeFace__gp_Pln(new Vec(1).toGpPln(0))
+//        face = new_TopoDS_Face__BRepBuilderAPI_MakeFace__TopoDS_Wire(wire)
+        if (makeWires.size() > 0) {
+            def builder = new_BRep_Builder()
+            for (MemorySegment w in makeWires[0..makeWires.size() - 1]) {
                 MemorySegment wire2 = ref_TopoDS_Shape__BRepBuilderAPI_MakeWire__Shape(w)
                 _TopoDS_Builder__Add__resTopoDS_Shape_toAddTopoDS_Shape(builder, face, wire2)
             }

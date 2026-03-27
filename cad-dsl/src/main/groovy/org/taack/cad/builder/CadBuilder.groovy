@@ -126,7 +126,7 @@ class CadBuilder {
         } else if (currentFaceNative) {
             currentFaceNative
         } else {
-            addCurrentWireNative()
+            ref_TopoDS_Shape__BRepBuilderAPI_MakeWire__Shape(addCurrentWireNative())
         }
     }
 
@@ -257,7 +257,8 @@ class CadBuilder {
      * @return
      */
     CadBuilder toFace() {
-        MemorySegment wire = ref_TopoDS_Shape__BRepBuilderAPI_MakeWire__Shape(wireNatives.first())
+        println "toFace $wireNatives"
+        MemorySegment wire = ref_TopoDS_Wire__BRepBuilderAPI_MakeWire__Wire(wireNatives.first())
         currentFaceNative = new_TopoDS_Face__BRepBuilderAPI_MakeFace__TopoDS_Wire(wire)
         if (wireNatives.size() > 1) {
             def builder = new_BRep_Builder()

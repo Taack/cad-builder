@@ -178,6 +178,18 @@ class SketchTest {
     }
 
     @Test
+    void "Revolut Edges 3D Vectors with Mirror"() {
+        BigDecimal face_inner_radius = 0.8
+
+        cb().from(new Vec(face_inner_radius, 0.0, -0.05))
+                .edge(new Vec(face_inner_radius - 0.05, 0.0, -0.05))
+                .edge(new Vec(face_inner_radius - 0.10, 0.0, -0.025))
+                .edge(new Vec(face_inner_radius - 0.10, 0.0, 0.025))
+                .edge(new Vec(face_inner_radius, 0.0, 0.025))
+                .toWire().mirror(new Vec(face_inner_radius, 0 , 0), new Vec(1)).toFace().from(new Vec(0.0)).revolution(new Vec(1.0)).display()
+    }
+
+    @Test
     void "Extrude Square Face with Hole using 2D Vectors with mirror"() {
         BigDecimal length = 0.1
 

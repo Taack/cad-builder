@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test
 import org.taack.cad.builder.Vec
 import org.taack.cad.builder.Vec2d
 
+import static org.taack.cad.builder.CadBuilder.cb
 import static org.taack.cad.dsl.CadDsl.cd
 
 @CompileStatic
@@ -90,13 +91,56 @@ class SketchTest {
     }
 
     @Test
-    void "Extrude Square Face with Hole using 2D Vectors with mirror"() {
+    void "Revolut Edges 3D Vectors"() {
+        BigDecimal face_inner_radius = 0.8
+
+        cd().wireFrom(new Vec(face_inner_radius - 0.05, 0.0, -0.05)) {
+            edge(new Vec(face_inner_radius - 0.10, 0.0, -0.025))
+            edge(new Vec(face_inner_radius - 0.10, 0.0, 0.025))
+            edge(new Vec(face_inner_radius + 0.10, 0.0, 0.025))
+            edge(new Vec(face_inner_radius + 0.10, 0.0, -0.025))
+            edge(new Vec(face_inner_radius + 0.05, 0.0, -0.05))
+            edge(new Vec(face_inner_radius - 0.05, 0.0, -0.05))
+
+        }.toFace().revolution(new Vec(1.0)).display()
+    }
+
+    @Test
+    void "Revolut Edges 3D Vectors using Mirror"() {
+        BigDecimal face_inner_radius = 0.8
+
+        cd().wireFrom(new Vec(face_inner_radius, 0.0, -0.05)) {
+            edge(new Vec(face_inner_radius - 0.05, 0.0, -0.05))
+            edge(new Vec(face_inner_radius - 0.10, 0.0, -0.025))
+            edge(new Vec(face_inner_radius - 0.10, 0.0, 0.025))
+            edge(new Vec(face_inner_radius, 0.0, 0.025))
+        }.mirror(new Vec(face_inner_radius, 0 , 0), new Vec(1)).toFace().revolution(new Vec(1.0)).display()
+    }
+
+
+    @Test
+    void "Extrude Square Face using 2D Vectors with mirror"() {
         double length = 0.1
 
         Vec2d p1 = new Vec2d(-length, -length)
         Vec2d p2 = new Vec2d(-length, length)
         Vec2d p3 = -p1
         Vec2d p4 = -p2
+
+        cd().wireFrom(p1) {
+            edge(p4)
+            edge(p3)
+        }.mirror(p1, p3 - p1).toFace().prism().display()
+    }
+
+    @Test
+    void "Extrude Square Face using 3D Vectors with mirror"() {
+        double length = 0.1
+
+        Vec p1 = new Vec(-length, -length, 0)
+        Vec p2 = new Vec(-length, length, 0)
+        Vec p3 = -p1
+        Vec p4 = -p2
 
         cd().wireFrom(p1) {
             edge(p4)

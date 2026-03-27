@@ -40,7 +40,7 @@ interface ICadDslVisitor {
 
     void visitHole(Number depth)
 
-    void visitRect2d(Number sX, Number sY, @DelegatesTo(value = CadDslEdge2d, strategy = Closure.DELEGATE_FIRST)Closure c)
+    void visitRect2d(Number sX, Number sY, @DelegatesTo(value = CadDslEdge2d, strategy = Closure.DELEGATE_FIRST) Closure c)
 
     void visitMove(Vec2d to)
 
@@ -60,6 +60,8 @@ interface ICadDslVisitor {
 
     void visitToFace()
 
+    void visitToFaceFrom2d()
+
     void visitRevolution(Vec from, Vec dir)
 
     void visitPrism(Vec dir)
@@ -75,5 +77,6 @@ interface ICadDslVisitor {
     void visitCommonEnd()
 
     void visitMirrorWire2d(Vec2d pos, Vec2d dir)
+
     void visitMirrorWire(Vec pos, Vec dir)
 }

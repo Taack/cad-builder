@@ -8,7 +8,7 @@ import org.taack.cad.builder.Vec2d
 class CadDslWire2d implements CadDslBase {
 
     CadDslFace toFace() {
-        visitor.visitToFace()
+        visitor.visitToFaceFrom2d()
         new CadDslFace(visitor: visitor)
     }
 
