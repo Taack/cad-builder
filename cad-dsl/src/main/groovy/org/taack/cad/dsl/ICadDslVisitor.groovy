@@ -79,4 +79,8 @@ interface ICadDslVisitor {
     void visitMirrorWire2d(Vec2d pos, Vec2d dir)
 
     void visitMirrorWire(Vec pos, Vec dir)
+
+    void visitFillet(Number length)
+
+    void visitHollowedSolid(Number thickness)
 }

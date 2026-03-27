@@ -3,11 +3,8 @@ package org.taack.cad.dsl
 import groovy.transform.CompileStatic
 import org.junit.jupiter.api.Test
 import org.taack.cad.builder.Vec
-import org.taack.cad.builder.Vec2d
 
-import java.lang.foreign.MemorySegment
-
-import static CadDsl.*
+import static org.taack.cad.dsl.CadDsl.cd
 
 @CompileStatic
 class BottleTest {
@@ -18,7 +15,7 @@ class BottleTest {
     static double myNeckHeight = myHeight / 10
 
     @CompileStatic
-    static CadDsl mainBottleBody() {
+    static CadDslSolid mainBottleBody() {
 
         Vec v1 = new Vec(-myWidth / 2, 0, 0)
         Vec v11 = new Vec(0, -myThickness / 4, 0)

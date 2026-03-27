@@ -109,7 +109,7 @@ class BlockTest {
 
     @Test
     void "Tetrahedron"() {
-        cd().direction(new Vec(1, 1, 1)).box(100, 100, 100).toCadDsl().common {
+        cd().direction(new Vec(1, 1, 1)).box(100, 100, 100).common {
             position(new Vec(100, 100, 100) * (5 / 10)) {
                 direction(new Vec(1))
                 box(500, 500, 500)
@@ -119,7 +119,7 @@ class BlockTest {
 
     @Test
     void "Tetrahedron and Hole"() {
-        cd().direction(new Vec(1, 1, 1)).box(100, 100, 100).toCadDsl().common {
+        cd().direction(new Vec(1, 1, 1)).box(100, 100, 100).common {
             position(new Vec(100, 100, 100) * (5 / 10)) {
                 direction(new Vec(1))
                 box(500, 500, 500)

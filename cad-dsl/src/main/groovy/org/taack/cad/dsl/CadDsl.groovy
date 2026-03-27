@@ -84,39 +84,10 @@ class CadDsl extends CadDslSolid implements CadDslBase {
         new CadDslSolid(visitor: visitor)
     }
 
-    CadDslSolid cut(@DelegatesTo(value = CadDsl, strategy = Closure.DELEGATE_FIRST) Closure c = null) {
-        visitor.visitCut()
-        if (c) {
-            c.delegate = this
-            c.call()
-        }
-        visitor.visitCutEnd()
-        new CadDslSolid(visitor: visitor)
-    }
-
-    CadDslSolid fuse(@DelegatesTo(value = CadDsl, strategy = Closure.DELEGATE_FIRST) Closure c = null) {
-        visitor.visitFuse()
-        if (c) {
-            c.delegate = this
-            c.call()
-        }
-        visitor.visitFuseEnd()
-        new CadDslSolid(visitor: visitor)
-    }
-
-    CadDslSolid currentSolid() {
-        new CadDslSolid(visitor: visitor)
-    }
-
-    CadDslSolid common(@DelegatesTo(value = CadDsl, strategy = Closure.DELEGATE_FIRST) Closure c = null) {
-        visitor.visitCommon()
-        if (c) {
-            c.delegate = this
-            c.call()
-        }
-        visitor.visitCommonEnd()
-        new CadDslSolid(visitor: visitor)
-    }
+//
+//    CadDslSolid currentSolid() {
+//        new CadDslSolid(visitor: visitor)
+//    }
 
 //    void display(String fileName = null) {
 //        visitor.display(fileName)

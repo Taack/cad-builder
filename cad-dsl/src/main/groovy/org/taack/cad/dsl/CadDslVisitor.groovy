@@ -421,6 +421,32 @@ class CadDslVisitor implements ICadDslVisitor {
     }
 
     @Override
+    void visitFillet(Number radius) {
+        def mkFillet = new_BRepFilletAPI_MakeFillet__TopoDS_Shape(shape)
+        def anEdgeExplorer = new_TopExp_Explorer__TopoDS_Shape_ToFind_ToAvoid(face ?: shape, ShapeEnum.TopAbs_EDGE.index, ShapeEnum.TopAbs_SHAPE.index)
+        while (_TopExp_Explorer__More(anEdgeExplorer)) {
+            def anEdge = ref_TopoDS_Edge__TopoDS_Shape(new_TopoDS_Shape__TopExp_Explorer__Current(anEdgeExplorer))
+            //Add edge to fillet algorithm
+            _BRepFilletAPI_MakeFillet__Add__radius_TopoDS_Edge(mkFillet, radius.toDouble(), anEdge)
+            _TopExp_Explorer__Next(anEdgeExplorer)
+        }
+
+        shape = new_TopoDS_Shape__Shape__BRepBuilderAPI_MakeShape(mkFillet)
+    }
+
+    @Override
+    void visitHollowedSolid(Number thickness) {
+        def facesToRemove = new_TopTools_ListOfShape()
+        if (face) {
+            _TopTools_ListOfShape__Append__TopoDS_Shape(facesToRemove, face)
+        }
+        def aSolidMaker = new_BRepOffsetAPI_MakeThickSolid()
+        _BRepOffsetAPI_MakeThickSolid__MakeThickSolidByJoin__TopoDS_Shape_TopTools_ListOfShape_thickness_tol(aSolidMaker, shape, facesToRemove, thickness.toDouble(), 0.001d)
+
+        shape = new_TopoDS_Shape__Shape__BRepBuilderAPI_MakeShape(aSolidMaker)
+    }
+
+    @Override
     void visitFace(Vec direction) {
         double positionMax = Double.NEGATIVE_INFINITY
         this.direction = direction

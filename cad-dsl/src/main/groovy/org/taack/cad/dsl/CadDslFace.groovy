@@ -31,17 +31,13 @@ class CadDslFace implements CadDslBase {
         this
     }
 
-    CadDsl fillet(Number length) {
-
-        println "!!!!!!!!!!!!! NOT IMPLEMENTED fillet($length)"
-
+    CadDslSolid fillet(Number radius) {
+        visitor.visitFillet(radius)
         new CadDsl(visitor: visitor)
     }
 
-    CadDsl hollowedSolid(Number thickness) {
-
-        println "!!!!!!!!!!!!! NOT IMPLEMENTED hollowedSolid($thickness)"
-
+    CadDslSolid hollowedSolid(Number thickness) {
+        visitor.visitHollowedSolid(thickness)
         new CadDsl(visitor: visitor)
     }
 }
