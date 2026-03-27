@@ -6,7 +6,6 @@ import org.taack.cad.builder.Vec
 import org.taack.cad.builder.Vec2d
 
 import static org.taack.cad.dsl.CadDsl.cd
-import static java.lang.Math.*
 
 @CompileStatic
 class BlockTest {

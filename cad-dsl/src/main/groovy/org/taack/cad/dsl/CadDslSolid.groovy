@@ -45,31 +45,32 @@ class CadDslSolid implements CadDslBase {
     CadDslSolid cut(@DelegatesTo(value = CadDsl, strategy = Closure.DELEGATE_FIRST) Closure c = null) {
         visitor.visitCut()
         if (c) {
-            c.delegate = this
+            c.delegate = new CadDsl(visitor: visitor)
             c.call()
         }
         visitor.visitCutEnd()
-        new CadDslSolid(visitor: visitor)
+        this
     }
 
     CadDslSolid fuse(@DelegatesTo(value = CadDsl, strategy = Closure.DELEGATE_FIRST) Closure c = null) {
         visitor.visitFuse()
         if (c) {
-            c.delegate = this
+            c.delegate = new CadDsl(visitor: visitor)
             c.call()
         }
         visitor.visitFuseEnd()
-        new CadDslSolid(visitor: visitor)
+        this
     }
 
     CadDslSolid common(@DelegatesTo(value = CadDsl, strategy = Closure.DELEGATE_FIRST) Closure c = null) {
         visitor.visitCommon()
+
         if (c) {
-            c.delegate = this
+            c.delegate = new CadDsl(visitor: visitor)
             c.call()
         }
         visitor.visitCommonEnd()
-        new CadDslSolid(visitor: visitor)
+        this
     }
 
 }
