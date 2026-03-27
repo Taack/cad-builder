@@ -33,9 +33,15 @@ class CadDslFace implements CadDslBase {
 
     CadDsl fillet(Number length) {
 
+        println "!!!!!!!!!!!!! NOT IMPLEMENTED fillet($length)"
+
+        new CadDsl(visitor: visitor)
     }
 
     CadDsl hollowedSolid(Number thickness) {
 
+        println "!!!!!!!!!!!!! NOT IMPLEMENTED hollowedSolid($thickness)"
+
+        new CadDsl(visitor: visitor)
     }
 }
