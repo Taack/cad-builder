@@ -40,16 +40,27 @@ class CadDslEdge2d implements CadDslBase {
      * @param to    End of the arc
      * @param via   Middle point of the arc
      */
-    void arc(Vec2d to, Vec2d via) {
+    CadDslEdge2d arc(Vec2d to, Vec2d via) {
         visitor.visitArc(to, via)
+        this
     }
 
     /**
      * Draw a closed circle at the last position
      * @param diameter  Diameter of the circle
      */
-    void circle(Number diameter) {
+    CadDslEdge2d circle(Number diameter) {
         visitor.visiteCircle2d(diameter)
+        this
+    }
+
+    /**
+     * Draw a closed circle at the last position
+     * @param diameter  Diameter of the circle
+     */
+    CadDslEdge2d ellipse(Vec2d dir, Number majDia, Number minDia) {
+        visitor.visitEllipse2d(dir, majDia, minDia)
+        this
     }
 
     /**
@@ -60,5 +71,9 @@ class CadDslEdge2d implements CadDslBase {
      */
     void rect(Number sX, Number sY, @DelegatesTo(value = CadDslEdge2d, strategy = Closure.DELEGATE_FIRST) Closure c = null) {
         visitor.visitRect2d(sX, sY, c)
+    }
+
+    void trimmed(CadDslEdge2d curce, Number from, Number to) {
+
     }
 }

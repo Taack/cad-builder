@@ -83,4 +83,6 @@ interface ICadDslVisitor {
     void visitFillet(Number length)
 
     void visitHollowedSolid(Number thickness)
+
+    void visitEllipse2d(Vec2d dir, Number majDia, Number minDia)
 }

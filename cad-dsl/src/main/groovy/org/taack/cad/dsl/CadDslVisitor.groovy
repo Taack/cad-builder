@@ -447,6 +447,11 @@ class CadDslVisitor implements ICadDslVisitor {
     }
 
     @Override
+    void visitEllipse2d(Vec2d dir, Number majDia, Number minDia) {
+
+    }
+
+    @Override
     void visitFace(Vec direction) {
         double positionMax = Double.NEGATIVE_INFINITY
         this.direction = direction

@@ -132,7 +132,6 @@ TopoDS_Shape MakeBottle(const Standard_Real myWidth, const Standard_Real myHeigh
     myBody = aSolidMaker.Shape();
 
 
-    return myBody;
     // Threading: Create Surfaces
     Handle(Geom_CylindricalSurface) aCyl1 = new Geom_CylindricalSurface(neckAx2, myNeckRadius * 0.99);
     Handle(Geom_CylindricalSurface) aCyl2 = new Geom_CylindricalSurface(neckAx2, myNeckRadius * 1.05);

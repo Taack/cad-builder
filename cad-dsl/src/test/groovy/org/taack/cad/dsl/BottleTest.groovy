@@ -3,9 +3,11 @@ package org.taack.cad.dsl
 import groovy.transform.CompileStatic
 import org.junit.jupiter.api.Test
 import org.taack.cad.builder.Vec
+import org.taack.cad.builder.Vec2d
 
 import static org.taack.cad.dsl.CadDsl.cd
-
+import static org.taack.cad.dsl.CadDslSurface.*
+import static java.lang.Math.*
 @CompileStatic
 class BottleTest {
     static double myWidth = 50.0
@@ -35,6 +37,20 @@ class BottleTest {
                 }.topZ().hollowedSolid(-myThickness / 50d)
     }
 
+
+    static CadDslSolid simpleThreading(CadDslSolid s) {
+        cd().thruSection {
+            wireFromSurface(cylindricalSurface(new Vec(myHeight), new Vec(1), myNeckRadius * 0.99)) {
+                double aMajor = 2 * PI
+                double aMinor = myNeckHeight / 10
+                Vec2d pos = new Vec2d(2 * PI, myNeckHeight / 2)
+                Vec2d dir = new Vec2d(2 * PI, myNeckHeight / 4)
+                to(pos)
+                trimmed(ellipse(dir, aMajor, aMinor), 0, PI)
+//                edge()
+            }
+        }
+    }
 //    static void simpleThreading(CadBuilder mb) {
 //        MemorySegment innerCyl = cylindricalSurface(new Vec(myHeight), new Vec(1), myNeckRadius * 0.99)
 //        MemorySegment outerCyl = cylindricalSurface(new Vec(myHeight), new Vec(1), myNeckRadius * 1.05)
@@ -57,39 +73,12 @@ class BottleTest {
 //                .applyThreading().display()
 //    }
 
-//    static void otherThreading(CadBuilder mb) {
-//        MemorySegment innerCyl = cylindricalSurface(new Vec(myHeight), new Vec(1), myNeckRadius * 0.99)
-//        Vec dir3d = new Vec(1)
-//        Vec pos3d = new Vec(myHeight + myNeckHeight / 2)
-//        MemorySegment curve3d = ellipseCurve(pos3d, dir3d, myNeckRadius * 2.15, myNeckRadius * 1.05)
-//        MemorySegment outerCyl = linearExtrusionSurface(curve3d, dir3d)
-//        double aMajor = 4.0 * Math.PI
-//        double aMinor = myNeckHeight / 10
-//        Vec2d pos = new Vec2d(2.0 * Math.PI, myNeckHeight / 2.0d)
-//        Vec2d dir = new Vec2d(2.0 * Math.PI, myNeckHeight / 4.0d)
-//
-//        MemorySegment ellipse1 = ellipse2dCurve(pos, dir, aMajor, aMinor)
-//        MemorySegment ellipse2 = ellipse2dCurve(pos, dir, aMajor, aMinor / 4)
-//
-//        MemorySegment arc1 = trimmedCurve2d(ellipse1, 0, Math.PI)
-//        MemorySegment seg  = trimmedCurveSegment2d(ellipse1, 0, Math.PI)
-//        MemorySegment arc2 = trimmedCurve2d(ellipse2, 0, Math.PI)
-//        mb
-//                .threadingWireFrom(edgeFrom(arc1, innerCyl), edgeFrom(seg, innerCyl))
-//                .threadingWireFrom(edgeFrom(arc2, outerCyl), edgeFrom(seg, outerCyl))
-//                .applyThreading().display()
-//    }
 
     @Test
     void "Make Bottle Using Builder API"() {
-        def cb = mainBottleBody()
-        cb.display()
-//        simpleThreading(cb)
+        def cd = mainBottleBody()
+//        cd = simpleThreading(cd)
+        cd.display()
     }
 
-    @Test
-    void "Make Bottle Using Builder API Other Threading"() {
-        def cb = mainBottleBody()
-//        otherThreading(cb)
-    }
 }

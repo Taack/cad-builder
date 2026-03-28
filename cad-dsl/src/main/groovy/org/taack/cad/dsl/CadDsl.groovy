@@ -84,6 +84,7 @@ class CadDsl extends CadDslSolid implements CadDslBase {
         new CadDslSolid(visitor: visitor)
     }
 
+    CadDslSolid thruSection(@DelegatesTo(value = CadDslThruSection, strategy = Closure.DELEGATE_FIRST) Closure c = null) {}
 //
 //    CadDslSolid currentSolid() {
 //        new CadDslSolid(visitor: visitor)
