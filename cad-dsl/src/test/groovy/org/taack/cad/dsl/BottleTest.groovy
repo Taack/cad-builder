@@ -40,14 +40,24 @@ class BottleTest {
 
     static CadDslSolid simpleThreading(CadDslSolid s) {
         cd().thruSection {
+            CadDslEdge2d commonSegment
             wireFromSurface(cylindricalSurface(new Vec(myHeight), new Vec(1), myNeckRadius * 0.99)) {
                 double aMajor = 2 * PI
                 double aMinor = myNeckHeight / 10
                 Vec2d pos = new Vec2d(2 * PI, myNeckHeight / 2)
                 Vec2d dir = new Vec2d(2 * PI, myNeckHeight / 4)
                 to(pos)
-                trimmed(ellipse(dir, aMajor, aMinor), 0, PI)
-//                edge()
+                def bounds = trimmed(ellipse(dir, aMajor, aMinor), 0, PI)
+                commonSegment = edge(bounds.bound(0, PI))
+            }
+            wireFromSurface(cylindricalSurface(new Vec(myHeight), new Vec(1), myNeckRadius * 1.05)) {
+                double aMajor = 2 * PI
+                double aMinor = myNeckHeight / 10
+                Vec2d pos = new Vec2d(2 * PI, myNeckHeight / 2)
+                Vec2d dir = new Vec2d(2 * PI, myNeckHeight / 4)
+                to(pos)
+                def bounds = trimmed(ellipse(dir, aMajor, aMinor), 0, PI)
+                commonSegment = edge(bounds.bound(0, PI))
             }
         }
     }
