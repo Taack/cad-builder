@@ -452,6 +452,36 @@ class CadDslVisitor implements ICadDslVisitor {
     }
 
     @Override
+    void visitThruSection() {
+
+    }
+
+    @Override
+    void visitWireFromSurface() {
+
+    }
+
+    @Override
+    void visitWireFromSurfaceEnd() {
+
+    }
+
+    @Override
+    void visitTrimmed(CadDslEdge2d curve, Number from, Number tp) {
+
+    }
+
+    @Override
+    void visitThruSectionEnd() {
+
+    }
+
+    @Override
+    void visitCylindricalSurface(Number number) {
+
+    }
+
+    @Override
     void visitFace(Vec direction) {
         double positionMax = Double.NEGATIVE_INFINITY
         this.direction = direction

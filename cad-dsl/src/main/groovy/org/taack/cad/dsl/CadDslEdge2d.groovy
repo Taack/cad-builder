@@ -1,6 +1,7 @@
 package org.taack.cad.dsl
 
 import groovy.transform.CompileStatic
+import org.taack.cad.builder.Vec
 import org.taack.cad.builder.Vec2d
 
 
@@ -32,14 +33,6 @@ class CadDslEdge2d implements CadDslBase {
      */
     CadDslEdge2d edge(Vec2d to) {
         visitor.visitEdge(to)
-        this
-    }
-
-    /**
-     * Draw an Edge from the last position to the "to" position (which will become the last position).
-     * @param to    End of the Edge
-     */
-    CadDslEdge2d edge(DataTrimmedCurve2d edgeBounds) {
         this
     }
 
@@ -82,8 +75,11 @@ class CadDslEdge2d implements CadDslBase {
         visitor.visitRect2d(sX, sY, c)
     }
 
-    DataTrimmedCurve2d trimmed(CadDslEdge2d curve, Number from, Number to) {
-
+    void trimmed(CadDslEdge2d curve, Number from, Number to) {
+        visitor.visitTrimmed(curve, from, to)
     }
 
+    Vec bound(Number U) {
+
+    }
 }

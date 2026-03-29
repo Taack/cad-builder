@@ -40,24 +40,32 @@ class BottleTest {
 
     static CadDslSolid simpleThreading(CadDslSolid s) {
         cd().thruSection {
-            CadDslEdge2d commonSegment
-            wireFromSurface(cylindricalSurface(new Vec(myHeight), new Vec(1), myNeckRadius * 0.99)) {
-                double aMajor = 2 * PI
-                double aMinor = myNeckHeight / 10
-                Vec2d pos = new Vec2d(2 * PI, myNeckHeight / 2)
-                Vec2d dir = new Vec2d(2 * PI, myNeckHeight / 4)
-                to(pos)
-                def bounds = trimmed(ellipse(dir, aMajor, aMinor), 0, PI)
-                commonSegment = edge(bounds.bound(0, PI))
+            double aMajor = 2 * PI
+            double aMinor = myNeckHeight / 10
+            Vec2d pos = new Vec2d(2 * PI, myNeckHeight / 2)
+            Vec2d dir = new Vec2d(2 * PI, myNeckHeight / 4)
+
+            position(new Vec(myHeight)) {
+                direction(new Vec(1))
+                cylindricalSurface(myNeckRadius * 0.99)
             }
-            wireFromSurface(cylindricalSurface(new Vec(myHeight), new Vec(1), myNeckRadius * 1.05)) {
-                double aMajor = 2 * PI
-                double aMinor = myNeckHeight / 10
-                Vec2d pos = new Vec2d(2 * PI, myNeckHeight / 2)
-                Vec2d dir = new Vec2d(2 * PI, myNeckHeight / 4)
+
+            wireFromSurface {
                 to(pos)
-                def bounds = trimmed(ellipse(dir, aMajor, aMinor), 0, PI)
-                commonSegment = edge(bounds.bound(0, PI))
+                trimmed(ellipse(dir, aMajor, aMinor), 0, PI)
+                to(bound(0))
+                edge(bound(PI))
+            }
+            position(new Vec(myHeight)) {
+                direction(new Vec(1))
+                cylindricalSurface(myNeckRadius * 1.05)
+            }
+
+            wireFromSurface {
+                to(pos)
+                trimmed(ellipse(dir, aMajor, aMinor), 0, PI)
+                to(bound(0))
+                edge(bound(PI))
             }
         }
     }
@@ -87,7 +95,7 @@ class BottleTest {
     @Test
     void "Make Bottle Using Builder API"() {
         def cd = mainBottleBody()
-//        cd = simpleThreading(cd)
+        cd = simpleThreading(cd)
         cd.display()
     }
 

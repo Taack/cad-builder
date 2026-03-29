@@ -85,4 +85,16 @@ interface ICadDslVisitor {
     void visitHollowedSolid(Number thickness)
 
     void visitEllipse2d(Vec2d dir, Number majDia, Number minDia)
+
+    void visitThruSection()
+
+    void visitWireFromSurface()
+
+    void visitWireFromSurfaceEnd()
+
+    void visitTrimmed(CadDslEdge2d curve, Number from, Number tp)
+
+    void visitThruSectionEnd()
+
+    void visitCylindricalSurface(Number number)
 }
