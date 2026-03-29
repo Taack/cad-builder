@@ -52,7 +52,7 @@ class CadDslEdge2d implements CadDslBase {
      * @param diameter  Diameter of the circle
      */
     CadDslEdge2d circle(Number diameter) {
-        visitor.visiteCircle2d(diameter)
+        visitor.visitCircle2d(diameter)
         this
     }
 

@@ -36,7 +36,7 @@ interface ICadDslVisitor {
 
     void visitCenterEnd()
 
-    void visiteCircle2d(Number diameter)
+    void visitCircle2d(Number diameter)
 
     void visitHole(Number depth)
 
