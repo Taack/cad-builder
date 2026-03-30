@@ -64,6 +64,8 @@ interface ICadDslVisitor {
 
     void visitPrism(Vec dir, boolean cut)
 
+    void visitPrism(double high, boolean cut)
+
     void visitMirror(Vec2d pos, Vec2d dir)
 
     void visitMirror(Vec pos, Vec dir)
@@ -95,4 +97,8 @@ interface ICadDslVisitor {
     void visitThruSectionEnd()
 
     void visitCylindricalSurface(Number number)
+
+    void visitClosedWire()
+
+    void visitClosedWireEnd()
 }

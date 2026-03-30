@@ -575,7 +575,20 @@ class CadDslVisitor implements ICadDslVisitor {
     }
 
     @Override
+    void visitClosedWire() {
+        println "visitClosedWire dir: $direction, fromVec2d: $fromVec2d"
+        visitFrom(fromVec2d)
+    }
+
+    @Override
+    void visitClosedWireEnd() {
+        println "visitClosedWire dir: $direction, fromVec2d: $fromVec2d"
+        visitFromEnd(fromVec2d)
+    }
+
+    @Override
     void visitFace(Vec direction) {
+        Tr.cur("visitFace $direction")
         double positionMax = Double.NEGATIVE_INFINITY
         this.direction = direction
         for (def aFaceExplorer = new_TopExp_Explorer__TopoDS_Shape_ToFind_ToAvoid(shape, ShapeEnum.TopAbs_FACE.ordinal(), ShapeEnum.TopAbs_SHAPE.ordinal());
@@ -710,6 +723,7 @@ class CadDslVisitor implements ICadDslVisitor {
 
     @Override
     void visitTo(Vec2d to) {
+        println "visitTo $to"
         fromVec2d = to
     }
 
@@ -827,7 +841,7 @@ class CadDslVisitor implements ICadDslVisitor {
         if (this.shape) {
             visualize(shape)
             Tr.cur "cut: $cut"
-            shape = cut ? new_TopoDS_Shape__bBRepAlgoAPI_Cut__s1_s2(this.shape, shape) : new_TopoDS_Shape__brep_algoapi_fuse__s1_s2(shape, this.shape)
+            shape = cut ? new_TopoDS_Shape__bBRepAlgoAPI_Cut__s1_s2(this.shape, shape) : new_TopoDS_Shape__brep_algoapi_fuse__s1_s2(this.shape, shape)
             boolShapes.peek() << shape
         }
 
@@ -835,6 +849,12 @@ class CadDslVisitor implements ICadDslVisitor {
         face = null
         makeWires.clear()
         this.shape = shape
+    }
+
+    @Override
+    void visitPrism(double high, boolean cut) {
+
+        visitPrism(direction * high, cut)
     }
 
     @Override

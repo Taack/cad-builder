@@ -98,6 +98,14 @@ class CadDslEdge2d implements CadDslBase {
 ////            visitor.visitEdge(sX, sY, c)
 //    }
 
+    void closedWire(@DelegatesTo(value = CadDslEdge2d, strategy = Closure.DELEGATE_FIRST) Closure c) {
+        visitor.visitClosedWire()
+        c.delegate = this
+        c.call()
+        visitor.visitClosedWireEnd()
+    }
+
+
     void trimmed(CadDslEdge2d curve, Number from, Number to) {
         visitor.visitTrimmed(curve, from, to)
     }

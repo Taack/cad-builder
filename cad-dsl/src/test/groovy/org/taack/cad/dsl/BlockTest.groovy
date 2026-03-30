@@ -26,7 +26,7 @@ class BlockTest {
     void "Block With Bored Center Hole"() {
         cd().box(length, height, thickness).topZ().wireFrom() {
             circle(centerHoleDia)
-        }.toFace().hole(new Vec(-cboreHoleDiameter)).display()
+        }.toFace().hole(-cboreHoleDiameter).display()
     }
 
     @Test
@@ -61,7 +61,7 @@ class BlockTest {
     void "Pillow Block With Counterbored Holes TopY"() {
         cd().box(length, length, length).topY().wireFrom() {
             circle(centerHoleDia)
-        }.toFace().hole(new Vec(0,-10,0)).display()
+        }.toFace().hole(-10).display()
     }
 
     @Test
@@ -84,9 +84,27 @@ class BlockTest {
     }
 
     @Test
+    void "Squared hole from numbers"() {
+        cd().box(length, length, length).butZ().wireFrom() {
+            println "Wire 2D rect"
+            double length = length / 10
+            Vec2d p1 = new Vec2d(-length, -length)
+            Vec2d p2 = new Vec2d(-length, length)
+            Vec2d p3 = -p1
+            Vec2d p4 = -p2
+            to p1
+            edge(p4)
+            edge(p3)
+            edge(p2)
+            edge(p1)
+        }.toFace().hole(-10).butZ().wireFrom() {
+            circle(length / 30)
+        }.toFace().hole(-10).display()//.hole(cboreHoleDiameter).display()
+    }
+
+    @Test
     void "A Die"() {
-        cd().box(length, length, length).topZ().wireFrom() {
-            println "Face 6 topZ 40,40"
+        cd().box(length, length, length).topZ().wireFrom() { // 6
             to(new Vec2d(cboreInset, cboreInset))
             circle(centerHoleDia)
             move(new Vec2d(length / 2 - cboreInset, 0))
@@ -95,42 +113,67 @@ class BlockTest {
             circle(centerHoleDia)
             to(new Vec2d(cboreInset, length - cboreInset))
             circle(centerHoleDia)
-            move(new Vec2d(+length / 2 - cboreInset, 0))
+            move(new Vec2d(length / 2 - cboreInset, 0))
             circle(centerHoleDia)
-            move(new Vec2d(+length / 2 - cboreInset, 0))
+            move(new Vec2d(length / 2 - cboreInset, 0))
             circle(centerHoleDia)
-        }.toFace().prism(new Vec(-cboreHoleDiameter)).butZ().wireFrom() {
-            println "Face 1 butZ 40,40"
-//            rect(centerHoleDia, centerHoleDia)
-        }.toFace().prism(new Vec(-cboreHoleDiameter)).topY().wireFrom() {
-            println "Face 4 topY 40,40"
-//            rect(length / 2, length / 2) {
-//                rect(centerHoleDia, centerHoleDia)
-//            }
-        }.toFace().prism(new Vec(-cboreHoleDiameter)).butY().wireFrom() {
-            println "Face 3 butY 40,40"
+        }.toFace().prism(cboreHoleDiameter).butY().wireFrom() { // 4
+            to(new Vec2d(cboreInset, cboreInset))
+            circle(centerHoleDia)
+            move(new Vec2d(length / 2 - cboreInset, 0))
+//            circle(centerHoleDia)
+            move(new Vec2d(length / 2 - cboreInset, 0))
+            circle(centerHoleDia)
+            to(new Vec2d(cboreInset, length - cboreInset))
+            circle(centerHoleDia)
+            move(new Vec2d(length / 2 - cboreInset, 0))
+//            circle(centerHoleDia)
+            move(new Vec2d(length / 2 - cboreInset, 0))
+            circle(centerHoleDia)
+        }.toFace().hole(-cboreHoleDiameter).topY().wireFrom() { // 3
             circle(centerHoleDia)
             move(new Vec2d(-length / 2 + cboreInset, -length / 2 + cboreInset))
             circle(centerHoleDia)
             to(new Vec2d(length / 2, length / 2))
             move(new Vec2d(length / 2 - cboreInset, length / 2 - cboreInset))
             circle(centerHoleDia)
-        }.toFace().prism(new Vec(-cboreHoleDiameter)).butX().wireFrom() {
-            println "Face 5 butX 40,-40"
+        }.toFace().hole(-cboreHoleDiameter).butX().wireFrom() { // 5
+            circle(centerHoleDia)
+            [10 / 2d, length - 5].each { double x ->
+                [10 / 2d, length].each { double y ->
+                    to(new Vec2d(x + centerHoleDia, y + centerHoleDia))
+                    closedWire {
+                        println "COUCUCOUOCUOUCOUC"
+                        [[-1, 1], [-1, -1], [1, -1], [1, 1]].each { int i2, int j2 ->
+                            double x2 = x + centerHoleDia * i2
+                            double y2 = y + centerHoleDia * j2
+                            edge(new Vec2d(x2, y2))
+                        }
+                    }
+                }
+            }
+        }.toFace().prism(new Vec(-cboreHoleDiameter)).display()
 //            rect(length / 2, length / 2) {
 //                rect(centerHoleDia, centerHoleDia)
 //            }
-            circle(centerHoleDia)
-
-        }.toFace().prism(new Vec(-cboreHoleDiameter)).topX().wireFrom() {
-            println "Face 2 topX 40,-40"
-            move(new Vec2d(-length / 2 + cboreInset, -length / 2 + cboreInset))
-            circle(centerHoleDia)
-            move(new Vec2d(length / 2 - cboreInset, length / 2 - cboreInset))
-            move(new Vec2d(length / 2 - cboreInset, length / 2 - cboreInset))
-            circle(centerHoleDia)
-        }.toFace().prism(new Vec(-cboreHoleDiameter)).display()
     }
+
+//            println "Face 5 butX 40,-40"
+////            rect(length / 2, length / 2) {
+////                rect(centerHoleDia, centerHoleDia)
+////            }
+//            circle(centerHoleDia)
+
+//        }.toFace().prism(new Vec(-cboreHoleDiameter)).topX().wireFrom() {
+//            println "Face 2 topX 40,-40"
+//            move(new Vec2d(-length / 2 + cboreInset, -length / 2 + cboreInset))
+//            circle(centerHoleDia)
+//            move(new Vec2d(length / 2 - cboreInset, length / 2 - cboreInset))
+//            move(new Vec2d(length / 2 - cboreInset, length / 2 - cboreInset))
+//            circle(centerHoleDia)
+//        }.toFace().hole(-cboreHoleDiameter).display()
+//        }
+
 
     @Test
     void "Tetrahedron"() {
@@ -153,4 +196,5 @@ class BlockTest {
             circle(3)
         }.toFace().prism(new Vec(-cboreHoleDiameter)).display()
     }
+
 }
