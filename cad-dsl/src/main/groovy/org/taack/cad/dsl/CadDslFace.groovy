@@ -13,7 +13,12 @@ class CadDslFace implements CadDslBase {
     }
 
     CadDslSolid prism(Vec dir = new Vec(1)) {
-        visitor.visitPrism(dir)
+        visitor.visitPrism(dir, false)
+        new CadDslSolid(visitor: visitor)
+    }
+
+    CadDslSolid hole(Vec dir = new Vec(-1)) {
+        visitor.visitPrism(dir, true)
         new CadDslSolid(visitor: visitor)
     }
 
@@ -34,8 +39,10 @@ class CadDslFace implements CadDslBase {
 
     CadDslWire2d wireFrom(Vec2d pos = null, @DelegatesTo(value = CadDslEdge2d, strategy = Closure.DELEGATE_FIRST) Closure c) {
         visitor.visitFrom(pos)
+        if (pos == null) visitor.visitCenter()
         c.delegate = new CadDslEdge2d(visitor: visitor)
         c.call()
+        if (pos == null) visitor.visitCenterEnd()
         visitor.visitFromEnd(pos)
         new CadDslWire2d(visitor: visitor)
     }

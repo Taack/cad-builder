@@ -38,8 +38,6 @@ interface ICadDslVisitor {
 
     void visitCircle2d(Number diameter)
 
-//    void visitHole(Number depth)
-
     void visitConstruct2d(@DelegatesTo(value = CadDslEdge2d, strategy = Closure.DELEGATE_FIRST) Closure c)
 
     void visitMove(Vec2d to)
@@ -64,7 +62,7 @@ interface ICadDslVisitor {
 
     void visitRevolution(Vec from, Vec dir)
 
-    void visitPrism(Vec dir)
+    void visitPrism(Vec dir, boolean cut)
 
     void visitMirror(Vec2d pos, Vec2d dir)
 

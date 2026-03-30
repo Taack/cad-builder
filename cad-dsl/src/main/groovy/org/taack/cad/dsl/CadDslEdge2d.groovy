@@ -102,17 +102,6 @@ class CadDslEdge2d implements CadDslBase {
         visitor.visitTrimmed(curve, from, to)
     }
 
-    CadDslEdge2d closedWire(@DelegatesTo(value = CadDslEdge2d, strategy = Closure.DELEGATE_FIRST) Closure c) {
-        visitor.visitFrom((Vec2d)null)
-        c.delegate = this
-        c.call()
-        visitor.visitFromEnd((Vec2d)null)
-        this
-    }
-
-    CadDslWire2d toWires() {
-        new CadDslWire2d(visitor: visitor)
-    }
     Vec bound(Number U) {
 
     }

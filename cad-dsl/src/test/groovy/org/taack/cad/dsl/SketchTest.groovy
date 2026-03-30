@@ -84,10 +84,10 @@ class SketchTest {
         }.move(c1) {
             arc(c3, c2)
             arc(c1, c4)
-        }.toFace().prism().topY().wireFrom() {
+        }.toFace().prism().topX().wireFrom() {
             println "Circle topY 0.1,-0.5"
             circle(0.02)
-        }.toFace().prism(new Vec(-0.02)).display()
+        }.toFace().prism(new Vec(0.1, 0.1, 0.1)).display()
     }
 
     @Test
