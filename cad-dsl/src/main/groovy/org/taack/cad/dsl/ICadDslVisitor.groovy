@@ -40,7 +40,7 @@ interface ICadDslVisitor {
 
     void visitHole(Number depth)
 
-    void visitRect2d(Number sX, Number sY, @DelegatesTo(value = CadDslEdge2d, strategy = Closure.DELEGATE_FIRST) Closure c)
+    void visitConstruct2d(@DelegatesTo(value = CadDslEdge2d, strategy = Closure.DELEGATE_FIRST) Closure c)
 
     void visitMove(Vec2d to)
 

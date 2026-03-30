@@ -603,11 +603,11 @@ class CadDslVisitor implements ICadDslVisitor {
         def surf = handle_Geom_Surface__TopoDS_Face(face)
         def makeFace = new_BRepBuilderAPI_MakeFace()
         closedShape2dList.each {
-            def MW = it.make2dCurve(surf)
-//            def MW = new_BRepBuilderAPI_MakeWire()
+            def aline = it.make2dCurve()
+            def MW = new_BRepBuilderAPI_MakeWire()
 //            def c = new_gp_Circ2d__ax2d_r(new_gp_Ax2d__pt_dir(it.pos.toGpPnt2d(), it.pos.toGpDir2d()), it.radius)
 //            def aline = handle_Geom2d_Circle__GCE2d_MakeCircle__cir2d(c)
-//            _BRepBuilderAPI_MakeWire__Add__BRepBuilderAPI_MakeEdge(MW, new_BRepBuilderAPI_MakeEdge__Geom2d_Curve_Geom_Surface(aline, surf))
+            _BRepBuilderAPI_MakeWire__Add__BRepBuilderAPI_MakeEdge(MW, new_BRepBuilderAPI_MakeEdge__Geom2d_Curve_Geom_Surface(aline, surf))
             _BRepBuilderAPI_MakeFace__Init(makeFace, surf, 0, 0.01d)
             _BRepBuilderAPI_MakeFace__Add__BRepBuilderAPI_MakeWire(makeFace, MW)
             def FP = TopoDS_Face__BRepBuilderAPI_MakeFace__Face(makeFace)
@@ -633,28 +633,41 @@ class CadDslVisitor implements ICadDslVisitor {
     }
 
     @Override
-    void visitRect2d(Number sX, Number sY, Closure c) {
-        if (c) { // Construction points
-            double sYd = sY.toDouble()
-            double sXd = sX.toDouble()
+    void visitConstruct2d(@DelegatesTo(value = CadDslEdge2d, strategy = Closure.DELEGATE_FIRST) Closure c) {
+        if (c) {
             oldFromVec2d = fromVec2d
-            fromVec2d += new Vec2d(sXd / 2, sYd / 2)
-            c.delegate = new CadDslEdge2d(visitor: this)
-            c.call()
-            fromVec2d = oldFromVec2d + new Vec2d(sXd / 2, -sYd.toDouble() / 2)
-            c.delegate = new CadDslEdge2d(visitor: this)
-            c.call()
-            fromVec2d = oldFromVec2d + new Vec2d(-sXd / 2, -sYd / 2)
-            c.delegate = new CadDslEdge2d(visitor: this)
-            c.call()
-            fromVec2d = oldFromVec2d + new Vec2d(-sXd / 2, sYd / 2)
-            c.delegate = new CadDslEdge2d(visitor: this)
-            c.call()
+            openShape2dList.each {
+                fromVec2d = it.to
+                c.delegate = new CadDslEdge2d(visitor: this)
+                c.call()
+            }
             fromVec2d = oldFromVec2d
-        } else {
-            closedShape2dList << new Rectangle2d(sX.toDouble(), sY.toDouble(), fromVec2d, direction)
         }
+//        openShape2dList.clear()
     }
+//    @Override
+//    void visitRect2d(Number sX, Number sY, Closure c) {
+//        if (c) { // Construction points
+//            double sYd = sY.toDouble()
+//            double sXd = sX.toDouble()
+//            oldFromVec2d = fromVec2d
+//            fromVec2d += new Vec2d(sXd / 2, sYd / 2)
+//            c.delegate = new CadDslEdge2d(visitor: this)
+//            c.call()
+//            fromVec2d = oldFromVec2d + new Vec2d(sXd / 2, -sYd.toDouble() / 2)
+//            c.delegate = new CadDslEdge2d(visitor: this)
+//            c.call()
+//            fromVec2d = oldFromVec2d + new Vec2d(-sXd / 2, -sYd / 2)
+//            c.delegate = new CadDslEdge2d(visitor: this)
+//            c.call()
+//            fromVec2d = oldFromVec2d + new Vec2d(-sXd / 2, sYd / 2)
+//            c.delegate = new CadDslEdge2d(visitor: this)
+//            c.call()
+//            fromVec2d = oldFromVec2d
+//        } else {
+//            closedShape2dList << new Rectangle2d(sX.toDouble(), sY.toDouble(), fromVec2d, direction)
+//        }
+//    }
 
     @Override
     void visitMove(Vec2d to) {
