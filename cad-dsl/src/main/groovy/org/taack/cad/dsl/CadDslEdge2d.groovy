@@ -65,43 +65,54 @@ class CadDslEdge2d implements CadDslBase {
         this
     }
 
-    /**
-     * Draw a closed rectangle whose center is the last position
-     * @param sX Size in X coords
-     * @param sY Size in Y coords
-     * @param c If not null, convert edges of this rectangle into construction points
-     */
-    void rect(Number sX, Number sY, @DelegatesTo(value = CadDslEdge2d, strategy = Closure.DELEGATE_FIRST) Closure c = null) {
-//        else {
-        double sXd = sX.toDouble()
-        double sYd = sY.toDouble()
-        visitor.visitMove new Vec2d(sXd / 2, sYd / 2)
-        edge(new Vec2d(sXd / 2, -sYd / 2))
-        edge(new Vec2d(-sXd / 2, -sYd / 2))
-        edge(new Vec2d(-sXd / 2, sYd / 2))
-        edge(new Vec2d(sXd / 2, sYd / 2))
-        if (c) visitor.visitConstruct2d(c)
-
-//        }
-//            c.delegate = new CadDslEdge2d(visitor: this)
-//            c.call()
-//            fromVec2d = oldFromVec2d + new Vec2d(sXd / 2, -sYd / 2)
-//            c.delegate = new CadDslEdge2d(visitor: this)
-//            c.call()
-//            fromVec2d = oldFromVec2d + new Vec2d(-sXd / 2, -sYd / 2)
-//            c.delegate = new CadDslEdge2d(visitor: this)
-//            c.call()
-//            fromVec2d = oldFromVec2d + new Vec2d(-sXd / 2, sYd / 2)
-//            c.delegate = new CadDslEdge2d(visitor: this)
-//            c.call()
-
-//            visitor.visitEdge(sX, sY, c)
-    }
+//    /**
+//     * Draw a closed rectangle whose center is the last position
+//     * @param sX Size in X coords
+//     * @param sY Size in Y coords
+//     * @param c If not null, convert edges of this rectangle into construction points
+//     */
+//    void rect(Number sX, Number sY, @DelegatesTo(value = CadDslEdge2d, strategy = Closure.DELEGATE_FIRST) Closure c = null) {
+////        else {
+//        double sXd = sX.toDouble()
+//        double sYd = sY.toDouble()
+//        visitor.visitMove new Vec2d(sXd / 2, sYd / 2)
+//        edge(new Vec2d(sXd / 2, -sYd / 2))
+//        edge(new Vec2d(-sXd / 2, -sYd / 2))
+//        edge(new Vec2d(-sXd / 2, sYd / 2))
+//        edge(new Vec2d(sXd / 2, sYd / 2))
+////        if (c) visitor.visitConstruct2d(c)
+//
+////        }
+////            c.delegate = new CadDslEdge2d(visitor: this)
+////            c.call()
+////            fromVec2d = oldFromVec2d + new Vec2d(sXd / 2, -sYd / 2)
+////            c.delegate = new CadDslEdge2d(visitor: this)
+////            c.call()
+////            fromVec2d = oldFromVec2d + new Vec2d(-sXd / 2, -sYd / 2)
+////            c.delegate = new CadDslEdge2d(visitor: this)
+////            c.call()
+////            fromVec2d = oldFromVec2d + new Vec2d(-sXd / 2, sYd / 2)
+////            c.delegate = new CadDslEdge2d(visitor: this)
+////            c.call()
+//
+////            visitor.visitEdge(sX, sY, c)
+//    }
 
     void trimmed(CadDslEdge2d curve, Number from, Number to) {
         visitor.visitTrimmed(curve, from, to)
     }
 
+    CadDslEdge2d closedWire(@DelegatesTo(value = CadDslEdge2d, strategy = Closure.DELEGATE_FIRST) Closure c) {
+        visitor.visitFrom((Vec2d)null)
+        c.delegate = this
+        c.call()
+        visitor.visitFromEnd((Vec2d)null)
+        this
+    }
+
+    CadDslWire2d toWires() {
+        new CadDslWire2d(visitor: visitor)
+    }
     Vec bound(Number U) {
 
     }

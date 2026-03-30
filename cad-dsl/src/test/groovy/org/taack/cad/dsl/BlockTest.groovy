@@ -24,42 +24,62 @@ class BlockTest {
 
     @Test
     void "Block With Bored Center Hole"() {
-        cd().box(length, height, thickness).topZ().center {
+        cd().box(length, height, thickness).topZ().wireFrom() {
             circle(centerHoleDia)
-        }.hole(thickness * 1.1).display()
+        }.toFace().prism(new Vec(-cboreHoleDiameter)).display()
     }
 
     @Test
     void "Pillow Block With Counterbored Holes"() {
-        cd().box(length, height, thickness).topZ().center {
-            rect(length - cboreInset, height - cboreInset) {
-                circle(centerHoleDia)
-            }
-        }.hole(cboreHoleDiameter).topZ().center {
+        cd().box(length, height, thickness).topZ().wireFrom() {
+            double rectSX = length - cboreInset
+            double rectSY = height - cboreInset
+            move(new Vec2d(-(rectSX) / 2, -(rectSY) / 2))
             circle(centerHoleDia)
-        }.hole(cboreHoleDiameter).display()
+            move(new Vec2d(0, rectSY))
+            circle(centerHoleDia)
+            move(new Vec2d(rectSX, 0))
+            circle(centerHoleDia)
+            move(new Vec2d(0, -(rectSY)))
+            circle(centerHoleDia)
+        }.toFace().prism(new Vec(-cboreHoleDiameter)).topZ().wireFrom() {
+            circle(centerHoleDia)
+        }.toFace().prism(new Vec(-cboreHoleDiameter)).display()
     }
 
     @Test
     void "Pillow Block With Counterbored Holes TopY"() {
-        cd().box(length, length, length).topY().center {
-            rect((length - cboreInset), (length - cboreInset)) {
-                circle(centerHoleDia)
-            }
-        }.hole(cboreHoleDiameter).display()
+        cd().box(length, length, length).topY().wireFrom() {
+            circle(centerHoleDia)
+        }.toFace().prism(new Vec(-cboreHoleDiameter)).display()
     }
 
     @Test
     void "Squared hole"() {
-        cd().box(length, length, length).butZ().center {
-            to(new Vec2d(length / 2, length / 2))
-            rect(centerHoleDia, centerHoleDia)
-        }.hole(cboreHoleDiameter).display()
+        cd().box(length, length, length).butZ().wireFrom() {
+//            to(new Vec2d(length / 2, length / 2))
+//            closedWire {
+
+                println "Wire 2D rect"
+                double length = length / 10
+                Vec2d p1 = new Vec2d(-length, -length)
+                Vec2d p2 = new Vec2d(-length, length)
+                Vec2d p3 = -p1
+                Vec2d p4 = -p2
+                to p1
+                edge(p4)
+                edge(p3)
+                edge(p2)
+                edge(p1)
+//            }
+            move(new Vec2d(length / 3, length / 3))
+            circle(length / 30)
+        }.toFace().prism().display()//.hole(cboreHoleDiameter).display()
     }
 
     @Test
     void "A Die"() {
-        cd().box(length, length, length).topZ().center {
+        cd().box(length, length, length).topZ().wireFrom() {
             println "Face 6 topZ 40,40"
             to(new Vec2d(cboreInset, cboreInset))
             circle(centerHoleDia)
@@ -73,15 +93,15 @@ class BlockTest {
             circle(centerHoleDia)
             move(new Vec2d(+length / 2 - cboreInset, 0))
             circle(centerHoleDia)
-        }.hole(cboreHoleDiameter).butZ().center {
+        }.toFace().prism(new Vec(-cboreHoleDiameter)).butZ().wireFrom() {
             println "Face 1 butZ 40,40"
-            rect(centerHoleDia, centerHoleDia)
-        }.hole(cboreHoleDiameter).topY().center {
+//            rect(centerHoleDia, centerHoleDia)
+        }.toFace().prism(new Vec(-cboreHoleDiameter)).topY().wireFrom() {
             println "Face 4 topY 40,40"
-            rect(length / 2, length / 2) {
-                rect(centerHoleDia, centerHoleDia)
-            }
-        }.hole(cboreHoleDiameter).butY().center {
+//            rect(length / 2, length / 2) {
+//                rect(centerHoleDia, centerHoleDia)
+//            }
+        }.toFace().prism(new Vec(-cboreHoleDiameter)).butY().wireFrom() {
             println "Face 3 butY 40,40"
             circle(centerHoleDia)
             move(new Vec2d(-length / 2 + cboreInset, -length / 2 + cboreInset))
@@ -89,21 +109,21 @@ class BlockTest {
             to(new Vec2d(length / 2, length / 2))
             move(new Vec2d(length / 2 - cboreInset, length / 2 - cboreInset))
             circle(centerHoleDia)
-        }.hole(cboreHoleDiameter).butX().center {
+        }.toFace().prism(new Vec(-cboreHoleDiameter)).butX().wireFrom() {
             println "Face 5 butX 40,-40"
-            rect(length / 2, length / 2) {
-                rect(centerHoleDia, centerHoleDia)
-            }
+//            rect(length / 2, length / 2) {
+//                rect(centerHoleDia, centerHoleDia)
+//            }
             circle(centerHoleDia)
 
-        }.hole(cboreHoleDiameter).topX().center {
+        }.toFace().prism(new Vec(-cboreHoleDiameter)).topX().wireFrom() {
             println "Face 2 topX 40,-40"
             move(new Vec2d(-length / 2 + cboreInset, -length / 2 + cboreInset))
             circle(centerHoleDia)
             move(new Vec2d(length / 2 - cboreInset, length / 2 - cboreInset))
             move(new Vec2d(length / 2 - cboreInset, length / 2 - cboreInset))
             circle(centerHoleDia)
-        }.hole(cboreHoleDiameter).display()
+        }.toFace().prism(new Vec(-cboreHoleDiameter)).display()
     }
 
     @Test
@@ -123,8 +143,8 @@ class BlockTest {
                 direction(new Vec(1))
                 box(500, 500, 500)
             }
-        }.butZ().center {
+        }.butZ().wireFrom() {
             circle(3)
-        }.hole(20).display()
+        }.toFace().prism(new Vec(-cboreHoleDiameter)).display()
     }
 }

@@ -1,7 +1,6 @@
 package org.taack.cad.dsl
 
 import groovy.transform.CompileStatic
-import org.taack.cad.builder.Vec
 import org.taack.cad.builder.Vec2d
 
 @CompileStatic

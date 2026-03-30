@@ -16,9 +16,9 @@ class SolidFuseAndCutTest {
         BigDecimal angle = atan(radianSphere)
         BigDecimal featureDiameter = 0.5
 
-        def c = cd().sphere(radius, -angle, angle).topZ().center {
+        def c = cd().sphere(radius, -angle, angle).topZ().wireFrom() {
             circle featureDiameter
-        }.hole(100)
+        }.toFace().prism(new Vec(-100))
         c.toCadDsl()
     }
 
@@ -57,7 +57,7 @@ class SolidFuseAndCutTest {
         BigDecimal face_inner_radius = 0.8
 
         other.cut {
-            topZ().center {
+            topZ().wireFrom() {
                 wireFrom(new Vec(face_inner_radius - 0.05, 0.0, -0.05)) {
                     edge(new Vec(face_inner_radius - 0.10, 0.0, -0.025))
                     edge(new Vec(face_inner_radius - 0.10, 0.0, 0.025))

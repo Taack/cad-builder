@@ -9,6 +9,7 @@ import static java.lang.Math.*
 @CompileStatic
 class CadDsl extends CadDslSolid implements CadDslBase {
     static CadDsl cd() {
+
         new CadDsl(visitor: new CadDslVisitor())
     }
 

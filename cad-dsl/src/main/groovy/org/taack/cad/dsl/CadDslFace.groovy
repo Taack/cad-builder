@@ -2,6 +2,7 @@ package org.taack.cad.dsl
 
 import groovy.transform.CompileStatic
 import org.taack.cad.builder.Vec
+import org.taack.cad.builder.Vec2d
 
 @CompileStatic
 class CadDslFace implements CadDslBase {
@@ -16,20 +17,29 @@ class CadDslFace implements CadDslBase {
         new CadDslSolid(visitor: visitor)
     }
 
-    CadDslSolid hole(Number depth) {
-        visitor.visitHole(depth)
-        new CadDslSolid(visitor: visitor)
+//    CadDslSolid hole(Number depth) {
+//        visitor.visitHole(depth)
+//        new CadDslSolid(visitor: visitor)
+//    }
+
+//    CadDslWire2d center(@DelegatesTo(value = CadDslEdge2d, strategy = Closure.DELEGATE_FIRST) Closure c = null) {
+//        visitor.visitCenter()
+//        if (c) {
+//            c.delegate = new CadDslEdge2d(visitor: visitor)
+//            c.call()
+//        }
+//        visitor.visitCenterEnd()
+//        new CadDslWire2d(visitor: visitor)
+//    }
+
+    CadDslWire2d wireFrom(Vec2d pos = null, @DelegatesTo(value = CadDslEdge2d, strategy = Closure.DELEGATE_FIRST) Closure c) {
+        visitor.visitFrom(pos)
+        c.delegate = new CadDslEdge2d(visitor: visitor)
+        c.call()
+        visitor.visitFromEnd(pos)
+        new CadDslWire2d(visitor: visitor)
     }
 
-    CadDslFace center(@DelegatesTo(value = CadDslEdge2d, strategy = Closure.DELEGATE_FIRST) Closure c = null) {
-        visitor.visitCenter()
-        if (c) {
-            c.delegate = new CadDslEdge2d(visitor: visitor)
-            c.call()
-        }
-        visitor.visitCenterEnd()
-        this
-    }
 
     CadDslSolid fillet(Number radius) {
         visitor.visitFillet(radius)
