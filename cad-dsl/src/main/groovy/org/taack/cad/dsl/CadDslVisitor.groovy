@@ -326,8 +326,7 @@ class CadDslVisitor implements ICadDslVisitor {
         Tr.cur("visitFromEnd $posOri")
 
         Tr.cur("visitFromEnd openShape2dList $openShape2dList")
-//        def face = new_TopoDS_Face__BRepBuilderAPI_MakeFace__gp_Pln(direction.toGpPln(0))
-
+        if (!face) face = new_TopoDS_Face__BRepBuilderAPI_MakeFace__gp_Pln(direction.toGpPln(0))
         currentSurface = handle_Geom_Surface__TopoDS_Face(face)
 
         if (!openShape2dList.empty) {
@@ -649,7 +648,7 @@ class CadDslVisitor implements ICadDslVisitor {
     void visitCenter() {
         fromVecStack << Vec.fromAPnt(new_gp_Pnt__CentreOfMass__TopoDS_Shape(face))
         fromVec2d = fromVec.coordsProjection(direction, ptParam00)
-        Tr.ind("visitCenter $fromVecStack $fromVec2d")
+        Tr.ind("visitCenter $fromVec $fromVec2d $ptParam00")
     }
 
     @Override

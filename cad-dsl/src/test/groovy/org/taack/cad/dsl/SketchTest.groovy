@@ -7,6 +7,8 @@ import org.taack.cad.builder.Vec2d
 
 import static org.taack.cad.builder.CadBuilder.cb
 import static org.taack.cad.dsl.CadDsl.cd
+import static org.taack.cad.dsl.CadDslVisitor.*
+import static org.taack.cad.dsl.CadDslVisitor.*
 
 @CompileStatic
 class SketchTest {
@@ -31,7 +33,7 @@ class SketchTest {
             edge(p2)
             edge(p3)
             edge(p4)
-            arc(p5, new Vec2d(+ 0.15, -0.029))
+            arc(p5, new Vec2d(+0.15, -0.029))
             edge(p6)
             edge(p7)
         }.toFace().revolution(new Vec(2, 0, 0), new Vec(0, 1, 0)).display()
@@ -55,14 +57,14 @@ class SketchTest {
 
         cd().wireFrom(pOri) {
             closedWire {
-                edge(p1)
-                edge(p2)
                 edge(p3)
+                edge(p2)
+                edge(p1)
                 edge(p4)
             }
             closedWire {
                 to cOri
-                arc(c1, c2)
+                arc(c2, c1)
                 arc(c4, c3)
             }
         }.toFace().prism(-1).display()
@@ -72,28 +74,34 @@ class SketchTest {
     void "Extrude Square Face with Hole using 2D Vectors with hole"() {
         double length = 0.1
 
-        Vec2d p1 = new Vec2d(-length, -length)
-        Vec2d p2 = new Vec2d(-length, length)
-        Vec2d p3 = -p1
-        Vec2d p4 = -p2
+        Vec2d pOri = new Vec2d()
+        Vec2d p1 = new Vec2d(0, length)
+        Vec2d p2 = new Vec2d(length, length)
+        Vec2d p3 = new Vec2d(length, 0)
+        Vec2d p4 = new Vec2d()
 
+        Vec2d cOri = p2 * .4
         Vec2d c1 = p1 * .2
         Vec2d c2 = p2 * .2
         Vec2d c3 = p3 * .2
         Vec2d c4 = p4 * .2
 
-        cd().wireFrom(p1) {
-            edge(p4)
-            edge(p3)
-            edge(p2)
-            edge(p1)
-//        }.move(c1) {
-            arc(c3, c2)
-            arc(c1, c4)
+        cd().wireFrom(pOri) {
+            closedWire {
+                edge(p3)
+                edge(p2)
+                edge(p1)
+                edge(p4)
+            }
+            closedWire {
+                to(cOri)
+                arc(c2, c1)
+                arc(c4, c3)
+            }
         }.toFace().prism().topX().wireFrom() {
-            println "Circle topY 0.1,-0.5"
+            CadDslVisitor.Tr.cur "Circle topY 0.1,-0.5"
             circle(0.02)
-        }.toFace().prism(new Vec(0.1, 0.1, 0.1)).display()
+        }.toFace().prism(0.02).display()
     }
 
     @Test
