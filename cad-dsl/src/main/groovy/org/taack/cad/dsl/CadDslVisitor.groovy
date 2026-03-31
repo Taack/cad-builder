@@ -801,14 +801,29 @@ class CadDslVisitor implements ICadDslVisitor {
 //        }
 //    }
 
+//    @Override
+//    void visitToFaceFrom2d() {
+//        Tr.cur("visitToFaceFrom2d: makeWires: $makeWires")
+//        MemorySegment wire = ref_TopoDS_Wire__BRepBuilderAPI_MakeWire__Wire(makeWires.first())
+//        face = new_TopoDS_Face__BRepBuilderAPI_MakeFace__TopoDS_Wire(wire)
+////        face = new_TopoDS_Face__BRepBuilderAPI_MakeFace__gp_Pln(new_gp_Pln__pt_dir(fromVec.toGpPnt(), direction.toGpDir()))
+//        if (makeWires.size() > 1) {
+//            def builder = new_BRep_Builder()
+//            for (MemorySegment w in makeWires[1..makeWires.size() - 1]) {
+//                MemorySegment wire2 = ref_TopoDS_Shape__BRepBuilderAPI_MakeWire__Shape(w)
+//                _TopoDS_Builder__Add__resTopoDS_Shape_toAddTopoDS_Shape(builder, face, wire2)
+//            }
+//        }
+//    }
     @Override
     void visitToFaceFrom2d() {
         Tr.cur("visitToFaceFrom2d: makeWires: $makeWires")
         MemorySegment wire = ref_TopoDS_Wire__BRepBuilderAPI_MakeWire__Wire(makeWires.first())
         face = new_TopoDS_Face__BRepBuilderAPI_MakeFace__TopoDS_Wire(wire)
-//        face = new_TopoDS_Face__BRepBuilderAPI_MakeFace__gp_Pln(direction.toGpPln(0))
-//        face = new_TopoDS_Face__BRepBuilderAPI_MakeFace__TopoDS_Wire(wire)
         if (makeWires.size() > 1) {
+//            def face = new_TopoDS_Face()
+//            _TopoDS_Shape__Free(face)
+        // face = new_TopoDS_Face__BRepBuilderAPI_MakeFace__gp_Pln(new_gp_Pln__pt_dir(fromVec.toGpPnt(), direction.toGpDir()))
             def builder = new_BRep_Builder()
             for (MemorySegment w in makeWires[1..makeWires.size() - 1]) {
                 MemorySegment wire2 = ref_TopoDS_Shape__BRepBuilderAPI_MakeWire__Shape(w)
@@ -841,9 +856,8 @@ class CadDslVisitor implements ICadDslVisitor {
 //        def MKDP = new_BRepFeat_MakeDPrism__Sbase_Pbase_Skface_Angle_Fuse_Modify(shape, face, currentSurface, 0, 0, 1)
 //        _BRepFeat_MakeDPrism__Perform__Height(MKDP, dir.z + dir.y + dir.x)
 //        def shape = new_TopoDS_Shape__Shape__BRepBuilderAPI_MakeShape MKDP
-        visualize(shape)
         if (this.shape) {
-            visualize(shape)
+//            visualize(shape)
             Tr.cur "cut: $cut"
             shape = cut ? new_TopoDS_Shape__bBRepAlgoAPI_Cut__s1_s2(this.shape, shape) : new_TopoDS_Shape__brep_algoapi_fuse__s1_s2(this.shape, shape)
             boolShapes.peek() << shape
@@ -853,6 +867,7 @@ class CadDslVisitor implements ICadDslVisitor {
         face = null
         makeWires.clear()
         this.shape = shape
+        visualize(this.shape)
     }
 
     @Override

@@ -474,6 +474,10 @@ TopoDS_Shape *new_TopoDS_Shape__BRepPrimAPI_MakeRevol__TopoDS_Face_gp_Ax1(TopoDS
 
 TopoDS_Shape *new_TopoDS_Shape__BRepPrimAPI_MakeRevol__TopoDS_Face_gp_Ax1_ang(TopoDS_Face* face, gp_Ax1* ax1, Standard_Real angle);
 
+void _TopoDS_Shape__Free(TopoDS_Face* face);
+
+TopoDS_Face *new_TopoDS_Face__face(TopoDS_Face* face);
+
 gp_Pln* new_gp_Pln__x_y_z_d(const Standard_Real x, const Standard_Real y, const Standard_Real z, const Standard_Real d);
 
 gp_Pln* new_gp_Pln__pt_dir(const gp_Pnt* pt, const gp_Dir* dir);

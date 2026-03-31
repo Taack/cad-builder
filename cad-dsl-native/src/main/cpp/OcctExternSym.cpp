@@ -1112,6 +1112,16 @@ extern "C" TopoDS_Shape *new_TopoDS_Shape__BRepPrimAPI_MakeRevol__TopoDS_Face_gp
     return new TopoDS_Shape(BRepPrimAPI_MakeRevol(face, ax1, angle).Shape());
 }
 
+extern "C" void _TopoDS_Shape__Free(TopoDS_Face& face) {
+    TRACE("");
+    return face.Free(Standard_True);
+}
+
+extern "C" TopoDS_Face *new_TopoDS_Face__face(TopoDS_Face& face) {
+    TRACE("");
+    return new TopoDS_Face(face);
+}
+
 extern "C" gp_Pln* new_gp_Pln__x_y_z_d(const Standard_Real x, const Standard_Real y, const Standard_Real z, const Standard_Real d) {
     TRACE("");
     return new gp_Pln(x, y, z, d);
