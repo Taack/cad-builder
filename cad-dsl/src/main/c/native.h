@@ -514,6 +514,8 @@ TopoDS_Shape *new_TopoDS_Shape__bBRepAlgoAPI_Cut__s1_s2(TopoDS_Shape *result, To
 
 TopoDS_Shape *new_TopoDS_Shape__brep_algoapi_fuse__s1_s2(TopoDS_Shape *s1, TopoDS_Shape *s2);
 
+TopoDS_Shape *new_TopoDS_Shape__brep_algoapi_fuse__s1_listrOfShape(TopoDS_Shape *result, TopTools_ListOfShape *aLT);
+
 TopoDS_Shape *new_TopoDS_Shape__brep_algoapi_common__s1_s2(TopoDS_Shape *s1, TopoDS_Shape *s2);
 
 TopoDS_Shape *new_TopoDS_Shape__BRepAlgoAPI_Cut__TopoDS_Shape_TopTools_ListOfShape(TopoDS_Shape *result, TopTools_ListOfShape *aLT);

@@ -1221,7 +1221,7 @@ Composed
 
 */
 extern "C" TopoDS_Shape *new_TopoDS_Shape__bBRepAlgoAPI_Cut__s1_s2(TopoDS_Shape &result, TopoDS_Shape &tool) {
-    TRACE("");
+    TRACE("OBSOLETE");
     const auto cut = new BRepAlgoAPI_Cut(result, tool);
 //    cut->Build();
 //    cut->SimplifyResult();
@@ -1229,15 +1229,53 @@ extern "C" TopoDS_Shape *new_TopoDS_Shape__bBRepAlgoAPI_Cut__s1_s2(TopoDS_Shape 
 }
 
 extern "C" TopoDS_Shape *new_TopoDS_Shape__brep_algoapi_fuse__s1_s2(TopoDS_Shape &s1, TopoDS_Shape &s2) {
-    TRACE("");
+    TRACE("OBSOLETE");
     const auto fuse = new BRepAlgoAPI_Fuse(s1, s2);
 //    fuse->Build();
 //    fuse->SimplifyResult();
     return new TopoDS_Shape(fuse->Shape());
 }
 
-extern "C" TopoDS_Shape *new_TopoDS_Shape__brep_algoapi_common__s1_s2(TopoDS_Shape &s1, TopoDS_Shape &s2) {
+extern "C" TopoDS_Shape *new_TopoDS_Shape__brep_algoapi_fuse__s1_listrOfShape(TopoDS_Shape &result, TopTools_ListOfShape &aLT) {
     TRACE("");
+
+    Standard_Boolean bRunParallel;
+    Standard_Real aFuzzyValue;
+    bRunParallel = Standard_False;
+    aFuzzyValue = 2.1e-5;
+
+    TopTools_ListOfShape aLS;
+    aLS.Append(result);
+    BRepAlgoAPI_Fuse aBuilder;
+    aBuilder.SetArguments(aLS);
+    aBuilder.SetTools(aLT);
+
+    // Set parallel processing mode (default is false)
+    aBuilder.SetRunParallel(bRunParallel);
+    // Set Fuzzy value (default is Precision::Confusion())
+//    aBuilder.SetFuzzyValue(aFuzzyValue);
+    // Set safe processing mode (default is false)
+    Standard_Boolean bSafeMode = Standard_False;
+    aBuilder.SetNonDestructive(bSafeMode);
+    // Set Gluing mode for coinciding arguments (default is off)
+    BOPAlgo_GlueEnum aGlue = BOPAlgo_GlueFull;//BOPAlgo_GlueShift;
+    aBuilder.SetGlue(aGlue);
+    // Disabling/Enabling the check for inverted solids (default is true)
+    Standard_Boolean bCheckInverted = Standard_False;
+    aBuilder.SetCheckInverted(bCheckInverted);
+    // Set OBB usage (default is false)
+    Standard_Boolean bUseOBB = Standard_True;
+    aBuilder.SetUseOBB(bUseOBB);
+
+
+    aBuilder.Build();
+    aBuilder.SimplifyResult();
+
+    return new TopoDS_Shape(aBuilder.Shape());
+}
+
+extern "C" TopoDS_Shape *new_TopoDS_Shape__brep_algoapi_common__s1_s2(TopoDS_Shape &s1, TopoDS_Shape &s2) {
+    TRACE("OBSOLETE");
     const auto common = new BRepAlgoAPI_Common(s1, s2);
 //    fuse->Build();
 //    fuse->SimplifyResult();
@@ -1265,22 +1303,6 @@ extern "C" TopoDS_Shape *new_TopoDS_Shape__BRepAlgoAPI_Cut__TopoDS_Shape_TopTool
     // Set options for the algorithm
     // setting options for this algorithm is similar to setting options for GF algorithm (see "GF Usage" chapter)
 
-    // Set parallel processing mode (default is false)
-    aBuilder.SetRunParallel(bRunParallel);
-    // Set Fuzzy value (default is Precision::Confusion())
-    aBuilder.SetFuzzyValue(aFuzzyValue);
-    // Set safe processing mode (default is false)
-    Standard_Boolean bSafeMode = Standard_True;
-    aBuilder.SetNonDestructive(bSafeMode);
-    // Set Gluing mode for coinciding arguments (default is off)
-    BOPAlgo_GlueEnum aGlue = BOPAlgo_GlueShift;
-    aBuilder.SetGlue(aGlue);
-    // Disabling/Enabling the check for inverted solids (default is true)
-    Standard_Boolean bCheckInverted = Standard_False;
-    aBuilder.SetCheckInverted(bCheckInverted);
-    // Set OBB usage (default is false)
-    Standard_Boolean bUseOBB = Standard_True;
-    aBuilder.SetUseOBB(bUseOBB);
 
     // run the algorithm
     aBuilder.Build();

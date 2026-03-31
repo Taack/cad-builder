@@ -140,11 +140,11 @@ class BlockTest {
         }.toFace().hole(-cboreHoleDiameter).butX().wireFrom() { // 5
             circle(centerHoleDia)
             [5d, length - 5d].each { double x ->
-                [-5d, -length].each { double y ->
+                [-5d, -length + 4.0d].each { double y ->
                     closedWire {
                         to(new Vec2d(x + centerHoleDia, y + centerHoleDia))
                         println "Cannot fix position ..."
-                        [[-1, 1], [-1, -1], [1, -1], [1, 1]].each { int i2, int j2 ->
+                        [[-1, 1], [-1, -1], [1, -1], [1, 1]].each { double i2, double j2 ->
                             double x2 = x + centerHoleDia * i2
                             double y2 = y + centerHoleDia * j2
                             edge(new Vec2d(x2, y2))
