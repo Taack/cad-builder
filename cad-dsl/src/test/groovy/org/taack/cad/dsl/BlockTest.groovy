@@ -121,13 +121,11 @@ class BlockTest {
             to(new Vec2d(cboreInset, cboreInset))
             circle(centerHoleDia)
             move(new Vec2d(length / 2 - cboreInset, 0))
-//            circle(centerHoleDia)
             move(new Vec2d(length / 2 - cboreInset, 0))
             circle(centerHoleDia)
             to(new Vec2d(cboreInset, length - cboreInset))
             circle(centerHoleDia)
             move(new Vec2d(length / 2 - cboreInset, 0))
-//            circle(centerHoleDia)
             move(new Vec2d(length / 2 - cboreInset, 0))
             circle(centerHoleDia)
         }.toFace().hole(-cboreHoleDiameter).topY().wireFrom() { // 3
@@ -141,18 +139,31 @@ class BlockTest {
             circle(centerHoleDia)
             [5d, length - 5d].each { double x ->
                 [-5d, -length + 4.0d].each { double y ->
+                    to(new Vec2d(x, y))
                     closedWire {
-                        to(new Vec2d(x + centerHoleDia, y + centerHoleDia))
-                        println "Cannot fix position ..."
-                        [[-1, 1], [-1, -1], [1, -1], [1, 1]].each { double i2, double j2 ->
-                            double x2 = x + centerHoleDia * i2
-                            double y2 = y + centerHoleDia * j2
+                        CadDslVisitor.Tr.cur "Could fix position ..."
+                        [[1, 0], [1, 1], [0, 1], [0, 0]].each { double i2, double j2 ->
+                            double x2 = centerHoleDia * i2
+                            double y2 = centerHoleDia * j2
                             edge(new Vec2d(x2, y2))
                         }
                     }
                 }
             }
-        }.toFace().prism(cboreHoleDiameter).display()
+        }.toFace().prism(cboreHoleDiameter).butZ().wireFrom() { // 1
+            circle(3)
+        }.toFace().prism(5).topX().wireFrom() {
+            [[5d, -5d], [length - 5d, -length + 4.0d]].each { double x, double y ->
+                to(new Vec2d(x, y))
+                closedWire {
+//                    [[1, 0], [1, 1], [0, 1], [0, 0]].each { double i2, double j2 ->
+//                        double x2 = centerHoleDia * i2
+//                        double y2 = centerHoleDia * j2
+//                        edge(new Vec2d(x2, y2))
+//                    }
+                }
+            }
+        }.toFace().hole(-3).display()
 //            rect(length / 2, length / 2) {
 //                rect(centerHoleDia, centerHoleDia)
 //            }

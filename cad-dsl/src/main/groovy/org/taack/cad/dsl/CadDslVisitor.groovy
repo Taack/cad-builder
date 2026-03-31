@@ -14,7 +14,7 @@ import static org.taack.occt.NativeLib.*
 @CompileStatic
 class CadDslVisitor implements ICadDslVisitor {
 
-    private class Tr {
+    class Tr {
         private static int inc = 0
 
         static void ind(String s) {
@@ -86,7 +86,8 @@ class CadDslVisitor implements ICadDslVisitor {
 
         @Override
         MemorySegment makeWireAdd(Vec2d fromLocal) {
-            return handle_Geom2d_TrimmedCurve__GCE2d_MakeSegment__p1_p2(fromLocal.toGpPnt2d(), to.toGpPnt2d())
+            Tr.cur("Edge2d from: $fromLocal, to: $to")
+            return handle_Geom2d_TrimmedCurve__GCE2d_MakeSegment__p1_p2((fromVec2d + fromLocal).toGpPnt2d(), (fromVec2d + to).toGpPnt2d())
         }
 
         @Override
@@ -322,12 +323,13 @@ class CadDslVisitor implements ICadDslVisitor {
     @Override
     void visitFromEnd(Vec2d posOri) {
         Tr.cur("visitFromEnd $posOri")
-        Vec2d pos = posOri ?: fromVec2d
 
         Tr.cur("visitFromEnd openShape2dList $openShape2dList")
         currentSurface = handle_Geom_Surface__TopoDS_Face(face)
 
         if (!openShape2dList.empty) {
+            Vec2d pos = new Vec2d()
+
             def makeWire = new_BRepBuilderAPI_MakeWire()
             for (OpenShape2D s2d in openShape2dList) {
                 def trimmedCurve = s2d.makeWireAdd(pos)
@@ -380,8 +382,8 @@ class CadDslVisitor implements ICadDslVisitor {
             }
             closedShape2dList.clear()
         }
-        fromVec2d = pos
-        Tr.dec("visitFromEnd $pos")
+//        fromVec2d = pos
+        Tr.dec("visitFromEnd $fromVec2d")
     }
 
     @Override
@@ -691,29 +693,6 @@ class CadDslVisitor implements ICadDslVisitor {
         }
 //        openShape2dList.clear()
     }
-//    @Override
-//    void visitRect2d(Number sX, Number sY, Closure c) {
-//        if (c) { // Construction points
-//            double sYd = sY.toDouble()
-//            double sXd = sX.toDouble()
-//            oldFromVec2d = fromVec2d
-//            fromVec2d += new Vec2d(sXd / 2, sYd / 2)
-//            c.delegate = new CadDslEdge2d(visitor: this)
-//            c.call()
-//            fromVec2d = oldFromVec2d + new Vec2d(sXd / 2, -sYd.toDouble() / 2)
-//            c.delegate = new CadDslEdge2d(visitor: this)
-//            c.call()
-//            fromVec2d = oldFromVec2d + new Vec2d(-sXd / 2, -sYd / 2)
-//            c.delegate = new CadDslEdge2d(visitor: this)
-//            c.call()
-//            fromVec2d = oldFromVec2d + new Vec2d(-sXd / 2, sYd / 2)
-//            c.delegate = new CadDslEdge2d(visitor: this)
-//            c.call()
-//            fromVec2d = oldFromVec2d
-//        } else {
-//            closedShape2dList << new Rectangle2d(sX.toDouble(), sY.toDouble(), fromVec2d, direction)
-//        }
-//    }
 
     @Override
     void visitMove(Vec2d to) {
@@ -727,7 +706,7 @@ class CadDslVisitor implements ICadDslVisitor {
 
     @Override
     void visitTo(Vec2d to) {
-        println "visitTo $to"
+        Tr.cur "visitTo $to"
         fromVec2d = to
     }
 
