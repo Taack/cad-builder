@@ -19,19 +19,19 @@ class SketchTest {
         double yValue1 = 0.025
         double yValue2 = yValue1 * 2.0
 
-        Vec2d p1 = new Vec2d(innerRadius - xValue1, -yValue2)
-        Vec2d p2 = new Vec2d(innerRadius - xValue2, -yValue1)
-        Vec2d p3 = new Vec2d(innerRadius - xValue2, yValue1)
-        Vec2d p4 = new Vec2d(innerRadius + xValue2, yValue1)
-        Vec2d p5 = new Vec2d(innerRadius + xValue2, -yValue1)
-        Vec2d p6 = new Vec2d(innerRadius + xValue1, -yValue2)
-        Vec2d p7 = p1
+        Vec2d pOri = new Vec2d(innerRadius, 0)
+        Vec2d p2 = new Vec2d(-xValue2, -yValue1)
+        Vec2d p3 = new Vec2d(-xValue2, yValue1)
+        Vec2d p4 = new Vec2d(+xValue2, yValue1)
+        Vec2d p5 = new Vec2d(+xValue2, -yValue1)
+        Vec2d p6 = new Vec2d(+xValue1, -yValue2)
+        Vec2d p7 = new Vec2d()
 
-        cd().wireFrom(p1) {
+        cd().wireFrom(pOri) {
             edge(p2)
             edge(p3)
             edge(p4)
-            arc(p5, new Vec2d(innerRadius + 0.15, -0.029))
+            arc(p5, new Vec2d(+ 0.15, -0.029))
             edge(p6)
             edge(p7)
         }.toFace().revolution(new Vec(2, 0, 0), new Vec(0, 1, 0)).display()
@@ -41,25 +41,31 @@ class SketchTest {
     void "Extrude Square Face with Hole using 2D Vectors"() {
         double length = 0.1
 
-        Vec2d p1 = new Vec2d(-length, -length)
-        Vec2d p2 = new Vec2d(-length, length)
-        Vec2d p3 = -p1
-        Vec2d p4 = -p2
+        Vec2d pOri = new Vec2d()
+        Vec2d p1 = new Vec2d(0, length)
+        Vec2d p2 = new Vec2d(length, length)
+        Vec2d p3 = new Vec2d(length, 0)
+        Vec2d p4 = new Vec2d()
 
+        Vec2d cOri = p2 * .4
         Vec2d c1 = p1 * .2
         Vec2d c2 = p2 * .2
         Vec2d c3 = p3 * .2
         Vec2d c4 = p4 * .2
 
-        cd().wireFrom(p1) {
-            edge(p4)
-            edge(p3)
-            edge(p2)
-            edge(p1)
-        }.move(c1) {
-            arc(c3, c2)
-            arc(c1, c4)
-        }.toFace().prism().display()
+        cd().wireFrom(pOri) {
+            closedWire {
+                edge(p1)
+                edge(p2)
+                edge(p3)
+                edge(p4)
+            }
+            closedWire {
+                to cOri
+                arc(c1, c2)
+                arc(c4, c3)
+            }
+        }.toFace().prism(-1).display()
     }
 
     @Test
@@ -81,7 +87,7 @@ class SketchTest {
             edge(p3)
             edge(p2)
             edge(p1)
-        }.move(c1) {
+//        }.move(c1) {
             arc(c3, c2)
             arc(c1, c4)
         }.toFace().prism().topX().wireFrom() {
@@ -114,7 +120,7 @@ class SketchTest {
             edge(new Vec(face_inner_radius - 0.10, 0.0, -0.025))
             edge(new Vec(face_inner_radius - 0.10, 0.0, 0.025))
             edge(new Vec(face_inner_radius, 0.0, 0.025))
-        }.mirror(new Vec(face_inner_radius, 0 , 0), new Vec(1)).toFace().revolution(new Vec(1.0)).display()
+        }.mirror(new Vec(face_inner_radius, 0, 0), new Vec(1)).toFace().revolution(new Vec(1.0)).display()
     }
 
 

@@ -129,7 +129,8 @@ class CadDslVisitor implements ICadDslVisitor {
 
         @Override
         MemorySegment makeWireAdd(Vec2d fromLocal) {
-            return handle_Geom2d_TrimmedCurve__GCE2d_MakeArcOfCircle__p1_p2_p3(fromLocal.toGpPnt2d(), center.toGpPnt2d(), to.toGpPnt2d())
+            Tr.cur("Arc2d from: $fromLocal, to: $to")
+            return handle_Geom2d_TrimmedCurve__GCE2d_MakeArcOfCircle__p1_p2_p3((fromVec2d + fromLocal).toGpPnt2d(), (fromVec2d + center).toGpPnt2d(), (fromVec2d + to).toGpPnt2d())
         }
 
         @Override
@@ -325,15 +326,18 @@ class CadDslVisitor implements ICadDslVisitor {
         Tr.cur("visitFromEnd $posOri")
 
         Tr.cur("visitFromEnd openShape2dList $openShape2dList")
+//        def face = new_TopoDS_Face__BRepBuilderAPI_MakeFace__gp_Pln(direction.toGpPln(0))
+
         currentSurface = handle_Geom_Surface__TopoDS_Face(face)
 
         if (!openShape2dList.empty) {
-            Vec2d pos = new Vec2d()
+            Vec2d pos = new Vec2d()//fromVec2d ?: new Vec2d()
 
             def makeWire = new_BRepBuilderAPI_MakeWire()
             for (OpenShape2D s2d in openShape2dList) {
                 def trimmedCurve = s2d.makeWireAdd(pos)
                 pos = s2d.to
+
 //            def arcEdge = new_TopoDS_Edge__BRepBuilderAPI_MakeEdge__Geom2d_Curve_Geom_Surface(trimmedCurve, handle_Geom_Plan__gp_Pln(new Vec(0, 1, 0).toGpPln()))
 //                def arcEdge = new_TopoDS_Edge__BRepBuilderAPI_MakeEdge2d__Geom2d_Curve(trimmedCurve)
                 _BRepBuilderAPI_MakeWire__Add__BRepBuilderAPI_MakeEdge(makeWire, new_BRepBuilderAPI_MakeEdge__Geom2d_Curve_Geom_Surface(trimmedCurve, currentSurface))

@@ -69,10 +69,10 @@ class BlockTest {
         cd().box(length, length, length).butZ().wireFrom() {
             println "Wire 2D rect"
             double length = length / 10
-            Vec2d p1 = new Vec2d(-length, -length)
-            Vec2d p2 = new Vec2d(-length, length)
-            Vec2d p3 = -p1
-            Vec2d p4 = -p2
+            Vec2d p1 = new Vec2d()
+            Vec2d p2 = new Vec2d(0, length)
+            Vec2d p3 = new Vec2d(length, length)
+            Vec2d p4 = new Vec2d(length, 0)
             to p1
             edge(p4)
             edge(p3)
@@ -88,11 +88,11 @@ class BlockTest {
         cd().box(length, length, length).butZ().wireFrom() {
             println "Wire 2D rect"
             double length = length / 10
-            Vec2d p1 = new Vec2d(-length, -length)
-            Vec2d p2 = new Vec2d(-length, length)
-            Vec2d p3 = -p1
-            Vec2d p4 = -p2
-            to p1
+            Vec2d p1 = new Vec2d()
+            Vec2d p2 = new Vec2d(0, length)
+            Vec2d p3 = new Vec2d(length, length)
+            Vec2d p4 = new Vec2d(length, 0)
+            to p3
             edge(p4)
             edge(p3)
             edge(p2)
@@ -156,35 +156,15 @@ class BlockTest {
             [[5d, -5d], [length - 5d, -length + 4.0d]].each { double x, double y ->
                 to(new Vec2d(x, y))
                 closedWire {
-//                    [[1, 0], [1, 1], [0, 1], [0, 0]].each { double i2, double j2 ->
-//                        double x2 = centerHoleDia * i2
-//                        double y2 = centerHoleDia * j2
-//                        edge(new Vec2d(x2, y2))
-//                    }
+                    [[1, 0], [1, 1], [0, 1], [0, 0]].each { double i2, double j2 ->
+                        double x2 = centerHoleDia * i2
+                        double y2 = centerHoleDia * j2
+                        edge(new Vec2d(x2, y2))
+                    }
                 }
             }
         }.toFace().hole(-3).display()
-//            rect(length / 2, length / 2) {
-//                rect(centerHoleDia, centerHoleDia)
-//            }
     }
-
-//            println "Face 5 butX 40,-40"
-////            rect(length / 2, length / 2) {
-////                rect(centerHoleDia, centerHoleDia)
-////            }
-//            circle(centerHoleDia)
-
-//        }.toFace().prism(new Vec(-cboreHoleDiameter)).topX().wireFrom() {
-//            println "Face 2 topX 40,-40"
-//            move(new Vec2d(-length / 2 + cboreInset, -length / 2 + cboreInset))
-//            circle(centerHoleDia)
-//            move(new Vec2d(length / 2 - cboreInset, length / 2 - cboreInset))
-//            move(new Vec2d(length / 2 - cboreInset, length / 2 - cboreInset))
-//            circle(centerHoleDia)
-//        }.toFace().hole(-cboreHoleDiameter).display()
-//        }
-
 
     @Test
     void "Tetrahedron"() {
@@ -205,7 +185,7 @@ class BlockTest {
             }
         }.butZ().wireFrom() {
             circle(3)
-        }.toFace().prism(new Vec(-cboreHoleDiameter)).display()
+        }.toFace().hole(-cboreHoleDiameter).display()
     }
 
 }
