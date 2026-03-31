@@ -325,15 +325,20 @@ class CadDslVisitor implements ICadDslVisitor {
         Vec2d pos = posOri ?: fromVec2d
 
         Tr.cur("visitFromEnd openShape2dList $openShape2dList")
+        currentSurface = handle_Geom_Surface__TopoDS_Face(face)
+
         if (!openShape2dList.empty) {
             def makeWire = new_BRepBuilderAPI_MakeWire()
             for (OpenShape2D s2d in openShape2dList) {
                 def trimmedCurve = s2d.makeWireAdd(pos)
                 pos = s2d.to
 //            def arcEdge = new_TopoDS_Edge__BRepBuilderAPI_MakeEdge__Geom2d_Curve_Geom_Surface(trimmedCurve, handle_Geom_Plan__gp_Pln(new Vec(0, 1, 0).toGpPln()))
-                def arcEdge = new_TopoDS_Edge__BRepBuilderAPI_MakeEdge2d__Geom2d_Curve(trimmedCurve)
-                _BRepBuilderAPI_MakeWire__Add__TopoDS_Edge(makeWire, arcEdge)
+//                def arcEdge = new_TopoDS_Edge__BRepBuilderAPI_MakeEdge2d__Geom2d_Curve(trimmedCurve)
+                _BRepBuilderAPI_MakeWire__Add__BRepBuilderAPI_MakeEdge(makeWire, new_BRepBuilderAPI_MakeEdge__Geom2d_Curve_Geom_Surface(trimmedCurve, currentSurface))
+//                _BRepBuilderAPI_MakeWire__Add__TopoDS_Edge(makeWire, arcEdge)
             }
+
+
             makeWires << makeWire
             openShape2dList.clear()
         }
@@ -348,7 +353,6 @@ class CadDslVisitor implements ICadDslVisitor {
 //            def MW = new_BRepBuilderAPI_MakeWire()
 ////            def c = new_gp_Circ2d__ax2d_r(new_gp_Ax2d__pt_dir(it.pos.toGpPnt2d(), it.pos.toGpDir2d()), it.radius)
 ////            def aline = handle_Geom2d_Circle__GCE2d_MakeCircle__cir2d(c)
-                currentSurface = handle_Geom_Surface__TopoDS_Face(face)
             _BRepBuilderAPI_MakeWire__Add__BRepBuilderAPI_MakeEdge(makeWire, new_BRepBuilderAPI_MakeEdge__Geom2d_Curve_Geom_Surface(c, currentSurface))
                 makeWires << makeWire
 //            _BRepBuilderAPI_MakeFace__Init(makeFace, surf, 0, 0.01d)
@@ -576,14 +580,14 @@ class CadDslVisitor implements ICadDslVisitor {
 
     @Override
     void visitClosedWire() {
-        println "visitClosedWire dir: $direction, fromVec2d: $fromVec2d"
+        Tr.ind "visitClosedWire dir: $direction, fromVec2d: $fromVec2d"
         visitFrom(fromVec2d)
     }
 
     @Override
     void visitClosedWireEnd() {
-        println "visitClosedWire dir: $direction, fromVec2d: $fromVec2d"
         visitFromEnd(fromVec2d)
+        Tr.dec "visitClosedWireEnd dir: $direction, fromVec2d: $fromVec2d"
     }
 
     @Override

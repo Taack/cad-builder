@@ -140,7 +140,7 @@ class BlockTest {
         }.toFace().hole(-cboreHoleDiameter).butX().wireFrom() { // 5
             circle(centerHoleDia)
             [10 / 2d, length - 5].each { double x ->
-                [10 / 2d, length].each { double y ->
+                [-10 / 2d, -length].each { double y ->
                     to(new Vec2d(x + centerHoleDia, y + centerHoleDia))
                     closedWire {
                         println "COUCUCOUOCUOUCOUC"
@@ -152,7 +152,7 @@ class BlockTest {
                     }
                 }
             }
-        }.toFace().prism(new Vec(-cboreHoleDiameter)).display()
+        }.toFace().prism(cboreHoleDiameter).display()
 //            rect(length / 2, length / 2) {
 //                rect(centerHoleDia, centerHoleDia)
 //            }
