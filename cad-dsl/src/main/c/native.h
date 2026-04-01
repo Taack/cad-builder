@@ -474,6 +474,10 @@ TopoDS_Shape *new_TopoDS_Shape__BRepPrimAPI_MakeRevol__TopoDS_Face_gp_Ax1(TopoDS
 
 TopoDS_Shape *new_TopoDS_Shape__BRepPrimAPI_MakeRevol__TopoDS_Face_gp_Ax1_ang(TopoDS_Face* face, gp_Ax1* ax1, Standard_Real angle);
 
+void _TopoDS_Shape__Free(TopoDS_Face* face);
+
+TopoDS_Face *new_TopoDS_Face__face(TopoDS_Face* face);
+
 gp_Pln* new_gp_Pln__x_y_z_d(const Standard_Real x, const Standard_Real y, const Standard_Real z, const Standard_Real d);
 
 gp_Pln* new_gp_Pln__pt_dir(const gp_Pnt* pt, const gp_Dir* dir);
@@ -509,6 +513,8 @@ Composed
 TopoDS_Shape *new_TopoDS_Shape__bBRepAlgoAPI_Cut__s1_s2(TopoDS_Shape *result, TopoDS_Shape *tool);
 
 TopoDS_Shape *new_TopoDS_Shape__brep_algoapi_fuse__s1_s2(TopoDS_Shape *s1, TopoDS_Shape *s2);
+
+TopoDS_Shape *new_TopoDS_Shape__brep_algoapi_fuse__s1_listrOfShape(TopoDS_Shape *result, TopTools_ListOfShape *aLT);
 
 TopoDS_Shape *new_TopoDS_Shape__brep_algoapi_common__s1_s2(TopoDS_Shape *s1, TopoDS_Shape *s2);
 
