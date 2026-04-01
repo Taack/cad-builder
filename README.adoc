@@ -1,9 +1,9 @@
 = DSL for CAD Bodies and Assemblies
 :icons: font
 
-
 The purpose of this tool is to share 3D parts and assemblies like java class binaries.
 
+As of today, the DSL is not complete to define bodies and assemblies will come later.
 
 == Building
 
@@ -56,7 +56,7 @@ void "Pillow Block With Counterbored Holes and Prism"() {
 ----
 
 
-WARNING: DSL is not definitive
+WARNING: DSL is evolving
 
 .Renderer
 image::https://github.com/Taack/cad-builder/blob/main/screenshot-sketch.webp?raw=true[]
@@ -65,13 +65,13 @@ image::https://github.com/Taack/cad-builder/blob/main/screenshot-sketch.webp?raw
 
 There are 3 main packages in `cad-dsl` src folder (both for tests and implementation).
 
-* `org.taack.cad.binding` classes use direct OCCT symbol binding to draw. It is considered low-level, and should not be used when composing a new body.
+* `org.taack.cad.binding` classes use direct OCCT symbol binding using JExtract. It is considered low-level, and should not be used when composing a new body.
 * `org.taack.cad.builder` using the builder pattern, quick way to test builder limitation, this step helps to build a good DSL. This package should not be directly used.
 * `org.taack.cad.dsl` using the visitor pattern to build the DSL. This should be used in production.
 
 == DSL Tests
 
-DSL Tests are localised `cad-dsl/src/test/groovy/org/taack/cad/dsl` it could give an overview of `cad-dsl`.
+DSL Tests are localised `cad-dsl/src/test/groovy/org/taack/cad/dsl` it could give an overview of `cad-dsl` constructions.
 
 .Cut Version
 [source,groovy]
@@ -123,6 +123,28 @@ image::cad-fuse.png[]
 
 == Distribution and Usage
 
-`cad-dsl` is not yet published on maven. The only way to use it is to fork the source and save the model in STEP file ().
+`cad-dsl` has been published on maven for Linux x86 only.
 
-Change `display()` into `display('File.step')` or `display('File.brep')` or `display('File.png')`.
+=== Maven
+
+Artifact coordinates:
+
+.Maven
+[source,groovy]
+----
+implementation 'org.taack.cad:cad-dsl:0.1'
+----
+
+NOTE: See https://github.com/Taack/cad-dsl-app/blob/main/cad-dsl-linux-app-x86-64/build.gradle[sample-build.gradle] to deal with JMOD files
+
+You can also compile `cad-dsl-native` for your platform, and put the library in your lib path.
+
+=== Sample App using artifact
+
+You can download a sample app https://github.com/Taack/cad-dsl-app/tree/main/cad-dsl-linux-app-x86-64[cad-dsl-linux-app-x86-64]
+
+== Code completion
+
+Your IDE has to support Groovy `@DelegatesTo` must be supported.
+
+The language is statically typed. Intellij IDE Community version should do it.
