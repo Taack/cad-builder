@@ -20,11 +20,27 @@ class CadDslEdge2d implements CadDslBase {
     }
 
     /**
+     * Displace new position on this face.
+     * @param to Move, starting from the old position
+     */
+    void move(Number x, Number y) {
+        visitor.visitMove(new Vec2d(x, y))
+    }
+
+    /**
      * Move to new position on this face.
      * @param to New start positon
      */
     void to(Vec2d to) {
         visitor.visitTo(to)
+    }
+
+    /**
+     * Move to new position on this face.
+     * @param to New start positon
+     */
+    void to(Number x, Number y) {
+        visitor.visitTo(new Vec2d(x, y))
     }
 
     /**
