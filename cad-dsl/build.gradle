@@ -1,3 +1,4 @@
+
 plugins {
     id 'c'
     id 'groovy'
@@ -60,6 +61,8 @@ test {
     useJUnitPlatform()
 }
 
+ext.isReleaseVersion = { -> !version.endsWith('SNAPSHOT') }
+
 publishing {
     publications {
         maven(MavenPublication) {
@@ -69,18 +72,68 @@ publishing {
 
             from components.java
             withBuildIdentifier()
-        }
-    }
-    repositories {
-        maven {
-            name = "myRepo"
-            // change to point to your repo, e.g. http://my.org/repo
-            url = layout.buildDirectory.dir('repo')
-            metadataSources {
-                gradleMetadata()
+            pom {
+                name = 'Groovy CAD DSL'
+                description = 'DSL for CAD Bodies and Assemblies'
+                url = 'http://taack.org'
+                licenses {
+                    license {
+                        name = 'The Apache License, Version 2.0'
+                        url =  'http://www.apache.org/licenses/LICENSE-2.0.txt'
+                    }
+                }
+                scm {
+                    url = 'scm:git@github.com:Taack/cad-builder.git'
+                    connection = 'scm:git@github.com:Taack/cad-builder.git'
+                    developerConnection = 'scm:git@github.com:Taack/cad-builder.git'
+                }
+                developers {
+                    developer {
+                        id = 'org.taack'
+                        name = 'Adrien Guichard'
+                        email = 'adrien.guichard@taack.org'
+                    }
+                }
             }
         }
+
     }
+    if (isReleaseVersion())
+        repositories {
+            maven {
+                name = "myRepo"
+                // change to point to your repo, e.g. http://my.org/repo
+                url = layout.buildDirectory.dir('repo')
+                metadataSources {
+                    gradleMetadata()
+                }
+            }
+        }
+}
+
+if (isReleaseVersion()) {
+    apply plugin: 'signing'
+
+    group "org.taack.cad"
+
+    afterEvaluate {
+//        artifacts {
+//            archives sourcesJar
+//        }
+
+        signing {
+            required { isReleaseVersion() && gradle.taskGraph.hasTask("publish") }
+            sign publishing.publications.maven
+        }
+    }
+
+    tasks.withType(Sign).configureEach {
+        onlyIf { isReleaseVersion() }
+    }
+//    //do not generate extra load on Nexus with new staging repository if signing fails
+//    tasks.withType(InitializeNexusStagingRepository).configureEach {
+//        shouldRunAfter(tasks.withType(Sign))
+//    }
 }
 
 tasks.withType(GenerateModuleMetadata) {
