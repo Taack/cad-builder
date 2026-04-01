@@ -87,7 +87,7 @@ class CadDslVisitor implements ICadDslVisitor {
         @Override
         MemorySegment makeWireAdd(Vec2d fromLocal) {
             Tr.cur("Edge2d from: $fromLocal, to: $to")
-            return handle_Geom2d_TrimmedCurve__GCE2d_MakeSegment__p1_p2((fromVec2d + fromLocal).toGpPnt2d(), (fromVec2d + to).toGpPnt2d())
+            return handle_Geom2d_TrimmedCurve__GCE2d_MakeSegment__p1_p2((fromLocal).toGpPnt2d(), (to).toGpPnt2d())
         }
 
         @Override
@@ -130,7 +130,7 @@ class CadDslVisitor implements ICadDslVisitor {
         @Override
         MemorySegment makeWireAdd(Vec2d fromLocal) {
             Tr.cur("Arc2d from: $fromLocal, to: $to")
-            return handle_Geom2d_TrimmedCurve__GCE2d_MakeArcOfCircle__p1_p2_p3((fromVec2d + fromLocal).toGpPnt2d(), (fromVec2d + center).toGpPnt2d(), (fromVec2d + to).toGpPnt2d())
+            return handle_Geom2d_TrimmedCurve__GCE2d_MakeArcOfCircle__p1_p2_p3((fromLocal).toGpPnt2d(), (center).toGpPnt2d(), (to).toGpPnt2d())
         }
 
         @Override
@@ -253,44 +253,6 @@ class CadDslVisitor implements ICadDslVisitor {
         }
     }
 
-//    class Rectangle2d implements ClosedShape2D {
-//        final double sX
-//        final double sY
-//        final Vec2d pos
-//
-//        Rectangle2d(double sX, double sY, Vec2d pos, Vec2d dir) {
-//            this.sX = sX
-//            this.sY = sY
-//            this.pos = pos
-//        }
-//
-//        @Override
-//        MemorySegment make2dCurve() {
-//            def MW = new_BRepBuilderAPI_MakeWire()
-//
-//            Vec2d p1v = pos - new Vec2d(-sX / 2, -sY / 2)
-//            Vec2d p2v = pos - new Vec2d(sX / 2, -sY / 2)
-//            Vec2d p3v = pos - new Vec2d(sX / 2, sY / 2)
-//            Vec2d p4v = pos - new Vec2d(-sX / 2, sY / 2)
-//
-//            MemorySegment p1 = p1v.toGpPnt2d()
-//            MemorySegment p2 = p2v.toGpPnt2d()
-//            MemorySegment p3 = p3v.toGpPnt2d()
-//            MemorySegment p4 = p4v.toGpPnt2d()
-//
-//            def e1 = handle_Geom2d_Line__GCE2d_MakeLine__p1_p2(p1, p2)
-//            _BRepBuilderAPI_MakeWire__Add__BRepBuilderAPI_MakeEdge(MW, new_BRepBuilderAPI_MakeEdge__Geom2d_Curve_Geom_Surface_p1_p2(e1, surf, 0d, gp_Pnt2d__Distance__p1_p2(p1, p2)))
-//            def e2 = handle_Geom2d_Line__GCE2d_MakeLine__p1_p2(p2, p3)
-//            _BRepBuilderAPI_MakeWire__Add__BRepBuilderAPI_MakeEdge(MW, new_BRepBuilderAPI_MakeEdge__Geom2d_Curve_Geom_Surface_p1_p2(e2, surf, 0d, gp_Pnt2d__Distance__p1_p2(p2, p3)))
-//            def e3 = handle_Geom2d_Line__GCE2d_MakeLine__p1_p2(p3, p4)
-//            _BRepBuilderAPI_MakeWire__Add__BRepBuilderAPI_MakeEdge(MW, new_BRepBuilderAPI_MakeEdge__Geom2d_Curve_Geom_Surface_p1_p2(e3, surf, 0d, gp_Pnt2d__Distance__p1_p2(p3, p4)))
-//            def e4 = handle_Geom2d_Line__GCE2d_MakeLine__p1_p2(p4, p1)
-//            _BRepBuilderAPI_MakeWire__Add__BRepBuilderAPI_MakeEdge(MW, new_BRepBuilderAPI_MakeEdge__Geom2d_Curve_Geom_Surface_p1_p2(e4, surf, 0d, gp_Pnt2d__Distance__p1_p2(p4, p1)))
-//
-//            return MW
-//        }
-//    }
-
     @Override
     void visitFrom(Vec pos) {
         Tr.ind("visitFrom $pos")
@@ -330,17 +292,14 @@ class CadDslVisitor implements ICadDslVisitor {
         currentSurface = handle_Geom_Surface__TopoDS_Face(face)
 
         if (!openShape2dList.empty) {
-            Vec2d pos = new Vec2d()//fromVec2d ?: new Vec2d()
+            Vec2d pos = fromVec2d ?: new Vec2d()
 
             def makeWire = new_BRepBuilderAPI_MakeWire()
             for (OpenShape2D s2d in openShape2dList) {
                 def trimmedCurve = s2d.makeWireAdd(pos)
                 pos = s2d.to
 
-//            def arcEdge = new_TopoDS_Edge__BRepBuilderAPI_MakeEdge__Geom2d_Curve_Geom_Surface(trimmedCurve, handle_Geom_Plan__gp_Pln(new Vec(0, 1, 0).toGpPln()))
-//                def arcEdge = new_TopoDS_Edge__BRepBuilderAPI_MakeEdge2d__Geom2d_Curve(trimmedCurve)
                 _BRepBuilderAPI_MakeWire__Add__BRepBuilderAPI_MakeEdge(makeWire, new_BRepBuilderAPI_MakeEdge__Geom2d_Curve_Geom_Surface(trimmedCurve, currentSurface))
-//                _BRepBuilderAPI_MakeWire__Add__TopoDS_Edge(makeWire, arcEdge)
             }
 
 
@@ -352,41 +311,13 @@ class CadDslVisitor implements ICadDslVisitor {
             for (ClosedShape2D s2d in closedShape2dList) {
                 def c = s2d.make2dCurve()
                 def makeWire = new_BRepBuilderAPI_MakeWire()
-
-                //        closedShape2dList.each {
-//            def aline = it.make2dCurve()
-//            def MW = new_BRepBuilderAPI_MakeWire()
-////            def c = new_gp_Circ2d__ax2d_r(new_gp_Ax2d__pt_dir(it.pos.toGpPnt2d(), it.pos.toGpDir2d()), it.radius)
-////            def aline = handle_Geom2d_Circle__GCE2d_MakeCircle__cir2d(c)
-            _BRepBuilderAPI_MakeWire__Add__BRepBuilderAPI_MakeEdge(makeWire, new_BRepBuilderAPI_MakeEdge__Geom2d_Curve_Geom_Surface(c, currentSurface))
+                _BRepBuilderAPI_MakeWire__Add__BRepBuilderAPI_MakeEdge(makeWire, new_BRepBuilderAPI_MakeEdge__Geom2d_Curve_Geom_Surface(c, currentSurface))
                 makeWires << makeWire
-//            _BRepBuilderAPI_MakeFace__Init(makeFace, surf, 0, 0.01d)
-//            _BRepBuilderAPI_MakeFace__Add__BRepBuilderAPI_MakeWire(makeFace, MW)
-//            def FP = TopoDS_Face__BRepBuilderAPI_MakeFace__Face(makeFace)
-//            _BRepLib__BuildCurves3d__TopoDS_Shape FP
-//
-////        def CurvePoles = new_TColgp_Array1OfPnt__Low_Up(1,3)
-////        _TColgp_Array1OfPnt__Ar_Pt_Indx(CurvePoles, new Vec(150,0,150).toGpPnt(), 1)
-////        _TColgp_Array1OfPnt__Ar_Pt_Indx(CurvePoles, new Vec(200,100,150).toGpPnt(), 2)
-////        _TColgp_Array1OfPnt__Ar_Pt_Indx(CurvePoles, new Vec(150,200,150).toGpPnt(), 3)
-////        def curve = handle_Geom_BezierCurve__TColgp_Array1OfPnt(CurvePoles)
-////        def E = new_TopoDS_Edge__BRepBuilderAPI_MakeEdge__Geom_Curve curve
-////        def W = new_TopoDS_Wire__BRepBuilderAPI_MakeWire__TopoDS_Edge1 E
-//
-////        def MKDP = new_BRepFeat_MakePipe__Sbase_Pbase_Skface_Spine_Fuse_Modify(shape,FP,face,W,0,1)
-//
-//            def MKDP = new_BRepFeat_MakeDPrism__Sbase_Pbase_Skface_Angle_Fuse_Modify(shape, FP, surf, 0, 0, 1)
-//            _BRepFeat_MakeDPrism__Perform__Height(MKDP, -(direction.z + direction.y + direction.x) * depth.toDouble())
-////            _BRepFeat_MakeDPrism__Perform__Height(MKDP, depth.toDouble())
-////        _BRepFeat_MakePipe__Perform(MKDP)
-//            shape = new_TopoDS_Shape__Shape__BRepBuilderAPI_MakeShape MKDP
-//        }
-
             }
             closedShape2dList.clear()
         }
-//        fromVec2d = pos
         Tr.dec("visitFromEnd $fromVec2d")
+//        fromVec2d = null
     }
 
     @Override
@@ -469,6 +400,13 @@ class CadDslVisitor implements ICadDslVisitor {
 //        shape = null
     }
 
+    private void popShape() {
+        boolShapes.pop()
+        if (!boolShapes.peek().empty) boolShapes.peek().removeFirst()
+        boolShapes.peek().addFirst(shape)
+
+    }
+
     @Override
     void visitFuseEnd() {
         if (boolShapes.peek().empty) return
@@ -479,9 +417,7 @@ class CadDslVisitor implements ICadDslVisitor {
             firstShape = new_TopoDS_Shape__brep_algoapi_fuse__s1_s2(firstShape, otherShape)
         }
         shape = firstShape
-        boolShapes.pop()
-        boolShapes.peek().removeFirst()
-        boolShapes.peek().addFirst(shape)
+        popShape()
         Tr.dec("visitFuseEnd $shape")
     }
 
@@ -505,20 +441,8 @@ class CadDslVisitor implements ICadDslVisitor {
             firstShape = new_TopoDS_Shape__brep_algoapi_common__s1_s2(firstShape, otherShape)
         }
         shape = firstShape
-        boolShapes.pop()
-        boolShapes.peek().removeFirst()
-        boolShapes.peek().addFirst(shape)
+        popShape()
         Tr.dec("visitCommonEnd")
-    }
-
-    @Override
-    void visitMirrorWire2d(Vec2d pos, Vec2d dir) {
-        visitMirror(new Vec(pos), new Vec(dir))
-    }
-
-    @Override
-    void visitMirrorWire(Vec pos, Vec dir) {
-        visitMirror(pos, dir)
     }
 
     @Override
@@ -739,74 +663,22 @@ class CadDslVisitor implements ICadDslVisitor {
         openShapeList << new Arc(to, via)
     }
 
-//    @Override
-//    void visitToFace() {
-//        Tr.cur("visitToFace: makeWires: $makeWires")
-//        MemorySegment wire = ref_TopoDS_Wire__BRepBuilderAPI_MakeWire__Wire(makeWires.first())
-//        face = new_TopoDS_Face__BRepBuilderAPI_MakeFace__TopoDS_Wire(wire)
-//        if (makeWires.size() > 1) {
-//            def builder = new_BRep_Builder()
-//            for (MemorySegment w in makeWires[1..makeWires.size() - 1]) {
-//                MemorySegment wire2 = ref_TopoDS_Shape__BRepBuilderAPI_MakeWire__Shape(w)
-//                _TopoDS_Builder__Add__resTopoDS_Shape_toAddTopoDS_Shape(builder, face, wire2)
-//            }
-//        }
-//    }
-
     @Override
     void visitToFace() {
         Tr.cur("visitToFace: makeWires: $makeWires")
-//        MemorySegment wire = ref_TopoDS_Wire__BRepBuilderAPI_MakeWire__Wire(makeWires.first())
-//        face = new_TopoDS_Face__BRepBuilderAPI_MakeFace__TopoDS_Wire(wire)
-//        if (makeWires.size() > 1) {
-            def builder = new_BRep_Builder()
-            for (MemorySegment w in makeWires) {
-//            for (MemorySegment w in makeWires[1..makeWires.size() - 1]) {
-                MemorySegment wire2 = ref_TopoDS_Shape__BRepBuilderAPI_MakeWire__Shape(w)
-                _TopoDS_Builder__Add__resTopoDS_Shape_toAddTopoDS_Shape(builder, face, wire2)
-            }
-//        }
+        def builder = new_BRep_Builder()
+        for (MemorySegment w in makeWires) {
+            MemorySegment wire2 = ref_TopoDS_Shape__BRepBuilderAPI_MakeWire__Shape(w)
+            _TopoDS_Builder__Add__resTopoDS_Shape_toAddTopoDS_Shape(builder, face, wire2)
+        }
     }
-//
-//    @Override
-//    void visitToFaceFrom2d() {
-//        Tr.cur("visitToFaceFrom2d: makeWires: $makeWires")
-////        MemorySegment wire = ref_TopoDS_Wire__BRepBuilderAPI_MakeWire__Wire(makeWires.first())
-////        face = new_TopoDS_Face__BRepBuilderAPI_MakeFace__TopoDS_Wire(wire)
-//        face = new_TopoDS_Face__BRepBuilderAPI_MakeFace__gp_Pln(direction.toGpPln(0))
-////        face = new_TopoDS_Face__BRepBuilderAPI_MakeFace__TopoDS_Wire(wire)
-//        if (makeWires.size() > 0) {
-//            def builder = new_BRep_Builder()
-//            for (MemorySegment w in makeWires[0..makeWires.size() - 1]) {
-//                MemorySegment wire2 = ref_TopoDS_Shape__BRepBuilderAPI_MakeWire__Shape(w)
-//                _TopoDS_Builder__Add__resTopoDS_Shape_toAddTopoDS_Shape(builder, face, wire2)
-//            }
-//        }
-//    }
 
-//    @Override
-//    void visitToFaceFrom2d() {
-//        Tr.cur("visitToFaceFrom2d: makeWires: $makeWires")
-//        MemorySegment wire = ref_TopoDS_Wire__BRepBuilderAPI_MakeWire__Wire(makeWires.first())
-//        face = new_TopoDS_Face__BRepBuilderAPI_MakeFace__TopoDS_Wire(wire)
-////        face = new_TopoDS_Face__BRepBuilderAPI_MakeFace__gp_Pln(new_gp_Pln__pt_dir(fromVec.toGpPnt(), direction.toGpDir()))
-//        if (makeWires.size() > 1) {
-//            def builder = new_BRep_Builder()
-//            for (MemorySegment w in makeWires[1..makeWires.size() - 1]) {
-//                MemorySegment wire2 = ref_TopoDS_Shape__BRepBuilderAPI_MakeWire__Shape(w)
-//                _TopoDS_Builder__Add__resTopoDS_Shape_toAddTopoDS_Shape(builder, face, wire2)
-//            }
-//        }
-//    }
     @Override
     void visitToFaceFrom2d() {
         Tr.cur("visitToFaceFrom2d: makeWires: $makeWires")
         MemorySegment wire = ref_TopoDS_Wire__BRepBuilderAPI_MakeWire__Wire(makeWires.first())
         face = new_TopoDS_Face__BRepBuilderAPI_MakeFace__TopoDS_Wire(wire)
         if (makeWires.size() > 1) {
-//            def face = new_TopoDS_Face()
-//            _TopoDS_Shape__Free(face)
-//         face = new_TopoDS_Face__BRepBuilderAPI_MakeFace__gp_Pln(new_gp_Pln__pt_dir(fromVec.toGpPnt(), direction.toGpDir()))
             def builder = new_BRep_Builder()
             for (MemorySegment w in makeWires[1..makeWires.size() - 1]) {
                 MemorySegment wire2 = ref_TopoDS_Shape__BRepBuilderAPI_MakeWire__Shape(w)
@@ -830,42 +702,15 @@ class CadDslVisitor implements ICadDslVisitor {
         if (!this.shape) this.shape = shape
     }
 
-//    @Override
-//    void visitPrism(Vec dir, boolean cut) {
-//        def shape = new_TopoDS_Shape__BRepPrimAPI_MakePrism__TopoDS_Face_gp_Vec(face, dir.toGpVec())
-//        Tr.cur "prism($dir) from: $fromVec, direction: $direction, directionNormal: $directionNormal, shape: $shape"
-//
-//        _BRepLib__BuildCurves3d__TopoDS_Shape(face)
-////        def MKDP = new_BRepFeat_MakeDPrism__Sbase_Pbase_Skface_Angle_Fuse_Modify(shape, face, currentSurface, 0, 0, 1)
-////        _BRepFeat_MakeDPrism__Perform__Height(MKDP, dir.z + dir.y + dir.x)
-////        def shape = new_TopoDS_Shape__Shape__BRepBuilderAPI_MakeShape MKDP
-//        if (this.shape) {
-////            visualize(shape)
-//            Tr.cur "cut: $cut"
-//            shape = cut ? new_TopoDS_Shape__bBRepAlgoAPI_Cut__s1_s2(this.shape, shape) : new_TopoDS_Shape__brep_algoapi_fuse__s1_s2(this.shape, shape)//(shape, this.shape)
-//            boolShapes.peek() << shape
-//        }
-//
-//
-//        face = null
-//        makeWires.clear()
-//        this.shape = shape
-////        visualize(this.shape)
-//    }
     @Override
     void visitPrism(Vec dir, boolean cut) {
         def shape = new_TopoDS_Shape__BRepPrimAPI_MakePrism__TopoDS_Face_gp_Vec(face, dir.toGpVec())
         Tr.cur "prism($dir) from: $fromVec, direction: $direction, directionNormal: $directionNormal, shape: $shape"
 
-//        _BRepLib__BuildCurves3d__TopoDS_Shape(shape)
-//        def MKDP = new_BRepFeat_MakeDPrism__Sbase_Pbase_Skface_Angle_Fuse_Modify(shape, face, currentSurface, 0, 0, 1)
-//        _BRepFeat_MakeDPrism__Perform__Height(MKDP, dir.z + dir.y + dir.x)
-//        def shape = new_TopoDS_Shape__Shape__BRepBuilderAPI_MakeShape MKDP
         if (this.shape) {
-//            visualize(shape)
             Tr.cur "cut: $cut"
             if (cut) {
-                shape = new_TopoDS_Shape__bBRepAlgoAPI_Cut__s1_s2(this.shape, shape) //: new_TopoDS_Shape__brep_algoapi_fuse__s1_s2(this.shape, shape)
+                shape = new_TopoDS_Shape__bBRepAlgoAPI_Cut__s1_s2(this.shape, shape)
             } else {
                 def los = new_TopTools_ListOfShape()
                 _TopTools_ListOfShape__Append__TopoDS_Shape(los, shape)
@@ -874,22 +719,15 @@ class CadDslVisitor implements ICadDslVisitor {
             boolShapes.peek() << shape
         }
 
-
         face = null
         makeWires.clear()
         this.shape = shape
-//        visualize(this.shape)
     }
 
     @Override
     void visitPrism(double high, boolean cut) {
 
         visitPrism(direction * high, cut)
-    }
-
-    @Override
-    void visitMirror(Vec2d pos, Vec2d dir) {
-        visitMirror(new Vec(pos), new Vec(dir))
     }
 
     private MemorySegment addCurrentWireNative(MemorySegment wireNative = null) {
@@ -902,28 +740,6 @@ class CadDslVisitor implements ICadDslVisitor {
         ret
     }
 
-//    MemorySegment toShape() {
-//        if (shape) shape
-//        else if (face) face
-//        else ref_TopoDS_Shape__BRepBuilderAPI_MakeWire__Shape(addCurrentWireNative())
-//    }
-
-    @Override
-    void visitMirror(Vec pt, Vec dir) {
-        Tr.cur("visitMirror($pt, $dir)")
-        def ax1 = new_gp_Ax1__p_dir(pt.toGpPnt(), dir.toGpDir())
-        def aTrsf = new_gp_Trsf()
-        _gp_Trsf__SetMirror__gp_Ax1(aTrsf, ax1)
-        def topoWire = ref_TopoDS_Wire__BRepBuilderAPI_MakeWire__Wire(addCurrentWireNative())
-        _TopoDS__Shape__Reverse(topoWire)
-        def aBRepTrsf = new_BRepBuilderAPI_Transform__TopoDS_Shape_gp_Trsf(topoWire, aTrsf, 0, 0)
-        def aMirroredWire = ref_TopoDS__Wire__TopoDS_Shape(new_TopoDS_Shape__Shape__BRepBuilderAPI_MakeShape(aBRepTrsf))
-        def mkWire = new_BRepBuilderAPI_MakeWire()
-        _BRepBuilderAPI_MakeWire__Add__TopoDS_Wire(mkWire, aMirroredWire)
-        mkWire = addCurrentWireNative(mkWire)
-        makeWires.pop()
-        makeWires.push(mkWire)
-    }
 
     @Override
     void visitDirection(Vec axis, Vec normal) {

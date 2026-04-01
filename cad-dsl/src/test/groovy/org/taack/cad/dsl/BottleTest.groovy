@@ -5,9 +5,9 @@ import org.junit.jupiter.api.Test
 import org.taack.cad.builder.Vec
 import org.taack.cad.builder.Vec2d
 
+import static java.lang.Math.PI
 import static org.taack.cad.dsl.CadDsl.cd
-import static org.taack.cad.dsl.CadDslSurface.*
-import static java.lang.Math.*
+
 @CompileStatic
 class BottleTest {
     static double myWidth = 50.0
@@ -19,22 +19,26 @@ class BottleTest {
     @CompileStatic
     static CadDslSolid mainBottleBody() {
 
-        Vec v1 = new Vec(-myWidth / 2, 0, 0)
-        Vec v11 = new Vec(0, -myThickness / 4, 0)
-        Vec v2 = v1 + v11
-        Vec v3 = v11 * 2
-        Vec v4 = -v1 + v11
-        Vec v5 = -v1
+        Vec2d v1 = new Vec2d(-myWidth / 2, 0)
+        Vec2d v11 = new Vec2d(0, -myThickness / 4)
+        Vec2d v2 = v1 + v11
+        Vec2d v3 = v11 * 2
+        Vec2d v4 = -v1 + v11
+        Vec2d v5 = -v1
+        Vec2d v6 = -v2
+        Vec2d v7 = -v3
+        Vec2d v8 = -v4
 
         cd().wireFrom(v1) {
             edge(v2)
             arc(v4, v3)
             edge(v5)
-        }.mirror(new Vec(), new Vec(1, 0, 0))
-                .toFace()
-                .prism(new Vec(myHeight)).topZ().fillet(myThickness / 12d).fuse {
-                    cylinder(myNeckRadius, myNeckHeight)
-                }.topZ().hollowedSolid(-myThickness / 50d)
+            edge(v6)
+            arc(v8, v7)
+            edge(v1)
+        }.toFace().prism(new Vec(myHeight)).topZ().fillet(myThickness / 12d).fuse {
+            cylinder(myNeckRadius, myNeckHeight)
+        }.topZ().hollowedSolid(-myThickness / 50d)
     }
 
 
@@ -95,7 +99,7 @@ class BottleTest {
     @Test
     void "Make Bottle Using Builder API"() {
         def cd = mainBottleBody()
-        cd = simpleThreading(cd)
+//        cd = simpleThreading(cd)
         cd.display()
     }
 

@@ -66,19 +66,11 @@ interface ICadDslVisitor {
 
     void visitPrism(double high, boolean cut)
 
-    void visitMirror(Vec2d pos, Vec2d dir)
-
-    void visitMirror(Vec pos, Vec dir)
-
     void visitDirection(Vec axis, Vec normal)
 
     void visitCommon()
 
     void visitCommonEnd()
-
-    void visitMirrorWire2d(Vec2d pos, Vec2d dir)
-
-    void visitMirrorWire(Vec pos, Vec dir)
 
     void visitFillet(Number length)
 
