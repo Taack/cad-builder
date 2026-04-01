@@ -8,7 +8,7 @@ plugins {
 }
 
 group = 'org.taack'
-version = '1.0-SNAPSHOT'
+version = '0.1'
 
 def OCCT78 = file("/usr/lib").absolutePath
 def nativeLibPath = file("${project.parent.projectDir}/cad-dsl/build/libs/nativeLib/shared").absolutePath
@@ -26,10 +26,6 @@ java {
     }
 }
 
-//application {
-//    mainClass = 'org.taack.Main'
-//    applicationDefaultJvmArgs = ["-Djava.library.path=" + OCCT78 + ":" + nativeLibPath + ":" + nativeLibPath2, "--enable-preview", "--enable-native-access=ALL-UNNAMED"]
-//}
 
 jextract.libraries {
     def occt = register('cad-dsl-native') {

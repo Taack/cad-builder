@@ -6,7 +6,7 @@ plugins {
 }
 
 group = 'org.taack'
-version = '1.0-SNAPSHOT'
+version = '0.1'
 
 def libs77 = "TKBO TKBRep TKBin TKBinL TKBinTObj TKBinXCAF TKBool TKCAF TKCDF TKDCAF\
  TKDraw TKExpress TKFeat TKFillet TKG2d TKG3d TKGeomAlgo TKGeomBase TKHLR\
