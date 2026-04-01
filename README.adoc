@@ -33,26 +33,33 @@ image::cad-builder.webp[]
 
 == Sample
 
-Get inspiration from CAD Query, but using Groovy DSL.
+Get inspiration from https://github.com/CadQuery/cadquery[CAD Query], but using Groovy DSL.
 
 .Sample Code
 [source,groovy]
 ----
 @Test
-void "Pillow Block With Counterbored Holes"() {
-    cb().box(length, height, thickness).topZ().rect(length - cboreInset, height - cboreInset) {
-        hole(cboreHoleDiameter)
-    }.center {
-        hole(centerHoleDia)
-    }.display()
+void "Pillow Block With Counterbored Holes and Prism"() {
+    cd().box(length, height, thickness).topZ().wireFrom() {
+        double rectSX = length - cboreInset
+        double rectSY = height - cboreInset
+        [[-rectSX / 2, -rectSY / 2], [0, rectSY],
+         [rectSX, 0], [0, -rectSY]].each { double cX, double cY ->
+            move(cX, cY)
+            circle(centerHoleDia)
+        }
+    }.toFace().hole(-cboreHoleDiameter).topZ().wireFrom() {
+        circle(centerHoleDia)
+    }.toFace().prism(cboreHoleDiameter).display()
 }
+
 ----
 
 
 WARNING: DSL is not definitive
 
 .Renderer
-image::https://github.com/Taack/cad-builder/blob/main/test3.png?raw=true[]
+image::https://github.com/Taack/cad-builder/blob/main/screenshot-sketch.webp?raw=true[]
 
 == Packages
 

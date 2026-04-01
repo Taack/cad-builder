@@ -40,21 +40,17 @@ class BlockTest {
     }
 
     @Test
-    void "Pillow Block With Counterbored Holes"() {
+    void "Pillow Block With Counterbored Holes and Prism"() {
         cd().box(length, height, thickness).topZ().wireFrom() {
             double rectSX = length - cboreInset
             double rectSY = height - cboreInset
-            move(new Vec2d(-(rectSX) / 2, -(rectSY) / 2))
+            [[-rectSX / 2, -rectSY / 2], [0, rectSY], [rectSX, 0], [0, -rectSY]].each { double cX, double cY ->
+                move(cX, cY)
+                circle(centerHoleDia)
+            }
+        }.toFace().hole(-cboreHoleDiameter).topZ().wireFrom() {
             circle(centerHoleDia)
-            move(new Vec2d(0, rectSY))
-            circle(centerHoleDia)
-            move(new Vec2d(rectSX, 0))
-            circle(centerHoleDia)
-            move(new Vec2d(0, -(rectSY)))
-            circle(centerHoleDia)
-        }.toFace().hole(new Vec(-cboreHoleDiameter)).topZ().wireFrom() {
-            circle(centerHoleDia)
-        }.toFace().hole(new Vec(-cboreHoleDiameter)).display()
+        }.toFace().prism(cboreHoleDiameter).display()
     }
 
     @Test
