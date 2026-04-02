@@ -28,7 +28,7 @@ interface ICadDslVisitor {
 
     void visitFuseEnd()
 
-    void visitFace(Vec direction)
+    void visitFace(Vec direction, Vec position)
 
     void display(String fileName)
 

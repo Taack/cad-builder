@@ -7,33 +7,33 @@ import org.taack.cad.builder.Vec
 class CadDslSolid implements CadDslBase {
     CadDslFace topDir(Vec dir) {}
 
-    CadDslFace topX() {
-        visitor.visitFace(new Vec(1, 0, 0))
+    CadDslFace topX(Vec pos = null) {
+        visitor.visitFace(new Vec(1, 0, 0), pos)
         new CadDslFace(visitor: visitor)
     }
 
-    CadDslFace topY() {
-        visitor.visitFace(new Vec(0, 1, 0))
+    CadDslFace topY(Vec pos = null) {
+        visitor.visitFace(new Vec(0, 1, 0), pos)
         new CadDslFace(visitor: visitor)
     }
 
-    CadDslFace topZ() {
-        visitor.visitFace(new Vec(1))
+    CadDslFace topZ(Vec pos = null) {
+        visitor.visitFace(new Vec(1), pos)
         new CadDslFace(visitor: visitor)
     }
 
-    CadDslFace butX() {
-        visitor.visitFace(new Vec(-1, 0, 0))
+    CadDslFace butX(Vec pos = null) {
+        visitor.visitFace(new Vec(-1, 0, 0), pos)
         new CadDslFace(visitor: visitor)
     }
 
-    CadDslFace butY() {
-        visitor.visitFace(new Vec(0, -1, 0))
+    CadDslFace butY(Vec pos = null) {
+        visitor.visitFace(new Vec(0, -1, 0), pos)
         new CadDslFace(visitor: visitor)
     }
 
-    CadDslFace butZ() {
-        visitor.visitFace(new Vec(-1))
+    CadDslFace butZ(Vec pos = null) {
+        visitor.visitFace(new Vec(-1), pos)
         new CadDslFace(visitor: visitor)
     }
 

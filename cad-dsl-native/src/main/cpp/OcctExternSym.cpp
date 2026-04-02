@@ -84,6 +84,8 @@
 #include <BRepFeat_MakeDPrism.hxx>
 #include <BRepBuilderAPI_MakeEdge2d.hxx>
 #include <BRepAlgoAPI_Common.hxx>
+#include <Geom_Line.hxx>
+#include <GeomAPI_ExtremaCurveSurface.hxx>
 
 #include <string>       // std::string
 #include <sstream>      // std::ostringstream
@@ -246,6 +248,47 @@ extern "C" Geom2dAPI_InterCurveCurve* new_Geom2dAPI_InterCurveCurve__curve1_curv
     TRACE("");
     return new Geom2dAPI_InterCurveCurve(C1, C2);
 }
+
+extern "C" Geom_Line* new_Geom_Line__ax1(const gp_Ax1 &A1) {
+    TRACE("");
+    return new Geom_Line(A1);
+}
+
+extern "C" GeomAPI_ExtremaCurveSurface* new_GeomAPI_ExtremaCurveSurface__curve_surface(const Handle(Geom_Curve) &Curve, const Handle(Geom_Surface) &Surface) {
+    TRACE("");
+    return new GeomAPI_ExtremaCurveSurface(Curve, Surface);
+}
+
+extern "C" Standard_Integer i_GeomAPI_ExtremaCurveSurface__NbExtrema(GeomAPI_ExtremaCurveSurface& extrema) {
+    TRACE("");
+    return extrema.NbExtrema();
+}
+
+extern "C" Standard_Real r_GeomAPI_ExtremaCurveSurface__Distance__index(GeomAPI_ExtremaCurveSurface& extrema, const Standard_Integer Index) {
+    TRACE("");
+    return extrema.Distance(Index);
+}
+
+extern "C" Standard_Real* R6_GeomAPI_ExtremaCurveSurface__NbExtrema(GeomAPI_ExtremaCurveSurface& extrema, const Standard_Integer Index) {
+    TRACE("");
+    gp_Pnt p1;
+    gp_Pnt p2;
+
+    extrema.Points (Index, p1, p2);
+
+    Standard_Real p1x = p1.X();
+    Standard_Real p1y = p1.Y();
+    Standard_Real p1z = p1.Z();
+    Standard_Real p2x = p2.X();
+    Standard_Real p2y = p2.Y();
+    Standard_Real p2z = p2.Z();
+
+    Standard_Real* res = new Standard_Real[6] {p1x, p1y, p1x, p2x, p2y, p2x};
+    return res;
+
+}
+
+
 
 extern "C" Standard_Integer int_Geom2dAPI_InterCurveCurve__NbPoints(const Geom2dAPI_InterCurveCurve &inter_curve_curve) {
     TRACE("");

@@ -98,6 +98,8 @@ int visualize(void*);
 #define Geom_BezierCurve void
 #define BRepFeat_MakePipe void
 #define BRepFeat_MakeDPrism void
+#define Geom_Line void
+#define GeomAPI_ExtremaCurveSurface void
 
 /*
 
@@ -162,6 +164,16 @@ void _Geom2d_TrimmedCurve__Reverse(Handle(Geom2d_TrimmedCurve)* curve);
 Handle(Geom2d_Circle)* handle_Geom2d_Circle__GCE2d_MakeCircle__cir2d(gp_Circ2d *cir2d);
 
 Geom2dAPI_InterCurveCurve* new_Geom2dAPI_InterCurveCurve__curve1_curve2(const Handle(Geom2d_Curve)* C1, const Handle(Geom2d_Curve)* C2);
+
+Geom_Line* new_Geom_Line__ax1(const gp_Ax1 *A1);
+
+GeomAPI_ExtremaCurveSurface* new_GeomAPI_ExtremaCurveSurface__curve_surface(const Handle(Geom_Curve) *Curve, const Handle(Geom_Surface) *Surface);
+
+Standard_Integer i_GeomAPI_ExtremaCurveSurface__NbExtrema(GeomAPI_ExtremaCurveSurface* extrema);
+
+Standard_Real r_GeomAPI_ExtremaCurveSurface__Distance__index(GeomAPI_ExtremaCurveSurface* extrema, const Standard_Integer Index);
+
+Standard_Real* R6_GeomAPI_ExtremaCurveSurface__NbExtrema(GeomAPI_ExtremaCurveSurface* extrema, const Standard_Integer Index);
 
 Standard_Integer int_Geom2dAPI_InterCurveCurve__NbPoints(const Geom2dAPI_InterCurveCurve *inter_curve_curve);
 
