@@ -36,7 +36,6 @@ class CadDslVisitor implements ICadDslVisitor {
     final List<MemorySegment> makeWires = []
     MemorySegment currentSurface
     Stack<Vec> fromVecStack = new Stack<>()
-    private boolean mustReverseFace = false
 
     Vec getFromVec() {
         fromVecStack.empty() ? new Vec() : fromVecStack.peek()
@@ -60,6 +59,7 @@ class CadDslVisitor implements ICadDslVisitor {
 
     interface ClosedShape2D {
         MemorySegment make2dCurve()
+        boolean getReverse()
     }
 
     interface ClosedShape {
@@ -197,10 +197,12 @@ class CadDslVisitor implements ICadDslVisitor {
     class Circle2d implements ClosedShape2D {
         final Vec2d pos
         final double radius
+        final boolean reverse
 
-        Circle2d(Vec2d pos, double radius) {
+        Circle2d(Vec2d pos, double radius, boolean reverse) {
             this.pos = pos
             this.radius = radius
+            this.reverse = reverse
         }
 
         @Override
@@ -208,6 +210,7 @@ class CadDslVisitor implements ICadDslVisitor {
 //            def MW = new_BRepBuilderAPI_MakeWire()
             def c = new_gp_Circ2d__ax2d_r(new_gp_Ax2d__pt_dir(pos.toGpPnt2d(), new Vec2d(1, 0).toGpDir2d()), radius)
             def aline = handle_Geom2d_Circle__GCE2d_MakeCircle__cir2d(c)
+            if (reverse) _Geom2d_TrimmedCurve__Reverse(aline)
 //            _BRepBuilderAPI_MakeWire__Add__BRepBuilderAPI_MakeEdge(MW, new_BRepBuilderAPI_MakeEdge__Geom2d_Curve_Geom_Surface(aline, surf))
             return aline
         }
@@ -218,6 +221,7 @@ class CadDslVisitor implements ICadDslVisitor {
         final Vec2d dir
         final double majRadius
         final double minRadius
+        final boolean reverse = false
 
         Ellipse2d(Vec2d pos, Vec2d dir, double majRadius, double minRadius) {
             this.pos = pos
@@ -239,6 +243,7 @@ class CadDslVisitor implements ICadDslVisitor {
     class Circle implements ClosedShape {
         final Vec pos
         final double radius
+        final boolean reverse = false
 
         Circle(Vec pos, double radius) {
             this.pos = pos
@@ -300,7 +305,6 @@ class CadDslVisitor implements ICadDslVisitor {
             for (OpenShape2D s2d in openShape2dList) {
                 def trimmedCurve = s2d.makeWireAdd(pos)
                 pos = s2d.to
-
                 _BRepBuilderAPI_MakeWire__Add__BRepBuilderAPI_MakeEdge(makeWire, new_BRepBuilderAPI_MakeEdge__Geom2d_Curve_Geom_Surface(trimmedCurve, currentSurface))
             }
 
@@ -639,8 +643,8 @@ class CadDslVisitor implements ICadDslVisitor {
     }
 
     @Override
-    void visitCircle2d(Number radius) {
-        closedShape2dList << new Circle2d(fromVec2d, radius.toDouble())
+    void visitCircle2d(Number radius, boolean reverse) {
+        closedShape2dList << new Circle2d(fromVec2d, radius.toDouble(), reverse)
     }
 
 //    @Override
@@ -731,25 +735,27 @@ class CadDslVisitor implements ICadDslVisitor {
     }
 
     @Override
-    void visitReverse() {
-        mustReverseFace = true
-    }
-
-    @Override
     void visitToFaceFrom2d() {
         Tr.cur("visitToFaceFrom2d: makeWires: $makeWires")
         MemorySegment wire = ref_TopoDS_Wire__BRepBuilderAPI_MakeWire__Wire(makeWires.first())
 
         face = new_TopoDS_Face__BRepBuilderAPI_MakeFace__TopoDS_Wire(wire)
+
+//        if (makeWireReverse.contains(makeWires.first())) {
+//            Tr.cur "reverse face 1"
+//            _TopoDS__Shape__Reverse(face)
+//        }
+
         if (makeWires.size() > 1) {
-            if (mustReverseFace) {
-                _TopoDS__Shape__Reverse(face)
-                mustReverseFace = false
-            }
             def builder = new_BRep_Builder()
             for (MemorySegment w in makeWires[1..makeWires.size() - 1]) {
                 MemorySegment wire2 = ref_TopoDS_Shape__BRepBuilderAPI_MakeWire__Shape(w)
                 _TopoDS_Builder__Add__resTopoDS_Shape_toAddTopoDS_Shape(builder, face, wire2)
+//                if (makeWireReverse.contains(w)) {
+//                    Tr.cur "reverse face W"
+//                    _TopoDS__Shape__Reverse(face)
+//                }
+
             }
         }
     }

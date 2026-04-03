@@ -67,8 +67,17 @@ class CadDslEdge2d implements CadDslBase {
      * Draw a closed circle at the last position
      * @param diameter Diameter of the circle
      */
-    CadDslEdge2d circle(Number diameter) {
-        visitor.visitCircle2d(diameter)
+    CadDslEdge2d circle(Number diameter, boolean reverse = false) {
+        visitor.visitCircle2d(diameter, reverse)
+        this
+    }
+
+    /**
+     * Draw a closed circle at the last position
+     * @param diameter Diameter of the circle
+     */
+    CadDslEdge2d text(String fontPath, Number size, @DelegatesTo(value = CadDslEdge2dText, strategy = Closure.DELEGATE_FIRST) Closure c) {
+//        visitor.visitText(diameter)
         this
     }
 
@@ -119,10 +128,6 @@ class CadDslEdge2d implements CadDslBase {
         c.delegate = this
         c.call()
         visitor.visitClosedWireEnd()
-    }
-
-    void reverse() {
-        visitor.visitReverse()
     }
 
     void trimmed(CadDslEdge2d curve, Number from, Number to) {

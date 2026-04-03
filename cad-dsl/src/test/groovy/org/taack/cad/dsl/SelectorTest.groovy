@@ -30,18 +30,47 @@ class SelectorTest {
             circle(stud_diameter)
             move(0, 2 * stud_spacing)
             circle(stud_diameter)
-            move(- 2 * stud_spacing, 0)
+            move(-2 * stud_spacing, 0)
             circle(stud_diameter)
         }.toFace()
                 .prism(stud_height)
                 .butZ(new Vec(block_length / 2, block_length / 2, block_height - 2 * wall_thickness))
                 .wireFrom() {
-            circle(stud_diameter + wall_thickness)
-            reverse()
-            circle(stud_diameter)
-        }.toFace().prism(block_height - wall_thickness).display()
+                    circle(stud_diameter + wall_thickness)
+                    circle(stud_diameter, true)
+                }.toFace().prism(block_height - wall_thickness).display()
 
     }
 
-
+    @Test
+    void "Basic Box and Studs2"() {
+        cd().box(2 * block_length, block_length, block_height).butZ().hollowedSolid(-wall_thickness).topZ().wireFrom() {
+            to(stud_spacing, stud_spacing)
+            circle(stud_diameter)
+            move(2 * stud_spacing, 0)
+            circle(stud_diameter)
+            move(0, 2 * stud_spacing)
+            circle(stud_diameter)
+            move(-2 * stud_spacing, 0)
+            circle(stud_diameter)
+            to(5 * stud_spacing, stud_spacing)
+            circle(stud_diameter)
+            move(2 * stud_spacing, 0)
+            circle(stud_diameter)
+            move(0, 2 * stud_spacing)
+            circle(stud_diameter)
+            move(-2 * stud_spacing, 0)
+            circle(stud_diameter)
+        }.toFace()
+                .prism(stud_height)
+                .butZ(new Vec(block_length / 2, block_length / 2, block_height - 2 * wall_thickness))
+                .wireFrom() {
+                    to(2 * stud_spacing, 2 * stud_spacing)
+                    circle(stud_diameter + wall_thickness)
+                    circle(stud_diameter, true)
+                    to(6 * stud_spacing, 2 * stud_spacing)
+                    circle(stud_diameter + wall_thickness)
+                    circle(stud_diameter, true)
+                }.toFace().prism(block_height - wall_thickness).display()
+    }
 }

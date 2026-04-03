@@ -36,7 +36,7 @@ interface ICadDslVisitor {
 
     void visitCenterEnd()
 
-    void visitCircle2d(Number diameter)
+    void visitCircle2d(Number diameter, boolean reverse)
 
     void visitConstruct2d(@DelegatesTo(value = CadDslEdge2d, strategy = Closure.DELEGATE_FIRST) Closure c)
 
@@ -57,8 +57,6 @@ interface ICadDslVisitor {
     void visitArc(Vec to, Vec via)
 
     void visitToFace()
-
-    void visitReverse()
 
     void visitToFaceFrom2d()
 

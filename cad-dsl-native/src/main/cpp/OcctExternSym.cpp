@@ -87,6 +87,7 @@
 #include <Geom_Line.hxx>
 #include <GeomAPI_ExtremaCurveSurface.hxx>
 #include <BRepExtrema_DistShapeShape.hxx>
+#include <Graphic3d_Text.hxx>
 
 #include <string>       // std::string
 #include <sstream>      // std::ostringstream
@@ -1274,6 +1275,11 @@ extern "C" BRepAlgoAPI_Cut *new_BRepAlgoAPI_Cut__s1_s2(TopoDS_Shape &result, Top
     return cut;
 }
 
+/*
+
+Composed
+
+*/
 extern "C" Standard_Real *R7_BRepExtrema_DistShapeShape__s1_s2(const TopoDS_Shape &Shape1, const TopoDS_Shape &Shape2) {
     TRACE("");
     try {
@@ -1300,11 +1306,13 @@ extern "C" Standard_Real *R7_BRepExtrema_DistShapeShape__s1_s2(const TopoDS_Shap
     return new Standard_Real[7] {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, -20000000.0};
 }
 
-/*
+Graphic3d_Text* new_Graphic3d_Text__text_height_pos(const char *theText, const Standard_ShortReal theHeight, const gp_Pnt &thePoint) {
+    TRACE("");
+    Graphic3d_Text *grText = new Graphic3d_Text(theHeight);
+    grText->SetPosition(thePoint);
+    grText->SetText(theText);
+}
 
-Composed
-
-*/
 extern "C" TopoDS_Shape *new_TopoDS_Shape__bBRepAlgoAPI_Cut__s1_s2(TopoDS_Shape &result, TopoDS_Shape &tool) {
     TRACE("OBSOLETE");
     const auto cut = new BRepAlgoAPI_Cut(result, tool);
