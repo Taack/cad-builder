@@ -249,9 +249,9 @@ extern "C" Geom2dAPI_InterCurveCurve* new_Geom2dAPI_InterCurveCurve__curve1_curv
     return new Geom2dAPI_InterCurveCurve(C1, C2);
 }
 
-extern "C" Geom_Line* new_Geom_Line__ax1(const gp_Ax1 &A1) {
+extern "C" Handle(Geom_Line)* handle_Geom_Line__ax1(const gp_Ax1 &A1) {
     TRACE("");
-    return new Geom_Line(A1);
+    return new Handle(Geom_Line)(new Geom_Line(A1));
 }
 
 extern "C" GeomAPI_ExtremaCurveSurface* new_GeomAPI_ExtremaCurveSurface__curve_surface(const Handle(Geom_Curve) &Curve, const Handle(Geom_Surface) &Surface) {
@@ -265,16 +265,21 @@ extern "C" Standard_Integer i_GeomAPI_ExtremaCurveSurface__NbExtrema(GeomAPI_Ext
 }
 
 extern "C" Standard_Real r_GeomAPI_ExtremaCurveSurface__Distance__index(GeomAPI_ExtremaCurveSurface& extrema, const Standard_Integer Index) {
-    TRACE("");
+    TRACE2(std::ostringstream{} << "Index " << Index);
     return extrema.Distance(Index);
 }
 
 extern "C" Standard_Real* R6_GeomAPI_ExtremaCurveSurface__NbExtrema(GeomAPI_ExtremaCurveSurface& extrema, const Standard_Integer Index) {
-    TRACE("");
+    TRACE2(std::ostringstream{} << "Index " << Index);
     gp_Pnt p1;
     gp_Pnt p2;
 
-    extrema.Points (Index, p1, p2);
+    try {
+        extrema.Points(Index, p1, p2);
+    } catch(Standard_OutOfRange &e) {
+        TRACE(e.GetMessageString());
+        throw e;
+    }
 
     Standard_Real p1x = p1.X();
     Standard_Real p1y = p1.Y();
@@ -285,7 +290,6 @@ extern "C" Standard_Real* R6_GeomAPI_ExtremaCurveSurface__NbExtrema(GeomAPI_Extr
 
     Standard_Real* res = new Standard_Real[6] {p1x, p1y, p1x, p2x, p2y, p2x};
     return res;
-
 }
 
 
@@ -962,11 +966,11 @@ extern "C" BRepOffsetAPI_MakeThickSolid *new_BRepOffsetAPI_MakeThickSolid() {
 }
 
 extern "C" void _BRepOffsetAPI_MakeThickSolid__MakeThickSolidByJoin__TopoDS_Shape_TopTools_ListOfShape_thickness_tol(
-                                                      BRepOffsetAPI_MakeThickSolid *thick_solid, TopoDS_Shape *shape,
-                                                      const TopTools_ListOfShape *face_to_remove,
+                                                      BRepOffsetAPI_MakeThickSolid *thick_solid, TopoDS_Shape &shape,
+                                                      const TopTools_ListOfShape &face_to_remove,
                                                       Standard_Real thickness, Standard_Real tol) {
     TRACE("");
-    thick_solid->MakeThickSolidByJoin(*shape, *face_to_remove, thickness, tol);
+    thick_solid->MakeThickSolidByJoin(shape, face_to_remove, thickness, tol);
 }
 
 extern "C" Handle(Geom_CylindricalSurface) *handle_Geom_CylindricalSurface__ax2_radius(

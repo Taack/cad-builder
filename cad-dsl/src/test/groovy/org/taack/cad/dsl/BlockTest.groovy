@@ -88,7 +88,7 @@ class BlockTest {
             Vec2d p2 = new Vec2d(0, length)
             Vec2d p3 = new Vec2d(length, length)
             Vec2d p4 = new Vec2d(length, 0)
-            to p3
+            to p1
             edge(p4)
             edge(p3)
             edge(p2)
@@ -139,8 +139,8 @@ class BlockTest {
                     closedWire {
                         CadDslVisitor.Tr.cur "Could fix position ..."
                         [[1, 0], [1, 1], [0, 1], [0, 0]].each { double i2, double j2 ->
-                            double x2 = centerHoleDia * i2
-                            double y2 = centerHoleDia * j2
+                            double x2 = x + centerHoleDia * i2
+                            double y2 = y + centerHoleDia * j2
                             edge(new Vec2d(x2, y2))
                         }
                     }
@@ -153,8 +153,8 @@ class BlockTest {
                 to(new Vec2d(x, y))
                 closedWire {
                     [[1, 0], [1, 1], [0, 1], [0, 0]].each { double i2, double j2 ->
-                        double x2 = centerHoleDia * i2
-                        double y2 = centerHoleDia * j2
+                        double x2 = x + centerHoleDia * i2
+                        double y2 = y + centerHoleDia * j2
                         edge(new Vec2d(x2, y2))
                     }
                 }

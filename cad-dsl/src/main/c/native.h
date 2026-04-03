@@ -165,7 +165,7 @@ Handle(Geom2d_Circle)* handle_Geom2d_Circle__GCE2d_MakeCircle__cir2d(gp_Circ2d *
 
 Geom2dAPI_InterCurveCurve* new_Geom2dAPI_InterCurveCurve__curve1_curve2(const Handle(Geom2d_Curve)* C1, const Handle(Geom2d_Curve)* C2);
 
-Geom_Line* new_Geom_Line__ax1(const gp_Ax1 *A1);
+Handle(Geom_Line)* handle_Geom_Line__ax1(const gp_Ax1 *A1);
 
 GeomAPI_ExtremaCurveSurface* new_GeomAPI_ExtremaCurveSurface__curve_surface(const Handle(Geom_Curve) *Curve, const Handle(Geom_Surface) *Surface);
 

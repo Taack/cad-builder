@@ -464,6 +464,7 @@ class CadDslVisitor implements ICadDslVisitor {
     void visitHollowedSolid(Number thickness) {
         def facesToRemove = new_TopTools_ListOfShape()
         if (face) {
+            Tr.cur("visitHollowedSolid $face")
             _TopTools_ListOfShape__Append__TopoDS_Shape(facesToRemove, face)
         }
         def aSolidMaker = new_BRepOffsetAPI_MakeThickSolid()
@@ -525,53 +526,63 @@ class CadDslVisitor implements ICadDslVisitor {
         Tr.cur("visitFace $direction $position")
         double positionMax = Double.NEGATIVE_INFINITY
         this.direction = direction
+        Vec fromVecToPush
+
         for (def aFaceExplorer = new_TopExp_Explorer__TopoDS_Shape_ToFind_ToAvoid(shape, ShapeEnum.TopAbs_FACE.ordinal(), ShapeEnum.TopAbs_SHAPE.ordinal());
              _TopExp_Explorer__More(aFaceExplorer);
              _TopExp_Explorer__Next(aFaceExplorer)) {
             def aFace = new_TopoDS_Face__TopExp_Explorer__Current(aFaceExplorer)
             def aSurface = handle_Geom_Surface__TopoDS_Face(aFace)
             if (int_Geom_Surface__is__Geom_Plane(aSurface) == 1) {
+                double aZ
                 if (position == null)  {
 //                def aPlan = handle_Geom_Plane__handle_Geom_Surface(aSurface)
 //                def aPnt = new_gp_Pnt__Geom_Plane(aPlan)
-
-                    def aPnt = new_gp_Pnt__CentreOfMass__TopoDS_Shape(aFace)
+                    MemorySegment aPnt = new_gp_Pnt__CentreOfMass__TopoDS_Shape(aFace)
+                    fromVecToPush = Vec.fromAPnt(aPnt)
+                    aZ = fromVecToPush.cord(direction)
 //                fromVecStack.pop()
 
-                    double aZ = Vec.fromAPnt(aPnt).cord(direction)
-
-                    if (aZ > positionMax) {
-                        if (fromVecStack.size() > 0) fromVecStack.pop()
-                        fromVecStack.push(Vec.fromAPnt(aPnt))
-                        Tr.cur "Face Selected"
-                        positionMax = aZ
-                        bounds = new SurfaceBounds(R4_Geom_Surface__Bounds(aSurface))
-                        def pt = gp_Pnt__Geom_Surface__Value(aSurface, 1d, 1d)
-                        ptParam11 = Vec.fromAPnt(pt)
-                        pt = gp_Pnt__Geom_Surface__Value(aSurface, 0d, 0d)
-                        ptParam00 = Vec.fromAPnt(pt)
-                        face = aFace
-                    }
-                    Tr.cur "aZ: $aZ, positionMax: $positionMax"
                 } else {
                     def ax1 = new_gp_Ax1__p_dir(position.toGpPnt(), direction.toGpDir())
-                    def line = new_Geom_Line__ax1(ax1)
+                    def line = handle_Geom_Line__ax1(ax1)
                     def extrema = new_GeomAPI_ExtremaCurveSurface__curve_surface(line, aSurface)
                     int nbExtrema = i_GeomAPI_ExtremaCurveSurface__NbExtrema(extrema)
+                    Tr.cur("nbExtrema: $nbExtrema")
                     if (nbExtrema > 0) {
                         double distance = Double.POSITIVE_INFINITY
                         for (int i = 1; i <= nbExtrema; i++) {
                             double extremaDistance = r_GeomAPI_ExtremaCurveSurface__Distance__index(extrema, i)
-                            if (extremaDistance < distance) {
+                            Tr.cur("extremaDistance: $extremaDistance, $i")
+
+                            if (extremaDistance <= distance) {
                                 distance = extremaDistance
                                 SurfaceExtrema surfaceExtrema = new SurfaceExtrema(R6_GeomAPI_ExtremaCurveSurface__NbExtrema(extrema, i))
+                                fromVecToPush = new Vec(surfaceExtrema.p1x, surfaceExtrema.p1y, surfaceExtrema.p1z)
+                                aZ = fromVecToPush.cord(direction)
                             }
                         }
-
                     }
                 }
+
+
+                if (aZ > positionMax) {
+                    Tr.cur "Face Selected"
+                    positionMax = aZ
+                    bounds = new SurfaceBounds(R4_Geom_Surface__Bounds(aSurface))
+                    def pt = gp_Pnt__Geom_Surface__Value(aSurface, 1d, 1d)
+                    ptParam11 = Vec.fromAPnt(pt)
+                    pt = gp_Pnt__Geom_Surface__Value(aSurface, 0d, 0d)
+                    ptParam00 = Vec.fromAPnt(pt)
+                    face = aFace
+                    if (fromVecStack.size() > 0) fromVecStack.pop()
+                    if (fromVecToPush) fromVecStack.push(fromVecToPush)
+                }
+                Tr.cur "aZ: $aZ, positionMax: $positionMax"
+
             }
         }
+
     }
 
     @Override
