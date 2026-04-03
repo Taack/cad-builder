@@ -525,7 +525,7 @@ class CadDslVisitor implements ICadDslVisitor {
     @Override
     void visitFace(Vec direction, Vec position) {
         Tr.cur("visitFace $direction $position")
-        double positionMax = Double.NEGATIVE_INFINITY
+        double positionMax = position == null ? Double.NEGATIVE_INFINITY : Double.POSITIVE_INFINITY
         this.direction = direction
         Vec fromVecToPush = null
 
@@ -550,11 +550,10 @@ class CadDslVisitor implements ICadDslVisitor {
                 } else {
                     def ax1 = new_gp_Ax1__p_dir(position.toGpPnt(), direction.toGpDir())
                     def line = handle_Geom_Line__ax1(ax1)
-                    def segment = new_TopoDS_Edge__BRepBuilderAPI_MakeEdge__Geom_Curve(line)//handle_Geom_TrimmedCurve__Geom_Curve_u1_u2(line, 0d, 0.2d))
+                    def segment = new_TopoDS_Edge__BRepBuilderAPI_MakeEdge__Geom_Curve(handle_Geom_TrimmedCurve__Geom_Curve_u1_u2(line, 0d, 0.2d))
                     SurfaceDistance d = new SurfaceDistance(segment, aFace)
                     aZ = d.dist
                     fromVecToPush = d.v2
-                    Tr.cur d.toString()
 //                    def extrema = new_GeomAPI_ExtremaCurveSurface__curve_surface(segment, aSurface)
 //                    int nbExtrema = i_GeomAPI_ExtremaCurveSurface__NbExtrema(extrema)
 //                    Tr.cur("nbExtrema: $nbExtrema")
@@ -590,8 +589,8 @@ class CadDslVisitor implements ICadDslVisitor {
 //                }
 
 
-//                if ((position == null && aZ > positionMax) || (position != null && aZ < positionMax)) {
-                if (aZ > positionMax) {
+                if ((position == null && aZ > positionMax) || (position != null && aZ < positionMax)) {
+//                if (aZ > positionMax) {
                     Tr.cur "Face Selected"
                     positionMax = aZ
                     bounds = new SurfaceBounds(R4_Geom_Surface__Bounds(aSurface))

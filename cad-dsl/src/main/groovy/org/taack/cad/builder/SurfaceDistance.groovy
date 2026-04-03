@@ -16,7 +16,6 @@ final class SurfaceDistance {
     final double dist
 
     SurfaceDistance(MemorySegment s1, MemorySegment s2) {
-        CadDslVisitor.Tr.cur("SurfaceDistance($s1, $s2)")
         MemorySegment m = R7_BRepExtrema_DistShapeShape__s1_s2(s1, s2)
         if (m) {
             double p1x = m.get(ValueLayout.JAVA_DOUBLE,0)
@@ -33,6 +32,7 @@ final class SurfaceDistance {
             v2 = new Vec()
             dist = Double.NEGATIVE_INFINITY
         }
+        CadDslVisitor.Tr.cur(this.toString())
     }
 
     @Override

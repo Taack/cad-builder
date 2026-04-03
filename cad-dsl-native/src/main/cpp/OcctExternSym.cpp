@@ -1289,6 +1289,7 @@ extern "C" Standard_Real *R7_BRepExtrema_DistShapeShape__s1_s2(const TopoDS_Shap
             const gp_Pnt pS1 = dist.PointOnShape1(1);
             const gp_Pnt pS2 = dist.PointOnShape2(1);
             Standard_Real d = dist.Value();
+            TRACE2(std::ostringstream{} << "d: " << d);
 
             Standard_Real* res = new Standard_Real[7] {pS1.X(), pS1.Y(), pS1.Z(), pS2.X(), pS2.Y(), pS2.Z(), d};
             return res;
