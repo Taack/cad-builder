@@ -86,6 +86,7 @@
 #include <BRepAlgoAPI_Common.hxx>
 #include <Geom_Line.hxx>
 #include <GeomAPI_ExtremaCurveSurface.hxx>
+#include <BRepExtrema_DistShapeShape.hxx>
 
 #include <string>       // std::string
 #include <sstream>      // std::ostringstream
@@ -1009,6 +1010,17 @@ extern "C" Standard_Real* R4_Geom_Surface__Bounds(const Handle(Geom_Surface) &S)
     Standard_Real V2;
 
     S->Bounds(U1, U2, V1, V2);
+
+    Standard_Boolean is_umin_inf = Precision::IsInfinite ( U1 );
+    Standard_Boolean is_umax_inf = Precision::IsInfinite ( U2 );
+    Standard_Boolean is_vmin_inf = Precision::IsInfinite ( V1 );
+    Standard_Boolean is_vmax_inf = Precision::IsInfinite ( V2 );
+
+    if (is_umin_inf) TRACE("U1 is infinite");
+    if (is_umax_inf) TRACE("U2 is infinite");
+    if (is_vmin_inf) TRACE("V1 is infinite");
+    if (is_vmax_inf) TRACE("V2 is infinite");
+
     Standard_Real* res = new Standard_Real[4] {U1, U2, V1, V2};
     return res;
 }
@@ -1260,6 +1272,31 @@ extern "C" BRepAlgoAPI_Cut *new_BRepAlgoAPI_Cut__s1_s2(TopoDS_Shape &result, Top
     cut->Build();
     cut->SimplifyResult();
     return cut;
+}
+
+extern "C" Standard_Real *R7_BRepExtrema_DistShapeShape__s1_s2(const TopoDS_Shape &Shape1, const TopoDS_Shape &Shape2) {
+    TRACE("");
+    try {
+        BRepExtrema_DistShapeShape dist = BRepExtrema_DistShapeShape(Shape1, Shape2, 0.01);
+        if (!dist.IsDone()) TRACE("NOT DONE");
+        if (!dist.Perform()) TRACE("NOT PERFORMED");
+
+        Standard_Integer nbSol = dist.NbSolution();
+
+        TRACE2(std::ostringstream{} << "nbSol" << nbSol);
+
+        if (nbSol > 0) {
+            const gp_Pnt pS1 = dist.PointOnShape1(1);
+            const gp_Pnt pS2 = dist.PointOnShape2(1);
+            Standard_Real d = dist.Value();
+
+            Standard_Real* res = new Standard_Real[7] {pS1.X(), pS1.Y(), pS1.Z(), pS2.X(), pS2.Y(), pS2.Z(), d};
+            return res;
+        }
+    } catch (Standard_ConstructionError &e) {
+        TRACE(e.GetMessageString());
+    }
+    return new Standard_Real[7] {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, -20000000.0};
 }
 
 /*

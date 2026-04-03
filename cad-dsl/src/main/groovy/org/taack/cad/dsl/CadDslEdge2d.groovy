@@ -121,6 +121,9 @@ class CadDslEdge2d implements CadDslBase {
         visitor.visitClosedWireEnd()
     }
 
+    void reverse() {
+        visitor.visitReverse()
+    }
 
     void trimmed(CadDslEdge2d curve, Number from, Number to) {
         visitor.visitTrimmed(curve, from, to)

@@ -23,7 +23,7 @@ class SelectorTest {
 
     @Test
     void "Basic Box and Studs"() {
-        cd().box(block_length, block_length, block_height).topZ().wireFrom() {
+        cd().box(block_length, block_length, block_height).butZ().hollowedSolid(-wall_thickness).topZ().wireFrom() {
             to(stud_spacing, stud_spacing)
             circle(stud_diameter)
             move(2 * stud_spacing, 0)
@@ -32,7 +32,14 @@ class SelectorTest {
             circle(stud_diameter)
             move(- 2 * stud_spacing, 0)
             circle(stud_diameter)
-        }.toFace().prism(stud_height).display().butZ(/*new Vec()*/).hollowedSolid(wall_thickness).display()
+        }.toFace()
+                .prism(stud_height)
+                .butZ(new Vec(1))
+                .wireFrom() {
+            circle(stud_diameter + wall_thickness)
+            reverse()
+            circle(stud_diameter)
+        }.toFace().prism(-stud_height).display()
 
     }
 

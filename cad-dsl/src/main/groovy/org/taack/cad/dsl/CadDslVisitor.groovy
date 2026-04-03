@@ -3,7 +3,7 @@ package org.taack.cad.dsl
 import groovy.transform.CompileStatic
 import org.taack.cad.builder.ShapeEnum
 import org.taack.cad.builder.SurfaceBounds
-import org.taack.cad.builder.SurfaceExtrema
+import org.taack.cad.builder.SurfaceDistance
 import org.taack.cad.builder.Vec
 import org.taack.cad.builder.Vec2d
 
@@ -36,6 +36,7 @@ class CadDslVisitor implements ICadDslVisitor {
     final List<MemorySegment> makeWires = []
     MemorySegment currentSurface
     Stack<Vec> fromVecStack = new Stack<>()
+    private boolean mustReverseFace = false
 
     Vec getFromVec() {
         fromVecStack.empty() ? new Vec() : fromVecStack.peek()
@@ -526,13 +527,16 @@ class CadDslVisitor implements ICadDslVisitor {
         Tr.cur("visitFace $direction $position")
         double positionMax = Double.NEGATIVE_INFINITY
         this.direction = direction
-        Vec fromVecToPush
+        Vec fromVecToPush = null
 
         for (def aFaceExplorer = new_TopExp_Explorer__TopoDS_Shape_ToFind_ToAvoid(shape, ShapeEnum.TopAbs_FACE.ordinal(), ShapeEnum.TopAbs_SHAPE.ordinal());
              _TopExp_Explorer__More(aFaceExplorer);
              _TopExp_Explorer__Next(aFaceExplorer)) {
             def aFace = new_TopoDS_Face__TopExp_Explorer__Current(aFaceExplorer)
             def aSurface = handle_Geom_Surface__TopoDS_Face(aFace)
+
+            SurfaceBounds sBounds = new SurfaceBounds(R4_Geom_Surface__Bounds(aSurface))
+            Tr.cur("sBounds $sBounds")
             if (int_Geom_Surface__is__Geom_Plane(aSurface) == 1) {
                 double aZ
                 if (position == null)  {
@@ -546,26 +550,47 @@ class CadDslVisitor implements ICadDslVisitor {
                 } else {
                     def ax1 = new_gp_Ax1__p_dir(position.toGpPnt(), direction.toGpDir())
                     def line = handle_Geom_Line__ax1(ax1)
-                    def extrema = new_GeomAPI_ExtremaCurveSurface__curve_surface(line, aSurface)
-                    int nbExtrema = i_GeomAPI_ExtremaCurveSurface__NbExtrema(extrema)
-                    Tr.cur("nbExtrema: $nbExtrema")
-                    if (nbExtrema > 0) {
-                        double distance = Double.POSITIVE_INFINITY
-                        for (int i = 1; i <= nbExtrema; i++) {
-                            double extremaDistance = r_GeomAPI_ExtremaCurveSurface__Distance__index(extrema, i)
-                            Tr.cur("extremaDistance: $extremaDistance, $i")
-
-                            if (extremaDistance <= distance) {
-                                distance = extremaDistance
-                                SurfaceExtrema surfaceExtrema = new SurfaceExtrema(R6_GeomAPI_ExtremaCurveSurface__NbExtrema(extrema, i))
-                                fromVecToPush = new Vec(surfaceExtrema.p1x, surfaceExtrema.p1y, surfaceExtrema.p1z)
-                                aZ = fromVecToPush.cord(direction)
-                            }
+                    def segment = new_TopoDS_Edge__BRepBuilderAPI_MakeEdge__Geom_Curve(line)//handle_Geom_TrimmedCurve__Geom_Curve_u1_u2(line, 0d, 0.2d))
+                    SurfaceDistance d = new SurfaceDistance(segment, aFace)
+                    aZ = d.dist
+                    fromVecToPush = d.v2
+                    Tr.cur d.toString()
+//                    def extrema = new_GeomAPI_ExtremaCurveSurface__curve_surface(segment, aSurface)
+//                    int nbExtrema = i_GeomAPI_ExtremaCurveSurface__NbExtrema(extrema)
+//                    Tr.cur("nbExtrema: $nbExtrema")
+//                    if (nbExtrema > 0) {
+//                        double distance = Double.NEGATIVE_INFINITY
+//                        for (int i = 1; i <= nbExtrema; i++) {
+////                            double extremaDistance = r_GeomAPI_ExtremaCurveSurface__Distance__index(extrema, i)
+////                            Tr.cur("extremaDistance: $extremaDistance, $i")
+////
+////                            if (extremaDistance <= distance) {
+////                                distance = extremaDistance
+////                                SurfaceExtrema surfaceExtrema = new SurfaceExtrema(R6_GeomAPI_ExtremaCurveSurface__NbExtrema(extrema, i))
+////                                fromVecToPush = new Vec(surfaceExtrema.p1x, surfaceExtrema.p1y, surfaceExtrema.p1z)
+////                                aZ = fromVecToPush.cord(direction)
+////                            }
+//
+////                            double extremaDistance = r_GeomAPI_ExtremaCurveSurface__Distance__index(extrema, i)
+////                            Tr.cur("extremaDistance: $extremaDistance, $i")
+//
+//                            if (aZ > distance) {
+////                                distance = extremaDistance
+////                                SurfaceExtrema surfaceExtrema = new SurfaceExtrema(R6_GeomAPI_ExtremaCurveSurface__NbExtrema(extrema, i))
+////                                fromVecToPush = new Vec(surfaceExtrema.p1x, surfaceExtrema.p1y, surfaceExtrema.p1z)
+//                                MemorySegment aPnt = new_gp_Pnt__CentreOfMass__TopoDS_Shape(aFace)
+//                                fromVecToPush = Vec.fromAPnt(aPnt)
+//
+//                                aZ = r_GeomAPI_ExtremaCurveSurface__Distance__index(extrema, i)
+//                                distance = aZ
+//                                Tr.cur "extrema: $aZ, fromVec = $fromVecToPush"
+//                            }
                         }
-                    }
-                }
+//                    }
+//                }
 
 
+//                if ((position == null && aZ > positionMax) || (position != null && aZ < positionMax)) {
                 if (aZ > positionMax) {
                     Tr.cur "Face Selected"
                     positionMax = aZ
@@ -707,11 +732,21 @@ class CadDslVisitor implements ICadDslVisitor {
     }
 
     @Override
+    void visitReverse() {
+        mustReverseFace = true
+    }
+
+    @Override
     void visitToFaceFrom2d() {
         Tr.cur("visitToFaceFrom2d: makeWires: $makeWires")
         MemorySegment wire = ref_TopoDS_Wire__BRepBuilderAPI_MakeWire__Wire(makeWires.first())
+
         face = new_TopoDS_Face__BRepBuilderAPI_MakeFace__TopoDS_Wire(wire)
         if (makeWires.size() > 1) {
+            if (mustReverseFace) {
+                _TopoDS__Shape__Reverse(face)
+                mustReverseFace = false
+            }
             def builder = new_BRep_Builder()
             for (MemorySegment w in makeWires[1..makeWires.size() - 1]) {
                 MemorySegment wire2 = ref_TopoDS_Shape__BRepBuilderAPI_MakeWire__Shape(w)

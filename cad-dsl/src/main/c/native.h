@@ -414,6 +414,8 @@ void _BRepOffsetAPI_MakeThickSolid__MakeThickSolidByJoin__TopoDS_Shape_TopTools_
                                                       const TopTools_ListOfShape *face_to_remove,
                                                       Standard_Real thickness, Standard_Real tol);
 
+
+
 Handle(Geom_CylindricalSurface) *handle_Geom_CylindricalSurface__ax2_radius(
     const gp_Ax3 *ax2, const Standard_Real radius);
 
@@ -517,6 +519,9 @@ const gp_Ax22d *ref_Position__gp_Circ2d__Position(gp_Circ2d *cir2d);
 const gp_Pnt2d *ref_gp_Pnt2d__gp_Ax22d__Location(gp_Ax22d *ax22d);
 
 BRepAlgoAPI_Cut *new_BRepAlgoAPI_Cut__s1_s2(TopoDS_Shape *result, TopoDS_Shape *tool);
+
+Standard_Real *R7_BRepExtrema_DistShapeShape__s1_s2(const TopoDS_Shape *Shape1, const TopoDS_Shape *Shape2);
+
 /*
 
 Composed

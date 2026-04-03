@@ -58,6 +58,8 @@ interface ICadDslVisitor {
 
     void visitToFace()
 
+    void visitReverse()
+
     void visitToFaceFrom2d()
 
     void visitRevolution(Vec from, Vec dir)
