@@ -15,7 +15,9 @@ extern \"C\"
 
 */
 
-int visualize(void*);
+//int visualize(void*);
+//int visualize2(void*);
+int visualize3(void*d);
 
 #define gp_Dir2d void
 #define gp_Pln void
@@ -100,6 +102,8 @@ int visualize(void*);
 #define BRepFeat_MakeDPrism void
 #define Geom_Line void
 #define GeomAPI_ExtremaCurveSurface void
+#define Graphic3d_Text void
+#define Standard_ShortReal float
 
 /*
 
@@ -521,6 +525,8 @@ const gp_Pnt2d *ref_gp_Pnt2d__gp_Ax22d__Location(gp_Ax22d *ax22d);
 BRepAlgoAPI_Cut *new_BRepAlgoAPI_Cut__s1_s2(TopoDS_Shape *result, TopoDS_Shape *tool);
 
 Standard_Real *R7_BRepExtrema_DistShapeShape__s1_s2(const TopoDS_Shape *Shape1, const TopoDS_Shape *Shape2);
+
+Graphic3d_Text* new_Graphic3d_Text__text_height_pos(const char *theText, const Standard_ShortReal theHeight, const gp_Pnt *thePoint);
 
 /*
 

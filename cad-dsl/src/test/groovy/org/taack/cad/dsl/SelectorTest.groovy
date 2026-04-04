@@ -71,6 +71,9 @@ class SelectorTest {
                     to(6 * stud_spacing, 2 * stud_spacing)
                     circle(stud_diameter + wall_thickness)
                     circle(stud_diameter, true)
-                }.toFace().prism(block_height - wall_thickness).display()
+                }.toFace()
+                .prism(block_height - wall_thickness)
+                .note("coucou", 20.0, new Vec(20))
+//                .display()
     }
 }

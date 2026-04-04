@@ -1306,11 +1306,12 @@ extern "C" Standard_Real *R7_BRepExtrema_DistShapeShape__s1_s2(const TopoDS_Shap
     return new Standard_Real[7] {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, -20000000.0};
 }
 
-Graphic3d_Text* new_Graphic3d_Text__text_height_pos(const char *theText, const Standard_ShortReal theHeight, const gp_Pnt &thePoint) {
+extern "C" Graphic3d_Text* new_Graphic3d_Text__text_height_pos(const char *theText, const Standard_ShortReal theHeight, const gp_Pnt &thePoint) {
     TRACE("");
     Graphic3d_Text *grText = new Graphic3d_Text(theHeight);
     grText->SetPosition(thePoint);
     grText->SetText(theText);
+    return grText;
 }
 
 extern "C" TopoDS_Shape *new_TopoDS_Shape__bBRepAlgoAPI_Cut__s1_s2(TopoDS_Shape &result, TopoDS_Shape &tool) {

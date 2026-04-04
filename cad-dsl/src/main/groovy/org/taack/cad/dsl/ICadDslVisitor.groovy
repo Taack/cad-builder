@@ -93,4 +93,6 @@ interface ICadDslVisitor {
     void visitClosedWire()
 
     void visitClosedWireEnd()
+
+    void visitNote(String text, Number charHeight, Vec pos)
 }

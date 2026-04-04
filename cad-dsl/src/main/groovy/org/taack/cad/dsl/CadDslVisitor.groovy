@@ -1,11 +1,7 @@
 package org.taack.cad.dsl
 
 import groovy.transform.CompileStatic
-import org.taack.cad.builder.ShapeEnum
-import org.taack.cad.builder.SurfaceBounds
-import org.taack.cad.builder.SurfaceDistance
-import org.taack.cad.builder.Vec
-import org.taack.cad.builder.Vec2d
+import org.taack.cad.builder.*
 
 import java.lang.foreign.Arena
 import java.lang.foreign.MemorySegment
@@ -524,6 +520,16 @@ class CadDslVisitor implements ICadDslVisitor {
     void visitClosedWireEnd() {
         visitFromEnd(fromVec2d)
         Tr.dec "visitClosedWireEnd dir: $direction, fromVec2d: $fromVec2d"
+    }
+
+    @Override
+    void visitNote(String text, Number charHeight, Vec pos) {
+//        MemorySegment s =
+        try (Arena a = Arena.ofConfined()) {
+            MemorySegment msText = a.allocateFrom(text)
+            MemorySegment g3DText = new_Graphic3d_Text__text_height_pos(msText, charHeight.toFloat(), pos.toGpPnt())
+        }
+        visualize3(shape)
     }
 
     @Override

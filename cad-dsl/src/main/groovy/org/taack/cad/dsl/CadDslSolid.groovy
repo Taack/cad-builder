@@ -74,6 +74,7 @@ class CadDslSolid implements CadDslBase {
     }
 
     CadDslSolid note(String text, Number height, Vec pos) {
-
+        visitor.visitNote(text, height, pos)
+        this
     }
 }

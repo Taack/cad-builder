@@ -12,6 +12,12 @@
 #include <V3d_View.hxx>
 #include <V3d_Viewer.hxx>
 
+//Visualize2 +++
+#include <Graphic3d_ArrayOfTriangleStrips.hxx>
+#include <V3d_AmbientLight.hxx>
+#include <V3d_DirectionalLight.hxx>
+//Visualize2 ---
+
 #ifdef _WIN32
   #include <WNT_WClass.hxx>
   #include <WNT_Window.hxx>
@@ -154,6 +160,66 @@ extern "C" int visualize(TopoDS_Shape* truc) {
   OSD::SetSignal(false);
 
   OcctAisHello aViewer(truc);
+#ifdef _WIN32
+  // WinAPI message loop
+  for (;;)
+  {
+    MSG aMsg = {};
+    if (GetMessageW (&aMsg, NULL, 0, 0) <= 0)
+    {
+      return 0;
+    }
+    TranslateMessage(&aMsg);
+    DispatchMessageW(&aMsg);
+  }
+#else
+  // X11 event loop
+  Handle(Xw_Window) aWindow = Handle(Xw_Window)::DownCast(aViewer.View()->Window());
+  Handle(Aspect_DisplayConnection) aDispConn = aViewer.View()->Viewer()->Driver()->GetDisplayConnection();
+  Display *anXDisplay = (Display *) aDispConn->GetDisplayAspect();
+  for (;;) {
+    XEvent anXEvent;
+    XNextEvent(anXDisplay, &anXEvent);
+    aWindow->ProcessMessage(aViewer, anXEvent);
+    if (anXEvent.type == ClientMessage && (Atom) anXEvent.xclient.data.l[0] == aDispConn->GetAtom(
+          Aspect_XA_DELETE_WINDOW)) {
+      return 0; // exit when window is closed
+    }
+  }
+#endif
+  return 0;
+}
+
+
+
+extern "C" int visualize3(TopoDS_Shape* truc) {
+  OSD::SetSignal(false);
+
+  OcctAisHello aViewer(truc);
+
+
+      Handle(Graphic3d_Structure) aStruct = new Graphic3d_Structure (aViewer.View()->Viewer()->StructureManager());
+      aStruct->SetVisual (Graphic3d_TOS_SHADING); // Type of structure
+
+      // Create a group of primitives  in this structure
+      Handle(Graphic3d_Group) aPrsGroup = aStruct->NewGroup();
+
+      // Fill this group with one quad of size 100
+      Handle(Graphic3d_ArrayOfTriangleStrips) aTriangles = new Graphic3d_ArrayOfTriangleStrips (4);
+      aTriangles->AddVertex (-100./2., -100./2., 0.0);
+      aTriangles->AddVertex (-100./2.,  100./2., 0.0);
+      aTriangles->AddVertex ( 100./2., -100./2., 0.0);
+      aTriangles->AddVertex ( 100./2.,  100./2., 0.0);
+
+      Handle(Graphic3d_AspectFillArea3d) anAspects = new Graphic3d_AspectFillArea3d (Aspect_IS_SOLID, Quantity_NOC_RED,
+                                                                                     Quantity_NOC_RED, Aspect_TOL_SOLID, 1.0f,
+                                                                                     Graphic3d_NameOfMaterial_Gold, Graphic3d_NameOfMaterial_Gold);
+      aPrsGroup->SetGroupPrimitivesAspect (anAspects);
+      aPrsGroup->AddPrimitiveArray (aTriangles);
+    aStruct->Display();
+
+
+
 #ifdef _WIN32
   // WinAPI message loop
   for (;;)
