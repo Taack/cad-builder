@@ -65,8 +65,8 @@ class SprocketTest {
         Vec2d p0
         Vec2d p1
         cd().wireFrom(base_center) {
-            def base = circle(tooth_radius / 2)
-            def t = trimmed(base, 0, PI)
+            def base = circle(2.0d * tooth_radius)
+            def t = trimmed(base, PI - (roller_contact_angle / 2.0d), PI)
             p0 = t.start
             p1 = t.end
             println "Determine the center of the profile circle p0: $p0, p1: $p1"

@@ -29,4 +29,14 @@ class Circle2d implements IClosedShape2d {
         if (reverse) _Geom2d_TrimmedCurve__Reverse(aline)
         return aline
     }
+
+
+    @Override
+    String toString() {
+        return "Circle2d{" +
+                "pos=" + pos +
+                ", radius=" + radius +
+                ", reverse=" + reverse +
+                '}';
+    }
 }

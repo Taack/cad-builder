@@ -44,8 +44,6 @@ interface ICadDslVisitor {
 
     Circle2d visitCircle2d(Number diameter, boolean reverse)
 
-    void visitConstruct2d(@DelegatesTo(value = CadDslEdge2d, strategy = Closure.DELEGATE_FIRST) Closure c)
-
     void visitMove(Vec2d to)
 
     void visitMove(Vec to)
@@ -84,8 +82,6 @@ interface ICadDslVisitor {
 
     Ellipse2d visitEllipse2d(Vec2d dir, Number majDia, Number minDia)
 
-    void visitThruSection()
-
     void visitWireFromSurface()
 
     void visitWireFromSurfaceEnd()
@@ -93,8 +89,6 @@ interface ICadDslVisitor {
     ITrimmable2d visitTrimmed(IClosedShape2d curve, Number from, Number tp, boolean reverse)
 
     ArcOfCircle2d visitTrimmed(Circle2d circle2d, Number from, Number tp, boolean reverse)
-
-    void visitThruSectionEnd()
 
     void visitCylindricalSurface(Number number)
 

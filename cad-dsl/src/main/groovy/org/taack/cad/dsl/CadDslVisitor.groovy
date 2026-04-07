@@ -282,11 +282,6 @@ class CadDslVisitor implements ICadDslVisitor {
     }
 
     @Override
-    void visitThruSection() {
-        currentSurface = null
-    }
-
-    @Override
     void visitWireFromSurface() {
 
     }
@@ -302,15 +297,10 @@ class CadDslVisitor implements ICadDslVisitor {
     }
 
     @Override
-    ArcOfCircle2d visitTrimmed(Circle2d circle2d, Number from, Number tp, boolean reverse) {
-        ArcOfCircle2d arc = new ArcOfCircle2d(circle2d, reverse)
+    ArcOfCircle2d visitTrimmed(Circle2d circle2d, Number from, Number to, boolean reverse) {
+        ArcOfCircle2d arc = new ArcOfCircle2d(circle2d, from.toDouble(), to.toDouble(), reverse)
         openShape2dList << arc
         arc
-    }
-
-    @Override
-    void visitThruSectionEnd() {
-
     }
 
     @Override
@@ -457,41 +447,6 @@ class CadDslVisitor implements ICadDslVisitor {
         Circle2d c = new Circle2d(fromVec2d, radius.toDouble(), reverse)
         closedShape2dList << c
         return c
-    }
-
-//    @Override
-//    void visitHole(Number depth) {
-//        def surf = handle_Geom_Surface__TopoDS_Face(face)
-//        def makeFace = new_BRepBuilderAPI_MakeFace()
-//        closedShape2dList.each {
-//            def aline = it.make2dCurve()
-//            def MW = new_BRepBuilderAPI_MakeWire()
-//            _BRepBuilderAPI_MakeFace__Init(makeFace, surf, 0, 0.01d)
-//            _BRepBuilderAPI_MakeFace__Add__BRepBuilderAPI_MakeWire(makeFace, MW)
-//            def FP = TopoDS_Face__BRepBuilderAPI_MakeFace__Face(makeFace)
-//            _BRepLib__BuildCurves3d__TopoDS_Shape FP
-//
-//
-//
-//            def MKDP = new_BRepFeat_MakeDPrism__Sbase_Pbase_Skface_Angle_Fuse_Modify(shape, FP, surf, 0, 0, 1)
-//            _BRepFeat_MakeDPrism__Perform__Height(MKDP, -(direction.z + direction.y + direction.x) * depth.toDouble())
-//            shape = new_TopoDS_Shape__Shape__BRepBuilderAPI_MakeShape MKDP
-//        }
-//        closedShape2dList.clear()
-//    }
-
-    @Override
-    void visitConstruct2d(@DelegatesTo(value = CadDslEdge2d, strategy = Closure.DELEGATE_FIRST) Closure c) {
-        if (c) {
-            oldFromVec2d = fromVec2d
-            openShape2dList.each {
-                fromVec2d = it.to
-                c.delegate = new CadDslEdge2d(visitor: this)
-                c.call()
-            }
-            fromVec2d = oldFromVec2d
-        }
-//        openShape2dList.clear()
     }
 
     @Override
