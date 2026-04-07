@@ -9,7 +9,7 @@ import java.lang.foreign.MemorySegment
 import static org.taack.occt.NativeLib.handle_Geom2d_TrimmedCurve__GCE2d_MakeArcOfCircle__p1_p2_p3
 
 @CompileStatic
-class Arc2d implements IOpenShape2D {
+class Arc2d implements IOpenShape2d {
     Vec2d to
     Vec2d center
 

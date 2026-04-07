@@ -2,6 +2,7 @@ package org.taack.cad.dsl
 
 import groovy.transform.CompileStatic
 import org.junit.jupiter.api.Test
+import org.taack.cad.builder.CurveIntersection2d
 import org.taack.cad.builder.Vec
 import org.taack.cad.builder.Vec2d
 
@@ -10,6 +11,7 @@ import java.lang.foreign.MemorySegment
 import static java.lang.Math.*
 import static org.taack.cad.dsl.CadDsl.cd
 import static org.taack.occt.NativeLib.*
+
 // https://algotopia.com/contents/opencascade/opencascade_sprocket
 @CompileStatic
 class SprocketTest {
@@ -56,141 +58,148 @@ class SprocketTest {
     /**
      * Build a single tooth
      */
-    MemorySegment buildTooth() {
+    void buildTooth() {
 
         println "Create a 2D arc to form the base of the tooth"
         Vec2d base_center = new Vec2d(pitch_circle_radius + (tooth_radius - roller_radius), 0)
-
+        Vec2d p0
+        Vec2d p1
         cd().wireFrom(base_center) {
-//            trimmed(circle(), 0, PI)
+            def base = circle(tooth_radius / 2)
+            def t = trimmed(base, 0, PI)
+            p0 = t.start
+            p1 = t.end
+            println "Determine the center of the profile circle p0: $p0, p1: $p1"
+            double x_distance = cos(roller_contact_angle / 2d) * (profile_radius + tooth_radius)
+            double y_distance = sin(roller_contact_angle / 2d) * (profile_radius + tooth_radius)
+            Vec2d profileCenter = new Vec2d(pitch_circle_radius - x_distance, y_distance)
+            println "x_distance $x_distance"
+            println "y_distance $y_distance"
+            println "Construct the profile circle"
+
+            to profileCenter
+            def profile = circle(p1.distance(profileCenter))
+            println "Construct the outer circle"
+            to new Vec2d()
+            def outer = circle(top_radius)
+            println """\
+            Calculate the intersection point(s) of the profile circle
+            and the outer circle.  If there are two points, pick the one closest
+            to the center of the profile circle""".stripIndent()
+
+            CurveIntersection2d inter = new CurveIntersection2d(profile, outer)
+            println inter
+
+            removeFromConstruction(base, profile, outer)
+
         }
 
 
-
-        def base_circle = new_gp_Circ2d__ax2d_r(new_gp_Ax2d__pt_dir(base_center.toGpPnt2d(), new_gp_Dir2d()),
-                tooth_radius)
-        def trimmed_base = handle_Geom2d_TrimmedCurve__GCE2d_MakeArcOfCircle__cir2d_ang1_ang2(base_circle, PI - (roller_contact_angle / 2.0), PI)
-        _Geom2d_TrimmedCurve__Reverse(trimmed_base)
-        def p0 = new_gp_Pnt2d__Geom2d_TrimmedCurve__StartPoint(trimmed_base)
-        def p1 = new_gp_Pnt2d__Geom2d_TrimmedCurve__EndPoint(trimmed_base)
-
-        println "Determine the center of the profile circle"
-        double x_distance = cos(roller_contact_angle / 2d) * (profile_radius + tooth_radius)
-        double y_distance = sin(roller_contact_angle / 2d) * (profile_radius + tooth_radius)
-        def profile_center = new Vec2d(pitch_circle_radius - x_distance, y_distance).toGpPnt2d()
-
-        println "x_distance $x_distance"
-        println "y_distance $y_distance"
-
-        println "Construct the profile circle"
-        def profile_circle = new_gp_Circ2d__ax2d_r(new_gp_Ax2d__pt_dir(profile_center, new_gp_Dir2d()),
-                gp_Pnt2d__Distance__p1_p2(profile_center, p1))
-        def geom_profile_circle = handle_Geom2d_Circle__GCE2d_MakeCircle__cir2d(profile_circle)
-
-        println "Construct the outer circle"
-        def outer_circle = new_gp_Circ2d__ax2d_r(new_gp_Ax2d__pt_dir(new Vec2d(0, 0).toGpPnt2d(), new_gp_Dir2d()),
-                top_radius)
-        def geom_outer_circle = handle_Geom2d_Circle__GCE2d_MakeCircle__cir2d(outer_circle)
-
-        println """\
-        Calculate the intersection point(s) of the profile circle
-        and the outer circle.  If there are two points, pick the one closest
-        to the center of the profile circle""".stripIndent()
-
-        def inter = new_Geom2dAPI_InterCurveCurve__curve1_curve2(geom_profile_circle, geom_outer_circle)
-        int num_points = int_Geom2dAPI_InterCurveCurve__NbPoints(inter)
-
-        println "num_points = $num_points"
-
-        def p2
-        if (num_points == 2) {
-            if (gp_Pnt2d__Distance__p1_p2(p1, new_gp_Pnt2d__Geom2dAPI_InterCurveCurve__Point__i(inter, 1)) < gp_Pnt2d__Distance__p1_p2(p1, new_gp_Pnt2d__Geom2dAPI_InterCurveCurve__Point__i(inter, 2))) {
-                p2 = new_gp_Pnt2d__Geom2dAPI_InterCurveCurve__Point__i(inter, 1)
-                println "p2 point 1 ${Vec2d.fromAPnt(p2)}"
-            } else {
-                p2 = new_gp_Pnt2d__Geom2dAPI_InterCurveCurve__Point__i(inter, 2)
-                println "p2 point 2 ${Vec2d.fromAPnt(p2)}"
-            }
-        } else if (num_points == 1) {
-            p2 = new_gp_Pnt2d__Geom2dAPI_InterCurveCurve__Point__i(inter, 1)
-            println "p2 point 1 ${Vec2d.fromAPnt(p2)}"
-        } else throw new Exception("Too many intersection points between curves")
-
-        println "Trim the profile circle and mirror"
-        def trimmed_profile = handle_Geom2d_TrimmedCurve__GCE2d_MakeArcOfCircle__cir2d_p1_p2(profile_circle, p1, p2)
-
-        println "Calculate the outermost point"
-        Vec2d vP3 = new Vec2d(cos(tooth_angle / 2d) * top_radius, sin(tooth_angle / 2d) * top_radius)
-        println "vP3: $vP3"
-
-        println "and use it to create the third arc"
-        def trimmed_outer = handle_Geom2d_TrimmedCurve__GCE2d_MakeArcOfCircle__cir2d_p1_p2(outer_circle, p2, vP3.toGpPnt2d())
-
-        println "Mirror and reverse the three arcs"
-
-        println "${new Vec2d(1, 0).rotate(tooth_angle / 2.0d)}"
-
-        def mirror_axis = new_gp_Ax2d__pt_dir(new Vec2d().toGpPnt2d(), new Vec2d(1, 0).rotate(tooth_angle / 2.0d).toGpDir2d())
-        def mirror_base = handle_Geom2d_Geometry__Copy(trimmed_base)
-        def mirror_profile = handle_Geom2d_Geometry__Copy(trimmed_profile)
-        def mirror_outer = handle_Geom2d_Geometry__Copy(trimmed_outer)
-        _Geom2d_TrimmedCurve__Mirror__ax2(mirror_base, mirror_axis)
-        _Geom2d_TrimmedCurve__Mirror__ax2(mirror_profile, mirror_axis)
-        _Geom2d_TrimmedCurve__Mirror__ax2(mirror_outer, mirror_axis)
-        _Geom2d_TrimmedCurve__Reverse(mirror_base)
-        _Geom2d_TrimmedCurve__Reverse(mirror_profile)
-        _Geom2d_TrimmedCurve__Reverse(mirror_outer)
-
-        println "Replace the two outer arcs with a single one"
-        def outer_start = new_gp_Pnt2d__Geom2d_TrimmedCurve__StartPoint(trimmed_outer)
-        def outer_mid = new_gp_Pnt2d__Geom2d_TrimmedCurve__EndPoint(trimmed_outer)
-        def outer_end = new_gp_Pnt2d__Geom2d_TrimmedCurve__EndPoint(mirror_outer)
-        def outer_arc = handle_Geom2d_TrimmedCurve__GCE2d_MakeArcOfCircle__p1_p2_p3(outer_start, outer_mid, outer_end)
-
-        println "Outer Arc ${Vec2d.fromAPnt(outer_start)} ${Vec2d.fromAPnt(outer_mid)} ${Vec2d.fromAPnt(outer_end)}"
-
-        println "Create an arc for the inside of the wedge"
-        def inner_circle = new_gp_Circ2d__ax2d_r(new_gp_Ax2d__pt_dir(new Vec2d().toGpPnt2d(), new Vec2d(1, 0).toGpDir2d()), top_radius - roller_diameter)
-        Vec2d innerStartVec2d = new Vec2d(top_radius - roller_diameter, 0)
-        def inner_arc = handle_Geom2d_TrimmedCurve__GCE2d_MakeArcOfCircle__cir2d_p1_ang(inner_circle, innerStartVec2d.toGpPnt2d(), tooth_angle)
-        _Geom2d_TrimmedCurve__Reverse(inner_arc)
-
-        println "Convert the 2D arcs and two extra lines to 3D edges"
-        def plane = new_gp_Pln__pt_dir(new Vec().toGpPnt(), new Vec(0, 0, 1).toGpDir())
-        def arc1 = new_BRepBuilderAPI_MakeEdge__Geom_Curve handle_Geom_Curve__GeomAPI_To3d__Geom2d_Curve_gp_Pln(trimmed_base, plane)
-        def arc2 = new_BRepBuilderAPI_MakeEdge__Geom_Curve handle_Geom_Curve__GeomAPI_To3d__Geom2d_Curve_gp_Pln(trimmed_profile, plane)
-        def arc3 = new_BRepBuilderAPI_MakeEdge__Geom_Curve handle_Geom_Curve__GeomAPI_To3d__Geom2d_Curve_gp_Pln(outer_arc, plane)
-        def arc4 = new_BRepBuilderAPI_MakeEdge__Geom_Curve handle_Geom_Curve__GeomAPI_To3d__Geom2d_Curve_gp_Pln(mirror_profile, plane)
-        def arc5 = new_BRepBuilderAPI_MakeEdge__Geom_Curve handle_Geom_Curve__GeomAPI_To3d__Geom2d_Curve_gp_Pln(mirror_base, plane)
-
-        def p4 = new_gp_Pnt2d__Geom2d_TrimmedCurve__EndPoint(mirror_base)
-        Vec2d p4v2d = Vec2d.fromAPnt(p4)
-        def p5 = new_gp_Pnt2d__Geom2d_TrimmedCurve__StartPoint(inner_arc)
-        Vec2d p5v2d = Vec2d.fromAPnt(p5)
-        def lin1 = new_BRepBuilderAPI_MakeEdge__ptFrom_ptTo(new Vec(p4v2d).toGpPnt(), new Vec(p5v2d).toGpPnt())
-        def arc6 = new_BRepBuilderAPI_MakeEdge__Geom_Curve handle_Geom_Curve__GeomAPI_To3d__Geom2d_Curve_gp_Pln(inner_arc, plane)
-        def p6 = new_gp_Pnt2d__Geom2d_TrimmedCurve__EndPoint(inner_arc)
-        Vec2d p6v2d = Vec2d.fromAPnt(p6)
-        Vec2d p0v2d = Vec2d.fromAPnt(p0)
-        def lin2 = new_BRepBuilderAPI_MakeEdge__ptFrom_ptTo(new Vec(p6v2d).toGpPnt(), new Vec(p0v2d.x, p0v2d.y, 0).toGpPnt())
-
-        println "Combine the edges in a wire"
-        def wire = new_BRepBuilderAPI_MakeWire__BRepBuilderAPI_MakeEdge(arc1)
-        _BRepBuilderAPI_MakeWire__Add__BRepBuilderAPI_MakeEdge(wire, arc2)
-        _BRepBuilderAPI_MakeWire__Add__BRepBuilderAPI_MakeEdge(wire, arc3)
-        _BRepBuilderAPI_MakeWire__Add__BRepBuilderAPI_MakeEdge(wire, arc4)
-        _BRepBuilderAPI_MakeWire__Add__BRepBuilderAPI_MakeEdge(wire, arc5)
-        _BRepBuilderAPI_MakeWire__Add__BRepBuilderAPI_MakeEdge(wire, lin1)
-        _BRepBuilderAPI_MakeWire__Add__BRepBuilderAPI_MakeEdge(wire, arc6)
-        _BRepBuilderAPI_MakeWire__Add__BRepBuilderAPI_MakeEdge(wire, lin2)
-
-        println "Convert the wire into a face"
-        def face = new_TopoDS_Face__BRepBuilderAPI_MakeFace__TopoDS_Wire(new_TopoDS_Wire__BRepBuilderAPI_MakeWire__Wire(wire))
-
-        println "Finally, extrude the face"
-        def wedge = new_TopoDS_Shape__BRepPrimAPI_MakePrism__TopoDS_Face_gp_Vec(face, new Vec(0, 0, thickness).toGpVec())
-
-        return wedge
+//
+//        println "Construct the outer circle"
+//        def outer_circle = new_gp_Circ2d__ax2d_r(new_gp_Ax2d__pt_dir(new Vec2d(0, 0).toGpPnt2d(), new_gp_Dir2d()),
+//                top_radius)
+//        def geom_outer_circle = handle_Geom2d_Circle__GCE2d_MakeCircle__cir2d(outer_circle)
+//
+//        println """\
+//        Calculate the intersection point(s) of the profile circle
+//        and the outer circle.  If there are two points, pick the one closest
+//        to the center of the profile circle""".stripIndent()
+//
+//        def inter = new_Geom2dAPI_InterCurveCurve__curve1_curve2(geom_profile_circle, geom_outer_circle)
+//        int num_points = int_Geom2dAPI_InterCurveCurve__NbPoints(inter)
+//
+//        println "num_points = $num_points"
+//
+//        def p2
+//        if (num_points == 2) {
+//            if (gp_Pnt2d__Distance__p1_p2(p1, new_gp_Pnt2d__Geom2dAPI_InterCurveCurve__Point__i(inter, 1)) < gp_Pnt2d__Distance__p1_p2(p1, new_gp_Pnt2d__Geom2dAPI_InterCurveCurve__Point__i(inter, 2))) {
+//                p2 = new_gp_Pnt2d__Geom2dAPI_InterCurveCurve__Point__i(inter, 1)
+//                println "p2 point 1 ${Vec2d.fromAPnt(p2)}"
+//            } else {
+//                p2 = new_gp_Pnt2d__Geom2dAPI_InterCurveCurve__Point__i(inter, 2)
+//                println "p2 point 2 ${Vec2d.fromAPnt(p2)}"
+//            }
+//        } else if (num_points == 1) {
+//            p2 = new_gp_Pnt2d__Geom2dAPI_InterCurveCurve__Point__i(inter, 1)
+//            println "p2 point 1 ${Vec2d.fromAPnt(p2)}"
+//        } else throw new Exception("Too many intersection points between curves")
+//
+//        println "Trim the profile circle and mirror"
+//        def trimmed_profile = handle_Geom2d_TrimmedCurve__GCE2d_MakeArcOfCircle__cir2d_p1_p2(profile_circle, p1, p2)
+//
+//        println "Calculate the outermost point"
+//        Vec2d vP3 = new Vec2d(cos(tooth_angle / 2d) * top_radius, sin(tooth_angle / 2d) * top_radius)
+//        println "vP3: $vP3"
+//
+//        println "and use it to create the third arc"
+//        def trimmed_outer = handle_Geom2d_TrimmedCurve__GCE2d_MakeArcOfCircle__cir2d_p1_p2(outer_circle, p2, vP3.toGpPnt2d())
+//
+//        println "Mirror and reverse the three arcs"
+//
+//        println "${new Vec2d(1, 0).rotate(tooth_angle / 2.0d)}"
+//
+//        def mirror_axis = new_gp_Ax2d__pt_dir(new Vec2d().toGpPnt2d(), new Vec2d(1, 0).rotate(tooth_angle / 2.0d).toGpDir2d())
+//        def mirror_base = handle_Geom2d_Geometry__Copy(trimmed_base)
+//        def mirror_profile = handle_Geom2d_Geometry__Copy(trimmed_profile)
+//        def mirror_outer = handle_Geom2d_Geometry__Copy(trimmed_outer)
+//        _Geom2d_TrimmedCurve__Mirror__ax2(mirror_base, mirror_axis)
+//        _Geom2d_TrimmedCurve__Mirror__ax2(mirror_profile, mirror_axis)
+//        _Geom2d_TrimmedCurve__Mirror__ax2(mirror_outer, mirror_axis)
+//        _Geom2d_TrimmedCurve__Reverse(mirror_base)
+//        _Geom2d_TrimmedCurve__Reverse(mirror_profile)
+//        _Geom2d_TrimmedCurve__Reverse(mirror_outer)
+//
+//        println "Replace the two outer arcs with a single one"
+//        def outer_start = new_gp_Pnt2d__Geom2d_TrimmedCurve__StartPoint(trimmed_outer)
+//        def outer_mid = new_gp_Pnt2d__Geom2d_TrimmedCurve__EndPoint(trimmed_outer)
+//        def outer_end = new_gp_Pnt2d__Geom2d_TrimmedCurve__EndPoint(mirror_outer)
+//        def outer_arc = handle_Geom2d_TrimmedCurve__GCE2d_MakeArcOfCircle__p1_p2_p3(outer_start, outer_mid, outer_end)
+//
+//        println "Outer Arc ${Vec2d.fromAPnt(outer_start)} ${Vec2d.fromAPnt(outer_mid)} ${Vec2d.fromAPnt(outer_end)}"
+//
+//        println "Create an arc for the inside of the wedge"
+//        def inner_circle = new_gp_Circ2d__ax2d_r(new_gp_Ax2d__pt_dir(new Vec2d().toGpPnt2d(), new Vec2d(1, 0).toGpDir2d()), top_radius - roller_diameter)
+//        Vec2d innerStartVec2d = new Vec2d(top_radius - roller_diameter, 0)
+//        def inner_arc = handle_Geom2d_TrimmedCurve__GCE2d_MakeArcOfCircle__cir2d_p1_ang(inner_circle, innerStartVec2d.toGpPnt2d(), tooth_angle)
+//        _Geom2d_TrimmedCurve__Reverse(inner_arc)
+//
+//        println "Convert the 2D arcs and two extra lines to 3D edges"
+//        def plane = new_gp_Pln__pt_dir(new Vec().toGpPnt(), new Vec(0, 0, 1).toGpDir())
+//        def arc1 = new_BRepBuilderAPI_MakeEdge__Geom_Curve handle_Geom_Curve__GeomAPI_To3d__Geom2d_Curve_gp_Pln(trimmed_base, plane)
+//        def arc2 = new_BRepBuilderAPI_MakeEdge__Geom_Curve handle_Geom_Curve__GeomAPI_To3d__Geom2d_Curve_gp_Pln(trimmed_profile, plane)
+//        def arc3 = new_BRepBuilderAPI_MakeEdge__Geom_Curve handle_Geom_Curve__GeomAPI_To3d__Geom2d_Curve_gp_Pln(outer_arc, plane)
+//        def arc4 = new_BRepBuilderAPI_MakeEdge__Geom_Curve handle_Geom_Curve__GeomAPI_To3d__Geom2d_Curve_gp_Pln(mirror_profile, plane)
+//        def arc5 = new_BRepBuilderAPI_MakeEdge__Geom_Curve handle_Geom_Curve__GeomAPI_To3d__Geom2d_Curve_gp_Pln(mirror_base, plane)
+//
+//        def p4 = new_gp_Pnt2d__Geom2d_TrimmedCurve__EndPoint(mirror_base)
+//        Vec2d p4v2d = Vec2d.fromAPnt(p4)
+//        def p5 = new_gp_Pnt2d__Geom2d_TrimmedCurve__StartPoint(inner_arc)
+//        Vec2d p5v2d = Vec2d.fromAPnt(p5)
+//        def lin1 = new_BRepBuilderAPI_MakeEdge__ptFrom_ptTo(new Vec(p4v2d).toGpPnt(), new Vec(p5v2d).toGpPnt())
+//        def arc6 = new_BRepBuilderAPI_MakeEdge__Geom_Curve handle_Geom_Curve__GeomAPI_To3d__Geom2d_Curve_gp_Pln(inner_arc, plane)
+//        def p6 = new_gp_Pnt2d__Geom2d_TrimmedCurve__EndPoint(inner_arc)
+//        Vec2d p6v2d = Vec2d.fromAPnt(p6)
+//        Vec2d p0v2d = Vec2d.fromAPnt(p0)
+//        def lin2 = new_BRepBuilderAPI_MakeEdge__ptFrom_ptTo(new Vec(p6v2d).toGpPnt(), new Vec(p0v2d.x, p0v2d.y, 0).toGpPnt())
+//
+//        println "Combine the edges in a wire"
+//        def wire = new_BRepBuilderAPI_MakeWire__BRepBuilderAPI_MakeEdge(arc1)
+//        _BRepBuilderAPI_MakeWire__Add__BRepBuilderAPI_MakeEdge(wire, arc2)
+//        _BRepBuilderAPI_MakeWire__Add__BRepBuilderAPI_MakeEdge(wire, arc3)
+//        _BRepBuilderAPI_MakeWire__Add__BRepBuilderAPI_MakeEdge(wire, arc4)
+//        _BRepBuilderAPI_MakeWire__Add__BRepBuilderAPI_MakeEdge(wire, arc5)
+//        _BRepBuilderAPI_MakeWire__Add__BRepBuilderAPI_MakeEdge(wire, lin1)
+//        _BRepBuilderAPI_MakeWire__Add__BRepBuilderAPI_MakeEdge(wire, arc6)
+//        _BRepBuilderAPI_MakeWire__Add__BRepBuilderAPI_MakeEdge(wire, lin2)
+//
+//        println "Convert the wire into a face"
+//        def face = new_TopoDS_Face__BRepBuilderAPI_MakeFace__TopoDS_Wire(new_TopoDS_Wire__BRepBuilderAPI_MakeWire__Wire(wire))
+//
+//        println "Finally, extrude the face"
+//        def wedge = new_TopoDS_Shape__BRepPrimAPI_MakePrism__TopoDS_Face_gp_Vec(face, new Vec(0, 0, thickness).toGpVec())
+//
+//        return wedge
     }
 
     /**
@@ -365,10 +374,11 @@ class SprocketTest {
 
     @Test
     void "Build Tooth"() {
-        def tooth = buildTooth()
-        def roundTooth = roundTooth(tooth)
-        def manyTooth = cloneTooth(roundTooth)
-        def manyToothWithCenterHole = centerHole(manyTooth)
-        visualize mountingHoles(manyToothWithCenterHole)
+        buildTooth()
+//        def tooth = buildTooth()
+//        def roundTooth = roundTooth(tooth)
+//        def manyTooth = cloneTooth(roundTooth)
+//        def manyToothWithCenterHole = centerHole(manyTooth)
+//        visualize mountingHoles(manyToothWithCenterHole)
     }
 }

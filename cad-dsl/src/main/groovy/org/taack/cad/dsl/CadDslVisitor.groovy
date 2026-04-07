@@ -44,7 +44,7 @@ class CadDslVisitor implements ICadDslVisitor {
     SurfaceBounds bounds
     Vec ptParam11
     Vec ptParam00
-    List<IOpenShape2D> openShape2dList = []
+    List<IOpenShape2d> openShape2dList = []
     List<IOpenShape> openShapeList = []
     List<IClosedShape2d> closedShape2dList = []
     final Stack<List<MemorySegment>> boolShapes
@@ -98,7 +98,7 @@ class CadDslVisitor implements ICadDslVisitor {
             Vec2d pos = fromVec2d ?: new Vec2d()
 
             def makeWire = new_BRepBuilderAPI_MakeWire()
-            for (IOpenShape2D s2d in openShape2dList) {
+            for (IOpenShape2d s2d in openShape2dList) {
                 def trimmedCurve = s2d.makeWireAdd(pos)
                 pos = s2d.to
                 _BRepBuilderAPI_MakeWire__Add__BRepBuilderAPI_MakeEdge(makeWire, new_BRepBuilderAPI_MakeEdge__Geom2d_Curve_Geom_Surface(trimmedCurve, currentSurface))
@@ -297,8 +297,15 @@ class CadDslVisitor implements ICadDslVisitor {
     }
 
     @Override
-    void visitTrimmed(IClosedShape2d curve, Number from, Number tp) {
+    ITrimmable2d visitTrimmed(IClosedShape2d curve, Number from, Number tp, boolean reverse) {
 
+    }
+
+    @Override
+    ArcOfCircle2d visitTrimmed(Circle2d circle2d, Number from, Number tp, boolean reverse) {
+        ArcOfCircle2d arc = new ArcOfCircle2d(circle2d, reverse)
+        openShape2dList << arc
+        arc
     }
 
     @Override
@@ -322,6 +329,11 @@ class CadDslVisitor implements ICadDslVisitor {
     void visitClosedWireEnd() {
         visitFromEnd(fromVec2d)
         Tr.dec "visitClosedWireEnd dir: $direction, fromVec2d: $fromVec2d"
+    }
+
+    @Override
+    void visitRemoveFromConstruction(IConstruction... toRemove) {
+        closedShape2dList.removeAll(toRemove)
     }
 
     @Override

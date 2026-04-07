@@ -9,7 +9,7 @@ import java.lang.foreign.MemorySegment
 import static org.taack.occt.NativeLib.handle_Geom2d_TrimmedCurve__GCE2d_MakeSegment__p1_p2
 
 @CompileStatic
-class Edge2d implements IOpenShape2D {
+class Edge2d implements IOpenShape2d {
     Vec2d to
 
     Edge2d(Vec2d to) {

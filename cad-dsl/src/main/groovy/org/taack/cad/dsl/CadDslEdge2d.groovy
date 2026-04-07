@@ -3,12 +3,12 @@ package org.taack.cad.dsl
 import groovy.transform.CompileStatic
 import org.taack.cad.builder.Vec
 import org.taack.cad.builder.Vec2d
+import org.taack.cad.dsl.geom.ArcOfCircle2d
 import org.taack.cad.dsl.geom.Circle2d
 import org.taack.cad.dsl.geom.Ellipse2d
 import org.taack.cad.dsl.geom.IClosedShape2d
-
-import java.lang.foreign.MemorySegment
-
+import org.taack.cad.dsl.geom.IConstruction
+import org.taack.cad.dsl.geom.ITrimmable2d
 
 /**
  * Manage Drawing in face, directly or via construction closures
@@ -133,11 +133,19 @@ class CadDslEdge2d implements CadDslBase {
         visitor.visitClosedWireEnd()
     }
 
-    void trimmed(IClosedShape2d curve, Number from, Number to) {
-        visitor.visitTrimmed(curve, from, to)
+    ArcOfCircle2d trimmed(Circle2d curve, Number from, Number to, boolean reverse = false) {
+        visitor.visitTrimmed(curve, from, to, reverse)
+    }
+
+    ITrimmable2d trimmed(IClosedShape2d curve, Number from, Number to, boolean reverse = false) {
+        visitor.visitTrimmed(curve, from, to, reverse)
     }
 
     Vec bound(Number U) {
 
+    }
+
+    void removeFromConstruction(IConstruction... toRemove) {
+        visitor.visitRemoveFromConstruction(toRemove)
     }
 }

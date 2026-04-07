@@ -4,7 +4,7 @@ import org.taack.cad.builder.Vec2d
 
 import java.lang.foreign.MemorySegment
 
-interface ITrimmable2d {
+interface ITrimmable2d extends IOpenShape2d {
     Vec2d getStart()
     Vec2d getEnd()
     boolean getReverse()

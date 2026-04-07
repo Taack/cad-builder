@@ -2,9 +2,12 @@ package org.taack.cad.dsl
 
 import org.taack.cad.builder.Vec
 import org.taack.cad.builder.Vec2d
+import org.taack.cad.dsl.geom.ArcOfCircle2d
 import org.taack.cad.dsl.geom.Circle2d
 import org.taack.cad.dsl.geom.Ellipse2d
 import org.taack.cad.dsl.geom.IClosedShape2d
+import org.taack.cad.dsl.geom.IConstruction
+import org.taack.cad.dsl.geom.ITrimmable2d
 
 interface ICadDslVisitor {
     void visitFrom(Vec pos)
@@ -87,7 +90,9 @@ interface ICadDslVisitor {
 
     void visitWireFromSurfaceEnd()
 
-    void visitTrimmed(IClosedShape2d curve, Number from, Number tp)
+    ITrimmable2d visitTrimmed(IClosedShape2d curve, Number from, Number tp, boolean reverse)
+
+    ArcOfCircle2d visitTrimmed(Circle2d circle2d, Number from, Number tp, boolean reverse)
 
     void visitThruSectionEnd()
 
@@ -96,4 +101,6 @@ interface ICadDslVisitor {
     void visitClosedWire()
 
     void visitClosedWireEnd()
+
+    void visitRemoveFromConstruction(IConstruction... toRemove)
 }

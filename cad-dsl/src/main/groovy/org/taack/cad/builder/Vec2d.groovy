@@ -4,6 +4,7 @@ import groovy.transform.CompileStatic
 import static org.taack.occt.NativeLib.*
 
 import java.lang.foreign.MemorySegment
+import static java.lang.Math.*
 
 @CompileStatic
 class Vec2d {
@@ -60,9 +61,13 @@ class Vec2d {
     }
 
     Vec2d rotate(double beta) {
-        double cb = Math.cos(beta)
-        double sb = Math.sin(beta)
+        double cb = cos(beta)
+        double sb = sin(beta)
         new Vec2d(cb * x - sb * y, sb * x + cb * y)
+    }
+
+    double distance(Vec2d other) {
+        sqrt(pow(x - other.x, 2) + pow(y - other.y, 2))
     }
 
     static Vec2d fromAPnt(MemorySegment aPnt) {
