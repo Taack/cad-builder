@@ -1,11 +1,8 @@
 package org.taack.cad.dsl
 
 import groovy.transform.CompileStatic
-import org.taack.cad.builder.ShapeEnum
-import org.taack.cad.builder.SurfaceBounds
-import org.taack.cad.builder.SurfaceDistance
-import org.taack.cad.builder.Vec
-import org.taack.cad.builder.Vec2d
+import org.taack.cad.builder.*
+import org.taack.cad.dsl.geom.*
 
 import java.lang.foreign.Arena
 import java.lang.foreign.MemorySegment
@@ -47,9 +44,9 @@ class CadDslVisitor implements ICadDslVisitor {
     SurfaceBounds bounds
     Vec ptParam11
     Vec ptParam00
-    List<OpenShape2D> openShape2dList = []
-    List<OpenShape> openShapeList = []
-    List<ClosedShape2D> closedShape2dList = []
+    List<IOpenShape2D> openShape2dList = []
+    List<IOpenShape> openShapeList = []
+    List<IClosedShape2d> closedShape2dList = []
     final Stack<List<MemorySegment>> boolShapes
 
     CadDslVisitor() {
@@ -57,208 +54,7 @@ class CadDslVisitor implements ICadDslVisitor {
         boolShapes.push([])
     }
 
-    interface ClosedShape2D {
-        MemorySegment make2dCurve()
-        boolean getReverse()
-    }
 
-    interface ClosedShape {
-        MemorySegment makeWireAdd(MemorySegment makeWire)
-    }
-
-    interface OpenShape2D {
-        MemorySegment makeWireAdd(Vec2d fromLocal)
-
-        Vec2d getTo()
-    }
-
-    interface OpenShape {
-        MemorySegment makeWireAdd(Vec fromLocal)
-
-        Vec getTo()
-    }
-
-
-    class Edge2d implements OpenShape2D {
-        Vec2d to
-
-        Edge2d(Vec2d to) {
-            this.to = to
-        }
-
-        @Override
-        MemorySegment makeWireAdd(Vec2d fromLocal) {
-            Tr.cur("Edge2d from: $fromLocal, to: $to")
-            return handle_Geom2d_TrimmedCurve__GCE2d_MakeSegment__p1_p2((fromLocal).toGpPnt2d(), (to).toGpPnt2d())
-        }
-
-        @Override
-        String toString() {
-            return "Edge2d{" +
-                    "to=" + to +
-                    '}'
-        }
-    }
-
-    class Edge implements OpenShape {
-        Vec to
-
-        Edge(Vec to) {
-            this.to = to
-        }
-
-        @Override
-        MemorySegment makeWireAdd(Vec fromLocal) {
-            return handle_Geom_TrimmedCurve__GC_MakeSegment__p1_p2(fromLocal.toGpPnt(), to.toGpPnt())
-        }
-
-        @Override
-        String toString() {
-            return "Edge{" +
-                    "to=" + to +
-                    '}'
-        }
-    }
-
-    class Arc2d implements OpenShape2D {
-        Vec2d to
-        Vec2d center
-
-        Arc2d(Vec2d to, Vec2d center) {
-            this.to = to
-            this.center = center
-        }
-
-        @Override
-        MemorySegment makeWireAdd(Vec2d fromLocal) {
-            Tr.cur("Arc2d from: $fromLocal, to: $to")
-            return handle_Geom2d_TrimmedCurve__GCE2d_MakeArcOfCircle__p1_p2_p3((fromLocal).toGpPnt2d(), (center).toGpPnt2d(), (to).toGpPnt2d())
-        }
-
-        @Override
-        String toString() {
-            return "Arc2d{" +
-                    "to=" + to +
-                    ", center=" + center +
-                    '}'
-        }
-    }
-
-    class Trimmed2d implements OpenShape2D {
-        ClosedShape2D closableShape2d
-        double from
-        double to
-
-        Trimmed2d(ClosedShape2D shape2D) {
-            this.closableShape2d = shape2D
-        }
-
-        @Override
-        MemorySegment makeWireAdd(Vec2d fromLocal) {
-            handle_Geom2d_TrimmedCurve__curve_u1_u2(closableShape2d.make2dCurve(), from, to, 1, 1)
-        }
-
-        @Override
-        Vec2d getTo() {
-            return
-        }
-
-        @Override
-        String toString() {
-            return "Trimmed2d{" +
-                    "to=" + to +
-                    '}'
-        }
-    }
-
-    class Arc implements OpenShape {
-        Vec to
-        Vec center
-
-        Arc(Vec to, Vec center) {
-            this.to = to
-            this.center = center
-        }
-
-        @Override
-        MemorySegment makeWireAdd(Vec fromLocal) {
-            return handle_Geom_TrimmedCurve__GC_MakeArcOfCircle_p1_p2_p3(fromLocal.toGpPnt(), center.toGpPnt(), to.toGpPnt())
-        }
-
-        @Override
-        String toString() {
-            return "Arc2d{" +
-                    "to=" + to +
-                    ", center=" + center +
-                    '}'
-        }
-    }
-
-    class Circle2d implements ClosedShape2D {
-        final Vec2d pos
-        final double radius
-        final boolean reverse
-
-        Circle2d(Vec2d pos, double radius, boolean reverse) {
-            this.pos = pos
-            this.radius = radius
-            this.reverse = reverse
-        }
-
-        @Override
-        MemorySegment make2dCurve() {
-//            def MW = new_BRepBuilderAPI_MakeWire()
-            def c = new_gp_Circ2d__ax2d_r(new_gp_Ax2d__pt_dir(pos.toGpPnt2d(), new Vec2d(1, 0).toGpDir2d()), radius)
-            def aline = handle_Geom2d_Circle__GCE2d_MakeCircle__cir2d(c)
-            if (reverse) _Geom2d_TrimmedCurve__Reverse(aline)
-//            _BRepBuilderAPI_MakeWire__Add__BRepBuilderAPI_MakeEdge(MW, new_BRepBuilderAPI_MakeEdge__Geom2d_Curve_Geom_Surface(aline, surf))
-            return aline
-        }
-    }
-
-    class Ellipse2d implements ClosedShape2D {
-        final Vec2d pos
-        final Vec2d dir
-        final double majRadius
-        final double minRadius
-        final boolean reverse = false
-
-        Ellipse2d(Vec2d pos, Vec2d dir, double majRadius, double minRadius) {
-            this.pos = pos
-            this.dir = dir
-            this.majRadius = majRadius
-            this.minRadius = minRadius
-        }
-
-        @Override
-        MemorySegment make2dCurve() {
-//            def MW = new_BRepBuilderAPI_MakeWire()
-            def anAx2d = new_gp_Ax2d__pt_dir(pos.toGpPnt2d(), direction.toGpDir2d())
-            def ellipse = handle_Geom2d_Ellipse__a2_majorRadius_minorRadius_sense(anAx2d, majRadius.toDouble(), minRadius.toDouble(), 1)
-//            _BRepBuilderAPI_MakeWire__Add__BRepBuilderAPI_MakeEdge(MW, new_BRepBuilderAPI_MakeEdge__Geom2d_Curve_Geom_Surface(ellipse, surf))
-            return ellipse
-        }
-    }
-
-    class Circle implements ClosedShape {
-        final Vec pos
-        final double radius
-        final boolean reverse = false
-
-        Circle(Vec pos, double radius) {
-            this.pos = pos
-            this.radius = radius
-        }
-
-        @Override
-        MemorySegment makeWireAdd(MemorySegment surf) {
-            def MW = new_BRepBuilderAPI_MakeWire()
-            def c = new_gp_Circ2d__ax2d_r(new_gp_Ax2d__pt_dir(pos.toGpPnt2d(), pos.toGpDir2d()), radius)
-            def aline = handle_Geom2d_Circle__GCE2d_MakeCircle__cir2d(c)
-            _BRepBuilderAPI_MakeWire__Add__BRepBuilderAPI_MakeEdge(MW, new_BRepBuilderAPI_MakeEdge__Geom2d_Curve_Geom_Surface(aline, surf))
-            return MW
-        }
-    }
 
     @Override
     void visitFrom(Vec pos) {
@@ -271,7 +67,7 @@ class CadDslVisitor implements ICadDslVisitor {
         Vec pos = posOri
         if (!openShapeList.empty) {
             def makeWire = new_BRepBuilderAPI_MakeWire()
-            for (OpenShape s3d in openShapeList) {
+            for (IOpenShape s3d in openShapeList) {
                 def trimmedCurve = s3d.makeWireAdd(pos)
                 pos = s3d.to
                 def arcEdge = new_TopoDS_Edge__BRepBuilderAPI_MakeEdge__Geom_Curve(trimmedCurve)
@@ -302,7 +98,7 @@ class CadDslVisitor implements ICadDslVisitor {
             Vec2d pos = fromVec2d ?: new Vec2d()
 
             def makeWire = new_BRepBuilderAPI_MakeWire()
-            for (OpenShape2D s2d in openShape2dList) {
+            for (IOpenShape2D s2d in openShape2dList) {
                 def trimmedCurve = s2d.makeWireAdd(pos)
                 pos = s2d.to
                 _BRepBuilderAPI_MakeWire__Add__BRepBuilderAPI_MakeEdge(makeWire, new_BRepBuilderAPI_MakeEdge__Geom2d_Curve_Geom_Surface(trimmedCurve, currentSurface))
@@ -314,7 +110,7 @@ class CadDslVisitor implements ICadDslVisitor {
         }
         Tr.cur("visitFromEnd closedShape2dList $closedShape2dList")
         if (!closedShape2dList.empty) {
-            for (ClosedShape2D s2d in closedShape2dList) {
+            for (IClosedShape2d s2d in closedShape2dList) {
                 def c = s2d.make2dCurve()
                 def makeWire = new_BRepBuilderAPI_MakeWire()
                 _BRepBuilderAPI_MakeWire__Add__BRepBuilderAPI_MakeEdge(makeWire, new_BRepBuilderAPI_MakeEdge__Geom2d_Curve_Geom_Surface(c, currentSurface))
@@ -479,8 +275,10 @@ class CadDslVisitor implements ICadDslVisitor {
     }
 
     @Override
-    void visitEllipse2d(Vec2d dir, Number majDia, Number minDia) {
-        closedShape2dList << new Ellipse2d(fromVec2d, dir, majDia.toDouble(), minDia.toDouble())
+    Ellipse2d visitEllipse2d(Vec2d dir, Number majDia, Number minDia) {
+        Ellipse2d e = new Ellipse2d(fromVec2d, dir, majDia.toDouble(), minDia.toDouble())
+        closedShape2dList << e
+        e
     }
 
     @Override
@@ -499,7 +297,7 @@ class CadDslVisitor implements ICadDslVisitor {
     }
 
     @Override
-    void visitTrimmed(CadDslEdge2d curve, Number from, Number tp) {
+    void visitTrimmed(IClosedShape2d curve, Number from, Number tp) {
 
     }
 
@@ -643,8 +441,10 @@ class CadDslVisitor implements ICadDslVisitor {
     }
 
     @Override
-    void visitCircle2d(Number radius, boolean reverse) {
-        closedShape2dList << new Circle2d(fromVec2d, radius.toDouble(), reverse)
+    Circle2d visitCircle2d(Number radius, boolean reverse) {
+        Circle2d c = new Circle2d(fromVec2d, radius.toDouble(), reverse)
+        closedShape2dList << c
+        return c
     }
 
 //    @Override

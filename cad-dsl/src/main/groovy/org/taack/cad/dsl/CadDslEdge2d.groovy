@@ -3,6 +3,11 @@ package org.taack.cad.dsl
 import groovy.transform.CompileStatic
 import org.taack.cad.builder.Vec
 import org.taack.cad.builder.Vec2d
+import org.taack.cad.dsl.geom.Circle2d
+import org.taack.cad.dsl.geom.Ellipse2d
+import org.taack.cad.dsl.geom.IClosedShape2d
+
+import java.lang.foreign.MemorySegment
 
 
 /**
@@ -67,9 +72,8 @@ class CadDslEdge2d implements CadDslBase {
      * Draw a closed circle at the last position
      * @param diameter Diameter of the circle
      */
-    CadDslEdge2d circle(Number diameter, boolean reverse = false) {
+    Circle2d circle(Number diameter, boolean reverse = false) {
         visitor.visitCircle2d(diameter, reverse)
-        this
     }
 
     /**
@@ -85,9 +89,8 @@ class CadDslEdge2d implements CadDslBase {
      * Draw a closed circle at the last position
      * @param diameter Diameter of the circle
      */
-    CadDslEdge2d ellipse(Vec2d dir, Number majDia, Number minDia) {
+    Ellipse2d ellipse(Vec2d dir, Number majDia, Number minDia) {
         visitor.visitEllipse2d(dir, majDia, minDia)
-        this
     }
 
 //    /**
@@ -130,7 +133,7 @@ class CadDslEdge2d implements CadDslBase {
         visitor.visitClosedWireEnd()
     }
 
-    void trimmed(CadDslEdge2d curve, Number from, Number to) {
+    void trimmed(IClosedShape2d curve, Number from, Number to) {
         visitor.visitTrimmed(curve, from, to)
     }
 

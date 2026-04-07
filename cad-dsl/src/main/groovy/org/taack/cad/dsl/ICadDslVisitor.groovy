@@ -2,6 +2,9 @@ package org.taack.cad.dsl
 
 import org.taack.cad.builder.Vec
 import org.taack.cad.builder.Vec2d
+import org.taack.cad.dsl.geom.Circle2d
+import org.taack.cad.dsl.geom.Ellipse2d
+import org.taack.cad.dsl.geom.IClosedShape2d
 
 interface ICadDslVisitor {
     void visitFrom(Vec pos)
@@ -36,7 +39,7 @@ interface ICadDslVisitor {
 
     void visitCenterEnd()
 
-    void visitCircle2d(Number diameter, boolean reverse)
+    Circle2d visitCircle2d(Number diameter, boolean reverse)
 
     void visitConstruct2d(@DelegatesTo(value = CadDslEdge2d, strategy = Closure.DELEGATE_FIRST) Closure c)
 
@@ -76,7 +79,7 @@ interface ICadDslVisitor {
 
     void visitHollowedSolid(Number thickness)
 
-    void visitEllipse2d(Vec2d dir, Number majDia, Number minDia)
+    Ellipse2d visitEllipse2d(Vec2d dir, Number majDia, Number minDia)
 
     void visitThruSection()
 
@@ -84,7 +87,7 @@ interface ICadDslVisitor {
 
     void visitWireFromSurfaceEnd()
 
-    void visitTrimmed(CadDslEdge2d curve, Number from, Number tp)
+    void visitTrimmed(IClosedShape2d curve, Number from, Number tp)
 
     void visitThruSectionEnd()
 
