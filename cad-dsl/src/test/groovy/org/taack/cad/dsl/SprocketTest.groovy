@@ -15,7 +15,7 @@ import static java.lang.Math.*
 import static org.taack.cad.dsl.CadDsl.cd
 import static org.taack.occt.NativeLib.*
 
-// https://algotopia.com/contents/opencascade/opencascade_sprocket
+// mirrorProfile
 @CompileStatic
 class SprocketTest {
 
@@ -65,33 +65,32 @@ class SprocketTest {
 
         println "Create a 2D arc to form the base of the tooth"
         Vec2d base_center = new Vec2d(pitch_circle_radius + (tooth_radius - roller_radius), 0)
-        Vec2d p0
+        Vec2d p0v2d
         Vec2d p1
         cd().wireFrom(base_center) {
-            Circle2d base = circle(2.0d * tooth_radius)
-            ArcOfCircle2d trimmedBase = trimmed(base, PI - (roller_contact_angle / 2.0d), PI)
-            p0 = trimmedBase.start
+            Circle2d baseConstruct = circle(2.0d * tooth_radius)
+            ArcOfCircle2d trimmedBase = trimmed(baseConstruct, PI - (roller_contact_angle / 2.0d), PI)
+            p0v2d = trimmedBase.start
             p1 = trimmedBase.end
 
-            println "Determine the center of the profile circle p0: $p0, p1: $p1"
+            println "Determine the center of the profile circle p0: $p0v2d, p1: $p1"
             double x_distance = cos(roller_contact_angle / 2d) * (profile_radius + tooth_radius)
             double y_distance = sin(roller_contact_angle / 2d) * (profile_radius + tooth_radius)
             Vec2d profileCenter = new Vec2d(pitch_circle_radius - x_distance, y_distance)
 
             println "Construct the profile circle"
             to profileCenter
-            def profile = circle(p1.distance(profileCenter))
+            Circle2d profileConstruct = circle(p1.distance(profileCenter))
 
             println "Construct the outer circle"
             to new Vec2d()
-            def outer = circle(top_radius)
+            Circle2d outerConstruct = circle(top_radius)
 
             println """\
             Calculate the intersection point(s) of the profile circle
             and the outer circle.  If there are two points, pick the one closest
             to the center of the profile circle""".stripIndent()
-            CurveIntersection2d inter = new CurveIntersection2d(profile, outer)
-            removeFromConstruction(base, profile, outer)
+            CurveIntersection2d inter = new CurveIntersection2d(profileConstruct, outerConstruct)
             Vec2d p2
             if (inter.results.size() == 2)
                 if (p1.distance(inter.results[0]) < p1.distance(inter.results[1])) p2 = inter.results[0]
@@ -100,27 +99,30 @@ class SprocketTest {
             else throw new Exception("Too many intersection points between curves")
 
             println "Trim the profile circle and mirror"
-            ArcOfCircle2d trimmedProfile = trimmed(profile, p1, p2)
+            ArcOfCircle2d trimmedProfile = trimmed(profileConstruct, p1, p2)
 
             println "Calculate the outermost point"
             Vec2d vP3 = new Vec2d(cos(tooth_angle / 2d) * top_radius, sin(tooth_angle / 2d) * top_radius)
 
             println "and use it to create the third arc"
-            ArcOfCircle2d trimmedOuter = trimmed(outer, p2, vP3)
+            ArcOfCircle2d trimmedOuter = trimmed(outerConstruct, p2, vP3)
 
             println "Mirror and reverse the three arcs"
-            ITrimmable2d mirrorBase = mirror(trimmedBase, new Vec2d(), new Vec2d(1, 0))
-            ITrimmable2d mirrorProfile = mirror(trimmedProfile, new Vec2d(), new Vec2d(1, 0))
             ITrimmable2d mirrorOuter = mirror(trimmedOuter, new Vec2d(), new Vec2d(1, 0))
 
             println "Replace the two outer arcs with a single one"
             to trimmedOuter.start
             arc(trimmedOuter.end, mirrorOuter.end)
+            ITrimmable2d mirrorProfile = mirror(trimmedProfile, new Vec2d(), new Vec2d(1, 0))
+            ITrimmable2d mirrorBase = mirror(trimmedBase, new Vec2d(), new Vec2d(1, 0))
 
             println "Create an arc for the inside of the wedge"
-            Circle2d innerCircle = circle(top_radius - roller_diameter)
+            to new Vec2d()
+            Circle2d innerCircleConstruct = circle(top_radius - roller_diameter)
             Vec2d innerStartVec2d = new Vec2d(top_radius - roller_diameter, 0)
-            ArcOfCircle2d innerArc = trimmed(innerCircle, innerStartVec2d, tooth_angle, true)
+            ArcOfCircle2d innerArc = trimmed(innerCircleConstruct, innerStartVec2d, tooth_angle, true)
+
+            removeFromConstruction(innerArc)
 
             println "Convert the 2D arcs and two extra lines to 3D edges"
             Vec2d p4v2d = mirrorBase.end
@@ -128,7 +130,16 @@ class SprocketTest {
             println "p4v2d = $p4v2d, p5v2d = $p5v2d"
             to p4v2d
             edge(p5v2d)
-        }
+            addToConstruction(innerArc)
+            Vec2d p6v2d = innerArc.end
+            to p6v2d
+            edge(p0v2d)
+
+            println "Combine the edges in a wire"
+            println "Convert the wire into a face"
+            removeFromConstruction(baseConstruct, profileConstruct, outerConstruct, trimmedOuter, mirrorOuter, innerCircleConstruct, innerArc)
+
+        }.toFace().prism(thickness).display()
 
 
 //        println "Convert the 2D arcs and two extra lines to 3D edges"
@@ -147,7 +158,7 @@ class SprocketTest {
 //        def arc6 = new_BRepBuilderAPI_MakeEdge__Geom_Curve handle_Geom_Curve__GeomAPI_To3d__Geom2d_Curve_gp_Pln(inner_arc, plane)
 //        def p6 = new_gp_Pnt2d__Geom2d_TrimmedCurve__EndPoint(inner_arc)
 //        Vec2d p6v2d = Vec2d.fromAPnt(p6)
-//        Vec2d p0v2d = Vec2d.fromAPnt(p0)
+//        Vec2d p0v 2d = Vec2d.fromAPnt(p0)
 //        def lin2 = new_BRepBuilderAPI_MakeEdge__ptFrom_ptTo(new Vec(p6v2d).toGpPnt(), new Vec(p0v2d.x, p0v2d.y, 0).toGpPnt())
 //
 //        println "Combine the edges in a wire"

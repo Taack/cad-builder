@@ -37,6 +37,6 @@ class Circle2d implements IClosedShape2d {
                 "pos=" + pos +
                 ", radius=" + radius +
                 ", reverse=" + reverse +
-                '}';
+                '}'
     }
 }

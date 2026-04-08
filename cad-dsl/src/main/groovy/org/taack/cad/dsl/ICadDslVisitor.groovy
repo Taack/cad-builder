@@ -103,4 +103,6 @@ interface ICadDslVisitor {
     void visitRemoveFromConstruction(IConstruction... toRemove)
 
     ITrimmable2d visitMirror(ITrimmable2d curve, Vec2d pos, Vec2d dir)
+
+    void visitAddToConstruction(IConstruction... toAdd)
 }

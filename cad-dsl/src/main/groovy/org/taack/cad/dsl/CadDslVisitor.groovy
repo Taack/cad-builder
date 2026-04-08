@@ -338,6 +338,7 @@ class CadDslVisitor implements ICadDslVisitor {
     @Override
     void visitRemoveFromConstruction(IConstruction... toRemove) {
         closedShape2dList.removeAll(toRemove)
+        openShape2dList.removeAll(toRemove)
     }
 
     @Override
@@ -345,6 +346,14 @@ class CadDslVisitor implements ICadDslVisitor {
         Mirrored2d mirrored2d = new Mirrored2d(curve, pos, dir)
         openShape2dList << mirrored2d
         return mirrored2d
+    }
+
+    @Override
+    void visitAddToConstruction(IConstruction... toAdd) {
+        for (IConstruction c in toAdd) {
+            if (IOpenShape2d.isAssignableFrom(c.class))
+                openShape2dList.add(c as IOpenShape2d)
+        }
     }
 
     @Override

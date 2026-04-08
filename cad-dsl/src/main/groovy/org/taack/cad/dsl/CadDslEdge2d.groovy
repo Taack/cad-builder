@@ -160,4 +160,8 @@ class CadDslEdge2d implements CadDslBase {
     void removeFromConstruction(IConstruction... toRemove) {
         visitor.visitRemoveFromConstruction(toRemove)
     }
+
+    void addToConstruction(IConstruction... toAdd) {
+        visitor.visitAddToConstruction(toAdd)
+    }
 }

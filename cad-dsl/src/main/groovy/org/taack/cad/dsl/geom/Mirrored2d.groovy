@@ -41,14 +41,12 @@ class Mirrored2d implements ITrimmable2d {
     @Override
     MemorySegment trimmedCurve2d() {
         if (!trimmed) {
-            CadDslVisitor.Tr.cur "Mirrored2d $this"
             MemorySegment mirrorAxis = new_gp_Ax2d__pt_dir(pos.toGpPnt2d(), dir.toGpDir2d())
             trimmed = handle_Geom2d_Geometry__Copy(curve.trimmedCurve2d())
             _Geom2d_TrimmedCurve__Mirror__ax2(trimmed, mirrorAxis)
             _Geom2d_TrimmedCurve__Reverse(trimmed)
         }
         return trimmed
-
     }
 
     @Override
@@ -61,4 +59,14 @@ class Mirrored2d implements ITrimmable2d {
         return getEnd()
     }
 
+
+    @Override
+    String toString() {
+        return "Mirrored2d{" +
+                "start=" + start +
+                "end=" + end +
+                "pos=" + pos +
+                ", dir=" + dir +
+                '}';
+    }
 }
