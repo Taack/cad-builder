@@ -304,6 +304,20 @@ class CadDslVisitor implements ICadDslVisitor {
     }
 
     @Override
+    ArcOfCircle2d visitTrimmed(Circle2d circle2d, Vec2d from, Number to, boolean reverse) {
+        ArcOfCircle2d arc = new ArcOfCircle2d(circle2d, from, to.toDouble(), reverse)
+        openShape2dList << arc
+        arc
+    }
+
+    @Override
+    ArcOfCircle2d visitTrimmed(Circle2d circle2d, Vec2d from, Vec2d to, boolean reverse) {
+        ArcOfCircle2d arc = new ArcOfCircle2d(circle2d, from, to, reverse)
+        openShape2dList << arc
+        arc
+    }
+
+    @Override
     void visitCylindricalSurface(Number radius) {
         def ax2 = new_gp_Ax2__gp_Pnt_gp_Dir(fromVec.toGpPnt(), direction.toGpDir())
         currentSurface = handle_Geom_CylindricalSurface__ax2_radius(ax2, radius.toDouble())
@@ -324,6 +338,13 @@ class CadDslVisitor implements ICadDslVisitor {
     @Override
     void visitRemoveFromConstruction(IConstruction... toRemove) {
         closedShape2dList.removeAll(toRemove)
+    }
+
+    @Override
+    ITrimmable2d visitMirror(ITrimmable2d curve, Vec2d pos, Vec2d dir) {
+        Mirrored2d mirrored2d = new Mirrored2d(curve, pos, dir)
+        openShape2dList << mirrored2d
+        return mirrored2d
     }
 
     @Override

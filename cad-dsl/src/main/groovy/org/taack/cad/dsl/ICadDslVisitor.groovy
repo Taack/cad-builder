@@ -86,9 +86,13 @@ interface ICadDslVisitor {
 
     void visitWireFromSurfaceEnd()
 
-    ITrimmable2d visitTrimmed(IClosedShape2d curve, Number from, Number tp, boolean reverse)
+    ITrimmable2d visitTrimmed(IClosedShape2d curve, Number from, Number to, boolean reverse)
 
-    ArcOfCircle2d visitTrimmed(Circle2d circle2d, Number from, Number tp, boolean reverse)
+    ArcOfCircle2d visitTrimmed(Circle2d circle2d, Number from, Number to, boolean reverse)
+
+    ArcOfCircle2d visitTrimmed(Circle2d circle2d, Vec2d from, Number to, boolean reverse)
+
+    ArcOfCircle2d visitTrimmed(Circle2d circle2d, Vec2d from, Vec2d to, boolean reverse)
 
     void visitCylindricalSurface(Number number)
 
@@ -97,4 +101,6 @@ interface ICadDslVisitor {
     void visitClosedWireEnd()
 
     void visitRemoveFromConstruction(IConstruction... toRemove)
+
+    ITrimmable2d visitMirror(ITrimmable2d curve, Vec2d pos, Vec2d dir)
 }

@@ -137,8 +137,20 @@ class CadDslEdge2d implements CadDslBase {
         visitor.visitTrimmed(curve, from, to, reverse)
     }
 
+    ArcOfCircle2d trimmed(Circle2d curve, Vec2d from, Vec2d to, boolean reverse = false) {
+        visitor.visitTrimmed(curve, from, to, reverse)
+    }
+
+    ArcOfCircle2d trimmed(Circle2d curve, Vec2d from, Number to, boolean reverse = false) {
+        visitor.visitTrimmed(curve, from, to.toDouble(), reverse)
+    }
+
     ITrimmable2d trimmed(IClosedShape2d curve, Number from, Number to, boolean reverse = false) {
         visitor.visitTrimmed(curve, from, to, reverse)
+    }
+
+    ITrimmable2d mirror(ITrimmable2d curve, Vec2d pt, Vec2d dir) {
+        visitor.visitMirror(curve, pt, dir)
     }
 
     Vec bound(Number U) {
