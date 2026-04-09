@@ -5,10 +5,8 @@ import org.junit.jupiter.api.Test
 import org.taack.cad.builder.ShapeEnum
 import org.taack.cad.builder.Vec2d
 
-import java.beans.Visibility
-
+import static java.lang.Math.PI
 import static org.taack.occt.NativeLib.*
-import static java.lang.Math.*
 
 @CompileStatic
 class TaperedPrismLowLevelTest {
