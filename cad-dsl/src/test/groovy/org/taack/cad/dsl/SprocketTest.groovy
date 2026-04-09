@@ -112,7 +112,7 @@ class SprocketTest {
 
             println "Replace the two outer arcs with a single one"
             to trimmedOuter.start
-            arc(trimmedOuter.end, mirrorOuter.end)
+            arc(mirrorOuter.end, trimmedOuter.end)
             ITrimmable2d mirrorProfile = mirror(trimmedProfile, new Vec2d(), new Vec2d(1, 0))
             ITrimmable2d mirrorBase = mirror(trimmedBase, new Vec2d(), new Vec2d(1, 0))
 
@@ -137,7 +137,7 @@ class SprocketTest {
 
             println "Combine the edges in a wire"
             println "Convert the wire into a face"
-            removeFromConstruction(baseConstruct, profileConstruct, outerConstruct, trimmedOuter, mirrorOuter, innerCircleConstruct, innerArc)
+            removeFromConstruction(baseConstruct, profileConstruct, outerConstruct, trimmedOuter, mirrorOuter, innerCircleConstruct)
 
         }.toFace().prism(thickness).display()
 

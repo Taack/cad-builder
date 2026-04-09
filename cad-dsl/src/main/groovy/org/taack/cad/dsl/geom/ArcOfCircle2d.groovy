@@ -92,7 +92,7 @@ class ArcOfCircle2d implements ITrimmable2d {
     @Override
     String toString() {
         return "ArcOfCircle2d{" +
-                ", start=" + start +
+                "start=" + start +
                 ", end=" + end +
                 ", reverse=" + reverse +
                 ", angle1=" + angle1 +

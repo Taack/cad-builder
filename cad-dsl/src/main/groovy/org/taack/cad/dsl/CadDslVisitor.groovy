@@ -350,9 +350,13 @@ class CadDslVisitor implements ICadDslVisitor {
 
     @Override
     void visitAddToConstruction(IConstruction... toAdd) {
+        println "AUO 111"
         for (IConstruction c in toAdd) {
-            if (IOpenShape2d.isAssignableFrom(c.class))
-                openShape2dList.add(c as IOpenShape2d)
+            println "AUO 1112"
+            if (IOpenShape2d.isAssignableFrom(c.class)) {
+                openShape2dList.addLast(c as IOpenShape2d)
+                println "AUO 1113"
+            }
         }
     }
 
