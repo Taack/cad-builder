@@ -71,10 +71,11 @@ class ArcOfCircle2d implements ITrimmable2d {
     @Override
     MemorySegment trimmedCurve2d() {
         if (!trimmed) {
-            def c = new_gp_Circ2d__ax2d_r(new_gp_Ax2d__pt_dir(circle2d.pos.toGpPnt2d(), new Vec2d(1, 0).toGpDir2d()), circle2d.radius)
+            MemorySegment c = new_gp_Circ2d__ax2d_r(new_gp_Ax2d__pt_dir(circle2d.pos.toGpPnt2d(), new Vec2d(1, 0).toGpDir2d()), circle2d.radius)
             if (angle1 != angle2) trimmed = handle_Geom2d_TrimmedCurve__GCE2d_MakeArcOfCircle__cir2d_ang1_ang2(c, angle1, angle2)
             else if (ptTo == null) trimmed = handle_Geom2d_TrimmedCurve__GCE2d_MakeArcOfCircle__cir2d_p1_ang(c, ptFrom.toGpPnt2d(), angle1)
             else trimmed = handle_Geom2d_TrimmedCurve__GCE2d_MakeArcOfCircle__cir2d_p1_p2(c, ptFrom.toGpPnt2d(), ptTo.toGpPnt2d())
+            if (reverse) _Geom2d_TrimmedCurve__Reverse(trimmed)
         }
         return trimmed
     }

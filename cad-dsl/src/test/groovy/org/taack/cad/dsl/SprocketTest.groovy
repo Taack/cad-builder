@@ -69,7 +69,7 @@ class SprocketTest {
         Vec2d p1
         cd().wireFrom(base_center) {
             Circle2d baseConstruct = circle(2.0d * tooth_radius)
-            ArcOfCircle2d trimmedBase = trimmed(baseConstruct, PI - (roller_contact_angle / 2.0d), PI)
+            ArcOfCircle2d trimmedBase = trimmed(baseConstruct, PI - (roller_contact_angle / 2.0d), PI, true)
             p0v2d = trimmedBase.start
             p1 = trimmedBase.end
 
