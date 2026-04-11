@@ -72,8 +72,8 @@ class CadDslEdge2d implements CadDslBase {
      * Draw a closed circle at the last position
      * @param diameter Diameter of the circle
      */
-    Circle2d circle(Number diameter, boolean reverse = false) {
-        visitor.visitCircle2d(diameter, reverse)
+    Circle2d circle(Number radius, boolean reverse = false) {
+        visitor.visitCircle2d(radius, reverse)
     }
 
     /**

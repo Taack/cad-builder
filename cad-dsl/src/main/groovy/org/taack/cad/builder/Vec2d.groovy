@@ -67,7 +67,8 @@ class Vec2d {
     }
 
     double distance(Vec2d other) {
-        sqrt(pow(x - other.x, 2) + pow(y - other.y, 2))
+        //sqrt(pow(x - other.x, 2) + pow(y - other.y, 2))
+        gp_Pnt2d__Distance__p1_p2(this.toGpPnt2d(), other.toGpPnt2d())
     }
 
     static Vec2d fromAPnt(MemorySegment aPnt) {

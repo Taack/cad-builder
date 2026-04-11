@@ -59,7 +59,6 @@
 #include <Xw_Window.hxx>
 #include <gp_Pnt.hxx>
 #include <GeomAPI.hxx>
-#include <ShapeExtend_Status.hxx>
 #include <ShapeExtend_WireData.hxx>
 #include <ShapeFix_Wire.hxx>
 #include <ShapeFix_ShapeTolerance.hxx>
@@ -88,6 +87,8 @@
 #include <GeomAPI_ExtremaCurveSurface.hxx>
 #include <BRepExtrema_DistShapeShape.hxx>
 #include <Graphic3d_Text.hxx>
+#include <BRepCheck_Wire.hxx>
+
 
 #include <string>       // std::string
 #include <sstream>      // std::ostringstream
@@ -684,6 +685,73 @@ extern "C" void _TopoDS__Shape__Reverse(TopoDS_Shape &shape) {
     return shape.Reverse();
 }
 
+
+void wire_check1(TopoDS_Wire &wire) {
+    if (!wire.Closed()) {
+        gp_Pln plane;
+        TopoDS_Face face(BRepBuilderAPI_MakeFace(plane).Face());
+//        ShapeAnalysis_Wire analyze(wire, face, 0.01);
+        ShapeAnalysis_Wire analyze(wire, face, Precision::PConfusion());
+//        analyze.Load(wire);
+        analyze.Perform();
+        TRACE2(std::ostringstream{} << "Precision " << analyze.Precision());
+        Standard_Integer ne = analyze.NbEdges();
+        for (int i = 0; i < ne; i++) {
+
+//            if (analyze.CheckConnected(i, 0.01)) {
+            if (analyze.CheckConnected(i)) {
+                TRACE2(std::ostringstream{} << "CheckConnected TRUE for " << i);
+            } else {
+                TRACE2(std::ostringstream{} << "CheckConnected FALSE for " << i);
+                if (analyze.StatusConnected(ShapeExtend_OK)) TRACE2(std::ostringstream{} << "CheckConnected Status ShapeExtend_OK " << analyze.StatusConnected(ShapeExtend_OK));
+                if (analyze.StatusConnected(ShapeExtend_DONE)) TRACE2(std::ostringstream{} << "CheckConnected Status ShapeExtend_DONE " << analyze.StatusConnected(ShapeExtend_DONE));
+                if (analyze.StatusConnected(ShapeExtend_DONE1)) TRACE2(std::ostringstream{} << "CheckConnected Status ShapeExtend_DONE1 " << analyze.StatusConnected(ShapeExtend_DONE1));
+                if (analyze.StatusConnected(ShapeExtend_DONE2)) TRACE2(std::ostringstream{} << "CheckConnected Status ShapeExtend_DONE2 " << analyze.StatusConnected(ShapeExtend_DONE2));
+                if (analyze.StatusConnected(ShapeExtend_FAIL)) TRACE2(std::ostringstream{} << "CheckConnected Status ShapeExtend_FAIL " << analyze.StatusConnected(ShapeExtend_FAIL));
+                if (analyze.StatusConnected(ShapeExtend_FAIL1)) TRACE2(std::ostringstream{} << "CheckConnected Status ShapeExtend_FAIL1 " << analyze.StatusConnected(ShapeExtend_FAIL1));
+                if (analyze.StatusConnected(ShapeExtend_FAIL2)) TRACE2(std::ostringstream{} << "CheckConnected Status ShapeExtend_FAIL2 " << analyze.StatusConnected(ShapeExtend_FAIL2));
+            }
+            if (analyze.CheckGap2d(i)) {
+                TRACE2(std::ostringstream{} << "CheckGap2d TRUE for " << i);
+            } else {
+                TRACE2(std::ostringstream{} << "CheckGap2d FALSE for " << i);
+                if (analyze.StatusGaps2d(ShapeExtend_OK)) TRACE2(std::ostringstream{} << "CheckGap2d Status ShapeExtend_OK " << analyze.StatusGaps2d(ShapeExtend_OK));
+                if (analyze.StatusGaps2d(ShapeExtend_DONE)) TRACE2(std::ostringstream{} << "CheckGap2d Status ShapeExtend_DONE " << analyze.StatusGaps2d(ShapeExtend_DONE));
+                if (analyze.StatusGaps2d(ShapeExtend_FAIL)) TRACE2(std::ostringstream{} << "CheckGap2d Status ShapeExtend_FAIL " << analyze.StatusGaps2d(ShapeExtend_FAIL));
+            }
+            if (analyze.CheckLacking(i)) {
+                TRACE2(std::ostringstream{} << "CheckLacking TRUE for " << i);
+            } else {
+                TRACE2(std::ostringstream{} << "CheckLacking FALSE for " << i);
+                if (analyze.StatusLacking(ShapeExtend_OK)) TRACE2(std::ostringstream{} << "CheckLacking Status ShapeExtend_OK ");
+                if (analyze.StatusLacking(ShapeExtend_DONE)) TRACE2(std::ostringstream{} << "CheckLacking Status ShapeExtend_DONE ");
+                if (analyze.StatusLacking(ShapeExtend_DONE1)) TRACE2(std::ostringstream{} << "CheckLacking Status ShapeExtend_DONE1 ");
+                if (analyze.StatusLacking(ShapeExtend_DONE2)) TRACE2(std::ostringstream{} << "CheckLacking Status ShapeExtend_DONE2 ");
+                if (analyze.StatusLacking(ShapeExtend_FAIL)) TRACE2(std::ostringstream{} << "CheckLacking Status ShapeExtend_FAIL ");
+
+            }
+        }
+        TRACE2(std::ostringstream{} << "MinDistance2d " << analyze.MinDistance2d());
+        TRACE2(std::ostringstream{} << "MaxDistance2d " << analyze.MaxDistance2d());
+        TRACE2(std::ostringstream{} << "MinDistance3d " << analyze.MinDistance3d());
+        TRACE2(std::ostringstream{} << "MaxDistance3d " << analyze.MaxDistance3d());
+    }
+}
+
+void wire_check2(TopoDS_Wire &wire) {
+    BRepCheck_Wire checker(wire);
+    BRepCheck_Status closedStatus = checker.Closed();
+    TRACE2(std::ostringstream{} << "closedStatus " << closedStatus);
+
+    if (closedStatus == BRepCheck_NoError) TRACE("BRepCheck_NoError => Closed");
+    if (closedStatus == BRepCheck_NotConnected) TRACE("BRepCheck_NotConnected => wire is not topologically closed");
+    if (closedStatus == BRepCheck_RedundantEdge) TRACE("BRepCheck_RedundantEdge => edge is in wire more than 3 times or in case of 2 occurrences if not with FORWARD and REVERSED orientation.");
+    if (closedStatus == BRepCheck_UnorientableShape) TRACE("BRepCheck_UnorientableShape => ???");
+    if (closedStatus == BRepCheck_NotClosed) TRACE("BRepCheck_NotClosed => ???");
+    if (closedStatus == BRepCheck_NotConnected) TRACE("BRepCheck_NotConnected => ???");
+    if (closedStatus == BRepCheck_CheckFail) TRACE("BRepCheck_CheckFail => ???");
+}
+
 extern "C" TopoDS_Face *new_TopoDS_Face__BRepBuilderAPI_MakeFace__TopoDS_Wire(TopoDS_Wire &wire) {
     TRACE(wire.IsNull() ? "NULL" : "NOT NULL");
     TRACE(wire.Closed() ? "Closed" : "NOT Closed");
@@ -691,6 +759,10 @@ extern "C" TopoDS_Face *new_TopoDS_Face__BRepBuilderAPI_MakeFace__TopoDS_Wire(To
     TRACE(wire.Convex() ? "Convex" : "NOT Convex");
 //    return new TopoDS_Face(wire);
 //    return new TopoDS_Face(BRepBuilderAPI_MakeFace(wire).Face());
+
+    wire_check2(wire);
+    wire_check1(wire);
+
     BRepBuilderAPI_MakeFace* mf;
     try {
         mf = new BRepBuilderAPI_MakeFace(wire);

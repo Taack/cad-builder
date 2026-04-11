@@ -68,7 +68,7 @@ class SprocketTest {
         Vec2d p0v2d
         Vec2d p1
         cd().wireFrom(base_center) {
-            Circle2d baseConstruct = circle(2.0d * tooth_radius)
+            Circle2d baseConstruct = circle(tooth_radius)
             ArcOfCircle2d trimmedBase = trimmed(baseConstruct, PI - (roller_contact_angle / 2.0d), PI, true)
             p0v2d = trimmedBase.start
             p1 = trimmedBase.end
@@ -108,13 +108,14 @@ class SprocketTest {
             ArcOfCircle2d trimmedOuter = trimmed(outerConstruct, p2, vP3)
 
             println "Mirror and reverse the three arcs"
-            ITrimmable2d mirrorOuter = mirror(trimmedOuter, new Vec2d(), new Vec2d(1, 0))
+            Vec2d dirMirror = new Vec2d(1, 0).rotate(tooth_angle / 2.0d)
+            ITrimmable2d mirrorOuter = mirror(trimmedOuter, new Vec2d(), dirMirror)
 
             println "Replace the two outer arcs with a single one"
             to trimmedOuter.start
             arc(mirrorOuter.end, trimmedOuter.end)
-            ITrimmable2d mirrorProfile = mirror(trimmedProfile, new Vec2d(), new Vec2d(1, 0))
-            ITrimmable2d mirrorBase = mirror(trimmedBase, new Vec2d(), new Vec2d(1, 0))
+            ITrimmable2d mirrorProfile = mirror(trimmedProfile, new Vec2d(), dirMirror)
+            ITrimmable2d mirrorBase = mirror(trimmedBase, new Vec2d(), dirMirror)
 
             println "Create an arc for the inside of the wedge"
             to new Vec2d()
@@ -137,6 +138,7 @@ class SprocketTest {
 
             println "Combine the edges in a wire"
             println "Convert the wire into a face"
+//            removeFromConstruction(trimmedProfile)
             removeFromConstruction(baseConstruct, profileConstruct, outerConstruct, trimmedOuter, mirrorOuter, innerCircleConstruct)
 
         }.toFace().prism(thickness).display()

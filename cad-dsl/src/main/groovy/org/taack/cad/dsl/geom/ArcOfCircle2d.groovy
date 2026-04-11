@@ -49,10 +49,7 @@ class ArcOfCircle2d implements ITrimmable2d {
 
     @Override
     Vec2d getStart() {
-        if (ptFrom)
-            return ptFrom
-        else
-            return Vec2d.fromAPnt(new_gp_Pnt2d__Geom2d_TrimmedCurve__StartPoint(trimmedCurve2d()))
+        return Vec2d.fromAPnt(new_gp_Pnt2d__Geom2d_TrimmedCurve__StartPoint(trimmedCurve2d()))
     }
 
     @Override

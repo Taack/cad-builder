@@ -165,6 +165,9 @@ class SprocketLowLevelTest {
         def p6 = new_gp_Pnt2d__Geom2d_TrimmedCurve__EndPoint(inner_arc)
         Vec2d p6v2d = Vec2d.fromAPnt(p6)
         Vec2d p0v2d = Vec2d.fromAPnt(p0)
+
+        println "p5v2d = $p5v2d, p6v2d = $p6v2d"
+
         def lin2 = new_BRepBuilderAPI_MakeEdge__ptFrom_ptTo(new Vec(p6v2d).toGpPnt(), new Vec(p0v2d.x, p0v2d.y, 0).toGpPnt())
 
         println "Combine the edges in a wire"
