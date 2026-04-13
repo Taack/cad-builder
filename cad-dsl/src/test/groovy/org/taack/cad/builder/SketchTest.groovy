@@ -2,6 +2,8 @@ package org.taack.cad.builder
 
 import groovy.transform.CompileStatic
 import org.junit.jupiter.api.Test
+import org.taack.cad.dsl.geom.Vec
+import org.taack.cad.dsl.geom.Vec2d
 
 import static org.taack.cad.builder.CadBuilder.cb
 

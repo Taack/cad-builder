@@ -1,6 +1,9 @@
 package org.taack.cad.builder
 
 import groovy.transform.CompileStatic
+import org.taack.cad.dsl.geom.Vec
+import org.taack.cad.dsl.geom.Vec2d
+import org.taack.cad.dsl.helper.SurfaceBounds
 
 import java.lang.foreign.Arena
 import java.lang.foreign.MemorySegment
@@ -413,7 +416,7 @@ class CadBuilder {
     }
 
     static SurfaceBounds surfaceGetBounds(MemorySegment surface) {
-        new SurfaceBounds(R4_Geom_Surface__Bounds(surface))
+        new SurfaceBounds(surface)
     }
 
     static MemorySegment ellipseCurve(Vec pos, Vec direction, Number majorRadius, Number minorRadius) {

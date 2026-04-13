@@ -1,7 +1,7 @@
 package org.taack.cad.dsl
 
-import org.taack.cad.builder.Vec
-import org.taack.cad.builder.Vec2d
+import org.taack.cad.dsl.geom.Vec
+import org.taack.cad.dsl.geom.Vec2d
 import org.taack.cad.dsl.geom.ArcOfCircle2d
 import org.taack.cad.dsl.geom.Circle2d
 import org.taack.cad.dsl.geom.Ellipse2d

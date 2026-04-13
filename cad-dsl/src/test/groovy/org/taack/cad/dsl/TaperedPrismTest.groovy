@@ -2,11 +2,7 @@ package org.taack.cad.dsl
 
 import groovy.transform.CompileStatic
 import org.junit.jupiter.api.Test
-import org.taack.cad.builder.ShapeEnum
-import org.taack.cad.builder.Vec2d
 
-import static org.taack.occt.NativeLib.*
-import static java.lang.Math.*
 import static org.taack.cad.dsl.CadDsl.*
 
 

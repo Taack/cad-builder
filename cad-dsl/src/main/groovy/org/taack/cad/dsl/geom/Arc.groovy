@@ -1,7 +1,6 @@
 package org.taack.cad.dsl.geom
 
 import groovy.transform.CompileStatic
-import org.taack.cad.builder.Vec
 
 import java.lang.foreign.MemorySegment
 

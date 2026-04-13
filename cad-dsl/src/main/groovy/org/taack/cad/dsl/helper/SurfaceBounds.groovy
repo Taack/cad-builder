@@ -1,9 +1,11 @@
-package org.taack.cad.builder
+package org.taack.cad.dsl.helper
 
 import groovy.transform.CompileStatic
 
 import java.lang.foreign.MemorySegment
 import java.lang.foreign.ValueLayout
+
+import static org.taack.occt.NativeLib.R4_Geom_Surface__Bounds
 
 @CompileStatic
 final class SurfaceBounds {
@@ -12,7 +14,8 @@ final class SurfaceBounds {
     final double v1
     final double v2
 
-    SurfaceBounds(MemorySegment m) {
+    SurfaceBounds(MemorySegment surface) {
+        MemorySegment m = R4_Geom_Surface__Bounds(surface)
         u1 = m.get(ValueLayout.JAVA_DOUBLE,0)
 //        u1 = u2 = v1 = v2 = 0.0d
         u2 = m.get(ValueLayout.JAVA_DOUBLE,8)

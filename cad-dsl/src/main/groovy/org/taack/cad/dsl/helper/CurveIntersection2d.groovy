@@ -1,8 +1,9 @@
-package org.taack.cad.builder
+package org.taack.cad.dsl.helper
 
 import groovy.transform.CompileStatic
 import org.taack.cad.dsl.CadDslVisitor
 import org.taack.cad.dsl.geom.IClosedShape2d
+import org.taack.cad.dsl.geom.Vec2d
 
 import static org.taack.occt.NativeLib.*
 

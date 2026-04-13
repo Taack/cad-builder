@@ -1,6 +1,7 @@
-package org.taack.cad.builder
+package org.taack.cad.dsl.helper
 
 import groovy.transform.CompileStatic
+import org.taack.cad.dsl.geom.Vec
 import org.taack.cad.dsl.CadDslVisitor
 
 import java.lang.foreign.MemorySegment

@@ -2,7 +2,7 @@ package org.taack.cad.dsl
 
 import groovy.transform.CompileStatic
 import org.junit.jupiter.api.Test
-import org.taack.cad.builder.Vec
+import org.taack.cad.dsl.geom.Vec
 
 import static org.taack.cad.dsl.CadDsl.cd
 import static java.lang.Math.*

@@ -1,9 +1,10 @@
-package org.taack.cad.builder
+package org.taack.cad.dsl.helper
 
 import groovy.transform.CompileStatic
 
 import java.lang.foreign.MemorySegment
 import java.lang.foreign.ValueLayout
+import static org.taack.occt.NativeLib.*
 
 @CompileStatic
 final class SurfaceExtrema {
@@ -14,7 +15,8 @@ final class SurfaceExtrema {
     final double p2y
     final double p2z
 
-    SurfaceExtrema(MemorySegment m) {
+    SurfaceExtrema(MemorySegment extrema, int i) {
+        MemorySegment m = R6_GeomAPI_ExtremaCurveSurface__NbExtrema(extrema, i)
         p1x = m.get(ValueLayout.JAVA_DOUBLE,0)
         p1y = m.get(ValueLayout.JAVA_DOUBLE,8)
         p1z = m.get(ValueLayout.JAVA_DOUBLE,16)

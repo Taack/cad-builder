@@ -3,7 +3,7 @@ package org.taack.cad.binding
 import groovy.transform.CompileStatic
 import org.junit.jupiter.api.Test
 import org.taack.cad.builder.ShapeEnum
-import org.taack.cad.builder.Vec2d
+import org.taack.cad.dsl.geom.Vec2d
 
 import static java.lang.Math.PI
 import static org.taack.occt.NativeLib.*

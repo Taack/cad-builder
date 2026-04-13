@@ -2,9 +2,9 @@ package org.taack.cad.dsl
 
 import groovy.transform.CompileStatic
 import org.junit.jupiter.api.Test
-import org.taack.cad.builder.CurveIntersection2d
-import org.taack.cad.builder.Vec
-import org.taack.cad.builder.Vec2d
+import org.taack.cad.dsl.helper.CurveIntersection2d
+import org.taack.cad.dsl.geom.Vec
+import org.taack.cad.dsl.geom.Vec2d
 import org.taack.cad.dsl.geom.ArcOfCircle2d
 import org.taack.cad.dsl.geom.Circle2d
 import org.taack.cad.dsl.geom.ITrimmable2d
@@ -61,7 +61,7 @@ class SprocketTest {
     /**
      * Build a single tooth
      */
-    void buildTooth() {
+    CadDsl buildTooth() {
 
         println "Create a 2D arc to form the base of the tooth"
         Vec2d base_center = new Vec2d(pitch_circle_radius + (tooth_radius - roller_radius), 0)
@@ -136,56 +136,16 @@ class SprocketTest {
             to p6v2d
             edge(p0v2d)
 
-            println "Combine the edges in a wire"
-            println "Convert the wire into a face"
-//            removeFromConstruction(trimmedProfile)
             removeFromConstruction(baseConstruct, profileConstruct, outerConstruct, trimmedOuter, mirrorOuter, innerCircleConstruct)
 
-        }.toFace().prism(thickness).display()
+        }.toFace().prism(thickness).display().toCadDsl()
 
-
-//        println "Convert the 2D arcs and two extra lines to 3D edges"
-//        def plane = new_gp_Pln__pt_dir(new Vec().toGpPnt(), new Vec(0, 0, 1).toGpDir())
-//        def arc1 = new_BRepBuilderAPI_MakeEdge__Geom_Curve handle_Geom_Curve__GeomAPI_To3d__Geom2d_Curve_gp_Pln(trimmed_base, plane)
-//        def arc2 = new_BRepBuilderAPI_MakeEdge__Geom_Curve handle_Geom_Curve__GeomAPI_To3d__Geom2d_Curve_gp_Pln(trimmed_profile, plane)
-//        def arc3 = new_BRepBuilderAPI_MakeEdge__Geom_Curve handle_Geom_Curve__GeomAPI_To3d__Geom2d_Curve_gp_Pln(outer_arc, plane)
-//        def arc4 = new_BRepBuilderAPI_MakeEdge__Geom_Curve handle_Geom_Curve__GeomAPI_To3d__Geom2d_Curve_gp_Pln(mirror_profile, plane)
-//        def arc5 = new_BRepBuilderAPI_MakeEdge__Geom_Curve handle_Geom_Curve__GeomAPI_To3d__Geom2d_Curve_gp_Pln(mirror_base, plane)
-//
-//        def p4 = new_gp_Pnt2d__Geom2d_TrimmedCurve__EndPoint(mirror_base)
-//        Vec2d p4v2d = Vec2d.fromAPnt(p4)
-//        def p5 = new_gp_Pnt2d__Geom2d_TrimmedCurve__StartPoint(inner_arc)
-//        Vec2d p5v2d = Vec2d.fromAPnt(p5)
-//        def lin1 = new_BRepBuilderAPI_MakeEdge__ptFrom_ptTo(new Vec(p4v2d).toGpPnt(), new Vec(p5v2d).toGpPnt())
-//        def arc6 = new_BRepBuilderAPI_MakeEdge__Geom_Curve handle_Geom_Curve__GeomAPI_To3d__Geom2d_Curve_gp_Pln(inner_arc, plane)
-//        def p6 = new_gp_Pnt2d__Geom2d_TrimmedCurve__EndPoint(inner_arc)
-//        Vec2d p6v2d = Vec2d.fromAPnt(p6)
-//        Vec2d p0v 2d = Vec2d.fromAPnt(p0)
-//        def lin2 = new_BRepBuilderAPI_MakeEdge__ptFrom_ptTo(new Vec(p6v2d).toGpPnt(), new Vec(p0v2d.x, p0v2d.y, 0).toGpPnt())
-//
-//        println "Combine the edges in a wire"
-//        def wire = new_BRepBuilderAPI_MakeWire__BRepBuilderAPI_MakeEdge(arc1)
-//        _BRepBuilderAPI_MakeWire__Add__BRepBuilderAPI_MakeEdge(wire, arc2)
-//        _BRepBuilderAPI_MakeWire__Add__BRepBuilderAPI_MakeEdge(wire, arc3)
-//        _BRepBuilderAPI_MakeWire__Add__BRepBuilderAPI_MakeEdge(wire, arc4)
-//        _BRepBuilderAPI_MakeWire__Add__BRepBuilderAPI_MakeEdge(wire, arc5)
-//        _BRepBuilderAPI_MakeWire__Add__BRepBuilderAPI_MakeEdge(wire, lin1)
-//        _BRepBuilderAPI_MakeWire__Add__BRepBuilderAPI_MakeEdge(wire, arc6)
-//        _BRepBuilderAPI_MakeWire__Add__BRepBuilderAPI_MakeEdge(wire, lin2)
-//
-//        println "Convert the wire into a face"
-//        def face = new_TopoDS_Face__BRepBuilderAPI_MakeFace__TopoDS_Wire(new_TopoDS_Wire__BRepBuilderAPI_MakeWire__Wire(wire))
-//
-//        println "Finally, extrude the face"
-//        def wedge = new_TopoDS_Shape__BRepPrimAPI_MakePrism__TopoDS_Face_gp_Vec(face, new Vec(0, 0, thickness).toGpVec())
-//
-//        return wedge
     }
 
     /**
      * Round off the edge of the single tooth
      */
-    MemorySegment roundTooth(MemorySegment wedge) {
+    CadDsl roundTooth(CadDsl wedge) {
         double round_x = 2.6
         double round_z = 0.06 * pitch
         double round_radius = pitch
@@ -196,75 +156,99 @@ class SprocketTest {
         Vec2d p2d_2v = new Vec2d(top_radius, round_z)
         def p2d_2 = p2d_2v.toGpPnt2d()
 
-        println "Construct the rounding circle"
-        def round_circle = new_GccAna_Circ2d2TanRad__p2d1_p2d2_roundRadius(p2d_1, p2d_2, round_radius, 0.01d)
-        if (i_GccAna_Circ2d2TanRad__NbSolutions(round_circle) != 2)
-            throw new RuntimeException()
 
-        def round_circle_2d_1 = ref_gp_Circ2d__GccAna_Circ2d2TanRad__ThisSolution__index(round_circle, 1)
-        def round_circle_2d_2 = ref_gp_Circ2d__GccAna_Circ2d2TanRad__ThisSolution__index(round_circle, 2)
-        MemorySegment round_circle_2d
-        Vec2d roundP1 = Vec2d.fromAPnt ref_gp_Pnt2d__gp_Ax22d__Location(ref_Position__gp_Circ2d__Position(round_circle_2d_1))
+        wedge.wireFrom(new Vec2d()) {
+            println "Construct the rounding circle"
+//        def round_circle = new_GccAna_Circ2d2TanRad__p2d1_p2d2_roundRadius(p2d_1, p2d_2, round_radius, 0.01d)
+//        if (i_GccAna_Circ2d2TanRad__NbSolutions(round_circle) != 2)
+//            throw new RuntimeException()
 
-        println "round_circle_2d_1; ${roundP1.y}"
-        if (roundP1.y >= 0)
-            round_circle_2d = round_circle_2d_1
-        else
-            round_circle_2d = round_circle_2d_2
-
-        println "Remove the arc used for rounding"
-        def trimmed_circle = handle_Geom2d_TrimmedCurve__GCE2d_MakeArcOfCircle__cir2d_p1_p2(round_circle_2d, p2d_1, p2d_2)
-
-        println "Calculate extra points used to construct lines"
-        Vec p1v = new Vec(p2d_1v.x, 0, p2d_1v.y)
-        def p1 = p1v.toGpPnt()
-        Vec p2v = new Vec(p2d_2v.x, 0, p2d_2v.y)
-        def p2 = p2v.toGpPnt()
-        Vec p3v = new Vec(p2d_2v.x + 1, 0, p2d_2v.y)
-        def p3 = p3v.toGpPnt()
-        Vec p4v = new Vec(p2d_2v.x + 1, 0, p2d_1v.y - 1)
-        def p4 = p4v.toGpPnt()
-        Vec p5v = new Vec(p2d_1v.x, 0, p2d_1v.y - 1)
-        def p5 = p5v.toGpPnt()
-
-        println "Convert the arc and four extra lines into 3D edges"
-        def plane = new_gp_Pln__gp_Ax3(new_gp_Ax3__p_dN_dX(new Vec().toGpPnt(), new Vec(0, -1, 0).toGpDir(), new Vec(1, 0, 0).toGpDir()))
-        def arc1 = new_BRepBuilderAPI_MakeEdge__Geom_Curve(handle_Geom_Curve__GeomAPI_To3d__Geom2d_Curve_gp_Pln(trimmed_circle, plane))
-        def lin1 = new_BRepBuilderAPI_MakeEdge__ptFrom_ptTo(p2, p3)
-        def lin2 = new_BRepBuilderAPI_MakeEdge__ptFrom_ptTo(p3, p4)
-        def lin3 = new_BRepBuilderAPI_MakeEdge__ptFrom_ptTo(p4, p5)
-        def lin4 = new_BRepBuilderAPI_MakeEdge__ptFrom_ptTo(p5, p1)
-
-        println "Make a wire composed of the edges"
-        def round_wire = new_BRepBuilderAPI_MakeWire__BRepBuilderAPI_MakeEdge(arc1)
-        _BRepBuilderAPI_MakeWire__Add__BRepBuilderAPI_MakeEdge(round_wire, lin1)
-        _BRepBuilderAPI_MakeWire__Add__BRepBuilderAPI_MakeEdge(round_wire, lin2)
-        _BRepBuilderAPI_MakeWire__Add__BRepBuilderAPI_MakeEdge(round_wire, lin3)
-        _BRepBuilderAPI_MakeWire__Add__BRepBuilderAPI_MakeEdge(round_wire, lin4)
-
-        println "Turn the wire into a face"
-        def round_face = new_TopoDS_Face__BRepBuilderAPI_MakeFace(new_BRepBuilderAPI_MakeFace__BRepBuilderAPI_MakeWire(round_wire))
-
-        println "Revolve the face around the Z axis over the tooth angle"
-        def rounding_cut_1 = new_TopoDS_Shape__BRepPrimAPI_MakeRevol__TopoDS_Face_gp_Ax1_ang(round_face, new_gp_Ax1__p_dir(new Vec().toGpPnt(), new Vec(1).toGpDir()), tooth_angle)
-
-        // Construct a mirrored copy of the first cutting shape
-        def mirror = new_gp_Trsf()
-        _gp_Trsf__SetMirror__gp_Ax2(mirror, new_gp_Ax2__gp_Pnt_gp_Dir(new Vec().toGpPnt(), new Vec(1).toGpDir()))
-        def mirrored_cut_1 = new_TopoDS_Shape__BRepBuilderAPI_Transform__Shape_gp_Trsf_bCopy(rounding_cut_1, mirror, 0)
-
-        println "and translate it so that it ends up on the other side of the wedge"
-        def translate = new_gp_Trsf()
-        _gp_Trsf__SetTranslation__gp_Vec(translate, new Vec(0, 0, thickness).toGpVec())
-
-        def rounding_cut_2 = new_TopoDS_Shape__BRepBuilderAPI_Transform__Shape_gp_Trsf_bCopy(mirrored_cut_1, translate, 0)
-
-        println "Cut the wedge using the first and second cutting shape"
-        def cut_1 = new_TopoDS_Shape__bBRepAlgoAPI_Cut__s1_s2(wedge, rounding_cut_1)
-
-        def cut_2 = new_TopoDS_Shape__bBRepAlgoAPI_Cut__s1_s2(cut_1, rounding_cut_2)
-        cut_2
+        }.toCadDsl()
     }
+
+    /**
+     * Round off the edge of the single tooth
+     */
+//    MemorySegment roundTooth(MemorySegment wedge) {
+//        double round_x = 2.6
+//        double round_z = 0.06 * pitch
+//        double round_radius = pitch
+//
+//        println "Determine where the circle used for rounding has to start and stop"
+//        Vec2d p2d_1v = new Vec2d(top_radius - round_x, 0)
+//        def p2d_1 = p2d_1v.toGpPnt2d()
+//        Vec2d p2d_2v = new Vec2d(top_radius, round_z)
+//        def p2d_2 = p2d_2v.toGpPnt2d()
+//
+//        println "Construct the rounding circle"
+//        def round_circle = new_GccAna_Circ2d2TanRad__p2d1_p2d2_roundRadius(p2d_1, p2d_2, round_radius, 0.01d)
+//        if (i_GccAna_Circ2d2TanRad__NbSolutions(round_circle) != 2)
+//            throw new RuntimeException()
+//
+//        def round_circle_2d_1 = ref_gp_Circ2d__GccAna_Circ2d2TanRad__ThisSolution__index(round_circle, 1)
+//        def round_circle_2d_2 = ref_gp_Circ2d__GccAna_Circ2d2TanRad__ThisSolution__index(round_circle, 2)
+//        MemorySegment round_circle_2d
+//        Vec2d roundP1 = Vec2d.fromAPnt ref_gp_Pnt2d__gp_Ax22d__Location(ref_Position__gp_Circ2d__Position(round_circle_2d_1))
+//
+//        println "round_circle_2d_1; ${roundP1.y}"
+//        if (roundP1.y >= 0)
+//            round_circle_2d = round_circle_2d_1
+//        else
+//            round_circle_2d = round_circle_2d_2
+//
+//        println "Remove the arc used for rounding"
+//        def trimmed_circle = handle_Geom2d_TrimmedCurve__GCE2d_MakeArcOfCircle__cir2d_p1_p2(round_circle_2d, p2d_1, p2d_2)
+//
+//        println "Calculate extra points used to construct lines"
+//        Vec p1v = new Vec(p2d_1v.x, 0, p2d_1v.y)
+//        def p1 = p1v.toGpPnt()
+//        Vec p2v = new Vec(p2d_2v.x, 0, p2d_2v.y)
+//        def p2 = p2v.toGpPnt()
+//        Vec p3v = new Vec(p2d_2v.x + 1, 0, p2d_2v.y)
+//        def p3 = p3v.toGpPnt()
+//        Vec p4v = new Vec(p2d_2v.x + 1, 0, p2d_1v.y - 1)
+//        def p4 = p4v.toGpPnt()
+//        Vec p5v = new Vec(p2d_1v.x, 0, p2d_1v.y - 1)
+//        def p5 = p5v.toGpPnt()
+//
+//        println "Convert the arc and four extra lines into 3D edges"
+//        def plane = new_gp_Pln__gp_Ax3(new_gp_Ax3__p_dN_dX(new Vec().toGpPnt(), new Vec(0, -1, 0).toGpDir(), new Vec(1, 0, 0).toGpDir()))
+//        def arc1 = new_BRepBuilderAPI_MakeEdge__Geom_Curve(handle_Geom_Curve__GeomAPI_To3d__Geom2d_Curve_gp_Pln(trimmed_circle, plane))
+//        def lin1 = new_BRepBuilderAPI_MakeEdge__ptFrom_ptTo(p2, p3)
+//        def lin2 = new_BRepBuilderAPI_MakeEdge__ptFrom_ptTo(p3, p4)
+//        def lin3 = new_BRepBuilderAPI_MakeEdge__ptFrom_ptTo(p4, p5)
+//        def lin4 = new_BRepBuilderAPI_MakeEdge__ptFrom_ptTo(p5, p1)
+//
+//        println "Make a wire composed of the edges"
+//        def round_wire = new_BRepBuilderAPI_MakeWire__BRepBuilderAPI_MakeEdge(arc1)
+//        _BRepBuilderAPI_MakeWire__Add__BRepBuilderAPI_MakeEdge(round_wire, lin1)
+//        _BRepBuilderAPI_MakeWire__Add__BRepBuilderAPI_MakeEdge(round_wire, lin2)
+//        _BRepBuilderAPI_MakeWire__Add__BRepBuilderAPI_MakeEdge(round_wire, lin3)
+//        _BRepBuilderAPI_MakeWire__Add__BRepBuilderAPI_MakeEdge(round_wire, lin4)
+//
+//        println "Turn the wire into a face"
+//        def round_face = new_TopoDS_Face__BRepBuilderAPI_MakeFace(new_BRepBuilderAPI_MakeFace__BRepBuilderAPI_MakeWire(round_wire))
+//
+//        println "Revolve the face around the Z axis over the tooth angle"
+//        def rounding_cut_1 = new_TopoDS_Shape__BRepPrimAPI_MakeRevol__TopoDS_Face_gp_Ax1_ang(round_face, new_gp_Ax1__p_dir(new Vec().toGpPnt(), new Vec(1).toGpDir()), tooth_angle)
+//
+//        // Construct a mirrored copy of the first cutting shape
+//        def mirror = new_gp_Trsf()
+//        _gp_Trsf__SetMirror__gp_Ax2(mirror, new_gp_Ax2__gp_Pnt_gp_Dir(new Vec().toGpPnt(), new Vec(1).toGpDir()))
+//        def mirrored_cut_1 = new_TopoDS_Shape__BRepBuilderAPI_Transform__Shape_gp_Trsf_bCopy(rounding_cut_1, mirror, 0)
+//
+//        println "and translate it so that it ends up on the other side of the wedge"
+//        def translate = new_gp_Trsf()
+//        _gp_Trsf__SetTranslation__gp_Vec(translate, new Vec(0, 0, thickness).toGpVec())
+//
+//        def rounding_cut_2 = new_TopoDS_Shape__BRepBuilderAPI_Transform__Shape_gp_Trsf_bCopy(mirrored_cut_1, translate, 0)
+//
+//        println "Cut the wedge using the first and second cutting shape"
+//        def cut_1 = new_TopoDS_Shape__bBRepAlgoAPI_Cut__s1_s2(wedge, rounding_cut_1)
+//
+//        def cut_2 = new_TopoDS_Shape__bBRepAlgoAPI_Cut__s1_s2(cut_1, rounding_cut_2)
+//        cut_2
+//    }
     /**
      * Copy a single tooth to form a complete sprocket
      * This is done in two stages to speed up the fusing

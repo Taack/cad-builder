@@ -1,4 +1,4 @@
-package org.taack.cad.builder
+package org.taack.cad.dsl.geom
 
 import groovy.transform.CompileStatic
 

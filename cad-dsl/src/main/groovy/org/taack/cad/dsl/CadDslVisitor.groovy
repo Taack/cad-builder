@@ -3,6 +3,8 @@ package org.taack.cad.dsl
 import groovy.transform.CompileStatic
 import org.taack.cad.builder.*
 import org.taack.cad.dsl.geom.*
+import org.taack.cad.dsl.helper.SurfaceBounds
+import org.taack.cad.dsl.helper.SurfaceDistance
 
 import java.lang.foreign.Arena
 import java.lang.foreign.MemorySegment
@@ -373,7 +375,7 @@ class CadDslVisitor implements ICadDslVisitor {
             def aFace = new_TopoDS_Face__TopExp_Explorer__Current(aFaceExplorer)
             def aSurface = handle_Geom_Surface__TopoDS_Face(aFace)
 
-            SurfaceBounds sBounds = new SurfaceBounds(R4_Geom_Surface__Bounds(aSurface))
+            SurfaceBounds sBounds = new SurfaceBounds(aSurface)
             Tr.cur("sBounds $sBounds")
             if (int_Geom_Surface__is__Geom_Plane(aSurface) == 1) {
                 double aZ
@@ -431,7 +433,7 @@ class CadDslVisitor implements ICadDslVisitor {
 //                if (aZ > positionMax) {
                     Tr.cur "Face Selected"
                     positionMax = aZ
-                    bounds = new SurfaceBounds(R4_Geom_Surface__Bounds(aSurface))
+                    bounds = new SurfaceBounds(aSurface)
                     def pt = gp_Pnt__Geom_Surface__Value(aSurface, 1d, 1d)
                     ptParam11 = Vec.fromAPnt(pt)
                     pt = gp_Pnt__Geom_Surface__Value(aSurface, 0d, 0d)

@@ -2,8 +2,8 @@ package org.taack.cad.binding
 
 import groovy.transform.CompileStatic
 import org.junit.jupiter.api.Test
-import org.taack.cad.builder.SurfaceBounds
-import org.taack.cad.builder.Vec
+import org.taack.cad.dsl.helper.SurfaceBounds
+import org.taack.cad.dsl.geom.Vec
 import static org.taack.occt.NativeLib.*
 import static java.lang.Math.*
 
@@ -62,7 +62,7 @@ class PlateSurfaceLowLevelTest {
         def Surf = handle_Geom_Surface__GeomPlate_MakeApprox__Surface(Mapp)
 
         println "create a face corresponding to the approximated Plate Surface"
-        def s = new SurfaceBounds(r4_GeomPlate_Surface__Bounds(PSurf))
+        def s = new SurfaceBounds(PSurf)
 
         def MF = new_BRepBuilderAPI_MakeFace__s_um_uM_vm_vM_Tol(Surf, s.u1, s.u2, s.v1, s.v2, 0.01d)
 

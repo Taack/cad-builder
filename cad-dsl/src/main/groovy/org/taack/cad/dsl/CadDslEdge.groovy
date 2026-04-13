@@ -1,7 +1,7 @@
 package org.taack.cad.dsl
 
 import groovy.transform.CompileStatic
-import org.taack.cad.builder.Vec
+import org.taack.cad.dsl.geom.Vec
 
 @CompileStatic
 class CadDslEdge implements CadDslBase {

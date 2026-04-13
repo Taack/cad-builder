@@ -1,6 +1,7 @@
-package org.taack.cad.builder
+package org.taack.cad.dsl.geom
 
 import groovy.transform.CompileStatic
+
 import static org.taack.occt.NativeLib.*
 
 import java.lang.foreign.MemorySegment
