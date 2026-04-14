@@ -2,6 +2,7 @@ package org.taack.cad.dsl
 
 import groovy.transform.CompileStatic
 import org.junit.jupiter.api.Test
+import org.taack.cad.dsl.helper.Circle2dConstruct
 import org.taack.cad.dsl.helper.CurveIntersection2d
 import org.taack.cad.dsl.geom.Vec
 import org.taack.cad.dsl.geom.Vec2d
@@ -162,7 +163,11 @@ class SprocketTest {
 //        def round_circle = new_GccAna_Circ2d2TanRad__p2d1_p2d2_roundRadius(p2d_1, p2d_2, round_radius, 0.01d)
 //        if (i_GccAna_Circ2d2TanRad__NbSolutions(round_circle) != 2)
 //            throw new RuntimeException()
-
+            Circle2dConstruct circle2dConstruct = new Circle2dConstruct(p2d_1v, p2d_2v, round_radius)
+            Circle2d c1 = circle2dConstruct.circle2d1()
+            Circle2d c2 = circle2dConstruct.circle2d2()
+            Circle2d round_circle
+            if (c1.pos.y >= 0) round_circle
         }.toCadDsl()
     }
 
