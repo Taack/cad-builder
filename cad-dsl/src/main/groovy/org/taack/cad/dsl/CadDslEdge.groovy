@@ -1,10 +1,11 @@
 package org.taack.cad.dsl
 
 import groovy.transform.CompileStatic
+import org.taack.cad.dsl.geom.ITrimmable2d
 import org.taack.cad.dsl.geom.Vec
 
 @CompileStatic
-class CadDslEdge implements CadDslBase {
+class CadDslEdge extends CadDslEdge2d {
     /**
      * Displace new position on this face.
      * @param to    Move, starting from the old position
@@ -27,6 +28,10 @@ class CadDslEdge implements CadDslBase {
      */
     void edge(Vec to) {
         visitor.visitEdge(to)
+    }
+
+    void adapt3d(ITrimmable2d trimmedCurve, Vec dirX, Vec dirY) {
+        visitor.visitAdapt3d(trimmedCurve, dirX, dirY)
     }
 
     /**

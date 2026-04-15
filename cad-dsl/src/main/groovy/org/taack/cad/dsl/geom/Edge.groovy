@@ -1,6 +1,7 @@
 package org.taack.cad.dsl.geom
 
 import groovy.transform.CompileStatic
+import org.taack.cad.dsl.CadDslVisitor
 
 import java.lang.foreign.MemorySegment
 
@@ -16,6 +17,7 @@ class Edge implements IOpenShape {
 
     @Override
     MemorySegment makeWireAdd(Vec fromLocal) {
+        CadDslVisitor.Tr.cur("Edge from: $fromLocal, to: $to")
         return handle_Geom_TrimmedCurve__GC_MakeSegment__p1_p2(fromLocal.toGpPnt(), to.toGpPnt())
     }
 

@@ -3,6 +3,7 @@ package org.taack.cad.dsl
 import groovy.transform.CompileStatic
 import org.taack.cad.builder.*
 import org.taack.cad.dsl.geom.*
+import org.taack.cad.dsl.geom.adapter.Trimmable2dToIOpenShapeAdapter
 import org.taack.cad.dsl.helper.SurfaceBounds
 import org.taack.cad.dsl.helper.SurfaceDistance
 
@@ -66,8 +67,13 @@ class CadDslVisitor implements ICadDslVisitor {
 
     @Override
     void visitFromEnd(Vec posOri) {
-        Vec pos = posOri
+        Tr.cur("visitFromEnd $posOri")
+
+        Tr.cur("visitFromEnd openShapeList $openShapeList")
+        if (!face) face = new_TopoDS_Face__BRepBuilderAPI_MakeFace__gp_Pln(direction.toGpPln(0))
+        currentSurface = handle_Geom_Surface__TopoDS_Face(face)
         if (!openShapeList.empty) {
+            Vec pos = fromVec ?: new Vec()
             def makeWire = new_BRepBuilderAPI_MakeWire()
             for (IOpenShape s3d in openShapeList) {
                 def trimmedCurve = s3d.makeWireAdd(pos)
@@ -79,7 +85,7 @@ class CadDslVisitor implements ICadDslVisitor {
         }
         openShapeList.clear()
         fromVecStack.pop()
-        Tr.dec("visitFromEnd $pos")
+        Tr.dec("visitFromEnd $fromVec")
     }
 
     @Override
@@ -352,14 +358,16 @@ class CadDslVisitor implements ICadDslVisitor {
 
     @Override
     void visitAddToConstruction(IConstruction... toAdd) {
-        println "AUO 111"
         for (IConstruction c in toAdd) {
-            println "AUO 1112"
             if (IOpenShape2d.isAssignableFrom(c.class)) {
                 openShape2dList.addLast(c as IOpenShape2d)
-                println "AUO 1113"
             }
         }
+    }
+
+    @Override
+    void visitAdapt3d(ITrimmable2d trimmed2dCurve, Vec dirX, Vec dirY) {
+        openShapeList.add new Trimmable2dToIOpenShapeAdapter(trimmed2dCurve, fromVec, dirX, dirY)
     }
 
     @Override
@@ -564,9 +572,9 @@ class CadDslVisitor implements ICadDslVisitor {
     }
 
     @Override
-    void visitRevolution(Vec from, Vec dir) {
+    void visitRevolution(Vec from, Vec dir, double angle) {
         def ax1 = new_gp_Ax1__p_dir(from.toGpPnt(), dir.toGpDir())
-        def shape = new_TopoDS_Shape__BRepPrimAPI_MakeRevol__TopoDS_Face_gp_Ax1(face, ax1)
+        def shape = angle == 0 ? new_TopoDS_Shape__BRepPrimAPI_MakeRevol__TopoDS_Face_gp_Ax1(face, ax1) : new_TopoDS_Shape__BRepPrimAPI_MakeRevol__TopoDS_Face_gp_Ax1_ang(face, ax1, angle)
 
         MemorySegment trsf = new_gp_Trsf()
         _gp_Trsf__SetTranslation__gp_Vec(trsf, fromVec.toGpVec())

@@ -139,8 +139,7 @@ class SprocketTest {
 
             removeFromConstruction(baseConstruct, profileConstruct, outerConstruct, trimmedOuter, mirrorOuter, innerCircleConstruct)
 
-        }.toFace().prism(thickness).display().toCadDsl()
-
+        }.toFace().prism(thickness).toCadDsl()
     }
 
     /**
@@ -153,22 +152,76 @@ class SprocketTest {
 
         println "Determine where the circle used for rounding has to start and stop"
         Vec2d p2d_1v = new Vec2d(top_radius - round_x, 0)
-        def p2d_1 = p2d_1v.toGpPnt2d()
         Vec2d p2d_2v = new Vec2d(top_radius, round_z)
-        def p2d_2 = p2d_2v.toGpPnt2d()
 
+        wedge.cut {
+            cd().wireFrom(new Vec()) {
+                println "Construct the rounding circle"
+                Circle2dConstruct circle2dConstruct = new Circle2dConstruct(p2d_1v, p2d_2v, round_radius)
+                Circle2d c1 = circle2dConstruct.circle2d1()
+                Circle2d c2 = circle2dConstruct.circle2d2()
+                Circle2d round_circle
 
-        wedge.wireFrom(new Vec2d()) {
-            println "Construct the rounding circle"
-//        def round_circle = new_GccAna_Circ2d2TanRad__p2d1_p2d2_roundRadius(p2d_1, p2d_2, round_radius, 0.01d)
-//        if (i_GccAna_Circ2d2TanRad__NbSolutions(round_circle) != 2)
-//            throw new RuntimeException()
-            Circle2dConstruct circle2dConstruct = new Circle2dConstruct(p2d_1v, p2d_2v, round_radius)
-            Circle2d c1 = circle2dConstruct.circle2d1()
-            Circle2d c2 = circle2dConstruct.circle2d2()
-            Circle2d round_circle
-            if (c1.pos.y >= 0) round_circle
-        }.toCadDsl()
+                println "round_circle_2d_1; ${c1.pos}"
+                if (c1.pos.y >= 0) round_circle = c1
+                else round_circle = c2
+
+                println "Calculate extra points used to construct lines"
+                Vec p1v = new Vec(p2d_1v.x, 0, p2d_1v.y)
+                Vec p2v = new Vec(p2d_2v.x, 0, p2d_2v.y)
+                Vec p3v = new Vec(p2d_2v.x + 1, 0, p2d_2v.y)
+                Vec p4v = new Vec(p2d_2v.x + 1, 0, p2d_1v.y - 1)
+                Vec p5v = new Vec(p2d_1v.x, 0, p2d_1v.y - 1)
+
+                println "Convert the arc and four extra lines into 3D edges"
+                to p1v
+                adapt3d trimmed(round_circle, p2d_1v, p2d_2v), new Vec(0, -1, 0), new Vec(1, 0, 0)
+                edge p3v
+                edge p4v
+                edge p5v
+                edge p1v
+            }.toFace().revolution(tooth_angle).display()
+        }.display().toCadDsl()
+    }
+
+    /**
+     * Round off the edge of the single tooth
+     */
+    CadDsl roundTooth2d(CadDsl wedge) {
+        double round_x = 2.6
+        double round_z = 0.06 * pitch
+        double round_radius = pitch
+
+        println "Determine where the circle used for rounding has to start and stop"
+        Vec2d p2d_1v = new Vec2d(top_radius - round_x, 0)
+        Vec2d p2d_2v = new Vec2d(top_radius, round_z)
+
+        wedge.fuse {
+            wireFrom(new Vec2d()) {
+                println "Construct the rounding circle"
+                Circle2dConstruct circle2dConstruct = new Circle2dConstruct(p2d_1v, p2d_2v, round_radius)
+                Circle2d c1 = circle2dConstruct.circle2d1()
+                Circle2d c2 = circle2dConstruct.circle2d2()
+                Circle2d round_circle
+
+                println "round_circle_2d_1; ${c1.pos}"
+                if (c1.pos.y >= 0) round_circle = c1
+                else round_circle = c2
+
+                println "Calculate extra points used to construct lines"
+                Vec2d p3v2d = new Vec2d(p2d_2v.x + 1, p2d_2v.y)
+                Vec2d p4v2d = new Vec2d(p2d_2v.x + 1, p2d_1v.y - 1)
+                Vec2d p5v2d = new Vec2d(p2d_1v.x, p2d_1v.y - 1)
+
+                println "Convert the arc and four extra lines into 3D edges"
+                to p2d_1v
+                trimmed(round_circle, p2d_1v, p2d_2v)
+                edge p3v2d
+                edge p4v2d
+                edge p5v2d
+                edge p2d_1v
+            }.toFace().revolution(new Vec(), new Vec(0, 1, 0), tooth_angle).display()
+        }.display().toCadDsl()
     }
 
     /**
@@ -343,9 +396,9 @@ class SprocketTest {
 
     @Test
     void "Build Tooth"() {
-        buildTooth()
-//        def tooth = buildTooth()
-//        def roundTooth = roundTooth(tooth)
+//        buildTooth()
+        CadDsl tooth = buildTooth()
+        roundTooth2d(tooth)
 //        def manyTooth = cloneTooth(roundTooth)
 //        def manyToothWithCenterHole = centerHole(manyTooth)
 //        visualize mountingHoles(manyToothWithCenterHole)

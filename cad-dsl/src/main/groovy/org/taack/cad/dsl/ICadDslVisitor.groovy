@@ -64,7 +64,7 @@ interface ICadDslVisitor {
 
     void visitToFaceFrom2d()
 
-    void visitRevolution(Vec from, Vec dir)
+    void visitRevolution(Vec from, Vec dir, double angle)
 
     void visitPrism(Vec dir, boolean cut)
 
@@ -105,4 +105,6 @@ interface ICadDslVisitor {
     ITrimmable2d visitMirror(ITrimmable2d curve, Vec2d pos, Vec2d dir)
 
     void visitAddToConstruction(IConstruction... toAdd)
+
+    void visitAdapt3d(ITrimmable2d trimmed2dCurve, Vec dirX, Vec dirY)
 }

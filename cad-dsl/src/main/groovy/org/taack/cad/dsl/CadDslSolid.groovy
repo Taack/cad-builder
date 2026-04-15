@@ -73,6 +73,10 @@ class CadDslSolid implements CadDslBase {
         this
     }
 
+    CadDslSolid mirror(Vec pos, Vec dir) {
+
+    }
+
     CadDslSolid note(String text, Number height, Vec pos) {
 
     }
