@@ -322,6 +322,17 @@ extern "C"  Handle(Geom_Curve)* handle_Geom_Curve__GeomAPI_To3d__Geom2d_Curve_gp
     }
 }
 
+extern "C" gp_Pnt* new_gp_Pnt__Geom_TrimmedCurve__StartPoint(const Handle(Geom_TrimmedCurve)& curve) {
+    TRACE("");
+    return new gp_Pnt(curve->StartPoint());
+}
+
+extern "C" gp_Pnt* new_gp_Pnt__Geom_TrimmedCurve__EndPoint(const Handle(Geom_TrimmedCurve)& curve) {
+    TRACE("");
+    return new gp_Pnt(curve->EndPoint());
+}
+
+
 extern "C" Handle(Geom2d_Line) *handle_Geom2d_Line__GCE2d_MakeLine__p1_p2(gp_Pnt2d& p1, gp_Pnt2d& p2) {
     TRACE("");
     return new Handle(Geom2d_Line)(GCE2d_MakeLine(p1,p2).Value());

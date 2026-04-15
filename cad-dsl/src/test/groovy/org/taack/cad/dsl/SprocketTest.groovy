@@ -155,7 +155,7 @@ class SprocketTest {
         Vec2d p2d_2v = new Vec2d(top_radius, round_z)
 
         wedge.cut {
-            cd().wireFrom(new Vec()) {
+            wireFrom(new Vec()) {
                 println "Construct the rounding circle"
                 Circle2dConstruct circle2dConstruct = new Circle2dConstruct(p2d_1v, p2d_2v, round_radius)
                 Circle2d c1 = circle2dConstruct.circle2d1()
@@ -398,7 +398,7 @@ class SprocketTest {
     void "Build Tooth"() {
 //        buildTooth()
         CadDsl tooth = buildTooth()
-        roundTooth2d(tooth)
+        roundTooth(tooth)
 //        def manyTooth = cloneTooth(roundTooth)
 //        def manyToothWithCenterHole = centerHole(manyTooth)
 //        visualize mountingHoles(manyToothWithCenterHole)

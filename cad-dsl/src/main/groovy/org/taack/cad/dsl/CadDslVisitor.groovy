@@ -78,8 +78,9 @@ class CadDslVisitor implements ICadDslVisitor {
             for (IOpenShape s3d in openShapeList) {
                 def trimmedCurve = s3d.makeWireAdd(pos)
                 pos = s3d.to
-                def arcEdge = new_TopoDS_Edge__BRepBuilderAPI_MakeEdge__Geom_Curve(trimmedCurve)
-                _BRepBuilderAPI_MakeWire__Add__TopoDS_Edge(makeWire, arcEdge)
+//                def arcEdge = new_TopoDS_Edge__BRepBuilderAPI_MakeEdge__Geom_Curve(trimmedCurve)
+//                def arcEdge = new_BRepBuilderAPI_MakeEdge__Geom_Curve(trimmedCurve)
+                _BRepBuilderAPI_MakeWire__Add__BRepBuilderAPI_MakeEdge(makeWire, trimmedCurve)
             }
             makeWires << makeWire
         }
@@ -538,10 +539,14 @@ class CadDslVisitor implements ICadDslVisitor {
     @Override
     void visitToFace() {
         Tr.cur("visitToFace: makeWires: $makeWires")
-        def builder = new_BRep_Builder()
-        for (MemorySegment w in makeWires) {
-            MemorySegment wire2 = ref_TopoDS_Shape__BRepBuilderAPI_MakeWire__Shape(w)
-            _TopoDS_Builder__Add__resTopoDS_Shape_toAddTopoDS_Shape(builder, face, wire2)
+        MemorySegment wire = ref_TopoDS_Wire__BRepBuilderAPI_MakeWire__Wire(makeWires.first())
+        face = new_TopoDS_Face__BRepBuilderAPI_MakeFace__TopoDS_Wire(wire)
+        if (makeWires.size() > 1) {
+            def builder = new_BRep_Builder()
+            for (MemorySegment w in makeWires[1..makeWires.size() - 1]) {
+                MemorySegment wire2 = ref_TopoDS_Shape__BRepBuilderAPI_MakeWire__Shape(w)
+                _TopoDS_Builder__Add__resTopoDS_Shape_toAddTopoDS_Shape(builder, face, wire2)
+            }
         }
     }
 

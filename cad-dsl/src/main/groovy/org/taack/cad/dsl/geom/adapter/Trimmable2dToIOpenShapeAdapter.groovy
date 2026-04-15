@@ -10,6 +10,8 @@ import static org.taack.occt.NativeLib.*
 
 class Trimmable2dToIOpenShapeAdapter implements IOpenShape {
     private final ITrimmable2d trimmable2d
+    private MemorySegment curve3d
+    private MemorySegment geom
     private final Vec pos
     private final Vec dirX
     private final Vec dirY
@@ -23,15 +25,22 @@ class Trimmable2dToIOpenShapeAdapter implements IOpenShape {
 
     @Override
     MemorySegment makeWireAdd(Vec fromLocal) {
-        CadDslVisitor.Tr.cur("Trimmable2dToIOpenShapeAdapter from: $fromLocal, to: $to")
+        if (!curve3d) {
+            CadDslVisitor.Tr.cur("Trimmable2dToIOpenShapeAdapter from: $fromLocal, to: $to")
 //        def plane = new_gp_Pln__gp_Ax3(new_gp_Ax3__p_dN_dX(pos.toGpPnt(), dirX.toGpDir(), dirY.toGpDir()))
-        def plane = new_gp_Pln__gp_Ax3(new_gp_Ax3__p_dN_dX(new Vec().toGpPnt(), dirX.toGpDir(), dirY.toGpDir()))
-        handle_Geom_Curve__GeomAPI_To3d__Geom2d_Curve_gp_Pln(trimmable2d.trimmedCurve2d(), plane)
+            def plane = new_gp_Pln__gp_Ax3(new_gp_Ax3__p_dN_dX(new Vec().toGpPnt(), dirX.toGpDir(), dirY.toGpDir()))
+            geom = handle_Geom_Curve__GeomAPI_To3d__Geom2d_Curve_gp_Pln(trimmable2d.trimmedCurve2d(), plane)
+            curve3d = new_BRepBuilderAPI_MakeEdge__Geom_Curve geom
+        }
+        curve3d
     }
 
     @Override
     Vec getTo() {
-        pos + dirX * trimmable2d.to.x + dirY * trimmable2d.to.y
+        if (curve3d)
+            Vec.fromAPnt(new_gp_Pnt__Geom_TrimmedCurve__EndPoint(geom))
+        //pos + dirX * trimmable2d.to.x + dirY * trimmable2d.to.y
+
     }
 
 

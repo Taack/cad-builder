@@ -183,6 +183,10 @@ Handle(Geom2d_Geometry)*  handle_Geom2d_Geometry__Copy(const Handle(Geom2d_Geome
 
 Handle(Geom_Curve)* handle_Geom_Curve__GeomAPI_To3d__Geom2d_Curve_gp_Pln(Handle(Geom2d_Curve) *curve, gp_Pln *plan);
 
+gp_Pnt* new_gp_Pnt__Geom_TrimmedCurve__StartPoint(const Handle(Geom_TrimmedCurve)* curve);
+
+gp_Pnt* new_gp_Pnt__Geom_TrimmedCurve__EndPoint(const Handle(Geom_TrimmedCurve)* curve);
+
 Handle(Geom2d_Line) *handle_Geom2d_Line__GCE2d_MakeLine__p1_p2(gp_Pnt2d* p1, gp_Pnt2d* p2);
 /***********************************************************************************************************************
 
