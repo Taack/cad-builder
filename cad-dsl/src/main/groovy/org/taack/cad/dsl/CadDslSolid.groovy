@@ -83,6 +83,11 @@ class CadDslSolid implements CadDslBase {
         this
     }
 
+    CadDslSolid rotate(Vec position, Vec direction, Number angle) {
+        visitor.visitSolidRotate(position, direction, angle.toDouble())
+        this
+    }
+
     CadDslSolid note(String text, Number height, Vec pos) {
 
     }

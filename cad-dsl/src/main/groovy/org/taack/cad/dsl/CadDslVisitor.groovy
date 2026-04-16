@@ -402,6 +402,23 @@ class CadDslVisitor implements ICadDslVisitor {
     }
 
     @Override
+    void visitSolidRotate(Vec pos, Vec dir, double angle) {
+        Tr.cur("visitSolidTranslatevisitSolidRotate ${boolShapes.peek()}")
+        def shape = boolShapes.peek().empty ? shape : boolShapes.peek().last()
+        if (shape) {
+            def translate = new_gp_Trsf()
+            _gp_Trsf__SetRotation__gp_Vec(translate, new_gp_Ax1__p_dir(pos.toGpPnt(), dir.toGpDir()), angle)
+            def moved = new_TopoDS_Shape__BRepBuilderAPI_Transform__Shape_gp_Trsf_bCopy(shape, translate, 0)
+            if (boolShapes.peek().empty) this.shape = moved
+            else {
+                boolShapes.peek().removeLast()
+                boolShapes.peek() << moved
+            }
+        }
+
+    }
+
+    @Override
     void visitFace(Vec direction, Vec position) {
         Tr.cur("visitFace $direction $position")
         double positionMax = position == null ? Double.NEGATIVE_INFINITY : Double.POSITIVE_INFINITY

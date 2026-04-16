@@ -111,4 +111,6 @@ interface ICadDslVisitor {
     void visitSolidMirror(Vec pos, Vec dir)
 
     void visitSolidTranslate(Vec distance)
+
+    void visitSolidRotate(Vec pos, Vec dir, double angle)
 }
