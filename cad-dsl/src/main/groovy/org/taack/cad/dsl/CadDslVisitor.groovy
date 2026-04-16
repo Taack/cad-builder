@@ -470,7 +470,10 @@ class CadDslVisitor implements ICadDslVisitor {
                 } else
                     dumpShape(shape, 1920, 1080, t)
             }
-        } else visualize(shape ?: face ?: ref_TopoDS_Shape__BRepBuilderAPI_MakeWire__Shape(addCurrentWireNative()))
+        } else {
+            MemorySegment s = !boolShapes.empty() && !boolShapes.peek().empty? boolShapes.peek().last() : shape
+            visualize(s ?: face ?: ref_TopoDS_Shape__BRepBuilderAPI_MakeWire__Shape(addCurrentWireNative()))
+        }
 
     }
 
