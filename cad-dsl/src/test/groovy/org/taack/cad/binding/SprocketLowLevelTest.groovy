@@ -255,7 +255,7 @@ class SprocketLowLevelTest {
         println "Revolve the face around the Z axis over the tooth angle"
         def rounding_cut_1 = new_TopoDS_Shape__BRepPrimAPI_MakeRevol__TopoDS_Face_gp_Ax1_ang(round_face, new_gp_Ax1__p_dir(new Vec().toGpPnt(), new Vec(1).toGpDir()), tooth_angle)
 
-        // Construct a mirrored copy of the first cutting shape
+        println "Construct a mirrored copy of the first cutting shape"
         def mirror = new_gp_Trsf()
         _gp_Trsf__SetMirror__gp_Ax2(mirror, new_gp_Ax2__gp_Pnt_gp_Dir(new Vec().toGpPnt(), new Vec(1).toGpDir()))
         def mirrored_cut_1 = new_TopoDS_Shape__BRepBuilderAPI_Transform__Shape_gp_Trsf_bCopy(rounding_cut_1, mirror, 0)

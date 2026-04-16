@@ -74,7 +74,13 @@ class CadDslSolid implements CadDslBase {
     }
 
     CadDslSolid mirror(Vec pos, Vec dir) {
+        visitor.visitSolidMirror(pos, dir)
+        this
+    }
 
+    CadDslSolid translate(Vec distance) {
+        visitor.visitSolidTranslate(distance)
+        this
     }
 
     CadDslSolid note(String text, Number height, Vec pos) {

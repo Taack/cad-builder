@@ -372,6 +372,36 @@ class CadDslVisitor implements ICadDslVisitor {
     }
 
     @Override
+    void visitSolidMirror(Vec pos, Vec dir) {
+        Tr.cur("visitSolidMirror ${boolShapes.peek()}")
+
+        def shape = boolShapes.peek().empty ? shape : boolShapes.peek().last()
+        if (shape) {
+            def mirror = new_gp_Trsf()
+            _gp_Trsf__SetMirror__gp_Ax2(mirror, new_gp_Ax2__gp_Pnt_gp_Dir(pos.toGpPnt(), dir.toGpDir()))
+            def mirrored_cut_1 = new_TopoDS_Shape__BRepBuilderAPI_Transform__Shape_gp_Trsf_bCopy(shape, mirror, 0)
+            boolShapes.peek() << mirrored_cut_1
+            if (!this.shape) this.shape = mirrored_cut_1
+        }
+    }
+
+    @Override
+    void visitSolidTranslate(Vec distance) {
+        Tr.cur("visitSolidTranslate ${boolShapes.peek()}")
+        def shape = boolShapes.peek().empty ? shape : boolShapes.peek().last()
+        if (shape) {
+            def translate = new_gp_Trsf()
+            _gp_Trsf__SetTranslation__gp_Vec(translate, distance.toGpVec())
+            def moved = new_TopoDS_Shape__BRepBuilderAPI_Transform__Shape_gp_Trsf_bCopy(shape, translate, 0)
+            if (boolShapes.peek().empty) this.shape = moved
+            else {
+                boolShapes.peek().removeLast()
+                boolShapes.peek() << moved
+            }
+        }
+    }
+
+    @Override
     void visitFace(Vec direction, Vec position) {
         Tr.cur("visitFace $direction $position")
         double positionMax = position == null ? Double.NEGATIVE_INFINITY : Double.POSITIVE_INFINITY

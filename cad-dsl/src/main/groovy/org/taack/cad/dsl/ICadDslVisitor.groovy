@@ -107,4 +107,8 @@ interface ICadDslVisitor {
     void visitAddToConstruction(IConstruction... toAdd)
 
     void visitAdapt3d(ITrimmable2d trimmed2dCurve, Vec dirX, Vec dirY)
+
+    void visitSolidMirror(Vec pos, Vec dir)
+
+    void visitSolidTranslate(Vec distance)
 }

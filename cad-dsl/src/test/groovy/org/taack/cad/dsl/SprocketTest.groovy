@@ -180,7 +180,7 @@ class SprocketTest {
                 edge p4v
                 edge p5v
                 edge p1v
-            }.toFace().revolution(tooth_angle).display()
+            }.toFace().revolution(tooth_angle).mirror(new Vec(), new Vec(1)).translate(new Vec(0, 0, thickness)).display()
         }.display().toCadDsl()
     }
 
