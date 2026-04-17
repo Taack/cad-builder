@@ -220,7 +220,7 @@ class SprocketTest {
                 edge p4v2d
                 edge p5v2d
                 edge p2d_1v
-            }.toFace().revolution(new Vec(), new Vec(0, 1, 0), tooth_angle).rotate(new Vec(), new Vec(1,0,0), PI / 2).mirror(new Vec(), new Vec(1)).translate(new Vec(0, 0, thickness))
+            }.toFace().revolution(new Vec(), new Vec(0, 1, 0), tooth_angle).rotate(new Vec(), new Vec(1, 0, 0), PI / 2).mirror(new Vec(), new Vec(1)).translate(new Vec(0, 0, thickness))
         }.display().toCadDsl()
     }
 
@@ -230,47 +230,32 @@ class SprocketTest {
      * @param base_shape
      * @return
      */
-    MemorySegment cloneTooth(MemorySegment base_shape) {
-        def clone = new_gp_Trsf()
-        println "TopoDS_Shape aggregated_shape = base_shape"
-        def grouped_shape = base_shape
-
-        println "Find a divisor, between 1 and 8, for the number_of teeth"
+    CadDsl cloneTooth(CadDsl cadDsl) {
         int multiplier = 1
         int max_multiplier = 1
 
+        println "Find a divisor, between 1 and 8, for the number_of teeth"
         for (int current_multiplier = 1;
              current_multiplier <= 8;
              current_multiplier++) {
             if ((num_teeth % multiplier) == 0)
                 max_multiplier = current_multiplier
         }
-
         multiplier = max_multiplier
-        def gp_OZ = new_gp_Ax1__p_dir(new Vec().toGpPnt(), new Vec(1).toGpDir())
-        for (int i = 1; i < multiplier; i++) {
-            _gp_Trsf__SetRotation__gp_Vec(clone, gp_OZ, -i * tooth_angle)
 
-            def rotated_shape = new_TopoDS_Shape__BRepBuilderAPI_Transform__Shape_gp_Trsf_bCopy(base_shape, clone, 1)
-            grouped_shape = new_TopoDS_Shape__brep_algoapi_fuse__s1_s2(grouped_shape, rotated_shape)
-            println i
-        }
-
-        def aggregated_shape = grouped_shape
-
-        println "Rotate the basic tooth and fuse together"
-        for (int i = 1; i < num_teeth / multiplier; i++) {
-            _gp_Trsf__SetRotation__gp_Vec(clone, gp_OZ, -i * multiplier * tooth_angle)
-            def rotated_shape = new_TopoDS_Shape__BRepBuilderAPI_Transform__Shape_gp_Trsf_bCopy(grouped_shape, clone, 1)
-            aggregated_shape = new_TopoDS_Shape__brep_algoapi_fuse__s1_s2(aggregated_shape, rotated_shape)
-            println i
-        }
-
-        println "Fuse a disc to fill in the center"
-        def cylinder = new_TopoDS_Shape__BRepPrimAPI_MakeCylinder__gp_Ax2_radius_height(new_gp_Ax2_DZ(),
-                top_radius - roller_diameter,
-                thickness)
-        new_TopoDS_Shape__brep_algoapi_fuse__s1_s2(aggregated_shape, cylinder)
+        cadDsl.fuse {
+            for (int i = 1; i < multiplier; i++) {
+                rotate(new Vec(), new Vec(1), tooth_angle, true)
+                println(i)
+            }
+        }.display().fuse {
+            for (int i = 1; i < num_teeth / multiplier; i++) {
+                rotate(new Vec(), new Vec(1), multiplier * tooth_angle, true)
+                println(i)
+            }
+        }.fuse {
+            cylinder(top_radius - roller_diameter, thickness)
+        }.toCadDsl()
     }
 
     /**
@@ -315,8 +300,9 @@ class SprocketTest {
     void "Build Tooth"() {
 //        buildTooth()
         CadDsl tooth = buildTooth()
-        roundTooth(tooth)
-//        def manyTooth = cloneTooth(roundTooth)
+        CadDsl roundTooth = roundTooth(tooth)
+        def manyTooth = cloneTooth(roundTooth)
+        manyTooth.display()
 //        def manyToothWithCenterHole = centerHole(manyTooth)
 //        visualize mountingHoles(manyToothWithCenterHole)
     }
