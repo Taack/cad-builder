@@ -50,7 +50,7 @@ class CadDsl extends CadDslSolid implements CadDslBase {
     }
 
     CadDslSolid box(Number length, Number height, Number thickness) {
-        visitor.visitBox(length, height, thickness)
+        visitor.visitBox(length.toDouble(), height.toDouble(), thickness.toDouble())
         new CadDslSolid(visitor: visitor)
     }
 
@@ -64,7 +64,7 @@ class CadDsl extends CadDslSolid implements CadDslBase {
      * @return
      */
     CadDslSolid sphere(Number radius, Number angleFrom = 0, Number angleTo = 2 * PI) {
-        visitor.visitSphere(radius, angleFrom, angleTo)
+        visitor.visitSphere(radius.toDouble(), angleFrom.toDouble(), angleTo.toDouble())
         new CadDslSolid(visitor: visitor)
     }
 
@@ -76,12 +76,17 @@ class CadDsl extends CadDslSolid implements CadDslBase {
      * @return
      */
     CadDslSolid cylinder(Number radius, Number height) {
-        visitor.visitCylinder(radius, height)
+        visitor.visitCylinder(radius.toDouble(), height.toDouble())
+        new CadDslSolid(visitor: visitor)
+    }
+
+    CadDslSolid cone(Number radius1, Number radius2, Number height) {
+        visitor.visitCone(radius1.toDouble(), radius2.toDouble(), height.toDouble())
         new CadDslSolid(visitor: visitor)
     }
 
     CadDslSolid torus(Number torusRadius, Number ringRadius) {
-        visitor.visitTorus(torusRadius, ringRadius)
+        visitor.visitTorus(torusRadius.toDouble(), ringRadius.toDouble())
         new CadDslSolid(visitor: visitor)
     }
 

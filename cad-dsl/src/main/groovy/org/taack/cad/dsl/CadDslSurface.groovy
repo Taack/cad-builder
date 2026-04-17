@@ -6,7 +6,7 @@ import org.taack.cad.dsl.geom.Vec
 @CompileStatic
 class CadDslSurface implements CadDslBase {
     CadDslSurface cylindricalSurface(Number radius) {
-        visitor.visitCylindricalSurface(radius)
+        visitor.visitCylindricalSurface(radius.toDouble())
         this
     }
 

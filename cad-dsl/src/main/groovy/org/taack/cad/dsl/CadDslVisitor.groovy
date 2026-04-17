@@ -132,9 +132,9 @@ class CadDslVisitor implements ICadDslVisitor {
     }
 
     @Override
-    void visitBox(Number length, Number height, Number thickness) {
+    void visitBox(double length, double height, double thickness) {
         def ax2 = directionNormal ? new_gp_Ax2__gp_Pnt_gp_Dir_Normal(fromVec.toGpPnt(), direction.toGpDir(), directionNormal.toGpDir()) : new_gp_Ax2__gp_Pnt_gp_Dir(fromVec.toGpPnt(), direction.toGpDir())
-        def shape = new_TopoDS_Shape__Shape__BRepBuilderAPI_MakeShape(new_BRepPrimAPI_MakeBox__Ax2_x_y_z(ax2, length.toDouble(), height.toDouble(), thickness.toDouble()))
+        def shape = new_TopoDS_Shape__Shape__BRepBuilderAPI_MakeShape(new_BRepPrimAPI_MakeBox__Ax2_x_y_z(ax2, length, height, thickness))
 
         Tr.cur "box($length, $height, $thickness) from: $fromVec, direction: $direction, directionNormal: $directionNormal, shape: $shape"
         boolShapes.peek() << shape
@@ -142,20 +142,20 @@ class CadDslVisitor implements ICadDslVisitor {
     }
 
     @Override
-    void visitSphere(Number radius, Number radian1, Number radian2) {
+    void visitSphere(double radius, double radian1, double radian2) {
         Tr.cur "sphere($radius, $radian1, $radian2) from: $fromVec, direction: $direction, directionNormal: $directionNormal"
 
         def ax2 = new_gp_Ax2__gp_Pnt_gp_Dir(fromVec.toGpPnt(), direction.toGpDir())
-        def shape = new_TopoDS_Shape__BRepPrimAPI_MakeSphere__gp_Ax2_radius_a1_a2(ax2, radius.toDouble(), radian1.toDouble(), radian2.toDouble())
+        def shape = new_TopoDS_Shape__BRepPrimAPI_MakeSphere__gp_Ax2_radius_a1_a2(ax2, radius, radian1, radian2)
         boolShapes.peek() << shape
         if (!this.shape) this.shape = shape
     }
 
     @Override
-    void visitCylinder(Number radius, Number height) {
+    void visitCylinder(double radius, double height) {
 
         def ax2 = new_gp_Ax2__gp_Pnt_gp_Dir(fromVec.toGpPnt(), direction.toGpDir())
-        def shape = new_TopoDS_Shape__BRepPrimAPI_MakeCylinder__gp_Ax2_radius_height(ax2, radius.toDouble(), height.toDouble())
+        def shape = new_TopoDS_Shape__BRepPrimAPI_MakeCylinder__gp_Ax2_radius_height(ax2, radius, height)
 
         Tr.cur "cylinder($radius, $height) from: $fromVec, direction: $direction, directionNormal: $directionNormal, shape: $shape"
         boolShapes.peek() << shape
@@ -163,9 +163,9 @@ class CadDslVisitor implements ICadDslVisitor {
     }
 
     @Override
-    void visitTorus(Number torusRadius, Number ringRadius) {
+    void visitTorus(double torusRadius, double ringRadius) {
         def ax2 = new_gp_Ax2__gp_Pnt_gp_Dir(fromVec.toGpPnt(), direction.toGpDir())
-        def shape = new_TopoDS_Shape__BRepPrimAPI_MakeTorus__gp_Ax2_r1_r2(ax2, torusRadius.toDouble(), ringRadius.toDouble())
+        def shape = new_TopoDS_Shape__BRepPrimAPI_MakeTorus__gp_Ax2_r1_r2(ax2, torusRadius, ringRadius)
 
         Tr.cur "torus($torusRadius, $ringRadius) from: $fromVec, direction: $direction, directionNormal: $directionNormal, shape: $shape"
         boolShapes.peek() << shape
@@ -257,13 +257,13 @@ class CadDslVisitor implements ICadDslVisitor {
     }
 
     @Override
-    void visitFillet(Number radius) {
+    void visitFillet(double radius) {
         def mkFillet = new_BRepFilletAPI_MakeFillet__TopoDS_Shape(shape)
         def anEdgeExplorer = new_TopExp_Explorer__TopoDS_Shape_ToFind_ToAvoid(face ?: shape, ShapeEnum.TopAbs_EDGE.index, ShapeEnum.TopAbs_SHAPE.index)
         while (_TopExp_Explorer__More(anEdgeExplorer)) {
             def anEdge = ref_TopoDS_Edge__TopoDS_Shape(new_TopoDS_Shape__TopExp_Explorer__Current(anEdgeExplorer))
             //Add edge to fillet algorithm
-            _BRepFilletAPI_MakeFillet__Add__radius_TopoDS_Edge(mkFillet, radius.toDouble(), anEdge)
+            _BRepFilletAPI_MakeFillet__Add__radius_TopoDS_Edge(mkFillet, radius, anEdge)
             _TopExp_Explorer__Next(anEdgeExplorer)
         }
 
@@ -271,21 +271,21 @@ class CadDslVisitor implements ICadDslVisitor {
     }
 
     @Override
-    void visitHollowedSolid(Number thickness) {
+    void visitHollowedSolid(double thickness) {
         def facesToRemove = new_TopTools_ListOfShape()
         if (face) {
             Tr.cur("visitHollowedSolid $face")
             _TopTools_ListOfShape__Append__TopoDS_Shape(facesToRemove, face)
         }
         def aSolidMaker = new_BRepOffsetAPI_MakeThickSolid()
-        _BRepOffsetAPI_MakeThickSolid__MakeThickSolidByJoin__TopoDS_Shape_TopTools_ListOfShape_thickness_tol(aSolidMaker, shape, facesToRemove, thickness.toDouble(), 0.001d)
+        _BRepOffsetAPI_MakeThickSolid__MakeThickSolidByJoin__TopoDS_Shape_TopTools_ListOfShape_thickness_tol(aSolidMaker, shape, facesToRemove, thickness, 0.001d)
 
         shape = new_TopoDS_Shape__Shape__BRepBuilderAPI_MakeShape(aSolidMaker)
     }
 
     @Override
-    Ellipse2d visitEllipse2d(Vec2d dir, Number majDia, Number minDia) {
-        Ellipse2d e = new Ellipse2d(fromVec2d, dir, majDia.toDouble(), minDia.toDouble())
+    Ellipse2d visitEllipse2d(Vec2d dir, double majDia, double minDia) {
+        Ellipse2d e = new Ellipse2d(fromVec2d, dir, majDia, minDia)
         closedShape2dList << e
         e
     }
@@ -301,20 +301,20 @@ class CadDslVisitor implements ICadDslVisitor {
     }
 
     @Override
-    ITrimmable2d visitTrimmed(IClosedShape2d curve, Number from, Number tp, boolean reverse) {
+    ITrimmable2d visitTrimmed(IClosedShape2d curve, double from, double tp, boolean reverse) {
 
     }
 
     @Override
-    ArcOfCircle2d visitTrimmed(Circle2d circle2d, Number from, Number to, boolean reverse) {
-        ArcOfCircle2d arc = new ArcOfCircle2d(circle2d, from.toDouble(), to.toDouble(), reverse)
+    ArcOfCircle2d visitTrimmed(Circle2d circle2d, double from, double to, boolean reverse) {
+        ArcOfCircle2d arc = new ArcOfCircle2d(circle2d, from, to, reverse)
         openShape2dList << arc
         arc
     }
 
     @Override
-    ArcOfCircle2d visitTrimmed(Circle2d circle2d, Vec2d from, Number to, boolean reverse) {
-        ArcOfCircle2d arc = new ArcOfCircle2d(circle2d, from, to.toDouble(), reverse)
+    ArcOfCircle2d visitTrimmed(Circle2d circle2d, Vec2d from, double to, boolean reverse) {
+        ArcOfCircle2d arc = new ArcOfCircle2d(circle2d, from, to, reverse)
         openShape2dList << arc
         arc
     }
@@ -327,9 +327,9 @@ class CadDslVisitor implements ICadDslVisitor {
     }
 
     @Override
-    void visitCylindricalSurface(Number radius) {
+    void visitCylindricalSurface(double radius) {
         def ax2 = new_gp_Ax2__gp_Pnt_gp_Dir(fromVec.toGpPnt(), direction.toGpDir())
-        currentSurface = handle_Geom_CylindricalSurface__ax2_radius(ax2, radius.toDouble())
+        currentSurface = handle_Geom_CylindricalSurface__ax2_radius(ax2, radius)
     }
 
     @Override
@@ -416,6 +416,17 @@ class CadDslVisitor implements ICadDslVisitor {
                 boolShapes.peek() << moved
             }
         }
+
+    }
+
+    @Override
+    void visitCone(double r1, double r2, double height) {
+        def ax2 = directionNormal ? new_gp_Ax2__gp_Pnt_gp_Dir_Normal(fromVec.toGpPnt(), direction.toGpDir(), directionNormal.toGpDir()) : new_gp_Ax2__gp_Pnt_gp_Dir(fromVec.toGpPnt(), direction.toGpDir())
+        def shape = new_TopoDS_Shape__BRepPrimAPI_MakeCone__gp_Ax2_R1_R2_H(ax2, r1, r2, height)
+
+        Tr.cur "cone($r1, $r2, $height) from: $fromVec, direction: $direction, directionNormal: $directionNormal, shape: $shape"
+        boolShapes.peek() << shape
+        if (!this.shape) this.shape = shape
 
     }
 
@@ -539,8 +550,8 @@ class CadDslVisitor implements ICadDslVisitor {
     }
 
     @Override
-    Circle2d visitCircle2d(Number radius, boolean reverse) {
-        Circle2d c = new Circle2d(fromVec2d, radius.toDouble(), reverse)
+    Circle2d visitCircle2d(double radius, boolean reverse) {
+        Circle2d c = new Circle2d(fromVec2d, radius, reverse)
         closedShape2dList << c
         return c
     }

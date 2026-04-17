@@ -181,7 +181,7 @@ class SprocketTest {
                 edge p5v
                 edge p1v
             }.toFace().revolution(tooth_angle).mirror(new Vec(), new Vec(1)).translate(new Vec(0, 0, thickness))
-        }.display().toCadDsl()
+        }.toCadDsl()
     }
 
     /**
@@ -221,7 +221,7 @@ class SprocketTest {
                 edge p5v2d
                 edge p2d_1v
             }.toFace().revolution(new Vec(), new Vec(0, 1, 0), tooth_angle).rotate(new Vec(), new Vec(1, 0, 0), PI / 2).mirror(new Vec(), new Vec(1)).translate(new Vec(0, 0, thickness))
-        }.display().toCadDsl()
+        }.toCadDsl()
     }
 
     /**
@@ -248,7 +248,7 @@ class SprocketTest {
                 rotate(new Vec(), new Vec(1), tooth_angle, true)
                 println(i)
             }
-        }.display().fuse {
+        }.fuse {
             for (int i = 1; i < num_teeth / multiplier; i++) {
                 rotate(new Vec(), new Vec(1), multiplier * tooth_angle, true)
                 println(i)
@@ -263,9 +263,10 @@ class SprocketTest {
      * @param shape
      * @return
      */
-    MemorySegment centerHole(MemorySegment shape) {
-        def cylinder = new_TopoDS_Shape__BRepPrimAPI_MakeCylinder__gp_Ax2_radius_height(new_gp_Ax2_DZ(), center_radius, thickness)
-        new_TopoDS_Shape__bBRepAlgoAPI_Cut__s1_s2(shape, cylinder)
+    CadDsl centerHole(CadDsl shape) {
+        shape.cut {
+            cylinder(center_radius, thickness)
+        }.toCadDsl()
     }
 
     /**
@@ -273,47 +274,53 @@ class SprocketTest {
      * @param shape
      * @return
      */
-    MemorySegment mountingHoles(MemorySegment base) {
-        def result = base
-        for (int i = 0; i < mounting_hole_count; i++) {
-            Vec centerVec = new Vec(
-                    cos(i * PI / 3) * mounting_radius,
-                    sin(i * PI / 3) * mounting_radius,
-                    0.0)
-            MemorySegment center_axis = new_gp_Ax2__gp_Pnt_gp_Dir(centerVec.toGpPnt(), new Vec(1).toGpDir())
-            def cylinder = new_TopoDS_Shape__BRepPrimAPI_MakeCylinder__gp_Ax2_radius_height(center_axis, hole_radius, thickness)
-
-            result = new_TopoDS_Shape__bBRepAlgoAPI_Cut__s1_s2(result, cylinder)
-
-            def cone = new_TopoDS_Shape__BRepPrimAPI_MakeCone__gp_Ax2_R1_R2_H(
-                    center_axis,
-                    (hole_radius + thickness / 2.0d),
-                    hole_radius, thickness / 2.0d)
-            result = new_TopoDS_Shape__bBRepAlgoAPI_Cut__s1_s2(result, cone)
-        }
-
-        return result
+    CadDsl mountingHoles(CadDsl base) {
+        base.cut {
+            for (int i = 0; i < mounting_hole_count; i++) {
+                Vec centerVec = new Vec(
+                        cos(i * PI / 3) * mounting_radius,
+                        sin(i * PI / 3) * mounting_radius,
+                        0.0)
+                position(centerVec) {
+                    cylinder(hole_radius, thickness)
+                    cone((hole_radius + thickness / 2.0d), hole_radius, thickness / 2.0d)
+                }
+            }
+        }.toCadDsl()
+//        for (int i = 0; i < mounting_hole_count; i++) {
+//            Vec centerVec = new Vec(
+//                    cos(i * PI / 3) * mounting_radius,
+//                    sin(i * PI / 3) * mounting_radius,
+//                    0.0)
+//            MemorySegment center_axis = new_gp_Ax2__gp_Pnt_gp_Dir(centerVec.toGpPnt(), new Vec(1).toGpDir())
+//            def cylinder = new_TopoDS_Shape__BRepPrimAPI_MakeCylinder__gp_Ax2_radius_height(center_axis, hole_radius, thickness)
+//
+//            result = new_TopoDS_Shape__bBRepAlgoAPI_Cut__s1_s2(result, cylinder)
+//
+//            def cone = new_TopoDS_Shape__BRepPrimAPI_MakeCone__gp_Ax2_R1_R2_H(
+//                    center_axis,
+//                    (hole_radius + thickness / 2.0d),
+//                    hole_radius, thickness / 2.0d)
+//            result = new_TopoDS_Shape__bBRepAlgoAPI_Cut__s1_s2(result, cone)
+//        }
 
     }
 
     @Test
     void "Build Tooth"() {
-//        buildTooth()
         CadDsl tooth = buildTooth()
         CadDsl roundTooth = roundTooth(tooth)
-        def manyTooth = cloneTooth(roundTooth)
-        manyTooth.display()
-//        def manyToothWithCenterHole = centerHole(manyTooth)
-//        visualize mountingHoles(manyToothWithCenterHole)
+        CadDsl manyTooth = cloneTooth(roundTooth)
+        CadDsl manyToothWithCenterHole = centerHole(manyTooth)
+        mountingHoles(manyToothWithCenterHole).display()
     }
 
     @Test
     void "Build Tooth via 2d tools"() {
-//        buildTooth()
         CadDsl tooth = buildTooth()
-        roundTooth2d(tooth)
-//        def manyTooth = cloneTooth(roundTooth)
-//        def manyToothWithCenterHole = centerHole(manyTooth)
-//        visualize mountingHoles(manyToothWithCenterHole)
+        CadDsl roundTooth = roundTooth2d(tooth)
+        CadDsl manyTooth = cloneTooth(roundTooth)
+        CadDsl manyToothWithCenterHole = centerHole(manyTooth)
+        mountingHoles(manyToothWithCenterHole).display()
     }
 }

@@ -62,12 +62,12 @@ class CadDslFace implements CadDslBase {
 
 
     CadDslSolid fillet(Number radius) {
-        visitor.visitFillet(radius)
+        visitor.visitFillet(radius.toDouble())
         new CadDsl(visitor: visitor)
     }
 
     CadDslSolid hollowedSolid(Number thickness) {
-        visitor.visitHollowedSolid(thickness)
+        visitor.visitHollowedSolid(thickness.toDouble())
         new CadDsl(visitor: visitor)
     }
 }

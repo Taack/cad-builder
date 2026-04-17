@@ -73,7 +73,7 @@ class CadDslEdge2d implements CadDslBase {
      * @param diameter Diameter of the circle
      */
     Circle2d circle(Number radius, boolean reverse = false) {
-        visitor.visitCircle2d(radius, reverse)
+        visitor.visitCircle2d(radius.toDouble(), reverse)
     }
 
     /**
@@ -90,7 +90,7 @@ class CadDslEdge2d implements CadDslBase {
      * @param diameter Diameter of the circle
      */
     Ellipse2d ellipse(Vec2d dir, Number majDia, Number minDia) {
-        visitor.visitEllipse2d(dir, majDia, minDia)
+        visitor.visitEllipse2d(dir, majDia.toDouble(), minDia.toDouble())
     }
 
 //    /**
@@ -134,7 +134,7 @@ class CadDslEdge2d implements CadDslBase {
     }
 
     ArcOfCircle2d trimmed(Circle2d curve, Number from, Number to, boolean reverse = false) {
-        visitor.visitTrimmed(curve, from, to, reverse)
+        visitor.visitTrimmed(curve, from.toDouble(), to.toDouble(), reverse)
     }
 
     ArcOfCircle2d trimmed(Circle2d curve, Vec2d from, Vec2d to, boolean reverse = false) {
@@ -146,7 +146,7 @@ class CadDslEdge2d implements CadDslBase {
     }
 
     ITrimmable2d trimmed(IClosedShape2d curve, Number from, Number to, boolean reverse = false) {
-        visitor.visitTrimmed(curve, from, to, reverse)
+        visitor.visitTrimmed(curve, from.toDouble(), to.toDouble(), reverse)
     }
 
     ITrimmable2d mirror(ITrimmable2d curve, Vec2d pt, Vec2d dir) {

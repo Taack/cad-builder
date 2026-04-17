@@ -18,13 +18,13 @@ interface ICadDslVisitor {
 
     void visitFromEnd(Vec2d pos)
 
-    void visitBox(Number length, Number height, Number thickness)
+    void visitBox(double length, double height, double thickness)
 
-    void visitSphere(Number radius, Number radian1, Number radian2)
+    void visitSphere(double radius, double radian1, double radian2)
 
-    void visitCylinder(Number radius, Number height)
+    void visitCylinder(double radius, double height)
 
-    void visitTorus(Number torusRadius, Number ringRadius)
+    void visitTorus(double torusRadius, double ringRadius)
 
     void visitCut()
 
@@ -42,7 +42,7 @@ interface ICadDslVisitor {
 
     void visitCenterEnd()
 
-    Circle2d visitCircle2d(Number diameter, boolean reverse)
+    Circle2d visitCircle2d(double diameter, boolean reverse)
 
     void visitMove(Vec2d to)
 
@@ -76,25 +76,25 @@ interface ICadDslVisitor {
 
     void visitCommonEnd()
 
-    void visitFillet(Number length)
+    void visitFillet(double length)
 
-    void visitHollowedSolid(Number thickness)
+    void visitHollowedSolid(double thickness)
 
-    Ellipse2d visitEllipse2d(Vec2d dir, Number majDia, Number minDia)
+    Ellipse2d visitEllipse2d(Vec2d dir, double majDia, double minDia)
 
     void visitWireFromSurface()
 
     void visitWireFromSurfaceEnd()
 
-    ITrimmable2d visitTrimmed(IClosedShape2d curve, Number from, Number to, boolean reverse)
+    ITrimmable2d visitTrimmed(IClosedShape2d curve, double from, double to, boolean reverse)
 
-    ArcOfCircle2d visitTrimmed(Circle2d circle2d, Number from, Number to, boolean reverse)
+    ArcOfCircle2d visitTrimmed(Circle2d circle2d, double from, double to, boolean reverse)
 
-    ArcOfCircle2d visitTrimmed(Circle2d circle2d, Vec2d from, Number to, boolean reverse)
+    ArcOfCircle2d visitTrimmed(Circle2d circle2d, Vec2d from, double to, boolean reverse)
 
     ArcOfCircle2d visitTrimmed(Circle2d circle2d, Vec2d from, Vec2d to, boolean reverse)
 
-    void visitCylindricalSurface(Number number)
+    void visitCylindricalSurface(double number)
 
     void visitClosedWire()
 
@@ -113,4 +113,6 @@ interface ICadDslVisitor {
     void visitSolidTranslate(Vec distance)
 
     void visitSolidRotate(Vec pos, Vec dir, double angle, boolean clone)
+
+    void visitCone(double r1, double r2, double height)
 }
