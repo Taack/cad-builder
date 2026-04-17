@@ -2,21 +2,13 @@ package org.taack.cad.dsl
 
 import groovy.transform.CompileStatic
 import org.junit.jupiter.api.Test
+import org.taack.cad.dsl.geom.*
 import org.taack.cad.dsl.helper.Circle2dConstruct
 import org.taack.cad.dsl.helper.CurveIntersection2d
-import org.taack.cad.dsl.geom.Vec
-import org.taack.cad.dsl.geom.Vec2d
-import org.taack.cad.dsl.geom.ArcOfCircle2d
-import org.taack.cad.dsl.geom.Circle2d
-import org.taack.cad.dsl.geom.ITrimmable2d
-
-import java.lang.foreign.MemorySegment
 
 import static java.lang.Math.*
 import static org.taack.cad.dsl.CadDsl.cd
-import static org.taack.occt.NativeLib.*
 
-// mirrorProfile
 @CompileStatic
 class SprocketTest {
 
@@ -287,23 +279,6 @@ class SprocketTest {
                 }
             }
         }.toCadDsl()
-//        for (int i = 0; i < mounting_hole_count; i++) {
-//            Vec centerVec = new Vec(
-//                    cos(i * PI / 3) * mounting_radius,
-//                    sin(i * PI / 3) * mounting_radius,
-//                    0.0)
-//            MemorySegment center_axis = new_gp_Ax2__gp_Pnt_gp_Dir(centerVec.toGpPnt(), new Vec(1).toGpDir())
-//            def cylinder = new_TopoDS_Shape__BRepPrimAPI_MakeCylinder__gp_Ax2_radius_height(center_axis, hole_radius, thickness)
-//
-//            result = new_TopoDS_Shape__bBRepAlgoAPI_Cut__s1_s2(result, cylinder)
-//
-//            def cone = new_TopoDS_Shape__BRepPrimAPI_MakeCone__gp_Ax2_R1_R2_H(
-//                    center_axis,
-//                    (hole_radius + thickness / 2.0d),
-//                    hole_radius, thickness / 2.0d)
-//            result = new_TopoDS_Shape__bBRepAlgoAPI_Cut__s1_s2(result, cone)
-//        }
-
     }
 
     @Test
@@ -316,7 +291,7 @@ class SprocketTest {
     }
 
     @Test
-    void "Build Tooth via 2d tools"() {
+    void "Build Tooth via roundTooth2d"() {
         CadDsl tooth = buildTooth()
         CadDsl roundTooth = roundTooth2d(tooth)
         CadDsl manyTooth = cloneTooth(roundTooth)
