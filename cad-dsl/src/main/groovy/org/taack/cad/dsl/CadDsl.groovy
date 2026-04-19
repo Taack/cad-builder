@@ -57,10 +57,10 @@ class CadDsl extends CadDslSolid implements CadDslBase {
     /**
      * Make a Sphere whose center is the current position
      *
-     * @param radius    Sphere radius
+     * @param radius Sphere radius
      * @param direction coordinate system for the construction of the sphere
      * @param angleFrom first angle defining a spherical segment
-     * @param angleTo   second angle defining a spherical segment
+     * @param angleTo second angle defining a spherical segment
      * @return
      */
     CadDslSolid sphere(Number radius, Number angleFrom = 0, Number angleTo = 2 * PI) {
@@ -90,13 +90,14 @@ class CadDsl extends CadDslSolid implements CadDslBase {
         new CadDslSolid(visitor: visitor)
     }
 
-    CadDslSolid thruSection(@DelegatesTo(value = CadDslThruSection, strategy = Closure.DELEGATE_FIRST) Closure c = null) {}
-//
-//    CadDslSolid currentSolid() {
-//        new CadDslSolid(visitor: visitor)
-//    }
+    CadDslSolid thruSection(@DelegatesTo(value = CadDslThruSection, strategy = Closure.DELEGATE_FIRST) Closure c = null) {
+        visitor.visitThruSection()
+        if (c) {
+            c.delegate = new CadDslThruSection(visitor: visitor)
+            c.call()
+        }
+        visitor.visitThruSectionEnd()
 
-//    void display(String fileName = null) {
-//        visitor.display(fileName)
-//    }
+        new CadDslSolid(visitor: visitor)
+    }
 }

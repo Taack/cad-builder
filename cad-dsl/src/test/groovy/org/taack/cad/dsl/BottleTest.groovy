@@ -17,7 +17,7 @@ class BottleTest {
     static double myNeckHeight = myHeight / 10
 
     @CompileStatic
-    static CadDslSolid mainBottleBody() {
+    static CadDsl mainBottleBody() {
 
         Vec2d v1 = new Vec2d(-myWidth / 2, 0)
         Vec2d v11 = new Vec2d(0, -myThickness / 4)
@@ -38,12 +38,12 @@ class BottleTest {
             edge(v1)
         }.toFace().prism(new Vec(myHeight)).topZ().fillet(myThickness / 12d).fuse {
             cylinder(myNeckRadius, myNeckHeight)
-        }.topZ().hollowedSolid(-myThickness / 50d)
+        }.topZ().hollowedSolid(-myThickness / 50d).toCadDsl()
     }
 
 
-    static CadDslSolid simpleThreading(CadDslSolid s) {
-        cd().thruSection {
+    static CadDsl simpleThreading(CadDsl s) {
+        s.thruSection {
             double aMajor = 2 * PI
             double aMinor = myNeckHeight / 10
             Vec2d pos = new Vec2d(2 * PI, myNeckHeight / 2)
@@ -71,7 +71,7 @@ class BottleTest {
                 to(bound(0))
                 edge(bound(PI))
             }
-        }
+        }.toCadDsl()
     }
 //    static void simpleThreading(CadBuilder mb) {
 //        MemorySegment innerCyl = cylindricalSurface(new Vec(myHeight), new Vec(1), myNeckRadius * 0.99)
@@ -98,9 +98,8 @@ class BottleTest {
 
     @Test
     void "Make Bottle Using Builder API"() {
-        def cd = mainBottleBody()
-//        cd = simpleThreading(cd)
-        cd.display()
+        CadDsl cd = mainBottleBody()
+        simpleThreading(cd).display()
     }
 
 }

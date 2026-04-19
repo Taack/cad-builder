@@ -431,6 +431,16 @@ class CadDslVisitor implements ICadDslVisitor {
     }
 
     @Override
+    void visitThruSection() {
+
+    }
+
+    @Override
+    void visitThruSectionEnd() {
+
+    }
+
+    @Override
     void visitFace(Vec direction, Vec position) {
         Tr.cur("visitFace $direction $position")
         double positionMax = position == null ? Double.NEGATIVE_INFINITY : Double.POSITIVE_INFINITY

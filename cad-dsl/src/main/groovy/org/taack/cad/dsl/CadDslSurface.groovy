@@ -13,7 +13,7 @@ class CadDslSurface implements CadDslBase {
     CadDslSurface position(Vec pos, @DelegatesTo(value = CadDsl, strategy = Closure.DELEGATE_FIRST) Closure c = null) {
         visitor.visitFrom(pos)
         if (c) {
-            c.delegate = this
+            c.delegate = new CadDsl(visitor: visitor)
             c.call()
         }
         visitor.visitFromEnd(pos)
