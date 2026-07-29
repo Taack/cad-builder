@@ -26,7 +26,10 @@ ls /usr/include/opencascade | wc
 [groovy]
 ----
 ./gradlew cad-dsl:test
+./gradlew clean <1>
 ----
+
+<1> To replay tests, you have to clean the env.
 
 .Output
 image::cad-builder.webp[]
