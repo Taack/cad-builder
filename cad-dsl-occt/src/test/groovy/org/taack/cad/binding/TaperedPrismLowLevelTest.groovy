@@ -7,6 +7,7 @@ import org.taack.cad.dsl.geom.Vec2d
 
 import static java.lang.Math.PI
 import static org.taack.occt.NativeLib.*
+import static org.taack.cad.occt.Occt.*
 
 @CompileStatic
 class TaperedPrismLowLevelTest {
@@ -22,7 +23,7 @@ class TaperedPrismLowLevelTest {
         _TopExp_Explorer__Next Ex
         def F = new_TopoDS_Face__TopExp_Explorer__Current Ex
         def surf = handle_Geom_Surface__TopoDS_Face F
-        def c = new_gp_Circ2d__ax2d_r(new_gp_Ax2d__pt_dir(new Vec2d(200, 130).toGpPnt2d(), new Vec2d(200, 130).toGpDir2d()), 50)
+        def c = new_gp_Circ2d__ax2d_r(new_gp_Ax2d__pt_dir(gpPnt2d(new Vec2d(200, 130)), gpDir2d(new Vec2d(200, 130))), 50)
         def MW = new_BRepBuilderAPI_MakeWire()
         def aline = handle_Geom2d_Circle__GCE2d_MakeCircle__cir2d(c)
         _BRepBuilderAPI_MakeWire__Add__BRepBuilderAPI_MakeEdge(MW, new_BRepBuilderAPI_MakeEdge__Geom2d_Curve_Geom_Surface_p1_p2(aline, surf, 0d, PI))

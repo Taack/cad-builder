@@ -1,4 +1,4 @@
-package org.taack.cad.dsl.helper
+package org.taack.cad.occt
 
 import groovy.transform.CompileStatic
 

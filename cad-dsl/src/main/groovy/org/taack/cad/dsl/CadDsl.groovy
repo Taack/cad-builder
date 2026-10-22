@@ -3,6 +3,7 @@ package org.taack.cad.dsl
 import groovy.transform.CompileStatic
 import org.taack.cad.dsl.geom.Vec
 import org.taack.cad.dsl.geom.Vec2d
+import org.taack.cad.dsl.kernel.CadKernels
 
 import static java.lang.Math.*
 
@@ -10,7 +11,7 @@ import static java.lang.Math.*
 class CadDsl extends CadDslSolid implements CadDslBase {
     static CadDsl cd() {
 
-        new CadDsl(visitor: new CadDslVisitor())
+        new CadDsl(visitor: CadKernels.get().newVisitor())
     }
 
     CadDslWire wireFrom(Vec pos, @DelegatesTo(value = CadDslEdge, strategy = Closure.DELEGATE_FIRST) Closure c = null) {

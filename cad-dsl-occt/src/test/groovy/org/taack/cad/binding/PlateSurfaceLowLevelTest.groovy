@@ -2,9 +2,10 @@ package org.taack.cad.binding
 
 import groovy.transform.CompileStatic
 import org.junit.jupiter.api.Test
-import org.taack.cad.dsl.helper.SurfaceBounds
+import org.taack.cad.occt.SurfaceBounds
 import org.taack.cad.dsl.geom.Vec
 import static org.taack.occt.NativeLib.*
+import static org.taack.cad.occt.Occt.*
 import static java.lang.Math.*
 
 @CompileStatic
@@ -20,11 +21,11 @@ class PlateSurfaceLowLevelTest {
         Vec P5c = new Vec(5, 5, 5)
 
         def W = new_BRepBuilderAPI_MakePolygon()
-        _BRepBuilderAPI_MakePolygon__Add__pt(W, P1c.toGpPnt())
-        _BRepBuilderAPI_MakePolygon__Add__pt(W, P2c.toGpPnt())
-        _BRepBuilderAPI_MakePolygon__Add__pt(W, P3c.toGpPnt())
-        _BRepBuilderAPI_MakePolygon__Add__pt(W, P4c.toGpPnt())
-        _BRepBuilderAPI_MakePolygon__Add__pt(W, P1c.toGpPnt())
+        _BRepBuilderAPI_MakePolygon__Add__pt(W, gpPnt(P1c))
+        _BRepBuilderAPI_MakePolygon__Add__pt(W, gpPnt(P2c))
+        _BRepBuilderAPI_MakePolygon__Add__pt(W, gpPnt(P3c))
+        _BRepBuilderAPI_MakePolygon__Add__pt(W, gpPnt(P4c))
+        _BRepBuilderAPI_MakePolygon__Add__pt(W, gpPnt(P1c))
 
         println "Initialize a BuildPlateSurface"
         def BPSurf = new_GeomPlate_BuildPlateSurface__degree_NbPt_NbIter(3, 15, 2)
@@ -43,7 +44,7 @@ class PlateSurfaceLowLevelTest {
             _BRepTools_WireExplorer__Next(anExp)
         }
         println "Point constraint"
-        def PCont = handle_GeomPlate_PointConstraint__gp_Pnt_order(P5c.toGpPnt(), 0)
+        def PCont = handle_GeomPlate_PointConstraint__gp_Pnt_order(gpPnt(P5c), 0)
         _GeomPlate_BuildPlateSurface__Add__Cont(BPSurf, PCont)
 
         println "Compute the Plate surface"

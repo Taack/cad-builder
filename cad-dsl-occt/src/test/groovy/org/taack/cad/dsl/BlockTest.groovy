@@ -137,7 +137,7 @@ class BlockTest {
                 [-5d, -length + 4.0d].each { double y ->
                     to(new Vec2d(x, y))
                     closedWire {
-                        CadDslVisitor.Tr.cur "Could fix position ..."
+                        println "Could fix position ..."
                         [[1, 0], [1, 1], [0, 1], [0, 0]].each { double i2, double j2 ->
                             double x2 = x + centerHoleDia * i2
                             double y2 = y + centerHoleDia * j2

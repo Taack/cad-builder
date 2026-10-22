@@ -8,6 +8,7 @@ import org.taack.cad.dsl.geom.Vec2d
 import java.lang.foreign.MemorySegment
 
 import static org.taack.occt.NativeLib.*
+import static org.taack.cad.occt.Occt.*
 import static java.lang.Math.*
 
 // https://algotopia.com/contents/opencascade/opencascade_sprocket
@@ -60,7 +61,7 @@ class SprocketLowLevelTest {
 
         println "Create a 2D arc to form the base of the tooth"
         Vec2d base_center = new Vec2d(pitch_circle_radius + (tooth_radius - roller_radius), 0)
-        def base_circle = new_gp_Circ2d__ax2d_r(new_gp_Ax2d__pt_dir(base_center.toGpPnt2d(), new_gp_Dir2d()),
+        def base_circle = new_gp_Circ2d__ax2d_r(new_gp_Ax2d__pt_dir(gpPnt2d(base_center), new_gp_Dir2d()),
                 tooth_radius)
         def trimmed_base = handle_Geom2d_TrimmedCurve__GCE2d_MakeArcOfCircle__cir2d_ang1_ang2(base_circle, PI - (roller_contact_angle / 2.0), PI)
         _Geom2d_TrimmedCurve__Reverse(trimmed_base)
@@ -70,7 +71,7 @@ class SprocketLowLevelTest {
         println "Determine the center of the profile circle"
         double x_distance = cos(roller_contact_angle / 2d) * (profile_radius + tooth_radius)
         double y_distance = sin(roller_contact_angle / 2d) * (profile_radius + tooth_radius)
-        def profile_center = new Vec2d(pitch_circle_radius - x_distance, y_distance).toGpPnt2d()
+        def profile_center = gpPnt2d(new Vec2d(pitch_circle_radius - x_distance, y_distance))
 
         println "x_distance $x_distance"
         println "y_distance $y_distance"
@@ -81,7 +82,7 @@ class SprocketLowLevelTest {
         def geom_profile_circle = handle_Geom2d_Circle__GCE2d_MakeCircle__cir2d(profile_circle)
 
         println "Construct the outer circle"
-        def outer_circle = new_gp_Circ2d__ax2d_r(new_gp_Ax2d__pt_dir(new Vec2d(0, 0).toGpPnt2d(), new_gp_Dir2d()),
+        def outer_circle = new_gp_Circ2d__ax2d_r(new_gp_Ax2d__pt_dir(gpPnt2d(new Vec2d(0, 0)), new_gp_Dir2d()),
                 top_radius)
         def geom_outer_circle = handle_Geom2d_Circle__GCE2d_MakeCircle__cir2d(outer_circle)
 
@@ -99,14 +100,14 @@ class SprocketLowLevelTest {
         if (num_points == 2) {
             if (gp_Pnt2d__Distance__p1_p2(p1, new_gp_Pnt2d__Geom2dAPI_InterCurveCurve__Point__i(inter, 1)) < gp_Pnt2d__Distance__p1_p2(p1, new_gp_Pnt2d__Geom2dAPI_InterCurveCurve__Point__i(inter, 2))) {
                 p2 = new_gp_Pnt2d__Geom2dAPI_InterCurveCurve__Point__i(inter, 1)
-                println "p2 point 1 ${Vec2d.fromAPnt(p2)}"
+                println "p2 point 1 ${vec2d(p2)}"
             } else {
                 p2 = new_gp_Pnt2d__Geom2dAPI_InterCurveCurve__Point__i(inter, 2)
-                println "p2 point 2 ${Vec2d.fromAPnt(p2)}"
+                println "p2 point 2 ${vec2d(p2)}"
             }
         } else if (num_points == 1) {
             p2 = new_gp_Pnt2d__Geom2dAPI_InterCurveCurve__Point__i(inter, 1)
-            println "p2 point 1 ${Vec2d.fromAPnt(p2)}"
+            println "p2 point 1 ${vec2d(p2)}"
         } else throw new Exception("Too many intersection points between curves")
 
         println "Trim the profile circle and mirror"
@@ -117,13 +118,13 @@ class SprocketLowLevelTest {
         println "vP3: $vP3"
 
         println "and use it to create the third arc"
-        def trimmed_outer = handle_Geom2d_TrimmedCurve__GCE2d_MakeArcOfCircle__cir2d_p1_p2(outer_circle, p2, vP3.toGpPnt2d())
+        def trimmed_outer = handle_Geom2d_TrimmedCurve__GCE2d_MakeArcOfCircle__cir2d_p1_p2(outer_circle, p2, gpPnt2d(vP3))
 
         println "Mirror and reverse the three arcs"
 
         println "${new Vec2d(1, 0).rotate(tooth_angle / 2.0d)}"
 
-        def mirror_axis = new_gp_Ax2d__pt_dir(new Vec2d().toGpPnt2d(), new Vec2d(1, 0).rotate(tooth_angle / 2.0d).toGpDir2d())
+        def mirror_axis = new_gp_Ax2d__pt_dir(gpPnt2d(new Vec2d()), gpDir2d(new Vec2d(1, 0).rotate(tooth_angle / 2.0d)))
         def mirror_base = handle_Geom2d_Geometry__Copy(trimmed_base)
         def mirror_profile = handle_Geom2d_Geometry__Copy(trimmed_profile)
         def mirror_outer = handle_Geom2d_Geometry__Copy(trimmed_outer)
@@ -140,16 +141,16 @@ class SprocketLowLevelTest {
         def outer_end = new_gp_Pnt2d__Geom2d_TrimmedCurve__EndPoint(mirror_outer)
         def outer_arc = handle_Geom2d_TrimmedCurve__GCE2d_MakeArcOfCircle__p1_p2_p3(outer_start, outer_mid, outer_end)
 
-        println "Outer Arc ${Vec2d.fromAPnt(outer_start)} ${Vec2d.fromAPnt(outer_mid)} ${Vec2d.fromAPnt(outer_end)}"
+        println "Outer Arc ${vec2d(outer_start)} ${vec2d(outer_mid)} ${vec2d(outer_end)}"
 
         println "Create an arc for the inside of the wedge"
-        def inner_circle = new_gp_Circ2d__ax2d_r(new_gp_Ax2d__pt_dir(new Vec2d().toGpPnt2d(), new Vec2d(1, 0).toGpDir2d()), top_radius - roller_diameter)
+        def inner_circle = new_gp_Circ2d__ax2d_r(new_gp_Ax2d__pt_dir(gpPnt2d(new Vec2d()), gpDir2d(new Vec2d(1, 0))), top_radius - roller_diameter)
         Vec2d innerStartVec2d = new Vec2d(top_radius - roller_diameter, 0)
-        def inner_arc = handle_Geom2d_TrimmedCurve__GCE2d_MakeArcOfCircle__cir2d_p1_ang(inner_circle, innerStartVec2d.toGpPnt2d(), tooth_angle)
+        def inner_arc = handle_Geom2d_TrimmedCurve__GCE2d_MakeArcOfCircle__cir2d_p1_ang(inner_circle, gpPnt2d(innerStartVec2d), tooth_angle)
         _Geom2d_TrimmedCurve__Reverse(inner_arc)
 
         println "Convert the 2D arcs and two extra lines to 3D edges"
-        def plane = new_gp_Pln__pt_dir(new Vec().toGpPnt(), new Vec(0, 0, 1).toGpDir())
+        def plane = new_gp_Pln__pt_dir(gpPnt(new Vec()), gpDir(new Vec(0, 0, 1)))
         def arc1 = new_BRepBuilderAPI_MakeEdge__Geom_Curve handle_Geom_Curve__GeomAPI_To3d__Geom2d_Curve_gp_Pln(trimmed_base, plane)
         def arc2 = new_BRepBuilderAPI_MakeEdge__Geom_Curve handle_Geom_Curve__GeomAPI_To3d__Geom2d_Curve_gp_Pln(trimmed_profile, plane)
         def arc3 = new_BRepBuilderAPI_MakeEdge__Geom_Curve handle_Geom_Curve__GeomAPI_To3d__Geom2d_Curve_gp_Pln(outer_arc, plane)
@@ -157,18 +158,18 @@ class SprocketLowLevelTest {
         def arc5 = new_BRepBuilderAPI_MakeEdge__Geom_Curve handle_Geom_Curve__GeomAPI_To3d__Geom2d_Curve_gp_Pln(mirror_base, plane)
 
         def p4 = new_gp_Pnt2d__Geom2d_TrimmedCurve__EndPoint(mirror_base)
-        Vec2d p4v2d = Vec2d.fromAPnt(p4)
+        Vec2d p4v2d = vec2d(p4)
         def p5 = new_gp_Pnt2d__Geom2d_TrimmedCurve__StartPoint(inner_arc)
-        Vec2d p5v2d = Vec2d.fromAPnt(p5)
-        def lin1 = new_BRepBuilderAPI_MakeEdge__ptFrom_ptTo(new Vec(p4v2d).toGpPnt(), new Vec(p5v2d).toGpPnt())
+        Vec2d p5v2d = vec2d(p5)
+        def lin1 = new_BRepBuilderAPI_MakeEdge__ptFrom_ptTo(gpPnt(new Vec(p4v2d)), gpPnt(new Vec(p5v2d)))
         def arc6 = new_BRepBuilderAPI_MakeEdge__Geom_Curve handle_Geom_Curve__GeomAPI_To3d__Geom2d_Curve_gp_Pln(inner_arc, plane)
         def p6 = new_gp_Pnt2d__Geom2d_TrimmedCurve__EndPoint(inner_arc)
-        Vec2d p6v2d = Vec2d.fromAPnt(p6)
-        Vec2d p0v2d = Vec2d.fromAPnt(p0)
+        Vec2d p6v2d = vec2d(p6)
+        Vec2d p0v2d = vec2d(p0)
 
         println "p5v2d = $p5v2d, p6v2d = $p6v2d"
 
-        def lin2 = new_BRepBuilderAPI_MakeEdge__ptFrom_ptTo(new Vec(p6v2d).toGpPnt(), new Vec(p0v2d.x, p0v2d.y, 0).toGpPnt())
+        def lin2 = new_BRepBuilderAPI_MakeEdge__ptFrom_ptTo(gpPnt(new Vec(p6v2d)), gpPnt(new Vec(p0v2d.x, p0v2d.y, 0)))
 
         println "Combine the edges in a wire"
         def wire = new_BRepBuilderAPI_MakeWire__BRepBuilderAPI_MakeEdge(arc1)
@@ -184,7 +185,7 @@ class SprocketLowLevelTest {
         def face = new_TopoDS_Face__BRepBuilderAPI_MakeFace__TopoDS_Wire(new_TopoDS_Wire__BRepBuilderAPI_MakeWire__Wire(wire))
 
         println "Finally, extrude the face"
-        def wedge = new_TopoDS_Shape__BRepPrimAPI_MakePrism__TopoDS_Face_gp_Vec(face, new Vec(0, 0, thickness).toGpVec())
+        def wedge = new_TopoDS_Shape__BRepPrimAPI_MakePrism__TopoDS_Face_gp_Vec(face, gpVec(new Vec(0, 0, thickness)))
 
         return wedge
     }
@@ -199,9 +200,9 @@ class SprocketLowLevelTest {
 
         println "Determine where the circle used for rounding has to start and stop"
         Vec2d p2d_1v = new Vec2d(top_radius - round_x, 0)
-        def p2d_1 = p2d_1v.toGpPnt2d()
+        def p2d_1 = gpPnt2d(p2d_1v)
         Vec2d p2d_2v = new Vec2d(top_radius, round_z)
-        def p2d_2 = p2d_2v.toGpPnt2d()
+        def p2d_2 = gpPnt2d(p2d_2v)
 
         println "Construct the rounding circle"
         def round_circle = new_GccAna_Circ2d2TanRad__p2d1_p2d2_roundRadius(p2d_1, p2d_2, round_radius, 0.01d)
@@ -211,7 +212,7 @@ class SprocketLowLevelTest {
         def round_circle_2d_1 = ref_gp_Circ2d__GccAna_Circ2d2TanRad__ThisSolution__index(round_circle, 1)
         def round_circle_2d_2 = ref_gp_Circ2d__GccAna_Circ2d2TanRad__ThisSolution__index(round_circle, 2)
         MemorySegment round_circle_2d
-        Vec2d roundP1 = Vec2d.fromAPnt ref_gp_Pnt2d__gp_Ax22d__Location(ref_Position__gp_Circ2d__Position(round_circle_2d_1))
+        Vec2d roundP1 = vec2d(ref_gp_Pnt2d__gp_Ax22d__Location(ref_Position__gp_Circ2d__Position(round_circle_2d_1)))
 
         println "round_circle_2d_1; ${roundP1.y}"
         if (roundP1.y >= 0)
@@ -224,18 +225,18 @@ class SprocketLowLevelTest {
 
         println "Calculate extra points used to construct lines"
         Vec p1v = new Vec(p2d_1v.x, 0, p2d_1v.y)
-        def p1 = p1v.toGpPnt()
+        def p1 = gpPnt(p1v)
         Vec p2v = new Vec(p2d_2v.x, 0, p2d_2v.y)
-        def p2 = p2v.toGpPnt()
+        def p2 = gpPnt(p2v)
         Vec p3v = new Vec(p2d_2v.x + 1, 0, p2d_2v.y)
-        def p3 = p3v.toGpPnt()
+        def p3 = gpPnt(p3v)
         Vec p4v = new Vec(p2d_2v.x + 1, 0, p2d_1v.y - 1)
-        def p4 = p4v.toGpPnt()
+        def p4 = gpPnt(p4v)
         Vec p5v = new Vec(p2d_1v.x, 0, p2d_1v.y - 1)
-        def p5 = p5v.toGpPnt()
+        def p5 = gpPnt(p5v)
 
         println "Convert the arc and four extra lines into 3D edges"
-        def plane = new_gp_Pln__gp_Ax3(new_gp_Ax3__p_dN_dX(new Vec().toGpPnt(), new Vec(0, -1, 0).toGpDir(), new Vec(1, 0, 0).toGpDir()))
+        def plane = new_gp_Pln__gp_Ax3(new_gp_Ax3__p_dN_dX(gpPnt(new Vec()), gpDir(new Vec(0, -1, 0)), gpDir(new Vec(1, 0, 0))))
         def arc1 = new_BRepBuilderAPI_MakeEdge__Geom_Curve(handle_Geom_Curve__GeomAPI_To3d__Geom2d_Curve_gp_Pln(trimmed_circle, plane))
         def lin1 = new_BRepBuilderAPI_MakeEdge__ptFrom_ptTo(p2, p3)
         def lin2 = new_BRepBuilderAPI_MakeEdge__ptFrom_ptTo(p3, p4)
@@ -253,16 +254,16 @@ class SprocketLowLevelTest {
         def round_face = new_TopoDS_Face__BRepBuilderAPI_MakeFace(new_BRepBuilderAPI_MakeFace__BRepBuilderAPI_MakeWire(round_wire))
 
         println "Revolve the face around the Z axis over the tooth angle"
-        def rounding_cut_1 = new_TopoDS_Shape__BRepPrimAPI_MakeRevol__TopoDS_Face_gp_Ax1_ang(round_face, new_gp_Ax1__p_dir(new Vec().toGpPnt(), new Vec(1).toGpDir()), tooth_angle)
+        def rounding_cut_1 = new_TopoDS_Shape__BRepPrimAPI_MakeRevol__TopoDS_Face_gp_Ax1_ang(round_face, new_gp_Ax1__p_dir(gpPnt(new Vec()), gpDir(new Vec(1))), tooth_angle)
 
         println "Construct a mirrored copy of the first cutting shape"
         def mirror = new_gp_Trsf()
-        _gp_Trsf__SetMirror__gp_Ax2(mirror, new_gp_Ax2__gp_Pnt_gp_Dir(new Vec().toGpPnt(), new Vec(1).toGpDir()))
+        _gp_Trsf__SetMirror__gp_Ax2(mirror, new_gp_Ax2__gp_Pnt_gp_Dir(gpPnt(new Vec()), gpDir(new Vec(1))))
         def mirrored_cut_1 = new_TopoDS_Shape__BRepBuilderAPI_Transform__Shape_gp_Trsf_bCopy(rounding_cut_1, mirror, 0)
 
         println "and translate it so that it ends up on the other side of the wedge"
         def translate = new_gp_Trsf()
-        _gp_Trsf__SetTranslation__gp_Vec(translate, new Vec(0, 0, thickness).toGpVec())
+        _gp_Trsf__SetTranslation__gp_Vec(translate, gpVec(new Vec(0, 0, thickness)))
 
         def rounding_cut_2 = new_TopoDS_Shape__BRepBuilderAPI_Transform__Shape_gp_Trsf_bCopy(mirrored_cut_1, translate, 0)
 
@@ -295,7 +296,7 @@ class SprocketLowLevelTest {
         }
 
         multiplier = max_multiplier
-        def gp_OZ = new_gp_Ax1__p_dir(new Vec().toGpPnt(), new Vec(1).toGpDir())
+        def gp_OZ = new_gp_Ax1__p_dir(gpPnt(new Vec()), gpDir(new Vec(1)))
         for (int i = 1; i < multiplier; i++) {
             _gp_Trsf__SetRotation__gp_Vec(clone, gp_OZ, -i * tooth_angle)
 
@@ -343,7 +344,7 @@ class SprocketLowLevelTest {
                     cos(i * PI / 3) * mounting_radius,
                     sin(i * PI / 3) * mounting_radius,
                     0.0)
-            MemorySegment center_axis = new_gp_Ax2__gp_Pnt_gp_Dir(centerVec.toGpPnt(), new Vec(1).toGpDir())
+            MemorySegment center_axis = new_gp_Ax2__gp_Pnt_gp_Dir(gpPnt(centerVec), gpDir(new Vec(1)))
             def cylinder = new_TopoDS_Shape__BRepPrimAPI_MakeCylinder__gp_Ax2_radius_height(center_axis, hole_radius, thickness)
 
             result = new_TopoDS_Shape__bBRepAlgoAPI_Cut__s1_s2(result, cylinder)
