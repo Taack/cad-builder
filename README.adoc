@@ -5,6 +5,9 @@ The purpose of this tool is to share 3D parts and assemblies like java class bin
 
 As of today, the DSL is not complete to define bodies and assemblies will come later.
 
+.The OCCT bottle tutorial, written with the DSL (`BottleTest`)
+image::cad-bottle.png[]
+
 == Building
 
 The native part requires https://github.com/Open-Cascade-SAS/OCCT[Open CASCADE Technology] 8.0 (C++17).
@@ -23,14 +26,17 @@ Gradle looks for OCCT in `-PocctHome=<prefix>`, then the `OCCT_HOME` environment
 then `/usr` (Linux) or `/opt/homebrew` (macOS). It links every `TK*` toolkit found in `<prefix>/lib`.
 To avoid passing it each time, add `occtHome=/home/<you>/.local/occt-8.0.1` to `~/.gradle/gradle.properties`.
 
-.Launch Main App
-[groovy]
+.Run the tests
+[bash]
 ----
 ./gradlew -PocctHome=$HOME/.local/occt-8.0.1 cad-dsl:test
 ./gradlew clean <1>
 ----
 
 <1> To replay tests, you have to clean the env.
+
+`display()` opens the shape in an interactive OCCT viewer window, `display("x.png")` renders it off-screen
+(the images of this README are made this way), and `display("x.step")` / `display("x.stl")` export it.
 
 NOTE: Without FreeImage support in OCCT (`-DUSE_FREEIMAGE=ON`), `display("x.png")` writes PPM data whatever the extension.
 
@@ -45,9 +51,6 @@ so a signature mismatch is a compile error.
 * Release objects with `delete_<Type>`, handles with `delete_handle_<Type>`, and `double` arrays with `occt_free_doubles`.
 * Flags are `int` (0 / 1).
 * C++ exceptions never cross the boundary: a failing call returns `NULL` / `0`, and `occt_last_error()` gives the message.
-
-.Output
-image::cad-builder.webp[]
 
 == Sample
 
@@ -76,8 +79,8 @@ void "Pillow Block With Counterbored Holes and Prism"() {
 
 WARNING: DSL is evolving
 
-.Renderer
-image::https://github.com/Taack/cad-builder/blob/main/screenshot-sketch.webp?raw=true[]
+.Result
+image::cad-pillow-block.png[]
 
 == Packages
 
@@ -91,6 +94,25 @@ There are 3 main packages in `cad-dsl` src folder (both for tests and implementa
 
 DSL Tests are localised `cad-dsl/src/test/groovy/org/taack/cad/dsl` it could give an overview of `cad-dsl` constructions.
 
+.Cut 3 Boxes
+[source,groovy]
+----
+@Test
+void "Test cut 3 boxes"() {
+    cd().box(1, 1, 1).cut {
+        position(new Vec(1, 1, 1) * 0.6) {
+            box(1, 1, 1)
+        }
+        position(new Vec(1, 1, 1) * -0.6) {
+            box(1, 1, 1)
+        }
+    }.display()
+}
+----
+
+.Cut 3 Boxes Result
+image::cad-cut-3-boxes.png[]
+
 .Cut Version
 [source,groovy]
 ----
@@ -98,7 +120,7 @@ DSL Tests are localised `cad-dsl/src/test/groovy/org/taack/cad/dsl` it could giv
 void "Test mix fuse - common - cut"() {
     Vec diagonal = new Vec(1, 1, 1)
 
-    cd().box(2, 2, 1).toCadDsl().cut {
+    cd().box(2, 2, 1).cut {
         position(diagonal * 0.4) {
             box(1, 1, 1)
             position(diagonal * 0.3) {
@@ -112,7 +134,7 @@ void "Test mix fuse - common - cut"() {
 }
 ----
 
-.Image Displayed
+.Cut Result
 image::cad-cut.png[]
 
 .Fuse Version
@@ -122,7 +144,7 @@ image::cad-cut.png[]
 void "Test mix fuse - common - fuse"() {
     Vec diagonal = new Vec(1, 1, 1)
 
-    cd().box(2, 2, 1).toCadDsl().fuse {
+    cd().box(2, 2, 1).fuse {
         position(diagonal * 0.4) {
             box(1, 1, 1)
             position(diagonal * 0.3) {
