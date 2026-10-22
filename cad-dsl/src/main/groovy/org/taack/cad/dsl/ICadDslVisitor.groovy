@@ -122,6 +122,20 @@ interface ICadDslVisitor {
 
     void visitHelixProfileEnd(Vec2d from)
 
+    void visitSpline(List<Vec2d> through)
+
+    void visitWing()
+
+    void visitWingSection(Vec leadingEdge, double chord, double twist, Vec2d from)
+
+    void visitWingSectionEnd(Vec2d from)
+
+    void visitWingEnd()
+
+    void visitCircularPattern()
+
+    void visitCircularPatternEnd(int count, Vec axis)
+
     void visitThruSection()
 
     void visitThruSectionEnd()

@@ -453,44 +453,148 @@ class CadDslVisitor implements ICadDslVisitor {
         Tr.cur "helix($radius, $pitch, $height, $endRadius) from: $fromVec, axis: $helixAxis, radial: $helixRadial"
     }
 
-    // Drawing state hidden while the profile is drawn on its own plane
+    // Drawing state hidden while a profile is drawn on its own plane
     private MemorySegment savedFace
     private MemorySegment savedSurface
     private List<MemorySegment> savedMakeWires
     private Vec2d savedFromVec2d
 
-    @Override
-    void visitHelixProfile(Vec2d from) {
-        Tr.ind "visitHelixProfile $from"
+    /**
+     * Start drawing a profile on the plane of origin "origin", whose 2D x and y go along dirX and dirY.
+     */
+    private void beginProfile(Vec origin, Vec dirX, Vec dirY, Vec2d from) {
         savedFace = face
         savedSurface = currentSurface
         savedMakeWires = new ArrayList<>(makeWires)
         savedFromVec2d = fromVec2d
         makeWires.clear()
 
-        // Axial section plane through the start of the helix: x radial, y along the axis
-        def ax3 = own(new_gp_Ax3__p_dN_dX(helixStart.toGpPnt(), (helixRadial / helixAxis).toGpDir(), helixRadial.toGpDir()), NativeLib::delete_gp_Ax3)
+        def ax3 = own(new_gp_Ax3__p_dN_dX(origin.toGpPnt(), (dirX / dirY).toGpDir(), dirX.toGpDir()), NativeLib::delete_gp_Ax3)
         def pln = own(new_gp_Pln__gp_Ax3(ax3), NativeLib::delete_gp_Pln)
         face = own(new_TopoDS_Face__BRepBuilderAPI_MakeFace__gp_Pln(pln), NativeLib::delete_TopoDS_Face)
         visitFrom(from)
     }
 
-    @Override
-    void visitHelixProfileEnd(Vec2d from) {
+    /**
+     * End the profile started by beginProfile, restore the drawing state and return the profile wire (with 3D curves).
+     */
+    private MemorySegment endProfile(String what, Vec2d from) {
         visitFromEnd(from)
-        if (makeWires.empty) throw new IllegalStateException("helix profile: nothing drawn")
+        if (makeWires.empty) throw new IllegalStateException("$what: nothing drawn")
         def profile = ref_TopoDS_Wire__BRepBuilderAPI_MakeWire__Wire(makeWires.first())
-        def shape = own(new_TopoDS_Shape__BRepOffsetAPI_MakePipeShell__spine_profile_binormal(helixSpine, profile, helixAxis.toGpDir()), NativeLib::delete_TopoDS_Shape)
-        if (shape == MemorySegment.NULL) throw new IllegalArgumentException("helix profile: ${lastError()}")
+        _BRepLib__BuildCurves3d__TopoDS_Shape(profile)
 
         makeWires.clear()
         makeWires.addAll(savedMakeWires)
         face = savedFace
         currentSurface = savedSurface
         fromVec2d = savedFromVec2d
+        profile
+    }
+
+    @Override
+    void visitHelixProfile(Vec2d from) {
+        Tr.ind "visitHelixProfile $from"
+        // Axial section plane through the start of the helix: x radial, y along the axis
+        beginProfile(helixStart, helixRadial, helixAxis, from)
+    }
+
+    @Override
+    void visitHelixProfileEnd(Vec2d from) {
+        def profile = endProfile("helix profile", from)
+        def shape = own(new_TopoDS_Shape__BRepOffsetAPI_MakePipeShell__spine_profile_binormal(helixSpine, profile, helixAxis.toGpDir()), NativeLib::delete_TopoDS_Shape)
+        if (shape == MemorySegment.NULL) throw new IllegalArgumentException("helix profile: ${lastError()}")
+
         Tr.dec "visitHelixProfileEnd shape: $shape"
         boolShapes.peek() << shape
         if (!this.shape) this.shape = shape
+    }
+
+    @Override
+    void visitSpline(List<Vec2d> through) {
+        openShape2dList << new Spline2d(through)
+    }
+
+    // Section wires of the wing being built, in span order
+    private final List<MemorySegment> wingSections = []
+    private Vec wingSectionLeadingEdge
+    private double wingSectionChord
+    private double wingSectionTwist
+
+    @Override
+    void visitWing() {
+        Tr.ind "visitWing from: $fromVec"
+        wingSections.clear()
+    }
+
+    @Override
+    void visitWingSection(Vec leadingEdge, double chord, double twist, Vec2d from) {
+        Tr.cur "visitWingSection $leadingEdge, chord: $chord, twist: $twist"
+        wingSectionLeadingEdge = leadingEdge
+        wingSectionChord = chord
+        wingSectionTwist = twist
+        // Unit chord profile on the XZ plane, placed afterward
+        beginProfile(new Vec(), Vec.vX, Vec.vZ, from)
+    }
+
+    @Override
+    void visitWingSectionEnd(Vec2d from) {
+        def profile = endProfile("wing section", from)
+
+        // Scale to the chord, twist around the quarter chord (nose up), then move to the leading edge
+        def scale = own(new_gp_Trsf(), NativeLib::delete_gp_Trsf)
+        _gp_Trsf__SetScale__gp_Pnt_s(scale, new Vec().toGpPnt(), wingSectionChord)
+        def twistAxis = own(new_gp_Ax1__p_dir(new Vec(wingSectionChord / 4, 0, 0).toGpPnt(), Vec.vY.toGpDir()), NativeLib::delete_gp_Ax1)
+        def twist = own(new_gp_Trsf(), NativeLib::delete_gp_Trsf)
+        _gp_Trsf__SetRotation__gp_Vec(twist, twistAxis, Math.toRadians(wingSectionTwist))
+        def placement = own(new_gp_Trsf(), NativeLib::delete_gp_Trsf)
+        _gp_Trsf__SetTranslation__gp_Vec(placement, (fromVec + wingSectionLeadingEdge).toGpVec())
+        _gp_Trsf__Multiply__gp_Trsf(placement, twist)
+        _gp_Trsf__Multiply__gp_Trsf(placement, scale)
+
+        def section = own(new_TopoDS_Shape__BRepBuilderAPI_Transform__Shape_gp_Trsf_bCopy(profile, placement, 1), NativeLib::delete_TopoDS_Shape)
+        if (section == MemorySegment.NULL) throw new IllegalArgumentException("wing section: ${lastError()}")
+        wingSections << section
+    }
+
+    @Override
+    void visitWingEnd() {
+        if (wingSections.size() < 2) throw new IllegalStateException("wing: at least 2 sections expected, got ${wingSections.size()}")
+        def loft = own(new_BRepOffsetAPI_ThruSections__isSolid_ruled_pres3d(1, 0, 1.0e-06d), NativeLib::delete_BRepOffsetAPI_ThruSections)
+        for (MemorySegment section in wingSections) {
+            _BRepOffsetAPI_ThruSections__AddWire__TopoDS_Wire(loft, ref_TopoDS__Wire__TopoDS_Shape(section))
+        }
+        def shape = own(new_TopoDS_Shape__Shape__BRepBuilderAPI_MakeShape(loft), NativeLib::delete_TopoDS_Shape)
+        if (shape == MemorySegment.NULL) throw new IllegalArgumentException("wing: ${lastError()}")
+        wingSections.clear()
+
+        Tr.dec "visitWingEnd shape: $shape"
+        boolShapes.peek() << shape
+        if (!this.shape) this.shape = shape
+    }
+
+    // Index in boolShapes.peek() of the first shape of each pattern being built
+    private final Stack<Integer> patternStarts = new Stack<>()
+
+    @Override
+    void visitCircularPattern() {
+        Tr.ind "visitCircularPattern"
+        patternStarts.push(boolShapes.peek().size())
+    }
+
+    @Override
+    void visitCircularPatternEnd(int count, Vec axis) {
+        List<MemorySegment> shapes = boolShapes.peek()
+        List<MemorySegment> pattern = new ArrayList<>(shapes.subList(patternStarts.pop(), shapes.size()))
+        def ax1 = own(new_gp_Ax1__p_dir(fromVec.toGpPnt(), axis.toGpDir()), NativeLib::delete_gp_Ax1)
+        for (int i = 1; i < count; i++) {
+            def rotation = own(new_gp_Trsf(), NativeLib::delete_gp_Trsf)
+            _gp_Trsf__SetRotation__gp_Vec(rotation, ax1, 2 * Math.PI * i / count)
+            for (MemorySegment s in pattern) {
+                shapes << own(new_TopoDS_Shape__BRepBuilderAPI_Transform__Shape_gp_Trsf_bCopy(s, rotation, 1), NativeLib::delete_TopoDS_Shape)
+            }
+        }
+        Tr.dec "visitCircularPatternEnd $count x ${pattern.size()} shape(s) around $axis"
     }
 
     private static Vec unit(Vec v) {

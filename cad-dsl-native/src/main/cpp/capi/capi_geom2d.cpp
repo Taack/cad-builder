@@ -10,6 +10,8 @@
 #include <GCE2d_MakeSegment.hxx>
 #include <GccAna_Circ2d2TanRad.hxx>
 #include <Geom2dAPI_InterCurveCurve.hxx>
+#include <Geom2dAPI_Interpolate.hxx>
+#include <Geom2d_BSplineCurve.hxx>
 #include <Geom2d_Circle.hxx>
 #include <Geom2d_Ellipse.hxx>
 #include <Geom2d_Line.hxx>
@@ -20,6 +22,8 @@
 #include <gp_Dir2d.hxx>
 #include <gp_Pnt2d.hxx>
 #include <gp_Vec2d.hxx>
+#include <NCollection_HArray1.hxx>
+#include <Precision.hxx>
 
 extern "C" gp_Pnt2d *new_gp_Pnt2d__x_y(double theXp, double theYp) {
     TRACE2(std::ostringstream{} << " theXp " << theXp << " theYp " << theYp);
@@ -181,6 +185,18 @@ extern "C" occ::handle<Geom2d_Line> *handle_Geom2d_Line__GCE2d_MakeLine__p1_p2(c
 extern "C" occ::handle<Geom2d_Geometry> *handle_Geom2d_Geometry__Copy(const occ::handle<Geom2d_Geometry> *toCpy) {
     TRACE("");
     return guard(__func__, [&] { return new occ::handle<Geom2d_Geometry>((*toCpy)->Copy()); });
+}
+
+extern "C" OCCT_HANDLE(Geom2d_Curve) *handle_Geom2d_Curve__Geom2dAPI_Interpolate__xy_n(const double *xy, int n) {
+    TRACE("");
+    return guard(__func__, [&] {
+        occ::handle<NCollection_HArray1<gp_Pnt2d>> points = new NCollection_HArray1<gp_Pnt2d>(1, n);
+        for (int i = 0; i < n; i++) points->SetValue(i + 1, gp_Pnt2d(xy[2 * i], xy[2 * i + 1]));
+        Geom2dAPI_Interpolate interpolate(points, false, Precision::Confusion());
+        interpolate.Perform();
+        if (!interpolate.IsDone()) throw Standard_Failure("Geom2dAPI_Interpolate failed");
+        return new occ::handle<Geom2d_Curve>(interpolate.Curve());
+    });
 }
 
 extern "C" Geom2dAPI_InterCurveCurve *new_Geom2dAPI_InterCurveCurve__curve1_curve2(

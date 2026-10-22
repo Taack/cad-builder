@@ -9,6 +9,7 @@ import org.taack.cad.dsl.geom.Ellipse2d
 import org.taack.cad.dsl.geom.IClosedShape2d
 import org.taack.cad.dsl.geom.IConstruction
 import org.taack.cad.dsl.geom.ITrimmable2d
+import org.taack.cad.dsl.geom.Naca
 
 /**
  * Manage Drawing in face, directly or via construction closures
@@ -65,6 +66,26 @@ class CadDslEdge2d implements CadDslBase {
      */
     CadDslEdge2d arc(Vec2d to, Vec2d via) {
         visitor.visitArc(to, via)
+        this
+    }
+
+    /**
+     * Draw a smooth curve from the last position through the given points (the last one becomes the last position).
+     * @param through Points the curve goes through
+     */
+    CadDslEdge2d spline(Vec2d... through) {
+        visitor.visitSpline(through.toList())
+        this
+    }
+
+    /**
+     * Draw a closed NACA 4-digit airfoil for a unit chord, from the trailing edge (1, 0) around the leading edge (0, 0).
+     * @param code      4 digits, e.g. "2412": 2% camber at 40% of the chord, 12% thick
+     * @param nbPoints  Points per surface
+     */
+    CadDslEdge2d naca(String code, int nbPoints = 40) {
+        visitor.visitTo(new Vec2d(1, 0))
+        visitor.visitSpline(Naca.points(code, nbPoints))
         this
     }
 

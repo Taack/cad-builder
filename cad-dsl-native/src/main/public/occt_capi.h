@@ -177,6 +177,9 @@ OCCT_CAPI OCCT_HANDLE(Geom2d_Line) *handle_Geom2d_Line__GCE2d_MakeLine__p1_p2(co
 
 OCCT_CAPI OCCT_HANDLE(Geom2d_Geometry) *handle_Geom2d_Geometry__Copy(const OCCT_HANDLE(Geom2d_Geometry) *toCpy);
 
+/* B-spline through the n points {x0, y0, x1, y1, ...} (Geom2dAPI_Interpolate). */
+OCCT_CAPI OCCT_HANDLE(Geom2d_Curve) *handle_Geom2d_Curve__Geom2dAPI_Interpolate__xy_n(const double *xy, int n);
+
 OCCT_CAPI Geom2dAPI_InterCurveCurve *new_Geom2dAPI_InterCurveCurve__curve1_curve2(
     const OCCT_HANDLE(Geom2d_Curve) *C1, const OCCT_HANDLE(Geom2d_Curve) *C2);
 
@@ -252,6 +255,11 @@ OCCT_CAPI void _gp_Trsf__SetMirror__gp_Ax2(gp_Trsf *trsf, const gp_Ax2 *ax2);
 OCCT_CAPI void _gp_Trsf__SetTranslation__gp_Vec(gp_Trsf *gp_trsf, const gp_Vec *translation);
 
 OCCT_CAPI void _gp_Trsf__SetRotation__gp_Vec(gp_Trsf *gp_trsf, const gp_Ax1 *ax1, double angle);
+
+OCCT_CAPI void _gp_Trsf__SetScale__gp_Pnt_s(gp_Trsf *gp_trsf, const gp_Pnt *center, double scale);
+
+/* gp_trsf = gp_trsf * right: right is applied first. */
+OCCT_CAPI void _gp_Trsf__Multiply__gp_Trsf(gp_Trsf *gp_trsf, const gp_Trsf *right);
 
 OCCT_CAPI OCCT_HANDLE(Geom_TrimmedCurve) *handle_Geom_TrimmedCurve__Geom_Curve_u1_u2(
     const OCCT_HANDLE(Geom_Curve) *C, double U1, double U2);
