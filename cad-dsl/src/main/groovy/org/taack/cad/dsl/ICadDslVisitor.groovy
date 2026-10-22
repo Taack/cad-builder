@@ -116,6 +116,12 @@ interface ICadDslVisitor {
 
     void visitCone(double r1, double r2, double height)
 
+    void visitHelix(double radius, double pitch, double height, double endRadius)
+
+    void visitHelixProfile(Vec2d from)
+
+    void visitHelixProfileEnd(Vec2d from)
+
     void visitThruSection()
 
     void visitThruSectionEnd()

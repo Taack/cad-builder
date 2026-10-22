@@ -436,6 +436,72 @@ class CadDslVisitor implements ICadDslVisitor {
 
     }
 
+    // Helix being built by visitHelix, swept by visitHelixProfileEnd
+    MemorySegment helixSpine
+    Vec helixStart
+    Vec helixRadial
+    Vec helixAxis
+
+    @Override
+    void visitHelix(double radius, double pitch, double height, double endRadius) {
+        helixAxis = unit(direction)
+        helixRadial = directionNormal ? unit(directionNormal) : unit(Math.abs(helixAxis.y) < 0.9 ? Vec.vY / helixAxis : Vec.vZ / helixAxis)
+        helixStart = fromVec + helixRadial * radius
+        def ax2 = own(new_gp_Ax2__gp_Pnt_gp_Dir_Normal(fromVec.toGpPnt(), helixAxis.toGpDir(), helixRadial.toGpDir()), NativeLib::delete_gp_Ax2)
+        helixSpine = own(new_TopoDS_Wire__HelixBRep_BuilderHelix__ax2_diam1_diam2_height_pitch(ax2, 2 * radius, 2 * endRadius, height, pitch), NativeLib::delete_TopoDS_Wire)
+        if (helixSpine == MemorySegment.NULL) throw new IllegalArgumentException("helix($radius, $pitch, $height, $endRadius): ${lastError()}")
+        Tr.cur "helix($radius, $pitch, $height, $endRadius) from: $fromVec, axis: $helixAxis, radial: $helixRadial"
+    }
+
+    // Drawing state hidden while the profile is drawn on its own plane
+    private MemorySegment savedFace
+    private MemorySegment savedSurface
+    private List<MemorySegment> savedMakeWires
+    private Vec2d savedFromVec2d
+
+    @Override
+    void visitHelixProfile(Vec2d from) {
+        Tr.ind "visitHelixProfile $from"
+        savedFace = face
+        savedSurface = currentSurface
+        savedMakeWires = new ArrayList<>(makeWires)
+        savedFromVec2d = fromVec2d
+        makeWires.clear()
+
+        // Axial section plane through the start of the helix: x radial, y along the axis
+        def ax3 = own(new_gp_Ax3__p_dN_dX(helixStart.toGpPnt(), (helixRadial / helixAxis).toGpDir(), helixRadial.toGpDir()), NativeLib::delete_gp_Ax3)
+        def pln = own(new_gp_Pln__gp_Ax3(ax3), NativeLib::delete_gp_Pln)
+        face = own(new_TopoDS_Face__BRepBuilderAPI_MakeFace__gp_Pln(pln), NativeLib::delete_TopoDS_Face)
+        visitFrom(from)
+    }
+
+    @Override
+    void visitHelixProfileEnd(Vec2d from) {
+        visitFromEnd(from)
+        if (makeWires.empty) throw new IllegalStateException("helix profile: nothing drawn")
+        def profile = ref_TopoDS_Wire__BRepBuilderAPI_MakeWire__Wire(makeWires.first())
+        def shape = own(new_TopoDS_Shape__BRepOffsetAPI_MakePipeShell__spine_profile_binormal(helixSpine, profile, helixAxis.toGpDir()), NativeLib::delete_TopoDS_Shape)
+        if (shape == MemorySegment.NULL) throw new IllegalArgumentException("helix profile: ${lastError()}")
+
+        makeWires.clear()
+        makeWires.addAll(savedMakeWires)
+        face = savedFace
+        currentSurface = savedSurface
+        fromVec2d = savedFromVec2d
+        Tr.dec "visitHelixProfileEnd shape: $shape"
+        boolShapes.peek() << shape
+        if (!this.shape) this.shape = shape
+    }
+
+    private static Vec unit(Vec v) {
+        v * (1 / Math.sqrt(v.x * v.x + v.y * v.y + v.z * v.z))
+    }
+
+    private static String lastError() {
+        MemorySegment message = occt_last_error()
+        message == MemorySegment.NULL ? 'unknown OCCT error' : message.reinterpret(Long.MAX_VALUE).getString(0)
+    }
+
     @Override
     void visitThruSection() {
 
