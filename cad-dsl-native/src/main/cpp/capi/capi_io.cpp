@@ -12,6 +12,7 @@
 #include <Image_AlienPixMap.hxx>
 #include <OpenGl_GraphicDriver.hxx>
 #include <Prs3d_Drawer.hxx>
+#include <Prs3d_LineAspect.hxx>
 #include <STEPCAFControl_Writer.hxx>
 #include <StlAPI_Writer.hxx>
 #include <TDocStd_Document.hxx>
@@ -43,8 +44,8 @@ extern "C" int dumpShape(const TopoDS_Shape *shape, int width, int height, const
 
         //* Viewer setup
         occ::handle<V3d_Viewer> _viewer = new V3d_Viewer(_graphicDriver);
-        Quantity_Color bgColor(255. / 255, 255. / 255, 255. / 255, Quantity_TOC_RGB);
-        _viewer->SetDefaultBackgroundColor(bgColor);
+        // same look as the interactive viewer (OcctAisHello.cpp)
+        _viewer->SetDefaultBackgroundColor(Quantity_NOC_GRAY50);
         _viewer->SetDefaultLights();
         _viewer->SetLightOn();
 
@@ -67,21 +68,22 @@ extern "C" int dumpShape(const TopoDS_Shape *shape, int width, int height, const
         _view->SetComputedMode(false);
         _view->SetProj(V3d_XposYnegZpos);
         _view->AutoZFit();
+        _view->TriedronDisplay(Aspect_TOTP_LEFT_LOWER, Quantity_NOC_WHITE, 0.1);
+        _view->ChangeRenderingParams().NbMsaaSamples = 8;
 
         //* AIS context
         occ::handle<AIS_InteractiveContext> _context = new AIS_InteractiveContext(_viewer);
         _context->SetDisplayMode(AIS_Shaded, false);
         _context->DefaultDrawer()->SetFaceBoundaryDraw(true);
+        _context->DefaultDrawer()->FaceBoundaryAspect()->SetColor(Quantity_NOC_CYAN);
 
         // Render immediate structures into back buffer rather than front.
         _view->View()->SetImmediateModeDrawToFront(false);
 
         //* Dump
         occ::handle<Image_AlienPixMap> pixmap = new Image_AlienPixMap;
-        Quantity_Color _shapeColor(200. / 255, 200. / 255, 200. / 255, Quantity_TOC_RGB);
 
         occ::handle<AIS_Shape> _shapePrs = new AIS_Shape(*shape);
-        _shapePrs->SetColor(_shapeColor);
         _context->Display(_shapePrs, false);
         _view->FitAll(0.1, true);
 
