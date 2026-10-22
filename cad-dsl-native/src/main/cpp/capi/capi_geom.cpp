@@ -162,6 +162,16 @@ extern "C" void _gp_Trsf__SetRotation__gp_Vec(gp_Trsf *gp_trsf, const gp_Ax1 *ax
     guard(__func__, [&] { gp_trsf->SetRotation(*ax1, angle); });
 }
 
+extern "C" void _gp_Trsf__SetScale__gp_Pnt_s(gp_Trsf *gp_trsf, const gp_Pnt *center, double scale) {
+    TRACE("");
+    guard(__func__, [&] { gp_trsf->SetScale(*center, scale); });
+}
+
+extern "C" void _gp_Trsf__Multiply__gp_Trsf(gp_Trsf *gp_trsf, const gp_Trsf *right) {
+    TRACE("");
+    guard(__func__, [&] { gp_trsf->Multiply(*right); });
+}
+
 /*
 
     Curves

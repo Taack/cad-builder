@@ -104,6 +104,33 @@ class CadDsl extends CadDslSolid implements CadDslBase {
         new CadDslHelix(visitor: visitor)
     }
 
+    /**
+     * Make a wing (or a blade) by lofting through sections declared with {@link CadDslWing#section}.
+     * From the current position, the chord goes along X, the span along Y and the thickness along Z.
+     * @return
+     */
+    CadDslSolid wing(@DelegatesTo(value = CadDslWing, strategy = Closure.DELEGATE_FIRST) Closure c) {
+        visitor.visitWing()
+        c.delegate = new CadDslWing(visitor: visitor)
+        c.call()
+        visitor.visitWingEnd()
+        new CadDslSolid(visitor: visitor)
+    }
+
+    /**
+     * Repeat the solids made in the closure count times, evenly spaced around axis through the current position.
+     * The copies join the enclosing boolean operation (fuse, cut, common), so use it inside one.
+     * @param count Total number of instances, the original included
+     * @param axis  Rotation axis (defaults to Z)
+     */
+    CadDsl circularPattern(int count, Vec axis = Vec.vZ, @DelegatesTo(value = CadDsl, strategy = Closure.DELEGATE_FIRST) Closure c) {
+        visitor.visitCircularPattern()
+        c.delegate = this
+        c.call()
+        visitor.visitCircularPatternEnd(count, axis)
+        this
+    }
+
     CadDslSolid thruSection(@DelegatesTo(value = CadDslThruSection, strategy = Closure.DELEGATE_FIRST) Closure c = null) {
         visitor.visitThruSection()
         if (c) {
