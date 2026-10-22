@@ -42,6 +42,28 @@ class BottleTest {
     }
 
 
+    static CadDsl helixThreading(CadDsl s) {
+        double depth = myNeckRadius / 12
+        double pitch = myNeckHeight / 4
+
+        Vec2d pOri = new Vec2d(-depth / 3, -pitch / 3)
+        Vec2d p2 = new Vec2d(depth, -pitch / 12)
+        Vec2d p3 = new Vec2d(depth, pitch / 12)
+        Vec2d p4 = new Vec2d(-depth / 3, pitch / 3)
+
+        s.fuse {
+            position(new Vec(myHeight + pitch / 2)) {
+                direction(new Vec(1))
+                helix(myNeckRadius, pitch, myNeckHeight - 1.5 * pitch).profile(pOri) {
+                    edge(p2)
+                    edge(p3)
+                    edge(p4)
+                    edge(pOri)
+                }
+            }
+        }.toCadDsl()
+    }
+
     static CadDsl simpleThreading(CadDsl s) {
         s.thruSection {
             double aMajor = 2 * PI
@@ -98,6 +120,12 @@ class BottleTest {
 
     @Test
     void "Make Bottle Using Builder API"() {
+        CadDsl cd = mainBottleBody()
+        helixThreading(cd).display()
+    }
+
+    @Test
+    void "Make Bottle with ThruSection Threading"() {
         CadDsl cd = mainBottleBody()
         simpleThreading(cd).display()
     }

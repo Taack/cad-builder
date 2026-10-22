@@ -90,6 +90,20 @@ class CadDsl extends CadDslSolid implements CadDslBase {
         new CadDslSolid(visitor: visitor)
     }
 
+    /**
+     * Start a helix whose axis is the current direction, from the current position.
+     * Sweep a section along it with {@link CadDslHelix#profile} or {@link CadDslHelix#wire}.
+     * @param radius    Helix radius at the start
+     * @param pitch     Axial advance per turn, negative for a left-handed helix
+     * @param height    Total height along the axis
+     * @param endRadius Helix radius at the top, for a conical helix (defaults to radius)
+     * @return
+     */
+    CadDslHelix helix(Number radius, Number pitch, Number height, Number endRadius = radius) {
+        visitor.visitHelix(radius.toDouble(), pitch.toDouble(), height.toDouble(), endRadius.toDouble())
+        new CadDslHelix(visitor: visitor)
+    }
+
     CadDslSolid thruSection(@DelegatesTo(value = CadDslThruSection, strategy = Closure.DELEGATE_FIRST) Closure c = null) {
         visitor.visitThruSection()
         if (c) {

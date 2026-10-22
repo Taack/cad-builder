@@ -535,6 +535,16 @@ OCCT_CAPI void _BRepOffsetAPI_ThruSections__AddWire__TopoDS_Wire(BRepOffsetAPI_T
 
 OCCT_CAPI void _BRepOffsetAPI_ThruSections__CheckCompatibility__bool(BRepOffsetAPI_ThruSections *thru_sections, int b);
 
+/* Helix wire (HelixBRep_BuilderHelix) around the Z axis of axes, starting on its X axis.
+ * diam1 != diam2 makes a conical spiral; a negative pitch makes a left-handed helix. */
+OCCT_CAPI TopoDS_Wire *new_TopoDS_Wire__HelixBRep_BuilderHelix__ax2_diam1_diam2_height_pitch(
+    const gp_Ax2 *axes, double diam1, double diam2, double height, double pitch);
+
+/* Solid swept (BRepOffsetAPI_MakePipeShell) by the closed profile along spine. The profile keeps a constant
+ * angle with binormal (the helix axis for a helix); its 3D curves are built if missing. */
+OCCT_CAPI TopoDS_Shape *new_TopoDS_Shape__BRepOffsetAPI_MakePipeShell__spine_profile_binormal(
+    const TopoDS_Wire *spine, const TopoDS_Wire *profile, const gp_Dir *binormal);
+
 OCCT_CAPI BRepFeat_MakePipe *new_BRepFeat_MakePipe__Sbase_Pbase_Skface_Spine_Fuse_Modify(
     const TopoDS_Shape *Sbase, const TopoDS_Shape *Pbase, const TopoDS_Face *Skface, const TopoDS_Wire *Spine,
     int Fuse, int Modify);

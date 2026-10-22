@@ -4,6 +4,8 @@
 
 #include "capi_internal.hxx"
 
+#include <cmath>
+
 #include <BRepAlgoAPI_Common.hxx>
 #include <BRepAlgoAPI_Cut.hxx>
 #include <BRepAlgoAPI_Fuse.hxx>
@@ -14,6 +16,8 @@
 #include <BRepFeat_MakePipe.hxx>
 #include <BRepFilletAPI_MakeFillet.hxx>
 #include <BRepGProp.hxx>
+#include <BRepLib.hxx>
+#include <BRepOffsetAPI_MakePipeShell.hxx>
 #include <BRepOffsetAPI_MakeThickSolid.hxx>
 #include <BRepOffsetAPI_ThruSections.hxx>
 #include <BRepPrimAPI_MakeBox.hxx>
@@ -24,11 +28,15 @@
 #include <BRepPrimAPI_MakeSphere.hxx>
 #include <BRepPrimAPI_MakeTorus.hxx>
 #include <GProp_GProps.hxx>
+#include <HelixBRep_BuilderHelix.hxx>
+#include <Standard_Failure.hxx>
+#include <TopoDS.hxx>
 #include <TopoDS_Edge.hxx>
 #include <TopoDS_Face.hxx>
 #include <TopoDS_Wire.hxx>
 #include <gp_Ax1.hxx>
 #include <gp_Ax2.hxx>
+#include <gp_Ax3.hxx>
 #include <gp_Trsf.hxx>
 #include <gp_Vec.hxx>
 
@@ -141,6 +149,49 @@ extern "C" void _BRepOffsetAPI_ThruSections__AddWire__TopoDS_Wire(BRepOffsetAPI_
 extern "C" void _BRepOffsetAPI_ThruSections__CheckCompatibility__bool(BRepOffsetAPI_ThruSections *thru_sections, int b) {
     TRACE("");
     guard(__func__, [&] { thru_sections->CheckCompatibility(to_bool(b)); });
+}
+
+extern "C" TopoDS_Wire *new_TopoDS_Wire__HelixBRep_BuilderHelix__ax2_diam1_diam2_height_pitch(
+    const gp_Ax2 *axes, double diam1, double diam2, double height, double pitch) {
+    TRACE("");
+    return guard(__func__, [&] {
+        NCollection_Array1<double> heights(1, 1), pitches(1, 1);
+        NCollection_Array1<bool> isPitches(1, 1);
+        heights(1) = height;
+        pitches(1) = std::abs(pitch);
+        isPitches(1) = true;
+
+        // The builder only takes positive pitches: the hand comes from the frame, right-handed when it is direct
+        gp_Ax3 frame(*axes);
+        if (pitch < 0) frame.YReverse();
+
+        HelixBRep_BuilderHelix builder;
+        if (diam1 == diam2)
+            builder.SetParameters(frame, diam1, heights, pitches, isPitches);
+        else
+            builder.SetParameters(frame, diam1, diam2, heights, pitches, isPitches);
+        builder.Perform();
+        if (builder.ErrorStatus() != 0)
+            throw Standard_Failure(("HelixBRep_BuilderHelix error status " + std::to_string(builder.ErrorStatus())).c_str());
+        return new TopoDS_Wire(TopoDS::Wire(builder.Shape()));
+    });
+}
+
+extern "C" TopoDS_Shape *new_TopoDS_Shape__BRepOffsetAPI_MakePipeShell__spine_profile_binormal(
+    const TopoDS_Wire *spine, const TopoDS_Wire *profile, const gp_Dir *binormal) {
+    TRACE("");
+    return guard(__func__, [&] {
+        // Profiles drawn on a plane only have 2D curves
+        BRepLib::BuildCurves3d(*profile);
+
+        BRepOffsetAPI_MakePipeShell pipe(*spine);
+        pipe.SetMode(*binormal);
+        pipe.Add(*profile);
+        pipe.Build();
+        if (!pipe.IsDone() || !pipe.MakeSolid())
+            throw Standard_Failure("BRepOffsetAPI_MakePipeShell failed");
+        return new TopoDS_Shape(pipe.Shape());
+    });
 }
 
 /*
