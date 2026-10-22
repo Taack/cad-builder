@@ -5,6 +5,8 @@ import groovy.transform.CompileStatic
 import java.lang.foreign.MemorySegment
 
 import static org.taack.occt.NativeLib.*
+import org.taack.occt.NativeLib
+import static org.taack.cad.dsl.helper.Natives.own
 
 @CompileStatic
 class ArcOfCircle2d implements ITrimmable2d {
@@ -47,12 +49,12 @@ class ArcOfCircle2d implements ITrimmable2d {
 
     @Override
     Vec2d getStart() {
-        return Vec2d.fromAPnt(new_gp_Pnt2d__Geom2d_TrimmedCurve__StartPoint(trimmedCurve2d()))
+        return Vec2d.fromAPnt(own(new_gp_Pnt2d__Geom2d_TrimmedCurve__StartPoint(trimmedCurve2d()), NativeLib::delete_gp_Pnt2d))
     }
 
     @Override
     Vec2d getEnd() {
-         return Vec2d.fromAPnt(new_gp_Pnt2d__Geom2d_TrimmedCurve__EndPoint(trimmedCurve2d()))
+         return Vec2d.fromAPnt(own(new_gp_Pnt2d__Geom2d_TrimmedCurve__EndPoint(trimmedCurve2d()), NativeLib::delete_gp_Pnt2d))
     }
 
     @Override
@@ -63,10 +65,10 @@ class ArcOfCircle2d implements ITrimmable2d {
     @Override
     MemorySegment trimmedCurve2d() {
         if (!trimmed) {
-            MemorySegment c = new_gp_Circ2d__ax2d_r(new_gp_Ax2d__pt_dir(circle2d.pos.toGpPnt2d(), new Vec2d(1, 0).toGpDir2d()), circle2d.radius)
-            if (angle1 != angle2) trimmed = handle_Geom2d_TrimmedCurve__GCE2d_MakeArcOfCircle__cir2d_ang1_ang2(c, angle1, angle2)
-            else if (ptTo == null) trimmed = handle_Geom2d_TrimmedCurve__GCE2d_MakeArcOfCircle__cir2d_p1_ang(c, ptFrom.toGpPnt2d(), angle1)
-            else trimmed = handle_Geom2d_TrimmedCurve__GCE2d_MakeArcOfCircle__cir2d_p1_p2(c, ptFrom.toGpPnt2d(), ptTo.toGpPnt2d())
+            MemorySegment c = own(new_gp_Circ2d__ax2d_r(own(new_gp_Ax2d__pt_dir(circle2d.pos.toGpPnt2d(), new Vec2d(1, 0).toGpDir2d()), NativeLib::delete_gp_Ax2d), circle2d.radius), NativeLib::delete_gp_Circ2d)
+            if (angle1 != angle2) trimmed = own(handle_Geom2d_TrimmedCurve__GCE2d_MakeArcOfCircle__cir2d_ang1_ang2(c, angle1, angle2), NativeLib::delete_handle_Geom2d_TrimmedCurve)
+            else if (ptTo == null) trimmed = own(handle_Geom2d_TrimmedCurve__GCE2d_MakeArcOfCircle__cir2d_p1_ang(c, ptFrom.toGpPnt2d(), angle1), NativeLib::delete_handle_Geom2d_TrimmedCurve)
+            else trimmed = own(handle_Geom2d_TrimmedCurve__GCE2d_MakeArcOfCircle__cir2d_p1_p2(c, ptFrom.toGpPnt2d(), ptTo.toGpPnt2d()), NativeLib::delete_handle_Geom2d_TrimmedCurve)
             if (reverse) _Geom2d_TrimmedCurve__Reverse(trimmed)
         }
         return trimmed

@@ -30,24 +30,24 @@ int TaperedPrismMain() {
     Ex.Next();
     Ex.Next();
     TopoDS_Face F = TopoDS::Face(Ex.Current());
-    Handle(Geom_Surface) surf = BRep_Tool::Surface(F);
+    occ::handle<Geom_Surface> surf = BRep_Tool::Surface(F);
     gp_Circ2d
     c(gp_Ax2d(gp_Pnt2d(200.,130.),gp_Dir2d(1.,0.)),50.);
     BRepBuilderAPI_MakeWire MW;
-    Handle(Geom2d_Curve) aline = new Geom2d_Circle(c);
+    occ::handle<Geom2d_Curve> aline = new Geom2d_Circle(c);
     MW.Add(BRepBuilderAPI_MakeEdge(aline,surf,0.,M_PI));
     MW.Add(BRepBuilderAPI_MakeEdge(aline,surf,M_PI,2.*M_PI));
     BRepBuilderAPI_MakeFace MKF;
-    MKF.Init(surf,Standard_False, 0.01);
+    MKF.Init(surf,false, 0.01);
     MKF.Add(MW.Wire());
     TopoDS_Face FP = MKF.Face();
     BRepLib::BuildCurves3d(FP);
-    BRepFeat_MakeDPrism MKDP (S,FP,F,10*M_PI/180,Standard_True,
-                                Standard_True);
+    BRepFeat_MakeDPrism MKDP (S,FP,F,10*M_PI/180,true,
+                                true);
     MKDP.Perform(200);
     TopoDS_Shape res1 = MKDP.Shape();
 
-   visualize(res1);
+   return visualize(res1);
 }
 
 /*

@@ -5,6 +5,8 @@ import groovy.transform.CompileStatic
 import java.lang.foreign.MemorySegment
 
 import static org.taack.occt.NativeLib.*
+import org.taack.occt.NativeLib
+import static org.taack.cad.dsl.helper.Natives.own
 
 @CompileStatic
 class Circle2d implements IClosedShape2d {
@@ -33,9 +35,9 @@ class Circle2d implements IClosedShape2d {
 
     @Override
     MemorySegment make2dCurve() {
-        def c = gpCircle ?: new_gp_Circ2d__ax2d_r(new_gp_Ax2d__pt_dir(_pos.toGpPnt2d(), new Vec2d(1, 0).toGpDir2d()), radius)
-        def aline = handle_Geom2d_Circle__GCE2d_MakeCircle__cir2d(c)
-        if (reverse) _Geom2d_TrimmedCurve__Reverse(aline)
+        def c = gpCircle ?: own(new_gp_Circ2d__ax2d_r(own(new_gp_Ax2d__pt_dir(_pos.toGpPnt2d(), new Vec2d(1, 0).toGpDir2d()), NativeLib::delete_gp_Ax2d), radius), NativeLib::delete_gp_Circ2d)
+        def aline = own(handle_Geom2d_Circle__GCE2d_MakeCircle__cir2d(c), NativeLib::delete_handle_Geom2d_Circle)
+        if (reverse) _Geom2d_Curve__Reverse(aline)
         return aline
     }
 

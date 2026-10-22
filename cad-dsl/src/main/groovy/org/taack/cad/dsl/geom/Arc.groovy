@@ -5,6 +5,8 @@ import groovy.transform.CompileStatic
 import java.lang.foreign.MemorySegment
 
 import static org.taack.occt.NativeLib.handle_Geom_TrimmedCurve__GC_MakeArcOfCircle_p1_p2_p3
+import org.taack.occt.NativeLib
+import static org.taack.cad.dsl.helper.Natives.own
 
 @CompileStatic
 class Arc implements IOpenShape {
@@ -18,7 +20,7 @@ class Arc implements IOpenShape {
 
     @Override
     MemorySegment makeWireAdd(Vec fromLocal) {
-        return handle_Geom_TrimmedCurve__GC_MakeArcOfCircle_p1_p2_p3(fromLocal.toGpPnt(), center.toGpPnt(), to.toGpPnt())
+        return own(handle_Geom_TrimmedCurve__GC_MakeArcOfCircle_p1_p2_p3(fromLocal.toGpPnt(), center.toGpPnt(), to.toGpPnt()), NativeLib::delete_handle_Geom_TrimmedCurve)
     }
 
     @Override

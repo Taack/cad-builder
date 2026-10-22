@@ -33,10 +33,10 @@
 #include <BRepPrimAPI_MakeBox.hxx>
 #include <Geom_RectangularTrimmedSurface.hxx>
 #include <BRepTools.hxx>
+#include <NCollection_List.hxx>
 
-
-TopoDS_Shape MakeBottle(const Standard_Real myWidth, const Standard_Real myHeight,
-                        const Standard_Real myThickness)
+TopoDS_Shape MakeBottle(const double myWidth, const double myHeight,
+                        const double myThickness)
 {
     gp_Pnt aPnt1(-myWidth / 2., 0, 0);
     gp_Pnt aPnt2(-myWidth / 2., -myThickness / 4., 0);
@@ -46,9 +46,9 @@ TopoDS_Shape MakeBottle(const Standard_Real myWidth, const Standard_Real myHeigh
 
     std::cout << "aPnt1: " << aPnt1.X() << std::endl;
 
-    Handle(Geom_TrimmedCurve) anArcOfCircle = GC_MakeArcOfCircle(aPnt2, aPnt3, aPnt4);
-    Handle(Geom_TrimmedCurve) aSegment1 = GC_MakeSegment(aPnt1, aPnt2);
-    Handle(Geom_TrimmedCurve) aSegment2 = GC_MakeSegment(aPnt4, aPnt5);
+    occ::handle<Geom_TrimmedCurve> anArcOfCircle = GC_MakeArcOfCircle(aPnt2, aPnt3, aPnt4);
+    occ::handle<Geom_TrimmedCurve> aSegment1 = GC_MakeSegment(aPnt1, aPnt2);
+    occ::handle<Geom_TrimmedCurve> aSegment2 = GC_MakeSegment(aPnt4, aPnt5);
 
     // Profile: Define the Topology
     TopoDS_Edge anEdge1 = BRepBuilderAPI_MakeEdge(aSegment1);
@@ -94,8 +94,8 @@ TopoDS_Shape MakeBottle(const Standard_Real myWidth, const Standard_Real myHeigh
     gp_Dir neckAxis = gp::DZ();
     gp_Ax2 neckAx2(neckLocation, neckAxis);
 
-    Standard_Real myNeckRadius = myThickness / 4.;
-    Standard_Real myNeckHeight = myHeight / 10.;
+    double myNeckRadius = myThickness / 4.;
+    double myNeckHeight = myHeight / 10.;
 
     BRepPrimAPI_MakeCylinder MKCylinder(neckAx2, myNeckRadius, myNeckHeight);
     TopoDS_Shape myNeck = MKCylinder.Shape();
@@ -104,18 +104,18 @@ TopoDS_Shape MakeBottle(const Standard_Real myWidth, const Standard_Real myHeigh
 
     // Body: Create a Hollowed Solid
     TopoDS_Face faceToRemove;
-    Standard_Real zMax = -1;
+    double zMax = -1;
 
     for (TopExp_Explorer aFaceExplorer(myBody, TopAbs_FACE); aFaceExplorer.More(); aFaceExplorer.Next())
     {
         TopoDS_Face aFace = TopoDS::Face(aFaceExplorer.Current());
         // Check if <aFace> is the top face of the bottle's neck
-        Handle(Geom_Surface) aSurface = BRep_Tool::Surface(aFace);
+        occ::handle<Geom_Surface> aSurface = BRep_Tool::Surface(aFace);
         if (aSurface->DynamicType() == STANDARD_TYPE(Geom_Plane))
         {
-            Handle(Geom_Plane) aPlane = Handle(Geom_Plane)::DownCast(aSurface);
+            occ::handle<Geom_Plane> aPlane = occ::down_cast<Geom_Plane>(aSurface);
             gp_Pnt aPnt = aPlane->Location();
-            Standard_Real aZ = aPnt.Z();
+            double aZ = aPnt.Z();
             if (aZ > zMax)
             {
                 zMax = aZ;
@@ -124,34 +124,33 @@ TopoDS_Shape MakeBottle(const Standard_Real myWidth, const Standard_Real myHeigh
         }
     }
 
-    TopTools_ListOfShape facesToRemove;
+    NCollection_List<TopoDS_Shape> facesToRemove;
     facesToRemove.Append(faceToRemove);
     BRepOffsetAPI_MakeThickSolid aSolidMaker;
     aSolidMaker.MakeThickSolidByJoin(myBody, facesToRemove, -myThickness / 50, 1.e-3);
     std::cout << "face_to_remove.Closed()" << faceToRemove.Closed() << std::endl;
     myBody = aSolidMaker.Shape();
 
-
     // Threading: Create Surfaces
-    Handle(Geom_CylindricalSurface) aCyl1 = new Geom_CylindricalSurface(neckAx2, myNeckRadius * 0.99);
-    Handle(Geom_CylindricalSurface) aCyl2 = new Geom_CylindricalSurface(neckAx2, myNeckRadius * 1.05);
+    occ::handle<Geom_CylindricalSurface> aCyl1 = new Geom_CylindricalSurface(neckAx2, myNeckRadius * 0.99);
+    occ::handle<Geom_CylindricalSurface> aCyl2 = new Geom_CylindricalSurface(neckAx2, myNeckRadius * 1.05);
 
     // Threading: Define 2D Curves
     gp_Pnt2d aPnt(2. * M_PI, myNeckHeight / 2.);
     gp_Dir2d aDir(2. * M_PI, myNeckHeight / 4.);
     gp_Ax2d anAx2d(aPnt, aDir);
 
-    Standard_Real aMajor = 2. * M_PI;
-    Standard_Real aMinor = myNeckHeight / 10;
+    double aMajor = 2. * M_PI;
+    double aMinor = myNeckHeight / 10;
 
-    Handle(Geom2d_Ellipse) anEllipse1 = new Geom2d_Ellipse(anAx2d, aMajor, aMinor);
-    Handle(Geom2d_Ellipse) anEllipse2 = new Geom2d_Ellipse(anAx2d, aMajor, aMinor / 4);
-    Handle(Geom2d_TrimmedCurve) anArc1 = new Geom2d_TrimmedCurve(anEllipse1, 0, M_PI);
-    Handle(Geom2d_TrimmedCurve) anArc2 = new Geom2d_TrimmedCurve(anEllipse2, 0, M_PI);
+    occ::handle<Geom2d_Ellipse> anEllipse1 = new Geom2d_Ellipse(anAx2d, aMajor, aMinor);
+    occ::handle<Geom2d_Ellipse> anEllipse2 = new Geom2d_Ellipse(anAx2d, aMajor, aMinor / 4);
+    occ::handle<Geom2d_TrimmedCurve> anArc1 = new Geom2d_TrimmedCurve(anEllipse1, 0, M_PI);
+    occ::handle<Geom2d_TrimmedCurve> anArc2 = new Geom2d_TrimmedCurve(anEllipse2, 0, M_PI);
     gp_Pnt2d anEllipsePnt1 = anEllipse1->Value(0);
     gp_Pnt2d anEllipsePnt2 = anEllipse1->Value(M_PI);
 
-    Handle(Geom2d_TrimmedCurve) aSegment = GCE2d_MakeSegment(anEllipsePnt1, anEllipsePnt2);
+    occ::handle<Geom2d_TrimmedCurve> aSegment = GCE2d_MakeSegment(anEllipsePnt1, anEllipsePnt2);
     // Threading: Build Edges and Wiresnew
     TopoDS_Edge anEdge1OnSurf1 = BRepBuilderAPI_MakeEdge(anArc1, aCyl1);
     TopoDS_Edge anEdge2OnSurf1 = BRepBuilderAPI_MakeEdge(aSegment, aCyl1);
@@ -163,10 +162,10 @@ TopoDS_Shape MakeBottle(const Standard_Real myWidth, const Standard_Real myHeigh
     BRepLib::BuildCurves3d(threadingWire2);
 
     // Create Threading
-    BRepOffsetAPI_ThruSections aTool(Standard_True);
+    BRepOffsetAPI_ThruSections aTool(true);
     aTool.AddWire(threadingWire1);
     aTool.AddWire(threadingWire2);
-    aTool.CheckCompatibility(Standard_False);
+    aTool.CheckCompatibility(false);
 
     TopoDS_Shape myThreading = aTool.Shape();
 
@@ -180,8 +179,8 @@ TopoDS_Shape MakeBottle(const Standard_Real myWidth, const Standard_Real myHeigh
     return aRes;
 }
 
-extern "C" TopoDS_Shape* cMakeBottle(const Standard_Real myWidth, const Standard_Real myHeight,
-                                     const Standard_Real myThickness)
+extern "C" TopoDS_Shape* cMakeBottle(const double myWidth, const double myHeight,
+                                     const double myThickness)
 {
     try
     {
@@ -192,10 +191,12 @@ extern "C" TopoDS_Shape* cMakeBottle(const Standard_Real myWidth, const Standard
     {
         std::cout << e << std::endl;
     }
+    return nullptr;
 }
 
 int mainMakeBottle() {
          BRepTools::Write(MakeBottle(3.0, 6.0, 4.2), "bottle.brep");
+         return 0;
 }
 
 /*

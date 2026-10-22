@@ -2,6 +2,8 @@
   #include <windows.h>
 #endif
 
+#include "occt_capi.h"
+
 #include <AIS_InteractiveContext.hxx>
 #include <AIS_Shape.hxx>
 #include <AIS_ViewController.hxx>
@@ -38,11 +40,11 @@ public:
   //! Main constructor.
   OcctAisHello(TopoDS_Shape *aShape) {
     // graphic driver setup
-    Handle(Aspect_DisplayConnection) aDisplay = new Aspect_DisplayConnection();
-    Handle(Graphic3d_GraphicDriver) aDriver = new OpenGl_GraphicDriver(aDisplay);
+    occ::handle<Aspect_DisplayConnection> aDisplay = new Aspect_DisplayConnection();
+    occ::handle<Graphic3d_GraphicDriver> aDriver = new OpenGl_GraphicDriver(aDisplay);
 
     // viewer setup
-    Handle(V3d_Viewer) aViewer = new V3d_Viewer(aDriver);
+    occ::handle<V3d_Viewer> aViewer = new V3d_Viewer(aDriver);
     aViewer->SetDefaultLights();
     aViewer->SetLightOn();
 
@@ -50,18 +52,18 @@ public:
     myView = new V3d_View(aViewer);
 #ifdef _WIN32
     const TCollection_AsciiString aClassName ("MyWinClass");
-    Handle(WNT_WClass) aWinClass = new WNT_WClass (aClassName.ToCString(), &windowProcWrapper,
+    occ::handle<WNT_WClass> aWinClass = new WNT_WClass (aClassName.ToCString(), &windowProcWrapper,
                                                    CS_VREDRAW | CS_HREDRAW, 0, 0,
                                                    ::LoadCursor (NULL, IDC_ARROW));
-    Handle(WNT_Window) aWindow = new WNT_Window ("OCCT Viewer", aWinClass,  WS_OVERLAPPEDWINDOW,
+    occ::handle<WNT_Window> aWindow = new WNT_Window ("OCCT Viewer", aWinClass,  WS_OVERLAPPEDWINDOW,
                                                  100, 100, 512, 512, Quantity_NOC_BLACK);
     ::SetWindowLongPtrW ((HWND )aWindow->NativeHandle(), GWLP_USERDATA, (LONG_PTR )this);
 #else
-    Handle(Xw_Window) aWindow;
+    occ::handle<Xw_Window> aWindow;
     try {
         aWindow = new Xw_Window(aDisplay, "OCCT Viewer", 100, 100, 512, 512);
     } catch(Aspect_WindowDefinitionError& e) {
-        std::cout << "Aspect_WindowDefinitionError " << e.GetMessageString() << std::endl;
+        std::cout << "Aspect_WindowDefinitionError " << e.what() << std::endl;
         std::cout.flush();
         throw e;
     }
@@ -83,7 +85,7 @@ public:
 
     TopoDS_Shape bShape(*aShape);
 
-    Handle(AIS_InteractiveObject) aShapePrs = new AIS_Shape(bShape);
+    occ::handle<AIS_InteractiveObject> aShapePrs = new AIS_Shape(bShape);
     myContext->Display(aShapePrs, AIS_Shaded, 0, false);
     myView->FitAll(0.01, false);
 
@@ -92,10 +94,10 @@ public:
   }
 
   //! Return context.
-  const Handle(AIS_InteractiveContext) &Context() const { return myContext; }
+  const occ::handle<AIS_InteractiveContext> &Context() const { return myContext; }
 
   //! Return view.
-  const Handle(V3d_View) &View() const { return myView; }
+  const occ::handle<V3d_View> &View() const { return myView; }
 
 private:
   //! Handle expose event.
@@ -146,12 +148,13 @@ private:
 #endif
 
 private:
-  Handle(AIS_InteractiveContext) myContext;
-  Handle(V3d_View) myView;
+  occ::handle<AIS_InteractiveContext> myContext;
+  occ::handle<V3d_View> myView;
 };
 
 extern "C" int visualize(TopoDS_Shape* truc) {
-  OSD::SetSignal(false);
+  // No OSD::SetSignal here: it replaces the JVM's SIGSEGV handler, which the JVM relies on
+  // (implicit null checks, safepoints), and any later JVM fault then aborts the process.
 
   OcctAisHello aViewer(truc);
 #ifdef _WIN32
@@ -168,8 +171,8 @@ extern "C" int visualize(TopoDS_Shape* truc) {
   }
 #else
   // X11 event loop
-  Handle(Xw_Window) aWindow = Handle(Xw_Window)::DownCast(aViewer.View()->Window());
-  Handle(Aspect_DisplayConnection) aDispConn = aViewer.View()->Viewer()->Driver()->GetDisplayConnection();
+  occ::handle<Xw_Window> aWindow = occ::down_cast<Xw_Window>(aViewer.View()->Window());
+  occ::handle<Aspect_DisplayConnection> aDispConn = aViewer.View()->Viewer()->Driver()->GetDisplayConnection();
   Display *anXDisplay = (Display *) aDispConn->GetDisplayAspect();
   for (;;) {
     XEvent anXEvent;

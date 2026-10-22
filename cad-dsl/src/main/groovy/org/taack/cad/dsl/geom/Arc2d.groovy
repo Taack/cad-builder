@@ -6,6 +6,8 @@ import org.taack.cad.dsl.CadDslVisitor
 import java.lang.foreign.MemorySegment
 
 import static org.taack.occt.NativeLib.handle_Geom2d_TrimmedCurve__GCE2d_MakeArcOfCircle__p1_p2_p3
+import org.taack.occt.NativeLib
+import static org.taack.cad.dsl.helper.Natives.own
 
 @CompileStatic
 class Arc2d implements IOpenShape2d {
@@ -20,7 +22,7 @@ class Arc2d implements IOpenShape2d {
     @Override
     MemorySegment makeWireAdd(Vec2d fromLocal) {
         CadDslVisitor.Tr.cur("Arc2d from: $fromLocal, to: $to")
-        return handle_Geom2d_TrimmedCurve__GCE2d_MakeArcOfCircle__p1_p2_p3((fromLocal).toGpPnt2d(), (center).toGpPnt2d(), (to).toGpPnt2d())
+        return own(handle_Geom2d_TrimmedCurve__GCE2d_MakeArcOfCircle__p1_p2_p3((fromLocal).toGpPnt2d(), (center).toGpPnt2d(), (to).toGpPnt2d()), NativeLib::delete_handle_Geom2d_TrimmedCurve)
     }
 
     @Override

@@ -5,7 +5,6 @@ import org.taack.cad.dsl.geom.Vec
 import org.taack.cad.dsl.CadDslVisitor
 
 import java.lang.foreign.MemorySegment
-import java.lang.foreign.ValueLayout
 import static org.taack.occt.NativeLib.*
 
 
@@ -17,17 +16,11 @@ final class SurfaceDistance {
     final double dist
 
     SurfaceDistance(MemorySegment s1, MemorySegment s2) {
-        MemorySegment m = R7_BRepExtrema_DistShapeShape__s1_s2(s1, s2)
+        double[] m = Natives.doubles(R7_BRepExtrema_DistShapeShape__s1_s2(s1, s2), 7)
         if (m) {
-            double p1x = m.get(ValueLayout.JAVA_DOUBLE,0)
-            double p1y = m.get(ValueLayout.JAVA_DOUBLE,8)
-            double p1z = m.get(ValueLayout.JAVA_DOUBLE,16)
-            v1 = new Vec(p1x, p1y, p1z)
-            double p2x = m.get(ValueLayout.JAVA_DOUBLE,24)
-            double p2y = m.get(ValueLayout.JAVA_DOUBLE,32)
-            double p2z = m.get(ValueLayout.JAVA_DOUBLE,40)
-            v2 = new Vec(p2x, p2y, p2z)
-            dist = m.get(ValueLayout.JAVA_DOUBLE,48)
+            v1 = new Vec(m[0], m[1], m[2])
+            v2 = new Vec(m[3], m[4], m[5])
+            dist = m[6]
         } else {
             v1 = new Vec()
             v2 = new Vec()
