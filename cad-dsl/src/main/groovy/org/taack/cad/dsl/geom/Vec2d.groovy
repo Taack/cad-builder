@@ -2,11 +2,6 @@ package org.taack.cad.dsl.geom
 
 import groovy.transform.CompileStatic
 
-import static org.taack.occt.NativeLib.*
-import org.taack.occt.NativeLib
-import static org.taack.cad.dsl.helper.Natives.own
-
-import java.lang.foreign.MemorySegment
 import static java.lang.Math.*
 
 @CompileStatic
@@ -70,34 +65,9 @@ class Vec2d {
     }
 
     double distance(Vec2d other) {
-        //sqrt(pow(x - other.x, 2) + pow(y - other.y, 2))
-        gp_Pnt2d__Distance__p1_p2(this.toGpPnt2d(), other.toGpPnt2d())
-    }
-
-    static Vec2d fromAPnt(MemorySegment aPnt) {
-        new Vec2d(
-                gp_Pnt2d__X(aPnt),
-                gp_Pnt2d__Y(aPnt),
-        )
-    }
-
-    static Vec2d fromADir(MemorySegment aDir) {
-        new Vec2d(
-                gp_Dir2d__X(aDir),
-                gp_Dir2d__Y(aDir),
-        )
-    }
-
-    MemorySegment toGpDir2d() {
-        own(new_gp_Dir2d__x_y(x, y), NativeLib::delete_gp_Dir2d)
-    }
-
-    MemorySegment toGpPnt2d() {
-        own(new_gp_Pnt2d__x_y(x, y), NativeLib::delete_gp_Pnt2d)
-    }
-
-    MemorySegment toGpVec() {
-        own(new_gp_Vec2d__x_y(x, y), NativeLib::delete_gp_Vec2d)
+        double dx = x - other.x
+        double dy = y - other.y
+        sqrt(dx * dx + dy * dy)
     }
 
     double cord(Vec axe) {

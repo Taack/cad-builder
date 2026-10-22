@@ -3,15 +3,16 @@ package org.taack.cad.builder
 import groovy.transform.CompileStatic
 import org.taack.cad.dsl.geom.Vec
 import org.taack.cad.dsl.geom.Vec2d
-import org.taack.cad.dsl.helper.Natives
-import org.taack.cad.dsl.helper.SurfaceBounds
+import org.taack.cad.occt.Natives
+import org.taack.cad.occt.SurfaceBounds
 
 import java.lang.foreign.Arena
 import java.lang.foreign.MemorySegment
 
 import static org.taack.occt.NativeLib.*
+import static org.taack.cad.occt.Occt.*
 import org.taack.occt.NativeLib
-import static org.taack.cad.dsl.helper.Natives.own
+import static org.taack.cad.occt.Natives.own
 
 /*
  * Todo: realise one move instead of many
@@ -56,7 +57,7 @@ class CadBuilder {
 
     CadBuilder move(Vec p) {
         currentLoc = p
-        _gp_Trsf__SetTranslation__gp_Vec(trsf, currentLoc.toGpVec())
+        _gp_Trsf__SetTranslation__gp_Vec(trsf, gpVec(currentLoc))
         currentShapeNative = own(new_TopoDS_Shape__BRepBuilderAPI_Transform__Shape_gp_Trsf_bCopy(currentShapeNative, trsf, 1), NativeLib::delete_TopoDS_Shape)
         this
     }
@@ -65,7 +66,7 @@ class CadBuilder {
 
         println "currentLoc = $currentLoc"
         def trsf = own(new_gp_Trsf(), NativeLib::delete_gp_Trsf)
-        _gp_Trsf__SetTranslation__gp_Vec(trsf, currentLoc.toGpVec())
+        _gp_Trsf__SetTranslation__gp_Vec(trsf, gpVec(currentLoc))
         other.currentShapeNative = own(new_TopoDS_Shape__Shape__BRepBuilderAPI_MakeShape(own(new_BRepBuilderAPI_Transform__TopoDS_Shape_gp_Trsf(other.currentShapeNative, trsf, 0, 0), NativeLib::delete_BRepBuilderAPI_Transform)), NativeLib::delete_TopoDS_Shape)
         currentShapeNative = own(new_TopoDS_Shape__brep_algoapi_fuse__s1_s2(currentShapeNative, other.currentShapeNative), NativeLib::delete_TopoDS_Shape)
         this
@@ -82,7 +83,7 @@ class CadBuilder {
     }
 
     CadBuilder sphere(BigDecimal radius, Vec dir = new Vec(1.0), BigDecimal angle1 = null, BigDecimal angle2 = null) {
-        def ax2 = own(new_gp_Ax2__gp_Pnt_gp_Dir(currentLoc.toGpPnt(), dir.toGpDir()), NativeLib::delete_gp_Ax2)
+        def ax2 = own(new_gp_Ax2__gp_Pnt_gp_Dir(gpPnt(currentLoc), gpDir(dir)), NativeLib::delete_gp_Ax2)
         currentShapeNative = own(new_TopoDS_Shape__BRepPrimAPI_MakeSphere__gp_Ax2_radius_a1_a2(ax2, radius.toDouble(), angle1?.toDouble(), angle2?.toDouble()), NativeLib::delete_TopoDS_Shape)
         return this
     }
@@ -91,7 +92,7 @@ class CadBuilder {
 
         println "cyl : ${currentLoc}"
 
-        def ax2 = own(new_gp_Ax2__gp_Pnt_gp_Dir(currentLoc.toGpPnt(), dir.toGpDir()), NativeLib::delete_gp_Ax2)
+        def ax2 = own(new_gp_Ax2__gp_Pnt_gp_Dir(gpPnt(currentLoc), gpDir(dir)), NativeLib::delete_gp_Ax2)
         def MKCylinder = own(new_BRepPrimAPI_MakeCylinder__gp_Ax2_r_h(ax2, radius.toDouble(), height.toDouble()), NativeLib::delete_BRepPrimAPI_MakeCylinder)
         currentShapeNative = own(new_TopoDS_Shape__Shape__BRepBuilderAPI_MakeShape(MKCylinder), NativeLib::delete_TopoDS_Shape)
 
@@ -104,7 +105,7 @@ class CadBuilder {
     }
 
     CadBuilder torus(BigDecimal outerRadius, BigDecimal innerRadius, Vec dir = new Vec(1.0)) {
-        def ax2 = own(new_gp_Ax2__gp_Pnt_gp_Dir(currentLoc.toGpPnt(), dir.toGpDir()), NativeLib::delete_gp_Ax2)
+        def ax2 = own(new_gp_Ax2__gp_Pnt_gp_Dir(gpPnt(currentLoc), gpDir(dir)), NativeLib::delete_gp_Ax2)
         currentShapeNative = own(new_TopoDS_Shape__BRepPrimAPI_MakeTorus__gp_Ax2_r1_r2(ax2, outerRadius.toDouble(), innerRadius.toDouble()), NativeLib::delete_TopoDS_Shape)
         this
     }
@@ -167,7 +168,7 @@ class CadBuilder {
             if (int_Geom_Surface__is__Geom_Plane(aSurface) == 1) {
                 def aPlan = own(handle_Geom_Plane__handle_Geom_Surface(aSurface), NativeLib::delete_handle_Geom_Plane)
                 def aPnt = own(new_gp_Pnt__Geom_Plane(aPlan), NativeLib::delete_gp_Pnt)
-                currentLoc = Vec.fromAPnt(aPnt)
+                currentLoc = vec(aPnt)
                 double aZ = currentLoc.cord(axe)
                 if (aZ > positionMax) {
                     positionMax = aZ
@@ -179,14 +180,14 @@ class CadBuilder {
     }
 
     CadBuilder revolution(Vec dir = new Vec(0, 1, 0)) {
-        def ax1 = own(new_gp_Ax1__p_dir(currentLoc.toGpPnt(), dir.toGpDir()), NativeLib::delete_gp_Ax1)
+        def ax1 = own(new_gp_Ax1__p_dir(gpPnt(currentLoc), gpDir(dir)), NativeLib::delete_gp_Ax1)
 
         this.currentShapeNative = own(new_TopoDS_Shape__BRepPrimAPI_MakeRevol__TopoDS_Face_gp_Ax1(currentFaceNative, ax1), NativeLib::delete_TopoDS_Shape)
         this as CadBuilder
     }
 
     CadBuilder prism(Vec dir = new Vec(1)) {
-        this.currentShapeNative = own(new_TopoDS_Shape__BRepPrimAPI_MakePrism__TopoDS_Face_gp_Vec(currentFaceNative, dir.toGpVec()), NativeLib::delete_TopoDS_Shape)
+        this.currentShapeNative = own(new_TopoDS_Shape__BRepPrimAPI_MakePrism__TopoDS_Face_gp_Vec(currentFaceNative, gpVec(dir)), NativeLib::delete_TopoDS_Shape)
         this.currentFaceNative = null
         this.wireNatives = null
         this as CadBuilder
@@ -247,9 +248,9 @@ class CadBuilder {
             if (arcIndexCur != null && index == arcIndexCur) {
                 def arcCenter = arcCenterIt.next()
                 arcIndexCur = arcIndexIt.hasNext() ? arcIndexIt.next() : 0
-                trimmedCurve = own(handle_Geom_TrimmedCurve__GC_MakeArcOfCircle_p1_p2_p3(fromLocal.toGpPnt(), arcCenter.toGpPnt(), to.toGpPnt()), NativeLib::delete_handle_Geom_TrimmedCurve)
+                trimmedCurve = own(handle_Geom_TrimmedCurve__GC_MakeArcOfCircle_p1_p2_p3(gpPnt(fromLocal), gpPnt(arcCenter), gpPnt(to)), NativeLib::delete_handle_Geom_TrimmedCurve)
             } else {
-                trimmedCurve = own(handle_Geom_TrimmedCurve__GC_MakeSegment__p1_p2(fromLocal.toGpPnt(), to.toGpPnt()), NativeLib::delete_handle_Geom_TrimmedCurve)
+                trimmedCurve = own(handle_Geom_TrimmedCurve__GC_MakeSegment__p1_p2(gpPnt(fromLocal), gpPnt(to)), NativeLib::delete_handle_Geom_TrimmedCurve)
             }
             def arcEdge = own(new_TopoDS_Edge__BRepBuilderAPI_MakeEdge__Geom_Curve(trimmedCurve), NativeLib::delete_TopoDS_Edge)
             _BRepBuilderAPI_MakeWire__Add__TopoDS_Edge(wireNative, arcEdge)
@@ -285,7 +286,7 @@ class CadBuilder {
      * @return
      */
     CadBuilder center(@DelegatesTo(value = CadBuilder, strategy = Closure.DELEGATE_FIRST) Closure operations) {
-        clockwiseLoc = [Vec.fromAPnt(own(new_gp_Pnt__CentreOfMass__TopoDS_Shape(currentFaceNative), NativeLib::delete_gp_Pnt))]
+        clockwiseLoc = [vec(own(new_gp_Pnt__CentreOfMass__TopoDS_Shape(currentFaceNative), NativeLib::delete_gp_Pnt))]
         operations.delegate = this
         operations.call()
         this as CadBuilder
@@ -299,8 +300,8 @@ class CadBuilder {
      * @return Face
      */
     CadBuilder rect(BigDecimal sx, BigDecimal sy, @DelegatesTo(value = CadBuilder, strategy = Closure.DELEGATE_FIRST) Closure operations) {
-        def centerOfFace = Vec.fromAPnt(own(new_gp_Pnt__CentreOfMass__TopoDS_Shape(currentFaceNative), NativeLib::delete_gp_Pnt))
-        def faceDir = Vec.fromADir(own(new_gp_Dir__Normal__TopoDS_Face(currentFaceNative), NativeLib::delete_gp_Dir))
+        def centerOfFace = vec(own(new_gp_Pnt__CentreOfMass__TopoDS_Shape(currentFaceNative), NativeLib::delete_gp_Pnt))
+        def faceDir = vecFromDir(own(new_gp_Dir__Normal__TopoDS_Face(currentFaceNative), NativeLib::delete_gp_Dir))
         println "rect ($sx, $sy), faceDir = ${faceDir}, centerOfFace = ${centerOfFace}"
         def gCoords1 = Vec.globalLocFromLocal(centerOfFace, faceDir, new Vec2d(-sx / 2.0, -sy / 2.0))
         def gCoords2 = Vec.globalLocFromLocal(centerOfFace, faceDir, new Vec2d(sx / 2.0, -sy / 2.0))
@@ -317,7 +318,7 @@ class CadBuilder {
     private void holeHelper(Vec loc, MemorySegment dir, BigDecimal diameter, BigDecimal from, BigDecimal to) {
         currentShapeNative = own(ptrTopoDS_Shape__BRepFeat_MakeCylindricalHole__Perform__TopoDS_Shape_gp_Ax1_r_ptFrom_ptTo(currentShapeNative,
                 own(new_gp_Ax1__p_dir(
-                        loc.toGpPnt(),
+                        gpPnt(loc),
                         dir
                 ), NativeLib::delete_gp_Ax1), diameter.doubleValue(), from.doubleValue(), to.doubleValue()), NativeLib::delete_TopoDS_Shape)
         this as CadBuilder
@@ -326,7 +327,7 @@ class CadBuilder {
     private void holeHelper(Vec loc, MemorySegment dir, BigDecimal diameter, BigDecimal length) {
         currentShapeNative = own(ptrTopoDS_Shape__BRepFeat_MakeCylindricalHole__Perform__TopoDS_Shape_gp_Ax1_r_l(currentShapeNative,
                 own(new_gp_Ax1__p_dir(
-                        loc.toGpPnt(),
+                        gpPnt(loc),
                         dir
                 ), NativeLib::delete_gp_Ax1), diameter.doubleValue(), length.doubleValue()), NativeLib::delete_TopoDS_Shape)
         this as CadBuilder
@@ -334,18 +335,18 @@ class CadBuilder {
 
     void hole(BigDecimal diameter, BigDecimal length) {
         def gpDir = own(new_gp_Dir__Normal__TopoDS_Face(currentFaceNative), NativeLib::delete_gp_Dir)
-        println "hole $diameter Dir: ${Vec.fromADir(gpDir)}"
+        println "hole $diameter Dir: ${vecFromDir(gpDir)}"
         clockwiseLoc.each {
-            println "holeHelper $diameter, Loc: $it, Dir: ${Vec.fromADir(gpDir)}"
+            println "holeHelper $diameter, Loc: $it, Dir: ${vecFromDir(gpDir)}"
             holeHelper(it, gpDir, diameter, length)
         }
     }
 
     void hole(BigDecimal diameter) {
         def gpDir = own(new_gp_Dir__Normal__TopoDS_Face(currentFaceNative), NativeLib::delete_gp_Dir)
-        println "hole $diameter Dir: ${Vec.fromADir(gpDir)}"
+        println "hole $diameter Dir: ${vecFromDir(gpDir)}"
         clockwiseLoc.each {
-            println "holeHelper $diameter, Loc: $it, Dir: ${Vec.fromADir(gpDir)}"
+            println "holeHelper $diameter, Loc: $it, Dir: ${vecFromDir(gpDir)}"
             holeHelper(it, gpDir, diameter, 0.1, 0.0)
         }
     }
@@ -353,7 +354,7 @@ class CadBuilder {
     CadBuilder cut(CadBuilder other) {
         MemorySegment trsf = own(new_gp_Trsf(), NativeLib::delete_gp_Trsf)
         println "cut currentLoc = $currentLoc, other.currentLoc = ${other.currentLoc}"
-        _gp_Trsf__SetTranslation__gp_Vec(trsf, (new Vec(0.0) - currentLoc).toGpVec())
+        _gp_Trsf__SetTranslation__gp_Vec(trsf, gpVec(new Vec(0.0) - currentLoc))
         def toolNative = own(new_TopoDS_Shape__BRepBuilderAPI_Transform__Shape_gp_Trsf_bCopy(other.currentShapeNative, trsf, 1), NativeLib::delete_TopoDS_Shape)
         def cutNative = own(new_TopoDS_Shape__bBRepAlgoAPI_Cut__s1_s2(currentShapeNative, toolNative), NativeLib::delete_TopoDS_Shape)
         currentShapeNative = cutNative
@@ -365,7 +366,7 @@ class CadBuilder {
     }
 
     CadBuilder mirror(Vec pt, Vec dir) {
-        def ax1 = own(new_gp_Ax1__p_dir(pt.toGpPnt(), dir.toGpDir()), NativeLib::delete_gp_Ax1)
+        def ax1 = own(new_gp_Ax1__p_dir(gpPnt(pt), gpDir(dir)), NativeLib::delete_gp_Ax1)
         def aTrsf = own(new_gp_Trsf(), NativeLib::delete_gp_Trsf)
         _gp_Trsf__SetMirror__gp_Ax1(aTrsf, ax1)
 
@@ -408,16 +409,16 @@ class CadBuilder {
     }
 
     static MemorySegment cylindricalSurface(Vec pos, Vec direction, Number radius) {
-        def ax2 = own(new_gp_Ax2__gp_Pnt_gp_Dir(pos.toGpPnt(), direction.toGpDir()), NativeLib::delete_gp_Ax2)
+        def ax2 = own(new_gp_Ax2__gp_Pnt_gp_Dir(gpPnt(pos), gpDir(direction)), NativeLib::delete_gp_Ax2)
         own(handle_Geom_CylindricalSurface__ax2_radius(ax2, radius.toDouble()), NativeLib::delete_handle_Geom_CylindricalSurface)
     }
 
     static MemorySegment linearExtrusionSurface(MemorySegment curve, Vec direction) {
-        own(handle_Geom_SurfaceOfLinearExtrusion__Geom_Curve_gp_Dir(curve, direction.toGpDir()), NativeLib::delete_handle_Geom_SurfaceOfLinearExtrusion)
+        own(handle_Geom_SurfaceOfLinearExtrusion__Geom_Curve_gp_Dir(curve, gpDir(direction)), NativeLib::delete_handle_Geom_SurfaceOfLinearExtrusion)
     }
 
     static MemorySegment revolutionSurface(MemorySegment curve, Vec pos, Vec direction) {
-        def ax1 = own(new_gp_Ax1__p_dir(pos.toGpPnt(), direction.toGpDir()), NativeLib::delete_gp_Ax1)
+        def ax1 = own(new_gp_Ax1__p_dir(gpPnt(pos), gpDir(direction)), NativeLib::delete_gp_Ax1)
         own(handle_Geom_SurfaceOfRevolution__Geom_Curve_gp_Ax1(curve, ax1), NativeLib::delete_handle_Geom_SurfaceOfRevolution)
     }
 
@@ -426,12 +427,12 @@ class CadBuilder {
     }
 
     static MemorySegment ellipseCurve(Vec pos, Vec direction, Number majorRadius, Number minorRadius) {
-        def ax2 = own(new_gp_Ax2__gp_Pnt_gp_Dir(pos.toGpPnt(), direction.toGpDir()), NativeLib::delete_gp_Ax2)
+        def ax2 = own(new_gp_Ax2__gp_Pnt_gp_Dir(gpPnt(pos), gpDir(direction)), NativeLib::delete_gp_Ax2)
         own(handle_Geom_Ellipse__gp_Ax2_rM_rm(ax2, majorRadius.toDouble(), minorRadius.toDouble()), NativeLib::delete_handle_Geom_Ellipse)
     }
 
     static MemorySegment ellipse2dCurve(Vec2d pos, Vec2d direction, Number majorRadius, Number minorRadius) {
-        def anAx2d = own(new_gp_Ax2d__pt_dir(pos.toGpPnt2d(), direction.toGpDir2d()), NativeLib::delete_gp_Ax2d)
+        def anAx2d = own(new_gp_Ax2d__pt_dir(gpPnt2d(pos), gpDir2d(direction)), NativeLib::delete_gp_Ax2d)
         own(handle_Geom2d_Ellipse__a2_majorRadius_minorRadius_sense(anAx2d, majorRadius.toDouble(), minorRadius.toDouble(), 1), NativeLib::delete_handle_Geom2d_Ellipse)
     }
 

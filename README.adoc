@@ -8,9 +8,18 @@ As of today, the DSL is not complete to define bodies and assemblies will come l
 .The OCCT bottle tutorial, written with the DSL (`BottleTest`)
 image::cad-bottle.png[]
 
+== Modules
+
+* `cad-dsl`: the DSL, in pure Groovy. Models only need it to compile, and it builds without OCCT.
+* `cad-dsl-occt`: the Open CASCADE kernel running the DSL (`CadDslVisitor`), with the jextract bindings and the low-level `binding` and `builder` code.
+* `cad-dsl-native`: the C API over OCCT, loaded by `cad-dsl-occt`.
+
+The DSL finds its kernel at runtime with `ServiceLoader` (`org.taack.cad.dsl.kernel.CadKernel`), so `cd()` works as soon as
+`cad-dsl-occt` and its native library are on the classpath and library path.
+
 == Building
 
-The native part requires https://github.com/Open-Cascade-SAS/OCCT[Open CASCADE Technology] 8.0 (C++17).
+`./gradlew cad-dsl:build` only needs a JDK. The native part requires https://github.com/Open-Cascade-SAS/OCCT[Open CASCADE Technology] 8.0 (C++17).
 Use your distribution package if it ships 8.0, otherwise build it from source:
 
 .Build OCCT 8.0.1 into a local prefix
@@ -29,7 +38,7 @@ To avoid passing it each time, add `occtHome=/home/<you>/.local/occt-8.0.1` to `
 .Run the tests
 [bash]
 ----
-./gradlew -PocctHome=$HOME/.local/occt-8.0.1 cad-dsl:test
+./gradlew -PocctHome=$HOME/.local/occt-8.0.1 cad-dsl-occt:test
 ./gradlew clean <1>
 ----
 
@@ -84,15 +93,14 @@ image::cad-pillow-block.png[]
 
 == Packages
 
-There are 3 main packages in `cad-dsl` src folder (both for tests and implementation).
-
-* `org.taack.cad.binding` classes use direct OCCT symbol binding using JExtract. It is considered low-level, and should not be used when composing a new body.
-* `org.taack.cad.builder` using the builder pattern, quick way to test builder limitation, this step helps to build a good DSL. This package should not be directly used.
-* `org.taack.cad.dsl` using the visitor pattern to build the DSL. This should be used in production.
+* `org.taack.cad.dsl` (`cad-dsl`) using the visitor pattern to build the DSL. This should be used in production.
+* `org.taack.cad.occt` (`cad-dsl-occt`) the OCCT visitor and kernel behind the DSL.
+* `org.taack.cad.binding` (`cad-dsl-occt` tests) classes use direct OCCT symbol binding using JExtract. It is considered low-level, and should not be used when composing a new body.
+* `org.taack.cad.builder` (`cad-dsl-occt`) using the builder pattern, quick way to test builder limitation, this step helps to build a good DSL. This package should not be directly used.
 
 == DSL Tests
 
-DSL Tests are localised `cad-dsl/src/test/groovy/org/taack/cad/dsl` it could give an overview of `cad-dsl` constructions.
+DSL Tests are localised `cad-dsl-occt/src/test/groovy/org/taack/cad/dsl` it could give an overview of `cad-dsl` constructions.
 
 .Cut 3 Boxes
 [source,groovy]
@@ -281,7 +289,8 @@ image::cad-propeller.png[]
 
 == Distribution and Usage
 
-`cad-dsl` has been published on maven for Linux x86 only.
+`cad-dsl` does not depend on native code: parts and assemblies compiled against it can be shared as plain jars.
+Running them needs a kernel, `cad-dsl-occt`, which has been published on maven for Linux x86 only.
 
 === Maven
 
@@ -290,7 +299,8 @@ Artifact coordinates:
 .Maven
 [source,groovy]
 ----
-implementation 'org.taack.cad:cad-dsl:0.1'
+implementation 'org.taack.cad:cad-dsl:0.1'      // to write models
+runtimeOnly 'org.taack.cad:cad-dsl-occt:0.1'    // to build them
 ----
 
 NOTE: See https://github.com/Taack/cad-dsl-app/blob/main/cad-dsl-linux-app-x86-64/build.gradle[sample-build.gradle] to deal with JMOD files

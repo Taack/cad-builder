@@ -1,19 +1,17 @@
-package org.taack.cad.dsl
+package org.taack.cad.occt
 
 import groovy.transform.CompileStatic
 import org.taack.cad.builder.*
+import org.taack.cad.dsl.ICadDslVisitor
 import org.taack.cad.dsl.geom.*
-import org.taack.cad.dsl.geom.adapter.Trimmable2dToIOpenShapeAdapter
-import org.taack.cad.dsl.helper.Natives
-import org.taack.cad.dsl.helper.SurfaceBounds
-import org.taack.cad.dsl.helper.SurfaceDistance
 
 import java.lang.foreign.Arena
 import java.lang.foreign.MemorySegment
 
 import static org.taack.occt.NativeLib.*
+import static org.taack.cad.occt.Occt.*
 import org.taack.occt.NativeLib
-import static org.taack.cad.dsl.helper.Natives.own
+import static org.taack.cad.occt.Natives.own
 
 @CompileStatic
 class CadDslVisitor implements ICadDslVisitor {
@@ -76,13 +74,13 @@ class CadDslVisitor implements ICadDslVisitor {
         Tr.cur("visitFromEnd $posOri")
 
         Tr.cur("visitFromEnd openShapeList $openShapeList")
-        if (!face) face = own(new_TopoDS_Face__BRepBuilderAPI_MakeFace__gp_Pln(direction.toGpPln(0)), NativeLib::delete_TopoDS_Face)
+        if (!face) face = own(new_TopoDS_Face__BRepBuilderAPI_MakeFace__gp_Pln(gpPln(direction, 0)), NativeLib::delete_TopoDS_Face)
         currentSurface = own(handle_Geom_Surface__TopoDS_Face(face), NativeLib::delete_handle_Geom_Surface)
         if (!openShapeList.empty) {
             Vec pos = fromVec ?: new Vec()
             def makeWire = own(new_BRepBuilderAPI_MakeWire(), NativeLib::delete_BRepBuilderAPI_MakeWire)
             for (IOpenShape s3d in openShapeList) {
-                def trimmedCurve = s3d.makeWireAdd(pos)
+                def trimmedCurve = OcctGeom.edge(s3d, pos)
                 pos = s3d.to
 //                def arcEdge = new_TopoDS_Edge__BRepBuilderAPI_MakeEdge__Geom_Curve(trimmedCurve)
 //                def arcEdge = new_BRepBuilderAPI_MakeEdge__Geom_Curve(trimmedCurve)
@@ -106,7 +104,7 @@ class CadDslVisitor implements ICadDslVisitor {
         Tr.cur("visitFromEnd $posOri")
 
         Tr.cur("visitFromEnd openShape2dList $openShape2dList")
-        if (!face) face = own(new_TopoDS_Face__BRepBuilderAPI_MakeFace__gp_Pln(direction.toGpPln(0)), NativeLib::delete_TopoDS_Face)
+        if (!face) face = own(new_TopoDS_Face__BRepBuilderAPI_MakeFace__gp_Pln(gpPln(direction, 0)), NativeLib::delete_TopoDS_Face)
         currentSurface = own(handle_Geom_Surface__TopoDS_Face(face), NativeLib::delete_handle_Geom_Surface)
 
         if (!openShape2dList.empty) {
@@ -114,7 +112,7 @@ class CadDslVisitor implements ICadDslVisitor {
 
             def makeWire = own(new_BRepBuilderAPI_MakeWire(), NativeLib::delete_BRepBuilderAPI_MakeWire)
             for (IOpenShape2d s2d in openShape2dList) {
-                def trimmedCurve = s2d.makeWireAdd(pos)
+                def trimmedCurve = OcctGeom.curve2d(s2d, pos)
                 pos = s2d.to
                 _BRepBuilderAPI_MakeWire__Add__BRepBuilderAPI_MakeEdge(makeWire, own(new_BRepBuilderAPI_MakeEdge__Geom2d_Curve_Geom_Surface(trimmedCurve, currentSurface), NativeLib::delete_BRepBuilderAPI_MakeEdge))
             }
@@ -126,7 +124,7 @@ class CadDslVisitor implements ICadDslVisitor {
         Tr.cur("visitFromEnd closedShape2dList $closedShape2dList")
         if (!closedShape2dList.empty) {
             for (IClosedShape2d s2d in closedShape2dList) {
-                def c = s2d.make2dCurve()
+                def c = OcctGeom.curve2d(s2d)
                 def makeWire = own(new_BRepBuilderAPI_MakeWire(), NativeLib::delete_BRepBuilderAPI_MakeWire)
                 _BRepBuilderAPI_MakeWire__Add__BRepBuilderAPI_MakeEdge(makeWire, own(new_BRepBuilderAPI_MakeEdge__Geom2d_Curve_Geom_Surface(c, currentSurface), NativeLib::delete_BRepBuilderAPI_MakeEdge))
                 makeWires << makeWire
@@ -139,7 +137,7 @@ class CadDslVisitor implements ICadDslVisitor {
 
     @Override
     void visitBox(double length, double height, double thickness) {
-        def ax2 = directionNormal ? own(new_gp_Ax2__gp_Pnt_gp_Dir_Normal(fromVec.toGpPnt(), direction.toGpDir(), directionNormal.toGpDir()), NativeLib::delete_gp_Ax2) : own(new_gp_Ax2__gp_Pnt_gp_Dir(fromVec.toGpPnt(), direction.toGpDir()), NativeLib::delete_gp_Ax2)
+        def ax2 = directionNormal ? own(new_gp_Ax2__gp_Pnt_gp_Dir_Normal(gpPnt(fromVec), gpDir(direction), gpDir(directionNormal)), NativeLib::delete_gp_Ax2) : own(new_gp_Ax2__gp_Pnt_gp_Dir(gpPnt(fromVec), gpDir(direction)), NativeLib::delete_gp_Ax2)
         def shape = own(new_TopoDS_Shape__Shape__BRepBuilderAPI_MakeShape(own(new_BRepPrimAPI_MakeBox__Ax2_x_y_z(ax2, length, height, thickness), NativeLib::delete_BRepPrimAPI_MakeBox)), NativeLib::delete_TopoDS_Shape)
 
         Tr.cur "box($length, $height, $thickness) from: $fromVec, direction: $direction, directionNormal: $directionNormal, shape: $shape"
@@ -151,7 +149,7 @@ class CadDslVisitor implements ICadDslVisitor {
     void visitSphere(double radius, double radian1, double radian2) {
         Tr.cur "sphere($radius, $radian1, $radian2) from: $fromVec, direction: $direction, directionNormal: $directionNormal"
 
-        def ax2 = own(new_gp_Ax2__gp_Pnt_gp_Dir(fromVec.toGpPnt(), direction.toGpDir()), NativeLib::delete_gp_Ax2)
+        def ax2 = own(new_gp_Ax2__gp_Pnt_gp_Dir(gpPnt(fromVec), gpDir(direction)), NativeLib::delete_gp_Ax2)
         def shape = own(new_TopoDS_Shape__BRepPrimAPI_MakeSphere__gp_Ax2_radius_a1_a2(ax2, radius, radian1, radian2), NativeLib::delete_TopoDS_Shape)
         boolShapes.peek() << shape
         if (!this.shape) this.shape = shape
@@ -160,7 +158,7 @@ class CadDslVisitor implements ICadDslVisitor {
     @Override
     void visitCylinder(double radius, double height) {
 
-        def ax2 = own(new_gp_Ax2__gp_Pnt_gp_Dir(fromVec.toGpPnt(), direction.toGpDir()), NativeLib::delete_gp_Ax2)
+        def ax2 = own(new_gp_Ax2__gp_Pnt_gp_Dir(gpPnt(fromVec), gpDir(direction)), NativeLib::delete_gp_Ax2)
         def shape = own(new_TopoDS_Shape__BRepPrimAPI_MakeCylinder__gp_Ax2_radius_height(ax2, radius, height), NativeLib::delete_TopoDS_Shape)
 
         Tr.cur "cylinder($radius, $height) from: $fromVec, direction: $direction, directionNormal: $directionNormal, shape: $shape"
@@ -170,7 +168,7 @@ class CadDslVisitor implements ICadDslVisitor {
 
     @Override
     void visitTorus(double torusRadius, double ringRadius) {
-        def ax2 = own(new_gp_Ax2__gp_Pnt_gp_Dir(fromVec.toGpPnt(), direction.toGpDir()), NativeLib::delete_gp_Ax2)
+        def ax2 = own(new_gp_Ax2__gp_Pnt_gp_Dir(gpPnt(fromVec), gpDir(direction)), NativeLib::delete_gp_Ax2)
         def shape = own(new_TopoDS_Shape__BRepPrimAPI_MakeTorus__gp_Ax2_r1_r2(ax2, torusRadius, ringRadius), NativeLib::delete_TopoDS_Shape)
 
         Tr.cur "torus($torusRadius, $ringRadius) from: $fromVec, direction: $direction, directionNormal: $directionNormal, shape: $shape"
@@ -334,7 +332,7 @@ class CadDslVisitor implements ICadDslVisitor {
 
     @Override
     void visitCylindricalSurface(double radius) {
-        def ax2 = own(new_gp_Ax2__gp_Pnt_gp_Dir(fromVec.toGpPnt(), direction.toGpDir()), NativeLib::delete_gp_Ax2)
+        def ax2 = own(new_gp_Ax2__gp_Pnt_gp_Dir(gpPnt(fromVec), gpDir(direction)), NativeLib::delete_gp_Ax2)
         currentSurface = own(handle_Geom_CylindricalSurface__ax2_radius(ax2, radius), NativeLib::delete_handle_Geom_CylindricalSurface)
     }
 
@@ -384,7 +382,7 @@ class CadDslVisitor implements ICadDslVisitor {
         def shape = boolShapes.peek().empty ? shape : boolShapes.peek().last()
         if (shape) {
             def mirror = own(new_gp_Trsf(), NativeLib::delete_gp_Trsf)
-            _gp_Trsf__SetMirror__gp_Ax2(mirror, own(new_gp_Ax2__gp_Pnt_gp_Dir(pos.toGpPnt(), dir.toGpDir()), NativeLib::delete_gp_Ax2))
+            _gp_Trsf__SetMirror__gp_Ax2(mirror, own(new_gp_Ax2__gp_Pnt_gp_Dir(gpPnt(pos), gpDir(dir)), NativeLib::delete_gp_Ax2))
             def mirrored_cut_1 = own(new_TopoDS_Shape__BRepBuilderAPI_Transform__Shape_gp_Trsf_bCopy(shape, mirror, 0), NativeLib::delete_TopoDS_Shape)
             boolShapes.peek() << mirrored_cut_1
             if (!this.shape) this.shape = mirrored_cut_1
@@ -397,7 +395,7 @@ class CadDslVisitor implements ICadDslVisitor {
         def shape = boolShapes.peek().empty ? shape : boolShapes.peek().last()
         if (shape) {
             def translate = own(new_gp_Trsf(), NativeLib::delete_gp_Trsf)
-            _gp_Trsf__SetTranslation__gp_Vec(translate, distance.toGpVec())
+            _gp_Trsf__SetTranslation__gp_Vec(translate, gpVec(distance))
             def moved = own(new_TopoDS_Shape__BRepBuilderAPI_Transform__Shape_gp_Trsf_bCopy(shape, translate, 0), NativeLib::delete_TopoDS_Shape)
             if (boolShapes.peek().empty) this.shape = moved
             else {
@@ -413,7 +411,7 @@ class CadDslVisitor implements ICadDslVisitor {
         def shape = boolShapes.peek().empty ? shape : boolShapes.peek().last()
         if (shape) {
             def translate = own(new_gp_Trsf(), NativeLib::delete_gp_Trsf)
-            _gp_Trsf__SetRotation__gp_Vec(translate, own(new_gp_Ax1__p_dir(pos.toGpPnt(), dir.toGpDir()), NativeLib::delete_gp_Ax1), angle)
+            _gp_Trsf__SetRotation__gp_Vec(translate, own(new_gp_Ax1__p_dir(gpPnt(pos), gpDir(dir)), NativeLib::delete_gp_Ax1), angle)
             def moved = own(new_TopoDS_Shape__BRepBuilderAPI_Transform__Shape_gp_Trsf_bCopy(shape, translate, clone ? 1 : 0), NativeLib::delete_TopoDS_Shape)
             if (boolShapes.peek().empty) this.shape = moved
             else {
@@ -427,7 +425,7 @@ class CadDslVisitor implements ICadDslVisitor {
 
     @Override
     void visitCone(double r1, double r2, double height) {
-        def ax2 = directionNormal ? own(new_gp_Ax2__gp_Pnt_gp_Dir_Normal(fromVec.toGpPnt(), direction.toGpDir(), directionNormal.toGpDir()), NativeLib::delete_gp_Ax2) : own(new_gp_Ax2__gp_Pnt_gp_Dir(fromVec.toGpPnt(), direction.toGpDir()), NativeLib::delete_gp_Ax2)
+        def ax2 = directionNormal ? own(new_gp_Ax2__gp_Pnt_gp_Dir_Normal(gpPnt(fromVec), gpDir(direction), gpDir(directionNormal)), NativeLib::delete_gp_Ax2) : own(new_gp_Ax2__gp_Pnt_gp_Dir(gpPnt(fromVec), gpDir(direction)), NativeLib::delete_gp_Ax2)
         def shape = own(new_TopoDS_Shape__BRepPrimAPI_MakeCone__gp_Ax2_R1_R2_H(ax2, r1, r2, height), NativeLib::delete_TopoDS_Shape)
 
         Tr.cur "cone($r1, $r2, $height) from: $fromVec, direction: $direction, directionNormal: $directionNormal, shape: $shape"
@@ -447,7 +445,7 @@ class CadDslVisitor implements ICadDslVisitor {
         helixAxis = unit(direction)
         helixRadial = directionNormal ? unit(directionNormal) : unit(Math.abs(helixAxis.y) < 0.9 ? Vec.vY / helixAxis : Vec.vZ / helixAxis)
         helixStart = fromVec + helixRadial * radius
-        def ax2 = own(new_gp_Ax2__gp_Pnt_gp_Dir_Normal(fromVec.toGpPnt(), helixAxis.toGpDir(), helixRadial.toGpDir()), NativeLib::delete_gp_Ax2)
+        def ax2 = own(new_gp_Ax2__gp_Pnt_gp_Dir_Normal(gpPnt(fromVec), gpDir(helixAxis), gpDir(helixRadial)), NativeLib::delete_gp_Ax2)
         helixSpine = own(new_TopoDS_Wire__HelixBRep_BuilderHelix__ax2_diam1_diam2_height_pitch(ax2, 2 * radius, 2 * endRadius, height, pitch), NativeLib::delete_TopoDS_Wire)
         if (helixSpine == MemorySegment.NULL) throw new IllegalArgumentException("helix($radius, $pitch, $height, $endRadius): ${lastError()}")
         Tr.cur "helix($radius, $pitch, $height, $endRadius) from: $fromVec, axis: $helixAxis, radial: $helixRadial"
@@ -469,7 +467,7 @@ class CadDslVisitor implements ICadDslVisitor {
         savedFromVec2d = fromVec2d
         makeWires.clear()
 
-        def ax3 = own(new_gp_Ax3__p_dN_dX(origin.toGpPnt(), (dirX / dirY).toGpDir(), dirX.toGpDir()), NativeLib::delete_gp_Ax3)
+        def ax3 = own(new_gp_Ax3__p_dN_dX(gpPnt(origin), gpDir(dirX / dirY), gpDir(dirX)), NativeLib::delete_gp_Ax3)
         def pln = own(new_gp_Pln__gp_Ax3(ax3), NativeLib::delete_gp_Pln)
         face = own(new_TopoDS_Face__BRepBuilderAPI_MakeFace__gp_Pln(pln), NativeLib::delete_TopoDS_Face)
         visitFrom(from)
@@ -502,7 +500,7 @@ class CadDslVisitor implements ICadDslVisitor {
     @Override
     void visitHelixProfileEnd(Vec2d from) {
         def profile = endProfile("helix profile", from)
-        def shape = own(new_TopoDS_Shape__BRepOffsetAPI_MakePipeShell__spine_profile_binormal(helixSpine, profile, helixAxis.toGpDir()), NativeLib::delete_TopoDS_Shape)
+        def shape = own(new_TopoDS_Shape__BRepOffsetAPI_MakePipeShell__spine_profile_binormal(helixSpine, profile, gpDir(helixAxis)), NativeLib::delete_TopoDS_Shape)
         if (shape == MemorySegment.NULL) throw new IllegalArgumentException("helix profile: ${lastError()}")
 
         Tr.dec "visitHelixProfileEnd shape: $shape"
@@ -543,12 +541,12 @@ class CadDslVisitor implements ICadDslVisitor {
 
         // Scale to the chord, twist around the quarter chord (nose up), then move to the leading edge
         def scale = own(new_gp_Trsf(), NativeLib::delete_gp_Trsf)
-        _gp_Trsf__SetScale__gp_Pnt_s(scale, new Vec().toGpPnt(), wingSectionChord)
-        def twistAxis = own(new_gp_Ax1__p_dir(new Vec(wingSectionChord / 4, 0, 0).toGpPnt(), Vec.vY.toGpDir()), NativeLib::delete_gp_Ax1)
+        _gp_Trsf__SetScale__gp_Pnt_s(scale, gpPnt(new Vec()), wingSectionChord)
+        def twistAxis = own(new_gp_Ax1__p_dir(gpPnt(new Vec(wingSectionChord / 4, 0, 0)), gpDir(Vec.vY)), NativeLib::delete_gp_Ax1)
         def twist = own(new_gp_Trsf(), NativeLib::delete_gp_Trsf)
         _gp_Trsf__SetRotation__gp_Vec(twist, twistAxis, Math.toRadians(wingSectionTwist))
         def placement = own(new_gp_Trsf(), NativeLib::delete_gp_Trsf)
-        _gp_Trsf__SetTranslation__gp_Vec(placement, (fromVec + wingSectionLeadingEdge).toGpVec())
+        _gp_Trsf__SetTranslation__gp_Vec(placement, gpVec(fromVec + wingSectionLeadingEdge))
         _gp_Trsf__Multiply__gp_Trsf(placement, twist)
         _gp_Trsf__Multiply__gp_Trsf(placement, scale)
 
@@ -586,7 +584,7 @@ class CadDslVisitor implements ICadDslVisitor {
     void visitCircularPatternEnd(int count, Vec axis) {
         List<MemorySegment> shapes = boolShapes.peek()
         List<MemorySegment> pattern = new ArrayList<>(shapes.subList(patternStarts.pop(), shapes.size()))
-        def ax1 = own(new_gp_Ax1__p_dir(fromVec.toGpPnt(), axis.toGpDir()), NativeLib::delete_gp_Ax1)
+        def ax1 = own(new_gp_Ax1__p_dir(gpPnt(fromVec), gpDir(axis)), NativeLib::delete_gp_Ax1)
         for (int i = 1; i < count; i++) {
             def rotation = own(new_gp_Trsf(), NativeLib::delete_gp_Trsf)
             _gp_Trsf__SetRotation__gp_Vec(rotation, ax1, 2 * Math.PI * i / count)
@@ -637,12 +635,12 @@ class CadDslVisitor implements ICadDslVisitor {
 //                def aPlan = handle_Geom_Plane__handle_Geom_Surface(aSurface)
 //                def aPnt = new_gp_Pnt__Geom_Plane(aPlan)
                     MemorySegment aPnt = own(new_gp_Pnt__CentreOfMass__TopoDS_Shape(aFace), NativeLib::delete_gp_Pnt)
-                    fromVecToPush = Vec.fromAPnt(aPnt)
+                    fromVecToPush = vec(aPnt)
                     aZ = fromVecToPush.cord(direction)
 //                fromVecStack.pop()
 
                 } else {
-                    def ax1 = own(new_gp_Ax1__p_dir(position.toGpPnt(), direction.toGpDir()), NativeLib::delete_gp_Ax1)
+                    def ax1 = own(new_gp_Ax1__p_dir(gpPnt(position), gpDir(direction)), NativeLib::delete_gp_Ax1)
                     def line = own(handle_Geom_Line__ax1(ax1), NativeLib::delete_handle_Geom_Line)
                     def segment = own(new_TopoDS_Edge__BRepBuilderAPI_MakeEdge__Geom_Curve(own(handle_Geom_TrimmedCurve__Geom_Curve_u1_u2(line, 0d, 0.2d), NativeLib::delete_handle_Geom_TrimmedCurve)), NativeLib::delete_TopoDS_Edge)
                     SurfaceDistance d = new SurfaceDistance(segment, aFace)
@@ -672,7 +670,7 @@ class CadDslVisitor implements ICadDslVisitor {
 ////                                SurfaceExtrema surfaceExtrema = new SurfaceExtrema(R6_GeomAPI_ExtremaCurveSurface__NbExtrema(extrema, i))
 ////                                fromVecToPush = new Vec(surfaceExtrema.p1x, surfaceExtrema.p1y, surfaceExtrema.p1z)
 //                                MemorySegment aPnt = new_gp_Pnt__CentreOfMass__TopoDS_Shape(aFace)
-//                                fromVecToPush = Vec.fromAPnt(aPnt)
+//                                fromVecToPush = vec(aPnt)
 //
 //                                aZ = r_GeomAPI_ExtremaCurveSurface__Distance__index(extrema, i)
 //                                distance = aZ
@@ -689,9 +687,9 @@ class CadDslVisitor implements ICadDslVisitor {
                     positionMax = aZ
                     bounds = new SurfaceBounds(aSurface)
                     def pt = own(gp_Pnt__Geom_Surface__Value(aSurface, 1d, 1d), NativeLib::delete_gp_Pnt)
-                    ptParam11 = Vec.fromAPnt(pt)
+                    ptParam11 = vec(pt)
                     pt = own(gp_Pnt__Geom_Surface__Value(aSurface, 0d, 0d), NativeLib::delete_gp_Pnt)
-                    ptParam00 = Vec.fromAPnt(pt)
+                    ptParam00 = vec(pt)
                     face = aFace
                     if (fromVecStack.size() > 0) fromVecStack.pop()
                     if (fromVecToPush) fromVecStack.push(fromVecToPush)
@@ -724,7 +722,7 @@ class CadDslVisitor implements ICadDslVisitor {
 
     @Override
     void visitCenter() {
-        fromVecStack << Vec.fromAPnt(own(new_gp_Pnt__CentreOfMass__TopoDS_Shape(face), NativeLib::delete_gp_Pnt))
+        fromVecStack << vec(own(new_gp_Pnt__CentreOfMass__TopoDS_Shape(face), NativeLib::delete_gp_Pnt))
         fromVec2d = fromVec.coordsProjection(direction, ptParam00)
         Tr.ind("visitCenter $fromVec $fromVec2d $ptParam00")
     }
@@ -826,11 +824,11 @@ class CadDslVisitor implements ICadDslVisitor {
 
     @Override
     void visitRevolution(Vec from, Vec dir, double angle) {
-        def ax1 = own(new_gp_Ax1__p_dir(from.toGpPnt(), dir.toGpDir()), NativeLib::delete_gp_Ax1)
+        def ax1 = own(new_gp_Ax1__p_dir(gpPnt(from), gpDir(dir)), NativeLib::delete_gp_Ax1)
         def shape = angle == 0 ? own(new_TopoDS_Shape__BRepPrimAPI_MakeRevol__TopoDS_Face_gp_Ax1(face, ax1), NativeLib::delete_TopoDS_Shape) : own(new_TopoDS_Shape__BRepPrimAPI_MakeRevol__TopoDS_Face_gp_Ax1_ang(face, ax1, angle), NativeLib::delete_TopoDS_Shape)
 
         MemorySegment trsf = own(new_gp_Trsf(), NativeLib::delete_gp_Trsf)
-        _gp_Trsf__SetTranslation__gp_Vec(trsf, fromVec.toGpVec())
+        _gp_Trsf__SetTranslation__gp_Vec(trsf, gpVec(fromVec))
         shape = own(new_TopoDS_Shape__BRepBuilderAPI_Transform__Shape_gp_Trsf_bCopy(shape, trsf, 0), NativeLib::delete_TopoDS_Shape)
 
         Tr.cur "revol($from, $dir) from: $fromVec, direction: $direction, directionNormal: $directionNormal, shape: $shape"
@@ -841,7 +839,7 @@ class CadDslVisitor implements ICadDslVisitor {
 
     @Override
     void visitPrism(Vec dir, boolean cut) {
-        def shape = own(new_TopoDS_Shape__BRepPrimAPI_MakePrism__TopoDS_Face_gp_Vec(face, dir.toGpVec()), NativeLib::delete_TopoDS_Shape)
+        def shape = own(new_TopoDS_Shape__BRepPrimAPI_MakePrism__TopoDS_Face_gp_Vec(face, gpVec(dir)), NativeLib::delete_TopoDS_Shape)
         Tr.cur "prism($dir) from: $fromVec, direction: $direction, directionNormal: $directionNormal, shape: $shape"
 
         if (this.shape) {

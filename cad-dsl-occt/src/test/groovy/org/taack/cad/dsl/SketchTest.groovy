@@ -95,7 +95,7 @@ class SketchTest {
                 arc(c1, c4)
             }
         }.toFace().prism().topX().wireFrom() {
-            CadDslVisitor.Tr.cur "Circle topY 0.1,-0.5"
+            println "Circle topY 0.1,-0.5"
             circle(0.02)
         }.toFace().prism(0.02).display()
     }

@@ -2,13 +2,7 @@ package org.taack.cad.dsl.geom
 
 import groovy.transform.CompileStatic
 
-import java.lang.foreign.MemorySegment
-
-import static org.taack.occt.NativeLib.*
-import org.taack.occt.NativeLib
-import static org.taack.cad.dsl.helper.Natives.own
 import static java.lang.Math.*
-
 
 @CompileStatic
 final class Vec extends Vec2d {
@@ -83,38 +77,6 @@ final class Vec extends Vec2d {
         Vec coords3d = new Vec(coords)
         Vec vectorProd = dirXToGlobal(dir) * coords3d + dirYToGlobal(dir) * coords3d + dir * coords3d
         center + vectorProd
-    }
-
-    static Vec fromAPnt(MemorySegment aPnt) {
-        new Vec(
-                gp_Pnt__X(aPnt),
-                gp_Pnt__Y(aPnt),
-                gp_Pnt__Z(aPnt)
-        )
-    }
-
-    static Vec fromADir(MemorySegment aDir) {
-        new Vec(
-                gp_Dir__X(aDir),
-                gp_Dir__Y(aDir),
-                gp_Dir__Z(aDir)
-        )
-    }
-
-    MemorySegment toGpDir() {
-        own(new_gp_Dir__x_y_z(x, y, z), NativeLib::delete_gp_Dir)
-    }
-
-    MemorySegment toGpPnt() {
-        own(new_gp_Pnt__x_y_z(x, y, z), NativeLib::delete_gp_Pnt)
-    }
-
-    MemorySegment toGpVec() {
-        own(new_gp_Vec__x_y_z(x, y, z), NativeLib::delete_gp_Vec)
-    }
-
-    MemorySegment toGpPln(Number t = 0) {
-        own(new_gp_Pln__x_y_z_d(x, y, z, t.toDouble()), NativeLib::delete_gp_Pln)
     }
 
     double cord(Vec axe) {

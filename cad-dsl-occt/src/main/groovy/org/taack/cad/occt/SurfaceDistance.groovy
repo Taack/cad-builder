@@ -1,8 +1,7 @@
-package org.taack.cad.dsl.helper
+package org.taack.cad.occt
 
 import groovy.transform.CompileStatic
 import org.taack.cad.dsl.geom.Vec
-import org.taack.cad.dsl.CadDslVisitor
 
 import java.lang.foreign.MemorySegment
 import static org.taack.occt.NativeLib.*

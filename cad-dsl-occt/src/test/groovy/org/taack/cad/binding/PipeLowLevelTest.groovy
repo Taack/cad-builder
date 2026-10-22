@@ -9,6 +9,7 @@ import org.taack.cad.dsl.geom.Vec2d
 import java.lang.foreign.MemorySegment
 
 import static org.taack.occt.NativeLib.*
+import static org.taack.cad.occt.Occt.*
 
 @CompileStatic
 class PipeLowLevelTest {
@@ -21,18 +22,18 @@ class PipeLowLevelTest {
         def F1 = new_TopoDS_Face__TopExp_Explorer__Current(Ex)
         def surf = handle_Geom_Surface__TopoDS_Face(F1)
         def MW1 = new_BRepBuilderAPI_MakeWire()
-        def p1 = new Vec2d(100, 100).toGpPnt2d()
-        def p2 = new Vec2d(200, 100).toGpPnt2d()
+        def p1 = gpPnt2d(new Vec2d(100, 100))
+        def p2 = gpPnt2d(new Vec2d(200, 100))
         def aline = handle_Geom2d_Line__GCE2d_MakeLine__p1_p2(p1, p2)
 
         _BRepBuilderAPI_MakeWire__Add__BRepBuilderAPI_MakeEdge MW1, new_BRepBuilderAPI_MakeEdge__Geom2d_Curve_Geom_Surface_p1_p2(aline, surf, 0d, gp_Pnt2d__Distance__p1_p2(p1, p2))
         p1 = p2
-        p2 = new Vec2d(150, 200).toGpPnt2d()
+        p2 = gpPnt2d(new Vec2d(150, 200))
         aline = handle_Geom2d_Line__GCE2d_MakeLine__p1_p2(p1, p2)
 
         _BRepBuilderAPI_MakeWire__Add__BRepBuilderAPI_MakeEdge MW1, new_BRepBuilderAPI_MakeEdge__Geom2d_Curve_Geom_Surface_p1_p2(aline, surf, 0d, gp_Pnt2d__Distance__p1_p2(p1, p2))
         p1 = p2
-        p2 = new Vec2d(100, 100).toGpPnt2d()
+        p2 = gpPnt2d(new Vec2d(100, 100))
         aline = handle_Geom2d_Line__GCE2d_MakeLine__p1_p2(p1, p2)
 
         _BRepBuilderAPI_MakeWire__Add__BRepBuilderAPI_MakeEdge MW1, new_BRepBuilderAPI_MakeEdge__Geom2d_Curve_Geom_Surface_p1_p2(aline, surf, 0d, gp_Pnt2d__Distance__p1_p2(p1, p2))
@@ -42,9 +43,9 @@ class PipeLowLevelTest {
         def FP = TopoDS_Face__BRepBuilderAPI_MakeFace__Face MKF1
         _BRepLib__BuildCurves3d__TopoDS_Shape FP
         def CurvePoles = new_TColgp_Array1OfPnt__Low_Up(1,3)
-        _TColgp_Array1OfPnt__Ar_Pt_Indx(CurvePoles, new Vec(150,0,150).toGpPnt(), 1)
-        _TColgp_Array1OfPnt__Ar_Pt_Indx(CurvePoles, new Vec(200,100,150).toGpPnt(), 2)
-        _TColgp_Array1OfPnt__Ar_Pt_Indx(CurvePoles, new Vec(150,200,150).toGpPnt(), 3)
+        _TColgp_Array1OfPnt__Ar_Pt_Indx(CurvePoles, gpPnt(new Vec(150,0,150)), 1)
+        _TColgp_Array1OfPnt__Ar_Pt_Indx(CurvePoles, gpPnt(new Vec(200,100,150)), 2)
+        _TColgp_Array1OfPnt__Ar_Pt_Indx(CurvePoles, gpPnt(new Vec(150,200,150)), 3)
         def curve = handle_Geom_BezierCurve__TColgp_Array1OfPnt(CurvePoles)
         def E = new_TopoDS_Edge__BRepBuilderAPI_MakeEdge__Geom_Curve curve
         def W = new_TopoDS_Wire__BRepBuilderAPI_MakeWire__TopoDS_Edge1 E

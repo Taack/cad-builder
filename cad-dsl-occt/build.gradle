@@ -1,0 +1,57 @@
+plugins {
+    id 'groovy'
+    id 'java-library'
+    id 'de.infolektuell.jextract' version '1.4.0'
+    id 'maven-publish'
+}
+
+group = 'org.taack'
+version = '0.1'
+description = 'Open CASCADE kernel for the CAD DSL'
+ext.pomName = 'Groovy CAD DSL OCCT Kernel'
+
+evaluationDependsOn(':cad-dsl-native')
+
+def occtLib = project(':cad-dsl-native').occtLib
+def nativeLibPath = file("${project.parent.projectDir}/cad-dsl-native/build/lib/main/release").absolutePath
+
+compileJava.dependsOn ':cad-dsl-native:linkRelease'
+
+repositories {
+    mavenCentral()
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of 25
+    }
+}
+
+jextract.libraries {
+    def occt = register('cad-dsl-native') {
+        header = layout.projectDirectory.file("../cad-dsl-native/src/main/public/occt_capi.h")
+        headerClassName = "NativeLib"
+        targetPackage = "org.taack.occt"
+        useSystemLoadLibrary = true
+        libraries.add("cad-dsl-native")
+        libraryPath.add(layout.projectDirectory.dir("../cad-dsl-native/build/lib/main/release"))
+    }
+    sourceSets.named("main") {
+        jextract.libraries.addLater(occt)
+    }
+}
+
+dependencies {
+    api project(':cad-dsl')
+    testImplementation platform('org.junit:junit-bom:6.0.3')
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+test {
+    println "Setting LD_LIBRARY_PATH=$occtLib:$nativeLibPath"
+    environment('LD_LIBRARY_PATH', "$occtLib:$nativeLibPath")
+    useJUnitPlatform()
+}
+
+apply from: "$rootDir/gradle/publishing.gradle"
