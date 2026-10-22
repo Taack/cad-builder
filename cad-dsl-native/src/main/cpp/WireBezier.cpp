@@ -1,7 +1,8 @@
 #include<gp_Circ.hxx>
 #include<TopoDS_Wire.hxx>
 #include<BRepBuilderAPI_MakeWire.hxx>
-#include<TColgp_Array1OfPnt.hxx>
+#include <gp_Pnt.hxx>
+#include <NCollection_Array1.hxx>
 #include<Geom_BezierCurve.hxx>
 #include<BRepOffsetAPI_MakePipe.hxx>
 #include<BRepBuilderAPI_MakeEdge.hxx>
@@ -19,24 +20,24 @@ int mainBezier() {
 
         BRepBuilderAPI_MakeWire wireBuilder;
 
-        TColgp_Array1OfPnt pnts1(1, 3);
+        NCollection_Array1<gp_Pnt> pnts1(1, 3);
         pnts1.SetValue(1, gp_Pnt(0.0f, 0.0f, 0.0f));
         pnts1.SetValue(2, gp_Pnt(300.0f, 0.0f, 500.0f));
         pnts1.SetValue(3, gp_Pnt(400.0f, 0.0f, 0.0f));
 
-        Handle(Geom_BezierCurve) curve1 = new Geom_BezierCurve(pnts1);
+        occ::handle<Geom_BezierCurve> curve1 = new Geom_BezierCurve(pnts1);
         wireBuilder.Add(BRepBuilderAPI_MakeEdge(curve1).Edge());
 
-        TColgp_Array1OfPnt pnts2(1, 3);
+        NCollection_Array1<gp_Pnt> pnts2(1, 3);
         pnts2.SetValue(1, pnts1.Last());
         pnts2.SetValue(2, gp_Pnt(700.0f, 0.0f, 200.0f));
         pnts2.SetValue(3, gp_Pnt(400.0f, 0.0f, 600.0f));
 
-        Handle(Geom_BezierCurve) curve2 = new Geom_BezierCurve(pnts1);
+        occ::handle<Geom_BezierCurve> curve2 = new Geom_BezierCurve(pnts1);
         wireBuilder.Add(BRepBuilderAPI_MakeEdge(curve2).Edge());
 
         const TopoDS_Shape &sweptShape = BRepOffsetAPI_MakePipe(wireBuilder.Wire(), BRepBuilderAPI_MakeFace(sweepCircleWire).Shape());
-        visualize(sweptShape);
+        return visualize(sweptShape);
 }
 
 /*

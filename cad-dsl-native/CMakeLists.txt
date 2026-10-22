@@ -1,11 +1,14 @@
 cmake_minimum_required(VERSION 3.29)
 project(cad-dsl-native)
 
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
 add_executable(sprocket src/main/cpp/sprocket.cpp)
 add_executable(MakeBottle src/main/cpp/MakeBottle.cpp)
 
 find_package(VTK)
-find_package(OpenCASCADE 7.9.3 REQUIRED)
+find_package(OpenCASCADE 8.0 REQUIRED)
 
 target_include_directories(sprocket PUBLIC "${OpenCASCADE_INCLUDE_DIRS}")
 target_link_libraries(sprocket PUBLIC "${OpenCASCADE_LIBRARIES}")

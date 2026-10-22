@@ -11,7 +11,9 @@ plugins {
 group = 'org.taack'
 version = '0.1'
 
-def OCCT78 = file("/usr/lib").absolutePath
+evaluationDependsOn(':cad-dsl-native')
+
+def occtLib = project(':cad-dsl-native').occtLib
 def nativeLibPath = file("${project.parent.projectDir}/cad-dsl/build/libs/nativeLib/shared").absolutePath
 def nativeLibPath2 = file("${project.parent.projectDir}/cad-dsl-native/build/lib/main/release").absolutePath
 
@@ -30,7 +32,7 @@ java {
 
 jextract.libraries {
     def occt = register('cad-dsl-native') {
-        header = layout.projectDirectory.file("src/main/c/native.h")
+        header = layout.projectDirectory.file("../cad-dsl-native/src/main/public/occt_capi.h")
         headerClassName = "NativeLib"
         targetPackage = "org.taack.occt"
         useSystemLoadLibrary = true
@@ -43,8 +45,8 @@ jextract.libraries {
 }
 
 //run  {
-//    println "Setting LD_LIBRARY_PATH=$OCCT78:$nativeLibPath2:$nativeLibPath"
-//    environment('LD_LIBRARY_PATH', "$OCCT78:$nativeLibPath2:$nativeLibPath")
+//    println "Setting LD_LIBRARY_PATH=$occtLib:$nativeLibPath2:$nativeLibPath"
+//    environment('LD_LIBRARY_PATH', "$occtLib:$nativeLibPath2:$nativeLibPath")
 //}
 
 dependencies {
@@ -56,8 +58,8 @@ dependencies {
 }
 
 test {
-    println "Setting LD_LIBRARY_PATH=$OCCT78:$nativeLibPath2:$nativeLibPath"
-    environment('LD_LIBRARY_PATH', "$OCCT78:$nativeLibPath2:$nativeLibPath")
+    println "Setting LD_LIBRARY_PATH=$occtLib:$nativeLibPath2:$nativeLibPath"
+    environment('LD_LIBRARY_PATH', "$occtLib:$nativeLibPath2:$nativeLibPath")
     useJUnitPlatform()
 }
 

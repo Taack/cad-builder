@@ -65,7 +65,6 @@
 #include <TopExp_Explorer.hxx>
 #include <BRepTools_WireExplorer.hxx>
 
-
 #include <AIS_InteractiveContext.hxx>
 #include <AIS_Shape.hxx>
 #include <AIS_ViewController.hxx>
@@ -81,43 +80,43 @@
 using namespace std;
 
 // The basic inputs needed to build a sprocket
-Standard_Real roller_diameter = 10.2;
-Standard_Real pitch = 15.875;
-Standard_Integer num_teeth = 40;
-Standard_Real chain_width = 6.35;
+double roller_diameter = 10.2;
+double pitch = 15.875;
+int num_teeth = 40;
+double chain_width = 6.35;
 
 // Dimensions derived from the provided inputs
-Standard_Real roller_radius = roller_diameter / 2.0;
-Standard_Real tooth_angle = (2 * M_PI) / num_teeth;
-Standard_Real pitch_circle_diameter = pitch / sin(tooth_angle / 2.0);
-Standard_Real pitch_circle_radius = pitch_circle_diameter / 2.0;
+double roller_radius = roller_diameter / 2.0;
+double tooth_angle = (2 * M_PI) / num_teeth;
+double pitch_circle_diameter = pitch / sin(tooth_angle / 2.0);
+double pitch_circle_radius = pitch_circle_diameter / 2.0;
 
-Standard_Real roller_contact_angle_min =
+double roller_contact_angle_min =
     (M_PI * 120 / 180) - ((M_PI / 2) / num_teeth);
-Standard_Real roller_contact_angle_max =
+double roller_contact_angle_max =
     (M_PI * 140 / 180) - ((M_PI / 2) / num_teeth);
-Standard_Real roller_contact_angle =
+double roller_contact_angle =
     (roller_contact_angle_min + roller_contact_angle_max) / 2.0;
 
-Standard_Real tooth_radius_min = 0.505 * roller_diameter;
-Standard_Real tooth_radius_max =
+double tooth_radius_min = 0.505 * roller_diameter;
+double tooth_radius_max =
     tooth_radius_min + (0.069 * pow(roller_diameter, 1.0 / 3.0));
-Standard_Real tooth_radius = (tooth_radius_min + tooth_radius_max) / 2.0;
+double tooth_radius = (tooth_radius_min + tooth_radius_max) / 2.0;
 
-Standard_Real profile_radius = 0.12 * roller_diameter * (num_teeth + 2);
-Standard_Real top_diameter =
+double profile_radius = 0.12 * roller_diameter * (num_teeth + 2);
+double top_diameter =
     pitch_circle_diameter + ((1 - (1.6 / num_teeth)) * pitch) - roller_diameter;
-Standard_Real top_radius = top_diameter / 2.0;
+double top_radius = top_diameter / 2.0;
 
-Standard_Real thickness = chain_width * 0.95;
+double thickness = chain_width * 0.95;
 
 // Center hole data
-Standard_Real center_radius = 125.0 / 2.0;
+double center_radius = 125.0 / 2.0;
 
 // Mounting hole data
-Standard_Integer mounting_hole_count = 6;
-Standard_Real mounting_radius = 153.0 / 2.0;
-Standard_Real hole_radius = 8.5 / 2.0;
+int mounting_hole_count = 6;
+double mounting_radius = 153.0 / 2.0;
+double hole_radius = 8.5 / 2.0;
 
 /*
  * Build a single tooth
@@ -128,7 +127,7 @@ TopoDS_Shape BuildTooth() {
                          0);
     gp_Circ2d base_circle = gp_Circ2d(gp_Ax2d(base_center, gp_Dir2d()),
                                       tooth_radius);
-    Handle(Geom2d_TrimmedCurve) trimmed_base =
+    occ::handle<Geom2d_TrimmedCurve> trimmed_base =
         GCE2d_MakeArcOfCircle(base_circle,
                               M_PI - (roller_contact_angle / 2.0),
                               M_PI);
@@ -138,28 +137,28 @@ TopoDS_Shape BuildTooth() {
     gp_Pnt2d p1 = trimmed_base->EndPoint();
 
     // Determine the center of the profile circle
-    Standard_Real x_distance =
+    double x_distance =
         cos(roller_contact_angle / 2) * (profile_radius + tooth_radius);
-    Standard_Real y_distance =
+    double y_distance =
         sin(roller_contact_angle / 2) * (profile_radius + tooth_radius);
     gp_Pnt2d profile_center(pitch_circle_radius - x_distance, y_distance);
 
     // Construct the profile circle
     gp_Circ2d profile_circle = gp_Circ2d(gp_Ax2d(profile_center, gp_Dir2d()),
                                          profile_center.Distance(p1));
-    Handle(Geom2d_Circle) geom_profile_circle =
+    occ::handle<Geom2d_Circle> geom_profile_circle =
         GCE2d_MakeCircle(profile_circle);
 
     // Construct the outer circle
     gp_Circ2d outer_circle = gp_Circ2d(gp_Ax2d(gp_Pnt2d(0, 0), gp_Dir2d()),
                                        top_radius);
-    Handle(Geom2d_Circle) geom_outer_circle = GCE2d_MakeCircle(outer_circle);
+    occ::handle<Geom2d_Circle> geom_outer_circle = GCE2d_MakeCircle(outer_circle);
 
     // Calculate the intersection point(s) of the profile circle
     // and the outer circle.  If there are two points, pick the one closest
     // to the center of the profile circle
     Geom2dAPI_InterCurveCurve inter(geom_profile_circle, geom_outer_circle);
-    Standard_Integer num_points = inter.NbPoints();
+    int num_points = inter.NbPoints();
     gp_Pnt2d p2;
     if (num_points == 2) {
         if (p1.Distance(inter.Point(1)) < p1.Distance(inter.Point(2)))
@@ -171,7 +170,7 @@ TopoDS_Shape BuildTooth() {
     } else;
 
     // Trim the profile circle and mirror
-    Handle(Geom2d_TrimmedCurve) trimmed_profile =
+    occ::handle<Geom2d_TrimmedCurve> trimmed_profile =
         GCE2d_MakeArcOfCircle(profile_circle, p1, p2);
 
     // Calculate the outermost point
@@ -179,18 +178,18 @@ TopoDS_Shape BuildTooth() {
                            sin(tooth_angle / 2) * top_radius);
 
     // and use it to create the third arc
-    Handle(Geom2d_TrimmedCurve) trimmed_outer =
+    occ::handle<Geom2d_TrimmedCurve> trimmed_outer =
         GCE2d_MakeArcOfCircle(outer_circle, p2, p3);
 
     // Mirror and reverse the three arcs
     gp_Ax2d mirror_axis(gp::Origin2d(), gp::DX2d().Rotated(tooth_angle / 2.0));
 
-    Handle(Geom2d_TrimmedCurve) mirror_base =
-        Handle(Geom2d_TrimmedCurve)::DownCast(trimmed_base->Copy());
-    Handle(Geom2d_TrimmedCurve) mirror_profile =
-        Handle(Geom2d_TrimmedCurve)::DownCast(trimmed_profile->Copy());
-    Handle(Geom2d_TrimmedCurve) mirror_outer =
-        Handle(Geom2d_TrimmedCurve)::DownCast(trimmed_outer->Copy());
+    occ::handle<Geom2d_TrimmedCurve> mirror_base =
+        occ::down_cast<Geom2d_TrimmedCurve>(trimmed_base->Copy());
+    occ::handle<Geom2d_TrimmedCurve> mirror_profile =
+        occ::down_cast<Geom2d_TrimmedCurve>(trimmed_profile->Copy());
+    occ::handle<Geom2d_TrimmedCurve> mirror_outer =
+        occ::down_cast<Geom2d_TrimmedCurve>(trimmed_outer->Copy());
 
     mirror_base->Mirror(mirror_axis);
     mirror_profile->Mirror(mirror_axis);
@@ -204,14 +203,14 @@ TopoDS_Shape BuildTooth() {
     gp_Pnt2d outer_start = trimmed_outer->StartPoint();
     gp_Pnt2d outer_mid = trimmed_outer->EndPoint();
     gp_Pnt2d outer_end = mirror_outer->EndPoint();
-    Handle(Geom2d_TrimmedCurve) outer_arc =
+    occ::handle<Geom2d_TrimmedCurve> outer_arc =
         GCE2d_MakeArcOfCircle(outer_start, outer_mid, outer_end);
 
     // Create an arc for the inside of the wedge
     gp_Circ2d inner_circle(gp_Ax2d(gp_Pnt2d(0, 0), gp_Dir2d()),
                            top_radius - roller_diameter);
     gp_Pnt2d inner_start(top_radius - roller_diameter, 0);
-    Handle(Geom2d_TrimmedCurve) inner_arc =
+    occ::handle<Geom2d_TrimmedCurve> inner_arc =
         GCE2d_MakeArcOfCircle(inner_circle, inner_start, tooth_angle);
     inner_arc->Reverse();
 
@@ -253,9 +252,9 @@ TopoDS_Shape BuildTooth() {
  *  Round off the edge of the single tooth
  */
 TopoDS_Shape RoundTooth(TopoDS_Shape wedge) {
-    Standard_Real round_x = 2.6;
-    Standard_Real round_z = 0.06 * pitch;
-    Standard_Real round_radius = pitch;
+    double round_x = 2.6;
+    double round_z = 0.06 * pitch;
+    double round_radius = pitch;
 
     // Determine where the circle used for rounding has to start and stop
     gp_Pnt2d p2d_1(top_radius - round_x, 0);
@@ -275,7 +274,7 @@ TopoDS_Shape RoundTooth(TopoDS_Shape wedge) {
         round_circle_2d = round_circle_2d_2;
 
     // Remove the arc used for rounding
-    Handle(Geom2d_TrimmedCurve) trimmed_circle =
+    occ::handle<Geom2d_TrimmedCurve> trimmed_circle =
         GCE2d_MakeArcOfCircle(round_circle_2d, p2d_1, p2d_2);
 
     // Calculate extra points used to construct lines
@@ -418,21 +417,21 @@ TopoDS_Shape MountingHoles(TopoDS_Shape base) {
 TopoDS_Shape Cutout(TopoDS_Shape base) {
     gp_Circ2d outer(gp::OX2d(), top_radius - 1.75 * roller_diameter);
     gp_Circ2d inner(gp::OX2d(), center_radius + 0.75 * roller_diameter);
-    Handle(Geom2d_Circle) geom_outer = GCE2d_MakeCircle(outer);
-    Handle(Geom2d_Circle) geom_inner = GCE2d_MakeCircle(inner);
+    occ::handle<Geom2d_Circle> geom_outer = GCE2d_MakeCircle(outer);
+    occ::handle<Geom2d_Circle> geom_inner = GCE2d_MakeCircle(inner);
     geom_inner->Reverse();
 
-    Standard_Real base_angle = (2.0 * M_PI) / mounting_hole_count;
-    Standard_Real hole_angle = atan(hole_radius / mounting_radius);
-    Standard_Real correction_angle = 3 * hole_angle;
+    double base_angle = (2.0 * M_PI) / mounting_hole_count;
+    double hole_angle = atan(hole_radius / mounting_radius);
+    double correction_angle = 3 * hole_angle;
 
     gp_Lin2d left(gp::Origin2d(), gp::DX2d());
     gp_Lin2d right(gp::Origin2d(), gp::DX2d());
     left.Rotate(gp::Origin2d(), correction_angle);
     right.Rotate(gp::Origin2d(), base_angle - correction_angle);
 
-    Handle(Geom2d_Line) geom_left = GCE2d_MakeLine(left);
-    Handle(Geom2d_Line) geom_right = GCE2d_MakeLine(right);
+    occ::handle<Geom2d_Line> geom_left = GCE2d_MakeLine(left);
+    occ::handle<Geom2d_Line> geom_right = GCE2d_MakeLine(right);
 
     Geom2dAPI_InterCurveCurve inter_1(geom_outer, geom_left);
     Geom2dAPI_InterCurveCurve inter_2(geom_outer, geom_right);
@@ -447,9 +446,9 @@ TopoDS_Shape Cutout(TopoDS_Shape base) {
     (inter_4.Point(1).X() > 0) ? p4 = inter_4.Point(1) : p4 = inter_4.Point(2);
 
     // Trim the profile circle and mirror
-    Handle(Geom2d_TrimmedCurve) trimmed_outer =
+    occ::handle<Geom2d_TrimmedCurve> trimmed_outer =
         GCE2d_MakeArcOfCircle(outer, p1, p2);
-    Handle(Geom2d_TrimmedCurve) trimmed_inner =
+    occ::handle<Geom2d_TrimmedCurve> trimmed_inner =
         GCE2d_MakeArcOfCircle(inner, p4, p3);
 
     gp_Pln plane = gp_Pln(gp::Origin(), gp::DZ());
@@ -492,20 +491,20 @@ TopoDS_Shape Cutout(TopoDS_Shape base) {
 }
 
 void visualize(TopoDS_Shape &shape) {
-    Handle(Aspect_DisplayConnection) aDisplay = new Aspect_DisplayConnection();
-    Handle(Graphic3d_GraphicDriver) aDriver = new OpenGl_GraphicDriver(aDisplay);
+    occ::handle<Aspect_DisplayConnection> aDisplay = new Aspect_DisplayConnection();
+    occ::handle<Graphic3d_GraphicDriver> aDriver = new OpenGl_GraphicDriver(aDisplay);
 
     // viewer setup
-    Handle(V3d_Viewer) aViewer = new V3d_Viewer(aDriver);
+    occ::handle<V3d_Viewer> aViewer = new V3d_Viewer(aDriver);
     aViewer->SetDefaultLights();
     aViewer->SetLightOn();
 
-    Handle(V3d_View) myView;
+    occ::handle<V3d_View> myView;
 
     // view setup
     myView = new V3d_View(aViewer);
 
-    Handle(Xw_Window) aWindow = new Xw_Window(aDisplay, "OCCT Viewer", 100, 100, 512, 512);
+    occ::handle<Xw_Window> aWindow = new Xw_Window(aDisplay, "OCCT Viewer", 100, 100, 512, 512);
     Display *anXDisplay = (Display *)aDisplay->GetDisplayAspect();
     XSelectInput(anXDisplay, (Window)aWindow->NativeHandle(),
                  ExposureMask | KeyPressMask | KeyReleaseMask | FocusChangeMask | StructureNotifyMask
@@ -522,7 +521,7 @@ void visualize(TopoDS_Shape &shape) {
     // interactive context and demo scene
     auto *myContext = new AIS_InteractiveContext(aViewer);
 
-    Handle(AIS_InteractiveObject) aShapePrs = new AIS_Shape(shape);
+    occ::handle<AIS_InteractiveObject> aShapePrs = new AIS_Shape(shape);
     myContext->Display(aShapePrs, AIS_Shaded, 0, false);
     myView->FitAll(0.01, false);
 

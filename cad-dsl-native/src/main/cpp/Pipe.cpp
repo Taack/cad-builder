@@ -15,6 +15,8 @@
 #include <BRepFeat_MakePipe.hxx>
 #include <BRepBuilderAPI_MakeFace.hxx>
 #include <BRepLib.hxx>
+#include <NCollection_Array1.hxx>
+#include <gp_Pnt.hxx>
 
 extern "C" int visualize(const TopoDS_Shape& truc);
 
@@ -25,12 +27,12 @@ int main() {
     Ex.Next();
     Ex.Next();
     TopoDS_Face F1 = TopoDS::Face(Ex.Current());
-    Handle(Geom_Surface) surf = BRep_Tool::Surface(F1);
+    occ::handle<Geom_Surface> surf = BRep_Tool::Surface(F1);
     BRepBuilderAPI_MakeWire MW1;
     gp_Pnt2d p1,p2;
     p1 = gp_Pnt2d(100.,100.);
     p2 = gp_Pnt2d(200.,100.);
-    Handle(Geom2d_Line) aline = GCE2d_MakeLine(p1,p2).Value();
+    occ::handle<Geom2d_Line> aline = GCE2d_MakeLine(p1,p2).Value();
 
     MW1.Add(BRepBuilderAPI_MakeEdge(aline,surf,0.,p1.Distance(p2)));
     p1 = p2;
@@ -44,22 +46,22 @@ int main() {
 
     MW1.Add(BRepBuilderAPI_MakeEdge(aline,surf,0.,p1.Distance(p2)));
     BRepBuilderAPI_MakeFace MKF1;
-    MKF1.Init(surf,Standard_False, 0.01);
+    MKF1.Init(surf,false, 0.01);
     MKF1.Add(MW1.Wire());
     TopoDS_Face FP = MKF1.Face();
     BRepLib::BuildCurves3d(FP);
-    TColgp_Array1OfPnt CurvePoles(1,3);
+    NCollection_Array1<gp_Pnt> CurvePoles(1,3);
     gp_Pnt pt = gp_Pnt(150.,0.,150.);
     CurvePoles(1) = pt;
     pt = gp_Pnt(200.,100.,150.);
     CurvePoles(2) = pt;
     pt = gp_Pnt(150.,200.,150.);
     CurvePoles(3) = pt;
-    Handle(Geom_BezierCurve) curve = new Geom_BezierCurve(CurvePoles);
+    occ::handle<Geom_BezierCurve> curve = new Geom_BezierCurve(CurvePoles);
     TopoDS_Edge E = BRepBuilderAPI_MakeEdge(curve);
     TopoDS_Wire W = BRepBuilderAPI_MakeWire(E);
-    BRepFeat_MakePipe MKPipe (S,FP,F1,W,Standard_False,
-    Standard_True);
+    BRepFeat_MakePipe MKPipe (S,FP,F1,W,false,
+    true);
     MKPipe.Perform();
     TopoDS_Shape res1 = MKPipe.Shape();
     visualize(res1);
