@@ -5,6 +5,8 @@ import groovy.transform.CompileStatic
 import java.lang.foreign.MemorySegment
 
 import static org.taack.occt.NativeLib.*
+import org.taack.occt.NativeLib
+import static org.taack.cad.dsl.helper.Natives.own
 import static java.lang.Math.*
 
 
@@ -100,19 +102,19 @@ final class Vec extends Vec2d {
     }
 
     MemorySegment toGpDir() {
-        new_gp_Dir__x_y_z(x, y, z)
+        own(new_gp_Dir__x_y_z(x, y, z), NativeLib::delete_gp_Dir)
     }
 
     MemorySegment toGpPnt() {
-        new_gp_Pnt__x_y_z(x, y, z)
+        own(new_gp_Pnt__x_y_z(x, y, z), NativeLib::delete_gp_Pnt)
     }
 
     MemorySegment toGpVec() {
-        new_gp_Vec__x_y_z(x, y, z)
+        own(new_gp_Vec__x_y_z(x, y, z), NativeLib::delete_gp_Vec)
     }
 
     MemorySegment toGpPln(Number t = 0) {
-        new_gp_Pln__x_y_z_d(x, y, z, t.toDouble())
+        own(new_gp_Pln__x_y_z_d(x, y, z, t.toDouble()), NativeLib::delete_gp_Pln)
     }
 
     double cord(Vec axe) {

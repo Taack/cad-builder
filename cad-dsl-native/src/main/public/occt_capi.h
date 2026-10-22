@@ -165,7 +165,11 @@ OCCT_CAPI OCCT_HANDLE(Geom2d_TrimmedCurve) *handle_Geom2d_TrimmedCurve__GCE2d_Ma
 
 OCCT_CAPI void _Geom2d_TrimmedCurve__Mirror__ax2(OCCT_HANDLE(Geom2d_TrimmedCurve) *curve, const gp_Ax2d *ax2d);
 
+/* curve must really be a trimmed curve; use _Geom2d_Curve__Reverse for any other curve. */
 OCCT_CAPI void _Geom2d_TrimmedCurve__Reverse(OCCT_HANDLE(Geom2d_TrimmedCurve) *curve);
+
+/* curve may hold any Geom2d_Curve subclass (circle, ellipse, line, trimmed curve, ...). */
+OCCT_CAPI void _Geom2d_Curve__Reverse(OCCT_HANDLE(Geom2d_Curve) *curve);
 
 OCCT_CAPI OCCT_HANDLE(Geom2d_Circle) *handle_Geom2d_Circle__GCE2d_MakeCircle__cir2d(const gp_Circ2d *cir2d);
 

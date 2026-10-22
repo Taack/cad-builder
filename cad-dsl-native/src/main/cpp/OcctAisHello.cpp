@@ -153,7 +153,8 @@ private:
 };
 
 extern "C" int visualize(TopoDS_Shape* truc) {
-  OSD::SetSignal(false);
+  // No OSD::SetSignal here: it replaces the JVM's SIGSEGV handler, which the JVM relies on
+  // (implicit null checks, safepoints), and any later JVM fault then aborts the process.
 
   OcctAisHello aViewer(truc);
 #ifdef _WIN32

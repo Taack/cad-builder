@@ -3,6 +3,8 @@ package org.taack.cad.dsl.geom
 import groovy.transform.CompileStatic
 
 import static org.taack.occt.NativeLib.*
+import org.taack.occt.NativeLib
+import static org.taack.cad.dsl.helper.Natives.own
 
 import java.lang.foreign.MemorySegment
 import static java.lang.Math.*
@@ -87,15 +89,15 @@ class Vec2d {
     }
 
     MemorySegment toGpDir2d() {
-        new_gp_Dir2d__x_y(x, y)
+        own(new_gp_Dir2d__x_y(x, y), NativeLib::delete_gp_Dir2d)
     }
 
     MemorySegment toGpPnt2d() {
-        new_gp_Pnt2d__x_y(x, y)
+        own(new_gp_Pnt2d__x_y(x, y), NativeLib::delete_gp_Pnt2d)
     }
 
     MemorySegment toGpVec() {
-        new_gp_Vec2d__x_y(x, y)
+        own(new_gp_Vec2d__x_y(x, y), NativeLib::delete_gp_Vec2d)
     }
 
     double cord(Vec axe) {

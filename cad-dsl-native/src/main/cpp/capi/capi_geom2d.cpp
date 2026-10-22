@@ -161,6 +161,13 @@ extern "C" void _Geom2d_TrimmedCurve__Reverse(occ::handle<Geom2d_TrimmedCurve> *
     guard(__func__, [&] { (*curve)->Reverse(); });
 }
 
+// Geom2d_TrimmedCurve::Reverse() is final since OCCT 8.0: calling it through a trimmed curve
+// handle that holds another curve type is no longer dispatched to the right override.
+extern "C" void _Geom2d_Curve__Reverse(occ::handle<Geom2d_Curve> *curve) {
+    TRACE("");
+    guard(__func__, [&] { (*curve)->Reverse(); });
+}
+
 extern "C" occ::handle<Geom2d_Circle> *handle_Geom2d_Circle__GCE2d_MakeCircle__cir2d(const gp_Circ2d *cir2d) {
     TRACE("");
     return guard(__func__, [&] { return new occ::handle<Geom2d_Circle>(GCE2d_MakeCircle(*cir2d).Value()); });
