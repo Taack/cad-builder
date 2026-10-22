@@ -161,6 +161,54 @@ void "Test mix fuse - common - fuse"() {
 .Fuse Results
 image::cad-fuse.png[]
 
+=== Helix
+
+`helix(radius, pitch, height[, endRadius])` starts a helix around the current direction (a negative pitch makes it
+left-handed, `endRadius` makes it conical). `wire(radius)` sweeps a circle along it, `profile(from) { ... }` sweeps
+any closed profile drawn with the usual 2D edges. The profile lies in the axial plane at the start of the helix:
+`x` goes away from the axis, `y` goes along it, and `(0, 0)` is the start point of the helix.
+
+.Spring
+[source,groovy]
+----
+@Test
+void "Spring"() {
+    cd().helix(10, 4, 40).wire(1).display()
+}
+----
+
+.Spring Result
+image::cad-spring.png[]
+
+.Bottle Threading
+[source,groovy]
+----
+static CadDsl helixThreading(CadDsl s) {
+    double depth = myNeckRadius / 12
+    double pitch = myNeckHeight / 4
+
+    Vec2d pOri = new Vec2d(-depth / 3, -pitch / 3)
+    Vec2d p2 = new Vec2d(depth, -pitch / 12)
+    Vec2d p3 = new Vec2d(depth, pitch / 12)
+    Vec2d p4 = new Vec2d(-depth / 3, pitch / 3)
+
+    s.fuse {
+        position(new Vec(myHeight + pitch / 2)) {
+            direction(new Vec(1))
+            helix(myNeckRadius, pitch, myNeckHeight - 1.5 * pitch).profile(pOri) {
+                edge(p2)
+                edge(p3)
+                edge(p4)
+                edge(pOri)
+            }
+        }
+    }.toCadDsl()
+}
+----
+
+.Threaded Bottle Neck
+image::cad-bottle-neck.png[]
+
 == Distribution and Usage
 
 `cad-dsl` has been published on maven for Linux x86 only.
