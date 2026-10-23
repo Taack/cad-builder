@@ -473,7 +473,11 @@ to be turned into a video or a GIF, e.g. with `ffmpeg` or ImageMagick. STEP, STL
 [source,groovy]
 ----
 assembly('gear train') {
-    def base = place(part('base', Color.GRAY) { box(60, 30, 2) }) { translate(-20, -15, -2) }
+    // Parts
+    def basePart = part('base', Color.GRAY) { box(60, 30, 2) }
+    def pinPart = part('pin', Color.RED) { cylinder(0.5, 4) }
+    def rackPart = part('rack', Color.GREEN) { box(4, 50, 3) }
+    // a disc with a marker on top
     def wheel = { double radius, Color color ->
         part(color) {
             cylinder(radius, 3).fuse {
@@ -481,18 +485,27 @@ assembly('gear train') {
             }
         }
     }
-    def big = place(wheel(10, Color.ORANGE)) { revolute(axis(), base.topZ(new Vec(0, 0, 0))) }
-    def small = place(wheel(5, Color.BLUE)) { revolute(axis(), base.topZ(new Vec(15, 0, 0))) }
-    // pins on top of the gears, they turn with them
-    def pin = part('pin', Color.RED) { cylinder(0.5, 4) }
-    place(pin) { align(butZ(), small.topZ(new Vec(12, 0, 3)).reverse()) }
-    place(pin) { align(butZ(), big.topZ(new Vec(-6, 0, 3)).reverse()) }
-    // against the small gear, sliding along Y from the base side
-    def rack = place(part('rack', Color.GREEN) { box(4, 50, 3) }) { slider(butY(), base.butY(new Vec(22, -15, 1.5))) }
-    gear(big, small, -2)
-    // the rack moves by the arc length of the small gear, towards +Y, against its slider z
-    gear(small, rack, -PI * 5 / 180)
 
+    // Placements
+    def base = place(basePart) { translate(-20, -15, -2) }
+    def big = place(wheel(10, Color.ORANGE)) {
+        revolute(axis(), base.topZ(new Vec(0, 0, 0)))
+    }
+    def small = place(wheel(5, Color.BLUE)) {
+        revolute(axis(), base.topZ(new Vec(15, 0, 0)))
+    }
+    // pins on top of the gears, they turn with them
+    place(pinPart) { align(butZ(), small.topZ(new Vec(12, 0, 3)).reverse()) }
+    place(pinPart) { align(butZ(), big.topZ(new Vec(-6, 0, 3)).reverse()) }
+    // against the small gear, sliding along Y from the side of the base
+    def rack = place(rackPart) {
+        slider(butY(), base.butY(new Vec(22, -15, 1.5)))
+    }
+
+    // Motion
+    gear(big, small, -2)
+    // the rack moves by the arc length of the small gear, towards +Y (against its slider z)
+    gear(small, rack, -PI * 5 / 180)
     animate(duration: 4, fps: 12) {
         big.angle = { double t -> -45 * t }
     }
