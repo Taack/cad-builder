@@ -417,3 +417,5 @@ Your IDE has to support Groovy `@DelegatesTo` must be supported.
 The language is statically typed. Intellij IDE Community version should do it.
 
 Completion only needs `cad-dsl` on the classpath, neither OCCT nor native code.
+
+video::https://github.com/user-attachments/assets/c4763c7e-746c-4a55-a299-8d4375b2f001[]
