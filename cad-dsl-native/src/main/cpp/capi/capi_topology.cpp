@@ -27,6 +27,7 @@
 #include <Precision.hxx>
 #include <ShapeAnalysis_Wire.hxx>
 #include <ShapeExtend_WireData.hxx>
+#include <ShapeFix_Face.hxx>
 #include <ShapeFix_ShapeTolerance.hxx>
 #include <ShapeFix_Wire.hxx>
 #include <TopExp_Explorer.hxx>
@@ -396,6 +397,24 @@ extern "C" BRepBuilderAPI_MakeFace *new_BRepBuilderAPI_MakeFace__s_um_uM_vm_vM_T
     const occ::handle<Geom_Surface> *S, double UMin, double UMax, double VMin, double VMax, double TolDegen) {
     TRACE("");
     return guard(__func__, [&] { return new BRepBuilderAPI_MakeFace(*S, UMin, UMax, VMin, VMax, TolDegen); });
+}
+
+extern "C" TopoDS_Face *new_TopoDS_Face__ShapeFix_Face__surface_wire_precision_maxTol(
+    const occ::handle<Geom_Surface> *S, const TopoDS_Wire *W, double Precision, double MaxTolerance) {
+    TRACE("");
+    return guard(__func__, [&] {
+        // Not checked inside: the edges of W have no curve on S until ShapeFix_Face projects them
+        BRepBuilderAPI_MakeFace makeFace(*S, *W, false);
+        if (!makeFace.IsDone()) throw Standard_Failure("BRepBuilderAPI_MakeFace failed");
+        ShapeFix_Face fix(makeFace.Face());
+        fix.SetPrecision(Precision);
+        fix.SetMaxTolerance(MaxTolerance);
+        fix.Perform();
+        if (fix.Status(ShapeExtend_FAIL)) throw Standard_Failure("ShapeFix_Face failed");
+        // Perform leaves a single wire as drawn, which may bound the outside of the face
+        fix.FixOrientation();
+        return new TopoDS_Face(fix.Face());
+    });
 }
 
 extern "C" void _BRepBuilderAPI_MakeFace__Init(BRepBuilderAPI_MakeFace *MF, const occ::handle<Geom_Surface> *S, int Bound, double TolDegen) {

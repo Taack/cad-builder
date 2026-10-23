@@ -386,6 +386,50 @@ void "Three-blade Propeller"() {
 .Propeller Result
 image::cad-propeller.png[]
 
+=== Plate Surfaces
+
+`plate { ... }` fills a 3D contour with a smooth surface and returns it as a face, so `prism(...)` or `revolution(...)`
+make a solid of it. Like the sections of a wing, its constraints are drawn relative to the current position:
+
+* `boundary(from) { ... }` draws the contour, a closed wire drawn as with `wireFrom(Vec)` (`edge`, `arc`), once; the
+  face is trimmed by it, whatever its number of sides;
+* `curve(from) { ... }` draws a curve the surface passes through, as many as needed;
+* `through(points...)` makes the surface pass through points.
+
+The constraints are positional (G0). `plate(degree: 3, pointsOnCurve: 15, iterations: 2, tolerance: 1e-4,
+maxSegments: 9, maxDegree: 8) { ... }` tunes the plate surface and its BSpline approximation; these are the defaults.
+
+.Solid Under a Plate Surface
+[source,groovy]
+----
+static CadDslFace plateWithInnerCurve() {
+    Vec p1 = new Vec(0, 0, 0)
+    Vec p2 = new Vec(10, 0, 0)
+    Vec p3 = new Vec(10, 10, 0)
+    Vec p4 = new Vec(0, 10, 0)
+
+    cd().plate {
+        boundary(p1) {
+            arc(p2, new Vec(5, -1, 1))
+            edge(p3)
+            arc(p4, new Vec(5, 11, 1))
+            edge(p1)
+        }
+        // a ridge across the plate
+        curve(new Vec(2, 5, 1)) {
+            arc(new Vec(8, 5, 1), new Vec(5, 5, 4))
+        }
+    }
+}
+
+static CadDslSolid solidUnderPlate() {
+    plateWithInnerCurve().prism(new Vec(0, 0, -2))
+}
+----
+
+.Plate Result
+image::cad-plate.png[]
+
 === Assemblies
 
 `assembly([name]) { ... }` assembles parts and sub-assemblies:

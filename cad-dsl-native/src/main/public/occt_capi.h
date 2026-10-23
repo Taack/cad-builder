@@ -471,6 +471,11 @@ OCCT_CAPI BRepBuilderAPI_MakeFace *new_BRepBuilderAPI_MakeFace__BRepBuilderAPI_M
 OCCT_CAPI BRepBuilderAPI_MakeFace *new_BRepBuilderAPI_MakeFace__s_um_uM_vm_vM_Tol(
     const OCCT_HANDLE(Geom_Surface) *S, double UMin, double UMax, double VMin, double VMax, double TolDegen);
 
+/* Face of S bounded by W, whose edges need no curve on S: ShapeFix_Face projects them onto S and orients W
+   so that it bounds the inside of the face. */
+OCCT_CAPI TopoDS_Face *new_TopoDS_Face__ShapeFix_Face__surface_wire_precision_maxTol(
+    const OCCT_HANDLE(Geom_Surface) *S, const TopoDS_Wire *W, double precision, double maxTolerance);
+
 OCCT_CAPI void _BRepBuilderAPI_MakeFace__Init(BRepBuilderAPI_MakeFace *MF, const OCCT_HANDLE(Geom_Surface) *S, int Bound, double TolDegen);
 
 OCCT_CAPI void _BRepBuilderAPI_MakeFace__Add__BRepBuilderAPI_MakeWire(BRepBuilderAPI_MakeFace *MF, BRepBuilderAPI_MakeWire *W);

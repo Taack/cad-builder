@@ -126,6 +126,19 @@ class CadDsl extends CadDslSolid implements CadDslBase {
     }
 
     /**
+     * Make a face by filling a 3D contour with a smooth (plate) surface, see {@link CadDslPlate}.
+     * @param options   Optional {@link PlateOptions} settings, by name: degree, pointsOnCurve, iterations,
+     *                  tolerance, maxSegments, maxDegree
+     */
+    CadDslFace plate(Map<String, ? extends Number> options = [:], @DelegatesTo(value = CadDslPlate, strategy = Closure.DELEGATE_FIRST) Closure c) {
+        visitor.visitPlate(new PlateOptions(options))
+        c.delegate = new CadDslPlate(visitor: visitor)
+        c.call()
+        visitor.visitPlateEnd()
+        new CadDslFace(visitor: visitor)
+    }
+
+    /**
      * Repeat the solids made in the closure count times, evenly spaced around axis through the current position.
      * The copies join the enclosing boolean operation (fuse, cut, common), so use it inside one.
      * @param count Total number of instances, the original included
