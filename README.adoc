@@ -287,6 +287,9 @@ void "Spring"() {
 .Spring Result
 image::cad-spring.png[]
 
+.Bottle Neck Threaded with `thruSection` (`BottleTest.simpleThreading`)
+image::cad-bottle-thru-section.png[]
+
 .Bottle Threading
 [source,groovy]
 ----
