@@ -21,7 +21,7 @@ java {
 
 dependencies {
     // Closures and @DelegatesTo are part of the DSL API
-    api 'org.apache.groovy:groovy:5.0.4'
+    api 'org.apache.groovy:groovy:6.0.0'
     testImplementation platform('org.junit:junit-bom:6.0.3')
     testImplementation 'org.junit.jupiter:junit-jupiter'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
