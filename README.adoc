@@ -1,27 +1,59 @@
 = DSL for CAD Bodies and Assemblies
 :icons: font
+:toc:
+:toclevels: 2
 
 The purpose of this tool is to share 3D parts and assemblies like java class binaries.
 
-As of today, the DSL is not complete to define bodies, and assemblies place and animate parts without solver.
+The DSL does not cover every way to define a body yet, and assemblies place and animate parts without a solver.
 
 .The OCCT bottle tutorial, written with the DSL (`BottleTest`)
 image::cad-bottle.png[]
 
 == Modules
 
-* `cad-dsl`: the DSL, in pure Groovy. Models only need it to compile, and it builds without OCCT.
-* `cad-dsl-occt`: the Open CASCADE kernel running the DSL (`CadDslVisitor`), with the jextract bindings and the low-level `binding` and `builder` code.
+* `cad-dsl`: the DSL (`org.taack.cad.dsl`), in pure Groovy. Models only need it to compile, and it builds without OCCT.
+* `cad-dsl-occt`: the Open CASCADE kernel running the DSL (`org.taack.cad.occt`, with `CadDslVisitor`), and the jextract bindings.
+  It also holds two low-level packages, not meant for models:
+** `org.taack.cad.builder`, a builder API to try what OCCT can do before it gets into the DSL;
+** `org.taack.cad.binding` (tests), direct calls to the OCCT symbols bound by jextract.
 * `cad-dsl-native`: the C API over OCCT, loaded by `cad-dsl-occt`.
 
 The DSL finds its kernel at runtime with `ServiceLoader` (`org.taack.cad.dsl.kernel.CadKernel`), so `cd()` works as soon as
 `cad-dsl-occt` is on the classpath and `cad-dsl-native` in `java.library.path` (see <<Native Library>>).
 
+== Building
+
+`./gradlew cad-dsl:build` only needs a JDK. The native part requires https://github.com/Open-Cascade-SAS/OCCT[Open CASCADE Technology] 8.0 (C++17).
+Use your distribution package if it ships 8.0, otherwise build it from source:
+
+.Build OCCT 8.0.1 into a local prefix
+[source,bash]
+----
+git clone --depth 1 --branch V8_0_1 https://github.com/Open-Cascade-SAS/OCCT.git occt
+cmake -S occt -B occt/build -G Ninja -DCMAKE_BUILD_TYPE=Release \
+      -DCMAKE_INSTALL_PREFIX=$HOME/.local/occt-8.0.1 -DUSE_FREETYPE=ON -DUSE_TBB=ON
+cmake --build occt/build && cmake --install occt/build
+----
+
+Gradle looks for OCCT in `-PocctHome=<prefix>`, then the `OCCT_HOME` environment variable,
+then `/usr` (Linux) or `/opt/homebrew` (macOS). It links every `TK*` toolkit found in `<prefix>/lib`.
+To avoid passing it each time, add `occtHome=/home/<you>/.local/occt-8.0.1` to `~/.gradle/gradle.properties`.
+
+.Run the tests
+[source,bash]
+----
+./gradlew -PocctHome=$HOME/.local/occt-8.0.1 cad-dsl-occt:test
+./gradlew clean <1>
+----
+
+<1> To replay tests, you have to clean the env.
+
 == Scripts
 
 `cad-dsl` runs a model written as a Groovy script, without any project or test around it:
 
-[bash]
+[source,bash]
 ----
 ./gradlew :cad-dsl-occt:installDist   # or distZip, to share it
 cad-dsl-occt/build/install/cad-dsl/bin/cad-dsl samples/pillow-block.groovy             # <1>
@@ -33,7 +65,7 @@ cad-dsl-occt/build/install/cad-dsl/bin/cad-dsl samples/pillow-block.groovy block
 
 `cad-dsl` passes `CAD_DSL_OPTS` and `JAVA_OPTS` to the JVM: set `java.library.path` there (see <<Native Library>>).
 
-[bash]
+[source,bash]
 ----
 export CAD_DSL_OPTS="-Djava.library.path=$PWD/cad-dsl-native/build/lib/main/release"
 ----
@@ -53,118 +85,21 @@ cd().position(new Vec(0, 0, 1)) {
 To get code completion, write the imports anyway (see `samples/pillow-block.groovy`) and open the scripts
 in a project depending on `org.taack.cad:cad-dsl` only.
 
-== Building
+== DSL
 
-`./gradlew cad-dsl:build` only needs a JDK. The native part requires https://github.com/Open-Cascade-SAS/OCCT[Open CASCADE Technology] 8.0 (C++17).
-Use your distribution package if it ships 8.0, otherwise build it from source:
+WARNING: The DSL is evolving.
 
-.Build OCCT 8.0.1 into a local prefix
-[bash]
-----
-git clone --depth 1 --branch V8_0_1 https://github.com/Open-Cascade-SAS/OCCT.git occt
-cmake -S occt -B occt/build -G Ninja -DCMAKE_BUILD_TYPE=Release \
-      -DCMAKE_INSTALL_PREFIX=$HOME/.local/occt-8.0.1 -DUSE_FREETYPE=ON -DUSE_TBB=ON
-cmake --build occt/build && cmake --install occt/build
-----
-
-Gradle looks for OCCT in `-PocctHome=<prefix>`, then the `OCCT_HOME` environment variable,
-then `/usr` (Linux) or `/opt/homebrew` (macOS). It links every `TK*` toolkit found in `<prefix>/lib`.
-To avoid passing it each time, add `occtHome=/home/<you>/.local/occt-8.0.1` to `~/.gradle/gradle.properties`.
-
-.Run the tests
-[bash]
-----
-./gradlew -PocctHome=$HOME/.local/occt-8.0.1 cad-dsl-occt:test
-./gradlew clean <1>
-----
-
-<1> To replay tests, you have to clean the env.
+It takes inspiration from https://github.com/CadQuery/cadquery[CadQuery], in Groovy. The tests in
+`cad-dsl-occt/src/test/groovy/org/taack/cad/dsl` give an overview of its constructions; the examples below come from them.
 
 `display()` opens the shape in an interactive OCCT viewer window, `display("x.png")` renders it off-screen
 (the images of this README are made this way), and `display("x.step")` / `display("x.stl")` export it.
 
 NOTE: Without FreeImage support in OCCT (`-DUSE_FREEIMAGE=ON`), `display("x.png")` writes PPM data whatever the extension.
 
-== Native Library
+=== A First Part
 
-`cad-dsl-occt` calls OCCT through `cad-dsl-native`, a shared library built by `./gradlew :cad-dsl-native:linkRelease`
-into `cad-dsl-native/build/lib/main/release/`. It is not in the jar: the JVM loads it with
-`System.loadLibrary("cad-dsl-native")`, from `java.library.path`.
-
-Two things must then be found at runtime:
-
-. `cad-dsl-native` itself, by the JVM: put its directory in `java.library.path`.
-. The OCCT libraries it links (every `TK*` toolkit of the install, and their own dependencies such as TBB, FreeType or Tcl/Tk), by the system loader.
-On Linux and macOS, `cad-dsl-native` remembers the OCCT `lib` directory it was linked with (rpath),
-so nothing has to be set on the machine where it was built.
-
-The tests and `./gradlew :cad-dsl-occt:run` set `java.library.path` themselves.
-Everywhere else, pass it to the JVM, along with `--enable-native-access=ALL-UNNAMED` to avoid the restricted method warnings:
-
-[cols="1,3"]
-|===
-| Context | Setting
-
-| `cad-dsl` launcher
-| `CAD_DSL_OPTS="-Djava.library.path=<dir>"`
-
-| `java`
-| `java --enable-native-access=ALL-UNNAMED -Djava.library.path=<dir> -cp ... MyModel`
-
-| Gradle project using the artifacts
-| `tasks.withType(JavaExec).configureEach { systemProperty 'java.library.path', '<dir>' }`, and the same in `test { }`
-
-| IntelliJ run configuration
-| VM options: `-Djava.library.path=<dir> --enable-native-access=ALL-UNNAMED`
-|===
-
-When the library is missing, the first model fails with
-`UnsatisfiedLinkError: no cad-dsl-native in java.library.path: <the directories searched>`;
-when OCCT is missing, with an `UnsatisfiedLinkError` naming the OCCT library not found (e.g. `libTKernel.so.8.0: cannot open shared object file`).
-
-=== Linux
-
-* Library: `libcad-dsl-native.so`.
-* `java.library.path` defaults to `LD_LIBRARY_PATH` followed by the system directories (`/usr/lib64:/lib64:/lib:/usr/lib`),
-so `LD_LIBRARY_PATH=<dir>` works as well as `-Djava.library.path=<dir>`.
-* OCCT: found through the rpath on the build machine. On another machine, install the same OCCT version
-either in a system directory (distribution package, or a prefix registered with `ldconfig`),
-or anywhere and add its `lib` directory to `LD_LIBRARY_PATH`.
-
-=== macOS
-
-* Library: `libcad-dsl-native.dylib`. OCCT is looked for in `/opt/homebrew` by default (`brew install opencascade`, if it ships 8.0).
-* Pass `-Djava.library.path=<dir>` explicitly.
-* OCCT: Homebrew libraries are referenced by their absolute path, and a self-built OCCT through the rpath,
-so the build machine needs nothing more. On another machine, install OCCT at the same place,
-or add its `lib` directory to `DYLD_LIBRARY_PATH`.
-* System Integrity Protection removes the `DYLD_*` variables when launching protected programs such as `/usr/bin/java`:
-start `$JAVA_HOME/bin/java` (as the `cad-dsl` launcher does when `JAVA_HOME` is set) rather than the `/usr/bin` one.
-
-=== Windows
-
-* `cad-dsl-native` cannot be built on Windows yet: `cad-dsl-native/build.gradle` only knows the GCC/Clang linker options
-and the `.so` / `.dylib` OCCT libraries. The DSL (`cad-dsl`) builds and completes there like anywhere.
-* Once built, the library would be `cad-dsl-native.dll`, loaded the same way from `java.library.path`, which defaults to the directories of `PATH`.
-Windows has no rpath: the `bin` directory of the OCCT install (e.g. `win64/vc14/bin`), and those of the third party DLLs it was built with, must be in `PATH`.
-
-== Native Bindings
-
-The Groovy code calls OCCT through a C API generated by jextract from
-`cad-dsl-native/src/main/public/occt_capi.h`. This header is the only declaration of the
-exported functions: the C++ implementation in `cad-dsl-native/src/main/cpp/capi/` includes it,
-so a signature mismatch is a compile error.
-
-* OCCT objects are opaque pointers; `OCCT_HANDLE(T)` is a heap-allocated `occ::handle<T>`.
-* Release objects with `delete_<Type>`, handles with `delete_handle_<Type>`, and `double` arrays with `occt_free_doubles`.
-* Flags are `int` (0 / 1).
-* C++ exceptions never cross the boundary: a failing call returns `NULL` / `0`, and `occt_last_error()` gives the message.
-
-== Sample
-
-Get inspiration from https://github.com/CadQuery/cadquery[CAD Query], but using Groovy DSL.
-
-.Sample Code
+.Pillow Block with Counterbored Holes and Prism
 [source,groovy]
 ----
 @Test
@@ -181,25 +116,14 @@ void "Pillow Block With Counterbored Holes and Prism"() {
         circle(centerHoleDia)
     }.toFace().prism(cboreHoleDiameter).display()
 }
-
 ----
 
-
-WARNING: DSL is evolving
-
-.Result
+.Pillow Block Result
 image::cad-pillow-block.png[]
 
-== Packages
+=== Boolean Operations
 
-* `org.taack.cad.dsl` (`cad-dsl`) using the visitor pattern to build the DSL. This should be used in production.
-* `org.taack.cad.occt` (`cad-dsl-occt`) the OCCT visitor and kernel behind the DSL.
-* `org.taack.cad.binding` (`cad-dsl-occt` tests) classes use direct OCCT symbol binding using JExtract. It is considered low-level, and should not be used when composing a new body.
-* `org.taack.cad.builder` (`cad-dsl-occt`) using the builder pattern, quick way to test builder limitation, this step helps to build a good DSL. This package should not be directly used.
-
-== DSL Tests
-
-DSL Tests are localised `cad-dsl-occt/src/test/groovy/org/taack/cad/dsl` it could give an overview of `cad-dsl` constructions.
+`cut { ... }`, `fuse { ... }` and `common { ... }` combine the current solid with the solids made in their closure.
 
 .Cut 3 Boxes
 [source,groovy]
@@ -265,7 +189,7 @@ void "Test mix fuse - common - fuse"() {
 }
 ----
 
-.Fuse Results
+.Fuse Result
 image::cad-fuse.png[]
 
 === Helix
@@ -287,7 +211,9 @@ void "Spring"() {
 .Spring Result
 image::cad-spring.png[]
 
-.Bottle Threading
+Swept in a `fuse`, a trapezoid profile threads the neck of the bottle:
+
+.Bottle Threading with `helix`
 [source,groovy]
 ----
 static CadDsl helixThreading(CadDsl s) {
@@ -313,7 +239,7 @@ static CadDsl helixThreading(CadDsl s) {
 }
 ----
 
-.Threaded Bottle Neck
+.Bottle Neck Threaded with `helix`
 image::cad-bottle-neck.png[]
 
 === Wings and Propellers
@@ -386,6 +312,110 @@ void "Three-blade Propeller"() {
 .Propeller Result
 image::cad-propeller.png[]
 
+=== Thru Sections
+
+`thruSection { ... }` lofts a solid through closed wires drawn on surfaces, in the order they are declared. Where a
+wing lofts flat sections, it follows a curved face. Like `helix`, put it in a `fuse`, `cut` or `common` to join the
+current solid.
+
+* `cylindricalSurface(radius)` sets the surface the next wires are drawn on: a cylinder around the current direction,
+  through the current position. Set inside `position(...) { ... }`, it is kept once the position ends.
+* `wireFromSurface { ... }` draws a wire on that surface with the usual 2D edges, in the (u, v) parameters of the
+  surface. On a cylinder, `u` is the angle around the axis in radians, and `v` the distance along the axis from the
+  position: a straight edge winds around the cylinder as a helix.
+* `trimmed(curve, u1, u2)` keeps the part of a closed curve (`ellipse`, `circle`) between two of its parameters, as an
+  edge of the wire; `start` and `end` give its ends. The closed curve itself is a construction, not part of the wire.
+
+`ellipse(dir, majorRadius, minorRadius)` is centered on the current point, its major axis along `dir`.
+
+The OCCT bottle tutorial threads the neck this way. On two coaxial cylinders, a wire goes from a half ellipse back to
+its start: the chord winds around the neck, and the arc bulges beside it. The outer ellipse is a quarter as thick as
+the inner one, so the loft tapers from the neck to the crest of the thread.
+
+.Bottle Threading with `thruSection`
+[source,groovy]
+----
+static CadDsl simpleThreading(CadDsl s) {
+    double aMajor = 2 * PI
+    double aMinor = myNeckHeight / 10
+    Vec2d pos = new Vec2d(2 * PI, myNeckHeight / 2)
+    Vec2d dir = new Vec2d(2 * PI, myNeckHeight / 4)
+
+    s.fuse {
+        thruSection {
+            position(new Vec(myHeight)) {
+                direction(new Vec(1))
+                cylindricalSurface(myNeckRadius * 0.99)
+            }
+
+            wireFromSurface {
+                to(pos)
+                ITrimmable2d thread = trimmed(ellipse(dir, aMajor, aMinor), 0, PI)
+                edge(thread.start)
+            }
+
+            position(new Vec(myHeight)) {
+                direction(new Vec(1))
+                cylindricalSurface(myNeckRadius * 1.05)
+            }
+
+            wireFromSurface {
+                to(pos)
+                ITrimmable2d thread = trimmed(ellipse(dir, aMajor, aMinor / 4), 0, PI)
+                edge(thread.start)
+            }
+        }
+    }.toCadDsl()
+}
+----
+
+.Bottle Neck Threaded with `thruSection`
+image::cad-bottle-thru-section.png[]
+
+=== Plate Surfaces
+
+`plate { ... }` fills a 3D contour with a smooth surface and returns it as a face, so `prism(...)` or `revolution(...)`
+make a solid of it. Like the sections of a wing, its constraints are drawn relative to the current position:
+
+* `boundary(from) { ... }` draws the contour, a closed wire drawn as with `wireFrom(Vec)` (`edge`, `arc`), once; the
+  face is trimmed by it, whatever its number of sides;
+* `curve(from) { ... }` draws a curve the surface passes through, as many as needed;
+* `through(points...)` makes the surface pass through points.
+
+The constraints are positional (G0). `plate(degree: 3, pointsOnCurve: 15, iterations: 2, tolerance: 1e-4,
+maxSegments: 9, maxDegree: 8) { ... }` tunes the plate surface and its BSpline approximation; these are the defaults.
+
+.Solid Under a Plate Surface
+[source,groovy]
+----
+static CadDslFace plateWithInnerCurve() {
+    Vec p1 = new Vec(0, 0, 0)
+    Vec p2 = new Vec(10, 0, 0)
+    Vec p3 = new Vec(10, 10, 0)
+    Vec p4 = new Vec(0, 10, 0)
+
+    cd().plate {
+        boundary(p1) {
+            arc(p2, new Vec(5, -1, 1))
+            edge(p3)
+            arc(p4, new Vec(5, 11, 1))
+            edge(p1)
+        }
+        // a ridge across the plate
+        curve(new Vec(2, 5, 1)) {
+            arc(new Vec(8, 5, 1), new Vec(5, 5, 4))
+        }
+    }
+}
+
+static CadDslSolid solidUnderPlate() {
+    plateWithInnerCurve().prism(new Vec(0, 0, -2))
+}
+----
+
+.Plate Result
+image::cad-plate.png[]
+
 === Assemblies
 
 `assembly([name]) { ... }` assembles parts and sub-assemblies:
@@ -408,6 +438,7 @@ farthest along Z, `butX(pos)` the face facing -X closest to `pos`, with the orig
 `axis()` is on the axis of the cylindrical face of largest radius (a shaft, a hole), `axis(pos)` of the one closest to
 `pos`: its z is the axis direction, pointing to +Z (else +Y, else +X) in the part coordinates, and its origin the start
 of the face along the axis, or `pos` projected on it.
+
 On a part (or, in `place`, without receiver: the part placed) they are in the part coordinates; on an instance, in the
 coordinates of its assembly. `instance.at(connector)` brings the connector of an instance inside a sub-assembly to the
 coordinates of the assembly where the sub-assembly is placed. A connector is adjusted with `offset(distance)` along its
@@ -659,16 +690,88 @@ NOTE: See https://github.com/Taack/cad-dsl-app/blob/main/cad-dsl-linux-app-x86-6
 
 Build `cad-dsl-native` for your platform, and put its directory in `java.library.path`.
 
-=== Sample App using artifact
+=== Sample App Using the Artifacts
 
-You can download a sample app https://github.com/Taack/cad-dsl-app/tree/main/cad-dsl-linux-app-x86-64[cad-dsl-linux-app-x86-64]
+You can download a sample app: https://github.com/Taack/cad-dsl-app/tree/main/cad-dsl-linux-app-x86-64[cad-dsl-linux-app-x86-64].
 
-== Code completion
+=== Code Completion
 
-Your IDE has to support Groovy `@DelegatesTo` must be supported.
-
-The language is statically typed. Intellij IDE Community version should do it.
-
-Completion only needs `cad-dsl` on the classpath, neither OCCT nor native code.
+The DSL is statically typed: completion needs an IDE supporting Groovy `@DelegatesTo`, such as IntelliJ IDEA Community.
+It only needs `cad-dsl` on the classpath, neither OCCT nor native code.
 
 video::https://github.com/user-attachments/assets/c4763c7e-746c-4a55-a299-8d4375b2f001[]
+
+== Native Library
+
+`cad-dsl-occt` calls OCCT through `cad-dsl-native`, a shared library built by `./gradlew :cad-dsl-native:linkRelease`
+into `cad-dsl-native/build/lib/main/release/`. It is not in the jar: the JVM loads it with
+`System.loadLibrary("cad-dsl-native")`, from `java.library.path`.
+
+Two things must then be found at runtime:
+
+. `cad-dsl-native` itself, by the JVM: put its directory in `java.library.path`.
+. The OCCT libraries it links (every `TK*` toolkit of the install, and their own dependencies such as TBB, FreeType or Tcl/Tk), by the system loader.
+On Linux and macOS, `cad-dsl-native` remembers the OCCT `lib` directory it was linked with (rpath),
+so nothing has to be set on the machine where it was built.
+
+The tests and `./gradlew :cad-dsl-occt:run` set `java.library.path` themselves.
+Everywhere else, pass it to the JVM, along with `--enable-native-access=ALL-UNNAMED` to avoid the restricted method warnings:
+
+[cols="1,3"]
+|===
+| Context | Setting
+
+| `cad-dsl` launcher
+| `CAD_DSL_OPTS="-Djava.library.path=<dir>"`
+
+| `java`
+| `java --enable-native-access=ALL-UNNAMED -Djava.library.path=<dir> -cp ... MyModel`
+
+| Gradle project using the artifacts
+| `tasks.withType(JavaExec).configureEach { systemProperty 'java.library.path', '<dir>' }`, and the same in `test { }`
+
+| IntelliJ run configuration
+| VM options: `-Djava.library.path=<dir> --enable-native-access=ALL-UNNAMED`
+|===
+
+When the library is missing, the first model fails with
+`UnsatisfiedLinkError: no cad-dsl-native in java.library.path: <the directories searched>`;
+when OCCT is missing, with an `UnsatisfiedLinkError` naming the OCCT library not found (e.g. `libTKernel.so.8.0: cannot open shared object file`).
+
+=== Linux
+
+* Library: `libcad-dsl-native.so`.
+* `java.library.path` defaults to `LD_LIBRARY_PATH` followed by the system directories (`/usr/lib64:/lib64:/lib:/usr/lib`),
+so `LD_LIBRARY_PATH=<dir>` works as well as `-Djava.library.path=<dir>`.
+* OCCT: found through the rpath on the build machine. On another machine, install the same OCCT version
+either in a system directory (distribution package, or a prefix registered with `ldconfig`),
+or anywhere and add its `lib` directory to `LD_LIBRARY_PATH`.
+
+=== macOS
+
+* Library: `libcad-dsl-native.dylib`. OCCT is looked for in `/opt/homebrew` by default (`brew install opencascade`, if it ships 8.0).
+* Pass `-Djava.library.path=<dir>` explicitly.
+* OCCT: Homebrew libraries are referenced by their absolute path, and a self-built OCCT through the rpath,
+so the build machine needs nothing more. On another machine, install OCCT at the same place,
+or add its `lib` directory to `DYLD_LIBRARY_PATH`.
+* System Integrity Protection removes the `DYLD_*` variables when launching protected programs such as `/usr/bin/java`:
+start `$JAVA_HOME/bin/java` (as the `cad-dsl` launcher does when `JAVA_HOME` is set) rather than the `/usr/bin` one.
+
+=== Windows
+
+* `cad-dsl-native` cannot be built on Windows yet: `cad-dsl-native/build.gradle` only knows the GCC/Clang linker options
+and the `.so` / `.dylib` OCCT libraries. The DSL (`cad-dsl`) builds and completes there like anywhere.
+* Once built, the library would be `cad-dsl-native.dll`, loaded the same way from `java.library.path`, which defaults to the directories of `PATH`.
+Windows has no rpath: the `bin` directory of the OCCT install (e.g. `win64/vc14/bin`), and those of the third party DLLs it was built with, must be in `PATH`.
+
+== Native Bindings
+
+The Groovy code calls OCCT through a C API generated by jextract from
+`cad-dsl-native/src/main/public/occt_capi.h`. This header is the only declaration of the
+exported functions: the C++ implementation in `cad-dsl-native/src/main/cpp/capi/` includes it,
+so a signature mismatch is a compile error.
+
+* OCCT objects are opaque pointers; `OCCT_HANDLE(T)` is a heap-allocated `occ::handle<T>`.
+* Release objects with `delete_<Type>`, handles with `delete_handle_<Type>`, and `double` arrays with `occt_free_doubles`.
+* Flags are `int` (0 / 1).
+* C++ exceptions never cross the boundary: a failing call returns `NULL` / `0`, and `occt_last_error()` gives the message.

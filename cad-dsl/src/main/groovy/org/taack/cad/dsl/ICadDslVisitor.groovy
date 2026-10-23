@@ -139,6 +139,16 @@ interface ICadDslVisitor {
 
     void visitWingEnd()
 
+    void visitPlate(PlateOptions options)
+
+    void visitPlateCurve(Vec from, boolean boundary)
+
+    void visitPlateCurveEnd(Vec from)
+
+    void visitPlateThrough(Vec point)
+
+    void visitPlateEnd()
+
     void visitCircularPattern()
 
     void visitCircularPatternEnd(int count, Vec axis)

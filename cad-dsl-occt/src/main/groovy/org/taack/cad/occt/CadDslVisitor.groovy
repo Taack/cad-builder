@@ -3,6 +3,7 @@ package org.taack.cad.occt
 import groovy.transform.CompileStatic
 import org.taack.cad.builder.*
 import org.taack.cad.dsl.ICadDslVisitor
+import org.taack.cad.dsl.PlateOptions
 import org.taack.cad.dsl.geom.*
 
 import java.lang.foreign.Arena
@@ -31,6 +32,8 @@ class CadDslVisitor implements ICadDslVisitor {
             println "    " * inc + s
         }
     }
+    private static final double THRU_SECTIONS_PRECISION = 1.0e-06d
+
     // Owns every native object created for this model (see Natives)
     private final Arena nativeScope = Natives.openScope()
 
@@ -39,6 +42,9 @@ class CadDslVisitor implements ICadDslVisitor {
     MemorySegment face
     final List<MemorySegment> makeWires = []
     MemorySegment currentSurface
+    // Surface the wires of a thru section are drawn on; kept apart since leaving a position resets currentSurface
+    MemorySegment sectionSurface
+    final List<MemorySegment> sectionWires = []
     Stack<Vec> fromVecStack = new Stack<>()
 
     Vec getFromVec() {
@@ -77,20 +83,25 @@ class CadDslVisitor implements ICadDslVisitor {
         if (!face) face = own(new_TopoDS_Face__BRepBuilderAPI_MakeFace__gp_Pln(gpPln(direction, 0)), NativeLib::delete_TopoDS_Face)
         currentSurface = own(handle_Geom_Surface__TopoDS_Face(face), NativeLib::delete_handle_Geom_Surface)
         if (!openShapeList.empty) {
-            Vec pos = fromVec ?: new Vec()
-            def makeWire = own(new_BRepBuilderAPI_MakeWire(), NativeLib::delete_BRepBuilderAPI_MakeWire)
-            for (IOpenShape s3d in openShapeList) {
-                def trimmedCurve = OcctGeom.edge(s3d, pos)
-                pos = s3d.to
-//                def arcEdge = new_TopoDS_Edge__BRepBuilderAPI_MakeEdge__Geom_Curve(trimmedCurve)
-//                def arcEdge = new_BRepBuilderAPI_MakeEdge__Geom_Curve(trimmedCurve)
-                _BRepBuilderAPI_MakeWire__Add__BRepBuilderAPI_MakeEdge(makeWire, trimmedCurve)
-            }
-            makeWires << makeWire
+            makeWires << makeWire3d()
         }
         openShapeList.clear()
         fromVecStack.pop()
         Tr.dec("visitFromEnd $fromVec")
+    }
+
+    /**
+     * @return The wire (BRepBuilderAPI_MakeWire) of the open 3D shapes drawn from the current position, which are consumed
+     */
+    private MemorySegment makeWire3d() {
+        Vec pos = fromVec ?: new Vec()
+        def makeWire = own(new_BRepBuilderAPI_MakeWire(), NativeLib::delete_BRepBuilderAPI_MakeWire)
+        for (IOpenShape s3d in openShapeList) {
+            _BRepBuilderAPI_MakeWire__Add__BRepBuilderAPI_MakeEdge(makeWire, OcctGeom.edge(s3d, pos))
+            pos = s3d.to
+        }
+        openShapeList.clear()
+        makeWire
     }
 
     @Override
@@ -108,18 +119,7 @@ class CadDslVisitor implements ICadDslVisitor {
         currentSurface = own(handle_Geom_Surface__TopoDS_Face(face), NativeLib::delete_handle_Geom_Surface)
 
         if (!openShape2dList.empty) {
-            Vec2d pos = fromVec2d ?: new Vec2d()
-
-            def makeWire = own(new_BRepBuilderAPI_MakeWire(), NativeLib::delete_BRepBuilderAPI_MakeWire)
-            for (IOpenShape2d s2d in openShape2dList) {
-                def trimmedCurve = OcctGeom.curve2d(s2d, pos)
-                pos = s2d.to
-                _BRepBuilderAPI_MakeWire__Add__BRepBuilderAPI_MakeEdge(makeWire, own(new_BRepBuilderAPI_MakeEdge__Geom2d_Curve_Geom_Surface(trimmedCurve, currentSurface), NativeLib::delete_BRepBuilderAPI_MakeEdge))
-            }
-
-
-            makeWires << makeWire
-            openShape2dList.clear()
+            makeWires << makeWire2d(currentSurface)
         }
         Tr.cur("visitFromEnd closedShape2dList $closedShape2dList")
         if (!closedShape2dList.empty) {
@@ -133,6 +133,22 @@ class CadDslVisitor implements ICadDslVisitor {
         }
         Tr.dec("visitFromEnd $fromVec2d")
 //        fromVec2d = null
+    }
+
+    /**
+     * @return The wire (BRepBuilderAPI_MakeWire) of the open 2D shapes drawn on surface, which are consumed
+     */
+    private MemorySegment makeWire2d(MemorySegment surface) {
+        Vec2d pos = fromVec2d ?: new Vec2d()
+
+        def makeWire = own(new_BRepBuilderAPI_MakeWire(), NativeLib::delete_BRepBuilderAPI_MakeWire)
+        for (IOpenShape2d s2d in openShape2dList) {
+            def trimmedCurve = OcctGeom.curve2d(s2d, pos)
+            pos = s2d.to
+            _BRepBuilderAPI_MakeWire__Add__BRepBuilderAPI_MakeEdge(makeWire, own(new_BRepBuilderAPI_MakeEdge__Geom2d_Curve_Geom_Surface(trimmedCurve, surface), NativeLib::delete_BRepBuilderAPI_MakeEdge))
+        }
+        openShape2dList.clear()
+        makeWire
     }
 
     @Override
@@ -296,17 +312,24 @@ class CadDslVisitor implements ICadDslVisitor {
 
     @Override
     void visitWireFromSurface() {
-
+        Tr.ind("visitWireFromSurface")
     }
 
     @Override
     void visitWireFromSurfaceEnd() {
-
+        MemorySegment wire = ref_TopoDS_Shape__BRepBuilderAPI_MakeWire__Shape(makeWire2d(sectionSurface))
+        _BRepLib__BuildCurves3d__TopoDS_Shape(wire)
+        sectionWires << wire
+        // Only open shapes make the wire; closed ones were constructions for them
+        closedShape2dList.clear()
+        Tr.dec("visitWireFromSurfaceEnd sectionWires: $sectionWires")
     }
 
     @Override
-    ITrimmable2d visitTrimmed(IClosedShape2d curve, double from, double tp, boolean reverse) {
-
+    ITrimmable2d visitTrimmed(IClosedShape2d curve, double from, double to, boolean reverse) {
+        TrimmedCurve2d trimmed = new TrimmedCurve2d(curve, from, to, reverse)
+        openShape2dList << trimmed
+        trimmed
     }
 
     @Override
@@ -333,7 +356,7 @@ class CadDslVisitor implements ICadDslVisitor {
     @Override
     void visitCylindricalSurface(double radius) {
         def ax2 = own(new_gp_Ax2__gp_Pnt_gp_Dir(gpPnt(fromVec), gpDir(direction)), NativeLib::delete_gp_Ax2)
-        currentSurface = own(handle_Geom_CylindricalSurface__ax2_radius(ax2, radius), NativeLib::delete_handle_Geom_CylindricalSurface)
+        sectionSurface = own(handle_Geom_CylindricalSurface__ax2_radius(ax2, radius), NativeLib::delete_handle_Geom_CylindricalSurface)
     }
 
     @Override
@@ -571,6 +594,80 @@ class CadDslVisitor implements ICadDslVisitor {
         if (!this.shape) this.shape = shape
     }
 
+    private static final int PLATE_G0 = 0
+    // The approximation may deviate from the plate surface by this many times its G0 error
+    private static final double PLATE_DEVIATION_PER_G0_ERROR = 10
+
+    // Plate being built: its constraints are drawn relative to plateOrigin, its face is trimmed by plateBoundary
+    private MemorySegment plateBuilder
+    private PlateOptions plateOptions
+    private Vec plateOrigin
+    private MemorySegment plateBoundary
+    private boolean plateDrawingBoundary
+
+    @Override
+    void visitPlate(PlateOptions options) {
+        Tr.ind "visitPlate from: $fromVec, $options"
+        plateOptions = options
+        plateOrigin = fromVec
+        plateBoundary = null
+        plateBuilder = own(new_GeomPlate_BuildPlateSurface__degree_NbPt_NbIter(options.degree, options.pointsOnCurve, options.iterations), NativeLib::delete_GeomPlate_BuildPlateSurface)
+    }
+
+    @Override
+    void visitPlateCurve(Vec from, boolean boundary) {
+        Tr.ind "visitPlateCurve from: $from, boundary: $boundary"
+        if (boundary && plateBoundary) throw new IllegalStateException("plate: a single boundary expected")
+        plateDrawingBoundary = boundary
+        fromVecStack << from + plateOrigin
+    }
+
+    @Override
+    void visitPlateCurveEnd(Vec from) {
+        if (openShapeList.empty) throw new IllegalStateException("plate curve from $from: nothing drawn")
+        def wire = ref_TopoDS_Wire__BRepBuilderAPI_MakeWire__Wire(makeWire3d())
+        fromVecStack.pop()
+        if (plateDrawingBoundary) plateBoundary = wire
+
+        def explorer = own(new_BRepTools_WireExplorer(), NativeLib::delete_BRepTools_WireExplorer)
+        for (_BRepTools_WireExplorer__Init__TopoDS_Wire(explorer, wire); b_BRepTools_WireExplorer__More(explorer) != 0; _BRepTools_WireExplorer__Next(explorer)) {
+            def edge = own(_BRepTools_WireExplorer__Current(explorer), NativeLib::delete_TopoDS_Edge)
+            def curve = own(handle_BRepAdaptor_Curve(), NativeLib::delete_handle_BRepAdaptor_Curve)
+            _BRepAdaptor_Curve__Initialize(curve, edge)
+            def constraint = own(handle_BRepFill_CurveConstraint__Adaptor3d_Curve_Tang(curve, PLATE_G0), NativeLib::delete_handle_BRepFill_CurveConstraint)
+            _GeomPlate_BuildPlateSurface__Add__BRepFill_CurveConstraint(plateBuilder, constraint)
+        }
+        Tr.dec "visitPlateCurveEnd"
+    }
+
+    @Override
+    void visitPlateThrough(Vec point) {
+        Tr.cur "visitPlateThrough $point"
+        def constraint = own(handle_GeomPlate_PointConstraint__gp_Pnt_order(gpPnt(point + plateOrigin), PLATE_G0), NativeLib::delete_handle_GeomPlate_PointConstraint)
+        _GeomPlate_BuildPlateSurface__Add__Cont(plateBuilder, constraint)
+    }
+
+    @Override
+    void visitPlateEnd() {
+        if (!plateBoundary) throw new IllegalStateException("plate: boundary expected")
+        _GeomPlate_BuildPlateSurface__Perform(plateBuilder)
+        def plateSurface = own(handle_GeomPlate_Surface__GeomPlate_BuildPlateSurface__Surface(plateBuilder), NativeLib::delete_handle_GeomPlate_Surface)
+        if (plateSurface == MemorySegment.NULL) throw new IllegalArgumentException("plate: ${lastError()}")
+
+        double maxDeviation = Math.max(plateOptions.tolerance, PLATE_DEVIATION_PER_G0_ERROR * r_GeomPlate_BuildPlateSurface__G0Error(plateBuilder))
+        def approx = own(new_GeomPlate_MakeApprox__SurfPlate_Tol3d_Nbmax_dgmax_dmax_CritOrder(plateSurface, plateOptions.tolerance, plateOptions.maxSegments, plateOptions.maxDegree, maxDeviation, PLATE_G0), NativeLib::delete_GeomPlate_MakeApprox)
+        def surface = own(handle_Geom_Surface__GeomPlate_MakeApprox__Surface(approx), NativeLib::delete_handle_Geom_BSplineSurface)
+        if (surface == MemorySegment.NULL) throw new IllegalArgumentException("plate approximation: ${lastError()}")
+
+        // The boundary lies on the approximation within its deviation
+        face = own(new_TopoDS_Face__ShapeFix_Face__surface_wire_precision_maxTol(surface, plateBoundary, plateOptions.tolerance, maxDeviation), NativeLib::delete_TopoDS_Face)
+        if (face == MemorySegment.NULL) throw new IllegalArgumentException("plate face: ${lastError()}")
+        makeWires.clear()
+        plateBuilder = null
+        plateBoundary = null
+        Tr.dec "visitPlateEnd face: $face"
+    }
+
     // Index in boolShapes.peek() of the first shape of each pattern being built
     private final Stack<Integer> patternStarts = new Stack<>()
 
@@ -606,12 +703,24 @@ class CadDslVisitor implements ICadDslVisitor {
 
     @Override
     void visitThruSection() {
-
+        Tr.ind("visitThruSection")
+        sectionWires.clear()
     }
 
     @Override
     void visitThruSectionEnd() {
+        Tr.dec("visitThruSectionEnd sectionWires: $sectionWires")
+        if (sectionWires.empty) return
+        def thruSections = own(new_BRepOffsetAPI_ThruSections__isSolid_ruled_pres3d(1, 0, THRU_SECTIONS_PRECISION), NativeLib::delete_BRepOffsetAPI_ThruSections)
+        for (MemorySegment wire in sectionWires) {
+            _BRepOffsetAPI_ThruSections__AddWire__TopoDS_Wire(thruSections, wire)
+        }
+        _BRepOffsetAPI_ThruSections__CheckCompatibility__bool(thruSections, 0)
+        def shape = own(new_TopoDS_Shape__Shape__BRepBuilderAPI_MakeShape(thruSections), NativeLib::delete_TopoDS_Shape)
+        sectionWires.clear()
 
+        boolShapes.peek() << shape
+        if (!this.shape) this.shape = shape
     }
 
     @Override
@@ -706,12 +815,13 @@ class CadDslVisitor implements ICadDslVisitor {
         if (fileName) {
             try (Arena arena = Arena.ofConfined()) {
                 MemorySegment t = arena.allocateFrom(fileName)
+                MemorySegment s = shape ?: face
                 if (fileName.endsWith(".step")) {
-                    write_step(this.shape, t)
+                    write_step(s, t)
                 } else if (fileName.endsWith(".stl")) {
-                    write_stl(this.shape, t)
+                    write_stl(s, t)
                 } else
-                    dumpShape(shape, 1920, 1080, t)
+                    dumpShape(s, 1920, 1080, t)
             }
         } else {
             visualize(resultShape() ?: ref_TopoDS_Shape__BRepBuilderAPI_MakeWire__Shape(addCurrentWireNative()))

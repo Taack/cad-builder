@@ -78,4 +78,9 @@ class CadDslFace implements CadDslBase {
         visitor.visitHollowedSolid(thickness.toDouble())
         new CadDsl(visitor: visitor)
     }
+
+    CadDslFace display(String fileName = null) {
+        visitor.display(fileName)
+        this
+    }
 }
