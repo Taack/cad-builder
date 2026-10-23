@@ -22,69 +22,6 @@ image::cad-bottle.png[]
 The DSL finds its kernel at runtime with `ServiceLoader` (`org.taack.cad.dsl.kernel.CadKernel`), so `cd()` works as soon as
 `cad-dsl-occt` is on the classpath and `cad-dsl-native` in `java.library.path` (see <<Native Library>>).
 
-== Building
-
-`./gradlew cad-dsl:build` only needs a JDK. The native part requires https://github.com/Open-Cascade-SAS/OCCT[Open CASCADE Technology] 8.0 (C++17).
-Use your distribution package if it ships 8.0, otherwise build it from source:
-
-.Build OCCT 8.0.1 into a local prefix
-[source,bash]
-----
-git clone --depth 1 --branch V8_0_1 https://github.com/Open-Cascade-SAS/OCCT.git occt
-cmake -S occt -B occt/build -G Ninja -DCMAKE_BUILD_TYPE=Release \
-      -DCMAKE_INSTALL_PREFIX=$HOME/.local/occt-8.0.1 -DUSE_FREETYPE=ON -DUSE_TBB=ON
-cmake --build occt/build && cmake --install occt/build
-----
-
-Gradle looks for OCCT in `-PocctHome=<prefix>`, then the `OCCT_HOME` environment variable,
-then `/usr` (Linux) or `/opt/homebrew` (macOS). It links every `TK*` toolkit found in `<prefix>/lib`.
-To avoid passing it each time, add `occtHome=/home/<you>/.local/occt-8.0.1` to `~/.gradle/gradle.properties`.
-
-.Run the tests
-[source,bash]
-----
-./gradlew -PocctHome=$HOME/.local/occt-8.0.1 cad-dsl-occt:test
-./gradlew clean <1>
-----
-
-<1> To replay tests, you have to clean the env.
-
-== Scripts
-
-`cad-dsl` runs a model written as a Groovy script, without any project or test around it:
-
-[source,bash]
-----
-./gradlew :cad-dsl-occt:installDist   # or distZip, to share it
-cad-dsl-occt/build/install/cad-dsl/bin/cad-dsl samples/pillow-block.groovy             # <1>
-cad-dsl-occt/build/install/cad-dsl/bin/cad-dsl samples/pillow-block.groovy block.step  # <2>
-----
-
-<1> Opens the shape in the viewer.
-<2> The arguments following the script are available as `args`; this sample exports to the file given.
-
-`cad-dsl` passes `CAD_DSL_OPTS` and `JAVA_OPTS` to the JVM: set `java.library.path` there (see <<Native Library>>).
-
-[source,bash]
-----
-export CAD_DSL_OPTS="-Djava.library.path=$PWD/cad-dsl-native/build/lib/main/release"
-----
-
-From Gradle, `./gradlew :cad-dsl-occt:run --args="$PWD/samples/pillow-block.groovy"` sets it to the library just built.
-
-The DSL packages (`org.taack.cad.dsl`, `.geom`, `.helper`), `CadDsl.cd()` and `java.lang.Math` are imported for the script:
-
-.sphere.groovy
-[source,groovy]
-----
-cd().position(new Vec(0, 0, 1)) {
-    sphere(sqrt(4))
-}.display(args ? args[0] : null)
-----
-
-To get code completion, write the imports anyway (see `samples/pillow-block.groovy`) and open the scripts
-in a project depending on `org.taack.cad:cad-dsl` only.
-
 == DSL
 
 WARNING: The DSL is evolving.
@@ -688,11 +625,47 @@ runtimeOnly 'org.taack.cad:cad-dsl-occt:0.1'    // to build them
 
 NOTE: See https://github.com/Taack/cad-dsl-app/blob/main/cad-dsl-linux-app-x86-64/build.gradle[sample-build.gradle] to deal with JMOD files
 
-Build `cad-dsl-native` for your platform, and put its directory in `java.library.path`.
+Build `cad-dsl-native` for your platform (see <<Building>>), and put its directory in `java.library.path`.
 
 === Sample App Using the Artifacts
 
 You can download a sample app: https://github.com/Taack/cad-dsl-app/tree/main/cad-dsl-linux-app-x86-64[cad-dsl-linux-app-x86-64].
+
+=== Scripts
+
+`cad-dsl` runs a model written as a Groovy script, without any project or test around it:
+
+[source,bash]
+----
+./gradlew :cad-dsl-occt:installDist   # or distZip, to share it
+cad-dsl-occt/build/install/cad-dsl/bin/cad-dsl samples/pillow-block.groovy             # <1>
+cad-dsl-occt/build/install/cad-dsl/bin/cad-dsl samples/pillow-block.groovy block.step  # <2>
+----
+
+<1> Opens the shape in the viewer.
+<2> The arguments following the script are available as `args`; this sample exports to the file given.
+
+`cad-dsl` passes `CAD_DSL_OPTS` and `JAVA_OPTS` to the JVM: set `java.library.path` there (see <<Native Library>>).
+
+[source,bash]
+----
+export CAD_DSL_OPTS="-Djava.library.path=$PWD/cad-dsl-native/build/lib/main/release"
+----
+
+From Gradle, `./gradlew :cad-dsl-occt:run --args="$PWD/samples/pillow-block.groovy"` sets it to the library just built.
+
+The DSL packages (`org.taack.cad.dsl`, `.geom`, `.helper`), `CadDsl.cd()` and `java.lang.Math` are imported for the script:
+
+.sphere.groovy
+[source,groovy]
+----
+cd().position(new Vec(0, 0, 1)) {
+    sphere(sqrt(4))
+}.display(args ? args[0] : null)
+----
+
+To get code completion, write the imports anyway (see `samples/pillow-block.groovy`) and open the scripts
+in a project depending on `org.taack.cad:cad-dsl` only.
 
 === Code Completion
 
@@ -700,6 +673,66 @@ The DSL is statically typed: completion needs an IDE supporting Groovy `@Delegat
 It only needs `cad-dsl` on the classpath, neither OCCT nor native code.
 
 video::https://github.com/user-attachments/assets/c4763c7e-746c-4a55-a299-8d4375b2f001[]
+
+== Building
+
+`./gradlew cad-dsl:build` only needs a JDK. The native part requires https://github.com/Open-Cascade-SAS/OCCT[Open CASCADE Technology] 8.0 (C++17).
+Use your distribution package if it ships 8.0, otherwise build it from source:
+
+.Build OCCT 8.0.1 into a local prefix
+[source,bash]
+----
+git clone --depth 1 --branch V8_0_1 https://github.com/Open-Cascade-SAS/OCCT.git occt
+cmake -S occt -B occt/build -G Ninja -DCMAKE_BUILD_TYPE=Release \
+      -DCMAKE_INSTALL_PREFIX=$HOME/.local/occt-8.0.1 -DUSE_FREETYPE=ON -DUSE_TBB=ON
+cmake --build occt/build && cmake --install occt/build
+----
+
+Gradle looks for OCCT in `-PocctHome=<prefix>`, then the `OCCT_HOME` environment variable,
+then `/usr` (Linux) or `/opt/homebrew` (macOS); Windows has no default. It links every `TK*` toolkit found in `<prefix>/lib`.
+To avoid passing it each time, add `occtHome=/home/<you>/.local/occt-8.0.1` to `~/.gradle/gradle.properties`.
+
+.Run the tests
+[source,bash]
+----
+./gradlew -PocctHome=$HOME/.local/occt-8.0.1 cad-dsl-occt:test
+./gradlew clean <1>
+----
+
+<1> To replay tests, you have to clean the env.
+
+[[building-windows]]
+=== Building on Windows
+
+The native part builds with Visual C++ (Visual Studio 2022 or later, with the _Desktop development with C++_ workload),
+which Gradle finds by itself. Build OCCT from a _Developer PowerShell for VS_, which provides CMake and Ninja:
+
+.Build OCCT 8.0.1 on Windows
+[source,powershell]
+----
+git clone --depth 1 --branch V8_0_1 https://github.com/Open-Cascade-SAS/OCCT.git occt
+cmake -S occt -B occt/build -G Ninja -DCMAKE_BUILD_TYPE=Release `
+      -DCMAKE_INSTALL_PREFIX=C:/occt-8.0.1 -DINSTALL_DIR_LAYOUT=Unix `
+      -DBUILD_MODULE_Draw=OFF -DUSE_FREETYPE=OFF
+cmake --build occt/build; cmake --install occt/build
+----
+
+* `INSTALL_DIR_LAYOUT=Unix` installs the headers in `include/opencascade`, the import libraries (`TK*.lib`) in `lib`
+and the DLLs in `bin`, the layout Gradle expects. The default Windows layout (`inc`, `win64/vc14/lib`) is not supported.
+* Turning off the Draw test harness and FreeType avoids the third party libraries (Tcl/Tk, FreeType) that OCCT does not ship:
+the DSL needs neither. To keep them, point `-D3RDPARTY_DIR=<dir>` to their installs.
+
+The OCCT DLLs must be in `PATH` when the tests run (see <<native-library-windows>>):
+
+[source,powershell]
+----
+$env:PATH = "C:\occt-8.0.1\bin;$env:PATH"
+.\gradlew -PocctHome=C:/occt-8.0.1 cad-dsl-occt:test
+----
+
+In `gradle.properties`, write the prefix with forward slashes: `occtHome=C:/occt-8.0.1`.
+Build the library with `.\gradlew :cad-dsl-native:linkRelease` rather than `:cad-dsl-native:build`:
+the C++ unit test (`src/test/cpp`) uses X11 and does not compile on Windows.
 
 == Native Library
 
@@ -757,12 +790,15 @@ or add its `lib` directory to `DYLD_LIBRARY_PATH`.
 * System Integrity Protection removes the `DYLD_*` variables when launching protected programs such as `/usr/bin/java`:
 start `$JAVA_HOME/bin/java` (as the `cad-dsl` launcher does when `JAVA_HOME` is set) rather than the `/usr/bin` one.
 
+[[native-library-windows]]
 === Windows
 
-* `cad-dsl-native` cannot be built on Windows yet: `cad-dsl-native/build.gradle` only knows the GCC/Clang linker options
-and the `.so` / `.dylib` OCCT libraries. The DSL (`cad-dsl`) builds and completes there like anywhere.
-* Once built, the library would be `cad-dsl-native.dll`, loaded the same way from `java.library.path`, which defaults to the directories of `PATH`.
-Windows has no rpath: the `bin` directory of the OCCT install (e.g. `win64/vc14/bin`), and those of the third party DLLs it was built with, must be in `PATH`.
+* Library: `cad-dsl-native.dll`, built with Visual C++ (see <<building-windows>>).
+* `java.library.path` defaults to the directories of `PATH`, so `PATH` works as well as `-Djava.library.path=<dir>`.
+The `cad-dsl.bat` launcher reads `CAD_DSL_OPTS` too: `$env:CAD_DSL_OPTS = "-Djava.library.path=$PWD\cad-dsl-native\build\lib\main\release"`.
+* OCCT: Windows has no rpath. The `bin` directory of the OCCT install, and those of the third party DLLs it was built with,
+must be in `PATH`, on the build machine as on any other.
+When they are missing, loading fails with `UnsatisfiedLinkError: ...cad-dsl-native.dll: Can't find dependent libraries`.
 
 == Native Bindings
 

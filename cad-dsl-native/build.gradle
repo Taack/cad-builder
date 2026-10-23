@@ -10,6 +10,8 @@ version = '0.1'
 
 // OCCT 8.0 install prefix: -PocctHome=<dir>, the OCCT_HOME environment variable, or the platform default.
 def isMac = Os.isFamily(Os.FAMILY_MAC)
+// On Windows, the toolchain is Visual C++, and OCCT is installed with the Unix layout (see README, Building).
+def isWindows = Os.isFamily(Os.FAMILY_WINDOWS)
 def occtHome = (findProperty('occtHome') ?: System.getenv('OCCT_HOME') ?: (isMac ? '/opt/homebrew' : '/usr')) as String
 ext.occtLib = "$occtHome/lib"
 def occtInclude = "$occtHome/include/opencascade"
@@ -17,7 +19,7 @@ def occtInclude = "$occtHome/include/opencascade"
 // Link every toolkit the install provides: the set varies between releases and build options
 // (e.g. TKDEGLTF is only built when RapidJSON is available).
 def occtToolkits = ((file(occtLib).listFiles() ?: []) as List<File>)
-        .collect { it.name =~ /^lib(TK\w+)\.(so|dylib)$/ }
+        .collect { it.name =~ (isWindows ? /^(TK\w+)\.lib$/ : /^lib(TK\w+)\.(so|dylib)$/) }
         .findAll { it.matches() }
         .collect { it.group(1) }
         .sort()
@@ -25,15 +27,20 @@ if (occtToolkits.empty) {
     logger.warn("No OCCT toolkits found in $occtLib, set -PocctHome or OCCT_HOME to an OCCT 8.0 install prefix")
 }
 
-def otherLibs = isMac ? ["X11", "xcb", "Xau", "Xdmcp"] : ["GL", "GLU", "GLX", "GLEW", "X11", "xcb", "Xau", "Xdmcp"]
-
-def linkerLibs = (occtToolkits + otherLibs).collect { "-l$it" }
-if (isMac) {
-    linkerLibs << "-framework"
-    linkerLibs << "OpenGL"
+def occtLinkerArgs
+if (isWindows) {
+    occtLinkerArgs = ["/LIBPATH:$occtLib"] + (occtToolkits + ["user32"]).collect { "${it}.lib" }
+} else {
+    def otherLibs = isMac ? ["X11", "xcb", "Xau", "Xdmcp"] : ["GL", "GLU", "GLX", "GLEW", "X11", "xcb", "Xau", "Xdmcp"]
+    def linkerLibs = (occtToolkits + otherLibs).collect { "-l$it" }
+    if (isMac) {
+        linkerLibs << "-framework"
+        linkerLibs << "OpenGL"
+    }
+    occtLinkerArgs = ["-Xlinker", "-S", "-Bdirect", "-L$occtLib", "-Wl,-rpath,$occtLib"] + linkerLibs
 }
 
-logger.info("OCCT: $occtHome, linkerLibs: ${linkerLibs.join(' ')}")
+logger.info("OCCT: $occtHome, linkerArgs: ${occtLinkerArgs.join(' ')}")
 
 library {
     linkage = [Linkage.SHARED]
@@ -47,17 +54,22 @@ library {
 tasks.withType(CppCompile).configureEach {
     optimized = false
     includes.from occtInclude
-    compilerArgs.add '-std=c++17'
+    if (isWindows) {
+        compilerArgs.add '/std:c++17'
+        // M_PI, and std::min / std::max not shadowed by the windows.h macros, whatever the include order
+        macros.put('_USE_MATH_DEFINES', null)
+        macros.put('NOMINMAX', null)
+    } else {
+        compilerArgs.add '-std=c++17'
+    }
 }
 
 tasks.withType(LinkSharedLibrary).configureEach {
-    // Define toolchain-specific compiler and linker options
-    linkerArgs = ["-Xlinker", "-S", "-Bdirect", "-L$occtLib", "-Wl,-rpath,$occtLib"] + linkerLibs
+    linkerArgs = occtLinkerArgs
 }
 
 tasks.withType(LinkExecutable).configureEach {
-    // Define toolchain-specific compiler and linker options
-    linkerArgs = ["-Xlinker", "-S", "-Bdirect", "-L$occtLib", "-Wl,-rpath,$occtLib"] + linkerLibs
+    linkerArgs = occtLinkerArgs
 }
 
 tasks.register('listSymsPerLib') {
