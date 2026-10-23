@@ -287,10 +287,51 @@ void "Spring"() {
 .Spring Result
 image::cad-spring.png[]
 
-.Bottle Neck Threaded with `thruSection` (`BottleTest.simpleThreading`)
+`thruSection { ... }` lofts a solid through wires drawn on surfaces: `cylindricalSurface(radius)` sets the surface
+at the current position, `wireFromSurface { ... }` draws a wire on it with the usual 2D edges, in its (u, v)
+parameters. `trimmed(curve, u1, u2)` keeps the part of a closed curve between two of its parameters.
+
+.Bottle Threading with `thruSection`
+[source,groovy]
+----
+static CadDsl simpleThreading(CadDsl s) {
+    double aMajor = 2 * PI
+    double aMinor = myNeckHeight / 10
+    Vec2d pos = new Vec2d(2 * PI, myNeckHeight / 2)
+    Vec2d dir = new Vec2d(2 * PI, myNeckHeight / 4)
+
+    s.fuse {
+        thruSection {
+            position(new Vec(myHeight)) {
+                direction(new Vec(1))
+                cylindricalSurface(myNeckRadius * 0.99)
+            }
+
+            wireFromSurface {
+                to(pos)
+                ITrimmable2d thread = trimmed(ellipse(dir, aMajor, aMinor), 0, PI)
+                edge(thread.start)
+            }
+
+            position(new Vec(myHeight)) {
+                direction(new Vec(1))
+                cylindricalSurface(myNeckRadius * 1.05)
+            }
+
+            wireFromSurface {
+                to(pos)
+                ITrimmable2d thread = trimmed(ellipse(dir, aMajor, aMinor / 4), 0, PI)
+                edge(thread.start)
+            }
+        }
+    }.toCadDsl()
+}
+----
+
+.Bottle Neck Threaded with `thruSection`
 image::cad-bottle-thru-section.png[]
 
-.Bottle Threading
+.Bottle Threading with `helix`
 [source,groovy]
 ----
 static CadDsl helixThreading(CadDsl s) {
