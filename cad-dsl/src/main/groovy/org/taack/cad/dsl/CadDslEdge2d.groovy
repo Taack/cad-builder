@@ -1,7 +1,6 @@
 package org.taack.cad.dsl
 
 import groovy.transform.CompileStatic
-import org.taack.cad.dsl.geom.Vec
 import org.taack.cad.dsl.geom.Vec2d
 import org.taack.cad.dsl.geom.ArcOfCircle2d
 import org.taack.cad.dsl.geom.Circle2d
@@ -172,10 +171,6 @@ class CadDslEdge2d implements CadDslBase {
 
     ITrimmable2d mirror(ITrimmable2d curve, Vec2d pt, Vec2d dir) {
         visitor.visitMirror(curve, pt, dir)
-    }
-
-    Vec bound(Number U) {
-
     }
 
     void removeFromConstruction(IConstruction... toRemove) {

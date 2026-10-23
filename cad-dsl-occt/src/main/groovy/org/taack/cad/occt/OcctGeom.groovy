@@ -121,6 +121,11 @@ final class OcctGeom {
                 else trimmed = own(handle_Geom2d_TrimmedCurve__GCE2d_MakeArcOfCircle__cir2d_p1_p2(c, gpPnt2d(arc.ptFrom), gpPnt2d(arc.ptTo)), NativeLib::delete_handle_Geom2d_TrimmedCurve)
                 if (arc.reversed) _Geom2d_TrimmedCurve__Reverse(trimmed)
                 return trimmed
+            case TrimmedCurve2d:
+                TrimmedCurve2d t = (TrimmedCurve2d) s
+                trimmed = own(handle_Geom2d_TrimmedCurve__curve_u1_u2(curve2d(t.curve), t.u1, t.u2, 1, 1), NativeLib::delete_handle_Geom2d_TrimmedCurve)
+                if (t.reversed) _Geom2d_TrimmedCurve__Reverse(trimmed)
+                return trimmed
             case Mirrored2d:
                 Mirrored2d mirrored = (Mirrored2d) s
                 MemorySegment mirrorAxis = own(new_gp_Ax2d__pt_dir(gpPnt2d(mirrored.pos), gpDir2d(mirrored.dir)), NativeLib::delete_gp_Ax2d)

@@ -2,6 +2,7 @@ package org.taack.cad.dsl
 
 import groovy.transform.CompileStatic
 import org.junit.jupiter.api.Test
+import org.taack.cad.dsl.geom.ITrimmable2d
 import org.taack.cad.dsl.geom.Vec
 import org.taack.cad.dsl.geom.Vec2d
 
@@ -65,33 +66,34 @@ class BottleTest {
     }
 
     static CadDsl simpleThreading(CadDsl s) {
-        s.thruSection {
-            double aMajor = 2 * PI
-            double aMinor = myNeckHeight / 10
-            Vec2d pos = new Vec2d(2 * PI, myNeckHeight / 2)
-            Vec2d dir = new Vec2d(2 * PI, myNeckHeight / 4)
+        double aMajor = 2 * PI
+        double aMinor = myNeckHeight / 10
+        Vec2d pos = new Vec2d(2 * PI, myNeckHeight / 2)
+        Vec2d dir = new Vec2d(2 * PI, myNeckHeight / 4)
 
-            position(new Vec(myHeight)) {
-                direction(new Vec(1))
-                cylindricalSurface(myNeckRadius * 0.99)
-            }
+        s.fuse {
+            thruSection {
+                position(new Vec(myHeight)) {
+                    direction(new Vec(1))
+                    cylindricalSurface(myNeckRadius * 0.99)
+                }
 
-            wireFromSurface {
-                to(pos)
-                trimmed(ellipse(dir, aMajor, aMinor), 0, PI)
-                to(bound(0))
-                edge(bound(PI))
-            }
-            position(new Vec(myHeight)) {
-                direction(new Vec(1))
-                cylindricalSurface(myNeckRadius * 1.05)
-            }
+                wireFromSurface {
+                    to(pos)
+                    ITrimmable2d thread = trimmed(ellipse(dir, aMajor, aMinor), 0, PI)
+                    edge(thread.start)
+                }
 
-            wireFromSurface {
-                to(pos)
-                trimmed(ellipse(dir, aMajor, aMinor), 0, PI)
-                to(bound(0))
-                edge(bound(PI))
+                position(new Vec(myHeight)) {
+                    direction(new Vec(1))
+                    cylindricalSurface(myNeckRadius * 1.05)
+                }
+
+                wireFromSurface {
+                    to(pos)
+                    ITrimmable2d thread = trimmed(ellipse(dir, aMajor, aMinor / 4), 0, PI)
+                    edge(thread.start)
+                }
             }
         }.toCadDsl()
     }

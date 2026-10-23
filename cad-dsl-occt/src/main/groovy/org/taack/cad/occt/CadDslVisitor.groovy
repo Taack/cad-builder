@@ -31,6 +31,8 @@ class CadDslVisitor implements ICadDslVisitor {
             println "    " * inc + s
         }
     }
+    private static final double THRU_SECTIONS_PRECISION = 1.0e-06d
+
     // Owns every native object created for this model (see Natives)
     private final Arena nativeScope = Natives.openScope()
 
@@ -39,6 +41,9 @@ class CadDslVisitor implements ICadDslVisitor {
     MemorySegment face
     final List<MemorySegment> makeWires = []
     MemorySegment currentSurface
+    // Surface the wires of a thru section are drawn on; kept apart since leaving a position resets currentSurface
+    MemorySegment sectionSurface
+    final List<MemorySegment> sectionWires = []
     Stack<Vec> fromVecStack = new Stack<>()
 
     Vec getFromVec() {
@@ -108,18 +113,7 @@ class CadDslVisitor implements ICadDslVisitor {
         currentSurface = own(handle_Geom_Surface__TopoDS_Face(face), NativeLib::delete_handle_Geom_Surface)
 
         if (!openShape2dList.empty) {
-            Vec2d pos = fromVec2d ?: new Vec2d()
-
-            def makeWire = own(new_BRepBuilderAPI_MakeWire(), NativeLib::delete_BRepBuilderAPI_MakeWire)
-            for (IOpenShape2d s2d in openShape2dList) {
-                def trimmedCurve = OcctGeom.curve2d(s2d, pos)
-                pos = s2d.to
-                _BRepBuilderAPI_MakeWire__Add__BRepBuilderAPI_MakeEdge(makeWire, own(new_BRepBuilderAPI_MakeEdge__Geom2d_Curve_Geom_Surface(trimmedCurve, currentSurface), NativeLib::delete_BRepBuilderAPI_MakeEdge))
-            }
-
-
-            makeWires << makeWire
-            openShape2dList.clear()
+            makeWires << makeWire2d(currentSurface)
         }
         Tr.cur("visitFromEnd closedShape2dList $closedShape2dList")
         if (!closedShape2dList.empty) {
@@ -143,6 +137,22 @@ class CadDslVisitor implements ICadDslVisitor {
         Tr.cur "box($length, $height, $thickness) from: $fromVec, direction: $direction, directionNormal: $directionNormal, shape: $shape"
         boolShapes.peek() << shape
         if (!this.shape) this.shape = shape
+    }
+
+    /**
+     * @return The wire (BRepBuilderAPI_MakeWire) of the open 2D shapes drawn on surface, which are consumed
+     */
+    private MemorySegment makeWire2d(MemorySegment surface) {
+        Vec2d pos = fromVec2d ?: new Vec2d()
+
+        def makeWire = own(new_BRepBuilderAPI_MakeWire(), NativeLib::delete_BRepBuilderAPI_MakeWire)
+        for (IOpenShape2d s2d in openShape2dList) {
+            def trimmedCurve = OcctGeom.curve2d(s2d, pos)
+            pos = s2d.to
+            _BRepBuilderAPI_MakeWire__Add__BRepBuilderAPI_MakeEdge(makeWire, own(new_BRepBuilderAPI_MakeEdge__Geom2d_Curve_Geom_Surface(trimmedCurve, surface), NativeLib::delete_BRepBuilderAPI_MakeEdge))
+        }
+        openShape2dList.clear()
+        makeWire
     }
 
     @Override
@@ -296,17 +306,24 @@ class CadDslVisitor implements ICadDslVisitor {
 
     @Override
     void visitWireFromSurface() {
-
+        Tr.ind("visitWireFromSurface")
     }
 
     @Override
     void visitWireFromSurfaceEnd() {
-
+        MemorySegment wire = ref_TopoDS_Shape__BRepBuilderAPI_MakeWire__Shape(makeWire2d(sectionSurface))
+        _BRepLib__BuildCurves3d__TopoDS_Shape(wire)
+        sectionWires << wire
+        // Only open shapes make the wire; closed ones were constructions for them
+        closedShape2dList.clear()
+        Tr.dec("visitWireFromSurfaceEnd sectionWires: $sectionWires")
     }
 
     @Override
-    ITrimmable2d visitTrimmed(IClosedShape2d curve, double from, double tp, boolean reverse) {
-
+    ITrimmable2d visitTrimmed(IClosedShape2d curve, double from, double to, boolean reverse) {
+        TrimmedCurve2d trimmed = new TrimmedCurve2d(curve, from, to, reverse)
+        openShape2dList << trimmed
+        trimmed
     }
 
     @Override
@@ -333,7 +350,7 @@ class CadDslVisitor implements ICadDslVisitor {
     @Override
     void visitCylindricalSurface(double radius) {
         def ax2 = own(new_gp_Ax2__gp_Pnt_gp_Dir(gpPnt(fromVec), gpDir(direction)), NativeLib::delete_gp_Ax2)
-        currentSurface = own(handle_Geom_CylindricalSurface__ax2_radius(ax2, radius), NativeLib::delete_handle_Geom_CylindricalSurface)
+        sectionSurface = own(handle_Geom_CylindricalSurface__ax2_radius(ax2, radius), NativeLib::delete_handle_Geom_CylindricalSurface)
     }
 
     @Override
@@ -606,12 +623,24 @@ class CadDslVisitor implements ICadDslVisitor {
 
     @Override
     void visitThruSection() {
-
+        Tr.ind("visitThruSection")
+        sectionWires.clear()
     }
 
     @Override
     void visitThruSectionEnd() {
+        Tr.dec("visitThruSectionEnd sectionWires: $sectionWires")
+        if (sectionWires.empty) return
+        def thruSections = own(new_BRepOffsetAPI_ThruSections__isSolid_ruled_pres3d(1, 0, THRU_SECTIONS_PRECISION), NativeLib::delete_BRepOffsetAPI_ThruSections)
+        for (MemorySegment wire in sectionWires) {
+            _BRepOffsetAPI_ThruSections__AddWire__TopoDS_Wire(thruSections, wire)
+        }
+        _BRepOffsetAPI_ThruSections__CheckCompatibility__bool(thruSections, 0)
+        def shape = own(new_TopoDS_Shape__Shape__BRepBuilderAPI_MakeShape(thruSections), NativeLib::delete_TopoDS_Shape)
+        sectionWires.clear()
 
+        boolShapes.peek() << shape
+        if (!this.shape) this.shape = shape
     }
 
     @Override
