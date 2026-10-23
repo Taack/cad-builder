@@ -212,7 +212,7 @@ class SprocketTest {
                 edge p4v2d
                 edge p5v2d
                 edge p2d_1v
-            }.toFace().revolution(new Vec(), new Vec(0, 1, 0), tooth_angle).rotate(new Vec(), new Vec(1, 0, 0), PI / 2).mirror(new Vec(), new Vec(1)).translate(new Vec(0, 0, thickness))
+            }.toFace().revolution(new Vec(), new Vec(0, 1, 0), tooth_angle).rotate(new Vec(), new Vec(1, 0, 0), 90).mirror(new Vec(), new Vec(1)).translate(new Vec(0, 0, thickness))
         }.toCadDsl()
     }
 
@@ -237,12 +237,12 @@ class SprocketTest {
 
         cadDsl.fuse {
             for (int i = 1; i < multiplier; i++) {
-                rotate(new Vec(), new Vec(1), tooth_angle, true)
+                rotate(new Vec(), new Vec(1), toDegrees(tooth_angle), true)
                 println(i)
             }
         }.fuse {
             for (int i = 1; i < num_teeth / multiplier; i++) {
-                rotate(new Vec(), new Vec(1), multiplier * tooth_angle, true)
+                rotate(new Vec(), new Vec(1), toDegrees(multiplier * tooth_angle), true)
                 println(i)
             }
         }.fuse {

@@ -2,7 +2,7 @@
   #include <windows.h>
 #endif
 
-#include "occt_capi.h"
+#include "capi_internal.hxx"
 
 #include <AIS_InteractiveContext.hxx>
 #include <AIS_Shape.hxx>
@@ -38,7 +38,7 @@
 class OcctAisHello : public AIS_ViewController {
 public:
   //! Main constructor.
-  OcctAisHello(TopoDS_Shape *aShape) {
+  OcctAisHello(const CadNode &anAssembly) {
     // graphic driver setup
     occ::handle<Aspect_DisplayConnection> aDisplay = new Aspect_DisplayConnection();
     occ::handle<Graphic3d_GraphicDriver> aDriver = new OpenGl_GraphicDriver(aDisplay);
@@ -83,10 +83,7 @@ public:
     // interactive context and demo scene
     myContext = new AIS_InteractiveContext(aViewer);
 
-    TopoDS_Shape bShape(*aShape);
-
-    occ::handle<AIS_InteractiveObject> aShapePrs = new AIS_Shape(bShape);
-    myContext->Display(aShapePrs, AIS_Shaded, 0, false);
+    capi_display_assembly(myContext, anAssembly);
     myView->FitAll(0.01, false);
 
     aWindow->Map();
@@ -152,11 +149,11 @@ private:
   occ::handle<V3d_View> myView;
 };
 
-extern "C" int visualize(TopoDS_Shape* truc) {
+static int visualizeBodies(const CadNode &anAssembly) {
   // No OSD::SetSignal here: it replaces the JVM's SIGSEGV handler, which the JVM relies on
   // (implicit null checks, safepoints), and any later JVM fault then aborts the process.
 
-  OcctAisHello aViewer(truc);
+  OcctAisHello aViewer(anAssembly);
 #ifdef _WIN32
   // WinAPI message loop
   for (;;)
@@ -185,4 +182,14 @@ extern "C" int visualize(TopoDS_Shape* truc) {
   }
 #endif
   return 0;
+}
+
+extern "C" int visualize(TopoDS_Shape* truc) {
+  CadNode aPart;
+  aPart.shape = *truc;
+  return visualizeBodies(aPart);
+}
+
+extern "C" int visualize_assembly(const occ::handle<CadNode>* anAssembly) {
+  return visualizeBodies(**anAssembly);
 }

@@ -4,11 +4,15 @@
 
 #include "capi_internal.hxx"
 
+#include <BRepAdaptor_Surface.hxx>
 #include <BRepBuilderAPI_MakeEdge.hxx>
 #include <BRepBuilderAPI_MakeEdge2d.hxx>
 #include <BRepBuilderAPI_MakeFace.hxx>
 #include <BRepBuilderAPI_MakePolygon.hxx>
+#include <BRepBuilderAPI_MakeVertex.hxx>
 #include <BRepBuilderAPI_MakeWire.hxx>
+#include <BRepExtrema_DistShapeShape.hxx>
+#include <BRepGProp.hxx>
 #include <BRepCheck_Wire.hxx>
 #include <BRepLib.hxx>
 #include <BRepTools.hxx>
@@ -18,6 +22,7 @@
 #include <Geom2d_Curve.hxx>
 #include <GeomLProp_SLProps.hxx>
 #include <Geom_Curve.hxx>
+#include <GProp_GProps.hxx>
 #include <Geom_Surface.hxx>
 #include <Precision.hxx>
 #include <ShapeAnalysis_Wire.hxx>
@@ -29,9 +34,13 @@
 #include <TopoDS_Compound.hxx>
 #include <TopoDS_Edge.hxx>
 #include <TopoDS_Face.hxx>
+#include <TopoDS_Vertex.hxx>
 #include <TopoDS_Wire.hxx>
 #include <gp_Dir.hxx>
+#include <gp_Cylinder.hxx>
 #include <gp_Pln.hxx>
+
+#include <cmath>
 
 /*
 
@@ -402,6 +411,96 @@ extern "C" void _BRepBuilderAPI_MakeFace__Add__BRepBuilderAPI_MakeWire(BRepBuild
 extern "C" occ::handle<Geom_Surface> *handle_Geom_Surface__TopoDS_Face(const TopoDS_Face *face) {
     TRACE("");
     return guard(__func__, [&] { return new occ::handle<Geom_Surface>(BRep_Tool::Surface(*face)); });
+}
+
+extern "C" double *R6_TopoDS_Shape__PlanarFace__dir_hasPos_pos(const TopoDS_Shape *shape, double dx, double dy, double dz, int hasPos, double px, double py, double pz) {
+    TRACE("");
+    return guard(__func__, [&]() -> double * {
+        const gp_Dir dir(dx, dy, dz);
+        const gp_Pnt pos(px, py, pz);
+        const TopoDS_Vertex posVertex = BRepBuilderAPI_MakeVertex(pos);
+        bool found = false;
+        double best = 0;
+        gp_Pnt origin;
+        gp_Dir normal;
+        for (TopExp_Explorer ex(*shape, TopAbs_FACE); ex.More(); ex.Next()) {
+            const TopoDS_Face &face = TopoDS::Face(ex.Current());
+            BRepAdaptor_Surface surface(face);
+            if (surface.GetType() != GeomAbs_Plane) continue;
+            gp_Pln plane = surface.Plane();
+            gp_Dir n = plane.Axis().Direction();
+            if (face.Orientation() == TopAbs_REVERSED) n.Reverse();
+            if (n.Dot(dir) < std::cos(M_PI / 180)) continue;
+
+            GProp_GProps props;
+            BRepGProp::SurfaceProperties(face, props);
+            gp_Pnt centre = props.CentreOfMass();
+            // the farthest along dir, or the closest to pos
+            double score;
+            if (to_bool(hasPos)) {
+                BRepExtrema_DistShapeShape distance(posVertex, face);
+                if (!distance.IsDone()) continue;
+                score = -distance.Value();
+            } else score = gp_Vec(centre.XYZ()).Dot(gp_Vec(dir));
+            if (found && score <= best) continue;
+            found = true;
+            best = score;
+            normal = n;
+            origin = to_bool(hasPos) ? pos.Translated(-gp_Vec(n) * gp_Vec(n).Dot(gp_Vec(plane.Location(), pos))) : centre;
+        }
+        if (!found) return nullptr;
+        return new double[6]{origin.X(), origin.Y(), origin.Z(), normal.X(), normal.Y(), normal.Z()};
+    });
+}
+
+extern "C" double *R6_TopoDS_Shape__CylindricalFaceAxis__hasPos_pos(const TopoDS_Shape *shape, int hasPos, double px, double py, double pz) {
+    TRACE("");
+    return guard(__func__, [&]() -> double * {
+        const gp_Pnt pos(px, py, pz);
+        const TopoDS_Vertex posVertex = BRepBuilderAPI_MakeVertex(pos);
+        bool found = false;
+        double best = 0;
+        gp_Pnt origin;
+        gp_Dir axis;
+        for (TopExp_Explorer ex(*shape, TopAbs_FACE); ex.More(); ex.Next()) {
+            const TopoDS_Face &face = TopoDS::Face(ex.Current());
+            BRepAdaptor_Surface surface(face);
+            if (surface.GetType() != GeomAbs_Cylinder) continue;
+            gp_Cylinder cylinder = surface.Cylinder();
+
+            // the largest radius, or the closest to pos
+            double score;
+            if (to_bool(hasPos)) {
+                BRepExtrema_DistShapeShape distance(posVertex, face);
+                if (!distance.IsDone()) continue;
+                score = -distance.Value();
+            } else score = cylinder.Radius();
+            if (found && score <= best) continue;
+            found = true;
+            best = score;
+
+            // a direction independent of the surface parametrization
+            const gp_Ax1 &a = cylinder.Axis();
+            gp_Dir d = a.Direction();
+            const double eps = 1e-9;
+            if (d.Z() < -eps || (std::abs(d.Z()) <= eps && (d.Y() < -eps || (std::abs(d.Y()) <= eps && d.X() < 0))))
+                d.Reverse();
+            axis = d;
+            if (to_bool(hasPos)) {
+                origin = a.Location().Translated(gp_Vec(d) * gp_Vec(a.Location(), pos).Dot(gp_Vec(d)));
+            } else {
+                // V runs along the axis of a cylindrical surface: start at the face end the lowest along d
+                double umin, umax, vmin, vmax;
+                BRepTools::UVBounds(face, umin, umax, vmin, vmax);
+                const gp_Ax3 &p = cylinder.Position();
+                gp_Pnt e1 = p.Location().Translated(gp_Vec(p.Direction()) * vmin);
+                gp_Pnt e2 = p.Location().Translated(gp_Vec(p.Direction()) * vmax);
+                origin = gp_Vec(e1.XYZ()).Dot(gp_Vec(d)) <= gp_Vec(e2.XYZ()).Dot(gp_Vec(d)) ? e1 : e2;
+            }
+        }
+        if (!found) return nullptr;
+        return new double[6]{origin.X(), origin.Y(), origin.Z(), axis.X(), axis.Y(), axis.Z()};
+    });
 }
 
 extern "C" gp_Dir *new_gp_Dir__Normal__TopoDS_Face(const TopoDS_Face *aCurrentFace) {

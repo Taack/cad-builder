@@ -1,6 +1,7 @@
 package org.taack.cad.occt
 
 import groovy.transform.CompileStatic
+import org.taack.cad.dsl.ICadDslAssemblyVisitor
 import org.taack.cad.dsl.ICadDslVisitor
 import org.taack.cad.dsl.geom.IClosedShape2d
 import org.taack.cad.dsl.geom.ITrimmable2d
@@ -23,6 +24,11 @@ class OcctKernel implements CadKernel {
     @Override
     ICadDslVisitor newVisitor() {
         new CadDslVisitor()
+    }
+
+    @Override
+    ICadDslAssemblyVisitor newAssemblyVisitor(String name) {
+        new OcctAssemblyVisitor(name)
     }
 
     @Override

@@ -14,6 +14,14 @@ class CadDsl extends CadDslSolid implements CadDslBase {
         new CadDsl(visitor: CadKernels.get().newVisitor())
     }
 
+    /**
+     * Assemble parts and sub-assemblies, see {@link CadDslAssembly}.
+     * @param name Assembly name, kept in STEP files
+     */
+    static CadDslAssembly assembly(String name = null, @DelegatesTo(value = CadDslAssembly, strategy = Closure.DELEGATE_FIRST) Closure c) {
+        CadDslAssembly.build(name, c)
+    }
+
     CadDslWire wireFrom(Vec pos, @DelegatesTo(value = CadDslEdge, strategy = Closure.DELEGATE_FIRST) Closure c = null) {
         visitor.visitFrom(pos)
         if (c) {

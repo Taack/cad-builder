@@ -7,20 +7,33 @@
 #include <AIS_InteractiveContext.hxx>
 #include <AIS_Shape.hxx>
 #include <Aspect_DisplayConnection.hxx>
+#include <BRep_Builder.hxx>
+#include <BRepBndLib.hxx>
 #include <BRepCheck_Analyzer.hxx>
 #include <BRepCheck_Result.hxx>
+#include <BRepMesh_IncrementalMesh.hxx>
+#include <Bnd_Box.hxx>
 #include <Image_AlienPixMap.hxx>
 #include <OpenGl_GraphicDriver.hxx>
 #include <Prs3d_Drawer.hxx>
 #include <Prs3d_LineAspect.hxx>
 #include <STEPCAFControl_Writer.hxx>
 #include <StlAPI_Writer.hxx>
+#include <TCollection_ExtendedString.hxx>
+#include <TDataStd_Name.hxx>
 #include <TDocStd_Document.hxx>
+#include <TopLoc_Location.hxx>
+#include <TopoDS_Compound.hxx>
 #include <V3d_View.hxx>
 #include <V3d_Viewer.hxx>
 #include <XCAFApp_Application.hxx>
+#include <XCAFDoc_ColorTool.hxx>
 #include <XCAFDoc_DocumentTool.hxx>
 #include <XCAFDoc_ShapeTool.hxx>
+
+#include <cmath>
+#include <map>
+#include <stdexcept>
 
 #ifdef _WIN32
 #include <WNT_WClass.hxx>
@@ -29,9 +42,8 @@
 #include <Xw_Window.hxx>
 #endif
 
-extern "C" int dumpShape(const TopoDS_Shape *shape, int width, int height, const char *fileName) {
-    TRACE("");
-    return guard(__func__, [&] {
+static int dump(const char *function, const CadNode &assembly, int width, int height, const char *fileName) {
+    return guard(function, [&] {
         occ::handle<Aspect_DisplayConnection> _displayConnection = new Aspect_DisplayConnection();
 
         // don't waste the time waiting for VSync when window is not displayed on the screen
@@ -83,13 +95,24 @@ extern "C" int dumpShape(const TopoDS_Shape *shape, int width, int height, const
         //* Dump
         occ::handle<Image_AlienPixMap> pixmap = new Image_AlienPixMap;
 
-        occ::handle<AIS_Shape> _shapePrs = new AIS_Shape(*shape);
-        _context->Display(_shapePrs, false);
+        capi_display_assembly(_context, assembly);
         _view->FitAll(0.1, true);
 
         _view->ToPixMap(*pixmap, width, height);
         return pixmap->Save(fileName) ? 1 : 0;
     });
+}
+
+extern "C" int dumpShape(const TopoDS_Shape *shape, int width, int height, const char *fileName) {
+    TRACE("");
+    CadNode part;
+    part.shape = *shape;
+    return dump(__func__, part, width, height, fileName);
+}
+
+extern "C" int dumpAssembly(const occ::handle<CadNode> *assembly, int width, int height, const char *fileName) {
+    TRACE("");
+    return dump(__func__, **assembly, width, height, fileName);
 }
 
 extern "C" void write_step(const TopoDS_Shape *shape, const char *fileName) {
@@ -111,11 +134,116 @@ extern "C" void write_step(const TopoDS_Shape *shape, const char *fileName) {
     });
 }
 
+// StlAPI_Writer only writes the existing triangulation: mesh the shape first,
+// with a deflection relative to its size.
+static void write_meshed_stl(const TopoDS_Shape &shape, const char *fileName) {
+    Bnd_Box box;
+    BRepBndLib::Add(shape, box);
+    double deflection = box.IsVoid() ? 0.01 : 0.001 * std::sqrt(box.SquareExtent());
+    BRepMesh_IncrementalMesh mesh(shape, deflection, false, 0.5, true);
+    StlAPI_Writer stl_writer;
+    if (!stl_writer.Write(shape, fileName)) throw std::runtime_error("cannot write STL file");
+}
+
 extern "C" void write_stl(const TopoDS_Shape *shape, const char *fileName) {
     TRACE("");
+    guard(__func__, [&] { write_meshed_stl(*shape, fileName); });
+}
+
+extern "C" occ::handle<CadNode> *handle_CadNode__part__TopoDS_Shape_name_hasColor_r_g_b(const TopoDS_Shape *shape, const char *name, int hasColor, double r, double g, double b) {
+    TRACE("");
+    return guard(__func__, [&] {
+        occ::handle<CadNode> part = new CadNode();
+        if (name) part->name = name;
+        part->shape = *shape;
+        part->hasColor = to_bool(hasColor);
+        part->color = Quantity_Color(r, g, b, Quantity_TOC_sRGB);
+        return new occ::handle<CadNode>(part);
+    });
+}
+
+extern "C" occ::handle<CadNode> *handle_CadNode__assembly__name(const char *name) {
+    TRACE("");
+    return guard(__func__, [&] {
+        occ::handle<CadNode> assembly = new CadNode();
+        if (name) assembly->name = name;
+        assembly->isAssembly = true;
+        return new occ::handle<CadNode>(assembly);
+    });
+}
+
+extern "C" void _CadNode__AddComponent__node_location(occ::handle<CadNode> *assembly, const occ::handle<CadNode> *node, const gp_Trsf *location) {
+    TRACE("");
     guard(__func__, [&] {
-        StlAPI_Writer stl_writer;
-        stl_writer.Write(*shape, fileName);
+        if (!(*assembly)->isAssembly) throw std::invalid_argument("not an assembly");
+        (*assembly)->components.push_back({*node, *location});
+    });
+}
+
+void capi_display_assembly(const occ::handle<AIS_InteractiveContext> &context, const CadNode &assembly) {
+    assembly.forEachPart(gp_Trsf(), [&](const CadNode &part, const gp_Trsf &location) {
+        occ::handle<AIS_Shape> prs = new AIS_Shape(part.shape);
+        prs->SetLocalTransformation(location);
+        if (part.hasColor) prs->SetColor(part.color);
+        context->Display(prs, AIS_Shaded, 0, false);
+    });
+}
+
+namespace {
+// Writes an assembly tree to an XCAF document, each node once, however many times it is placed
+struct StepAssemblyWriter {
+    occ::handle<XCAFDoc_ShapeTool> shapeTool;
+    occ::handle<XCAFDoc_ColorTool> colorTool;
+    std::map<const CadNode *, TDF_Label> labels;
+
+    TDF_Label label(const CadNode &node) {
+        auto found = labels.find(&node);
+        if (found != labels.end()) return found->second;
+        TDF_Label l;
+        if (node.isAssembly) {
+            l = shapeTool->NewShape();
+            for (const CadNode::Component &c : node.components)
+                shapeTool->AddComponent(l, label(*c.node), TopLoc_Location(c.location));
+        } else {
+            l = shapeTool->AddShape(node.shape, false);
+            if (node.hasColor) colorTool->SetColor(l, node.color, XCAFDoc_ColorGen);
+        }
+        if (!node.name.empty()) TDataStd_Name::Set(l, TCollection_ExtendedString(node.name.c_str(), true));
+        labels[&node] = l;
+        return l;
+    }
+};
+}
+
+extern "C" void write_step_assembly(const occ::handle<CadNode> *assembly, const char *fileName) {
+    TRACE("");
+    guard(__func__, [&] {
+        occ::handle<TDocStd_Document> aDoc;
+        occ::handle<XCAFApp_Application> anApp = XCAFApp_Application::GetApplication();
+        anApp->NewDocument("MDTV-XCAF", aDoc);
+
+        StepAssemblyWriter writer{XCAFDoc_DocumentTool::ShapeTool(aDoc->Main()), XCAFDoc_DocumentTool::ColorTool(aDoc->Main())};
+        writer.label(**assembly);
+        writer.shapeTool->UpdateAssemblies();
+
+        STEPCAFControl_Writer myWriter;
+        myWriter.SetColorMode(true);
+        myWriter.SetNameMode(true);
+        myWriter.Perform(aDoc, fileName);
+    });
+}
+
+extern "C" void write_stl_assembly(const occ::handle<CadNode> *assembly, const char *fileName) {
+    TRACE("");
+    guard(__func__, [&] {
+        // STL has neither parts nor colors: all the parts go, moved, into one compound
+        BRep_Builder builder;
+        TopoDS_Compound compound;
+        builder.MakeCompound(compound);
+        (*assembly)->forEachPart(gp_Trsf(), [&](const CadNode &part, const gp_Trsf &location) {
+            builder.Add(compound, part.shape.Moved(TopLoc_Location(location)));
+        });
+        write_meshed_stl(compound, fileName);
     });
 }
 

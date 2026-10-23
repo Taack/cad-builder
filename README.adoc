@@ -3,7 +3,7 @@
 
 The purpose of this tool is to share 3D parts and assemblies like java class binaries.
 
-As of today, the DSL is not complete to define bodies and assemblies will come later.
+As of today, the DSL is not complete to define bodies, and assemblies place parts face against face, without solver.
 
 .The OCCT bottle tutorial, written with the DSL (`BottleTest`)
 image::cad-bottle.png[]
@@ -385,6 +385,68 @@ void "Three-blade Propeller"() {
 
 .Propeller Result
 image::cad-propeller.png[]
+
+=== Assemblies
+
+`assembly([name]) { ... }` assembles parts and sub-assemblies:
+
+* `part([name], [color]) { ... }` declares a part, built with the usual DSL (as from `cd()`) in its own coordinates;
+  `part(solid, [name], [color])` uses a solid already built. Without color, a part keeps the kernel default one.
+* `assembly([name]) { ... }` declares a sub-assembly.
+* `place(part) { ... }` puts an occurrence of a part, or of a sub-assembly, in the assembly, as many times as needed,
+  and returns it (`CadDslInstance`). Its closure positions it:
+** `mate(connector, target)` puts a connector of the part on a connector of the assembly, face against face: same
+   origin, opposite normals, same x direction;
+** `align(connector, target)` makes them coincide: same origin, same z and x directions, e.g. coaxial axes;
+** then `translate(vec)` or `translate(x, y, z)` and `rotate(axis, degrees[, around])` move it, in the order they are
+   written, in the assembly coordinates.
+* `body([color]) { ... }` and `body(solid[, color])` are shortcuts for a part placed once, where it was built.
+
+Connectors are frames on planar faces, taken with the same selectors as solids: `topZ()` is the face facing +Z the
+farthest along Z, `butX(pos)` the face facing -X closest to `pos`, with the origin at `pos` projected on it, and so on.
+`axis()` is on the axis of the cylindrical face of largest radius (a shaft, a hole), `axis(pos)` of the one closest to
+`pos`: its z is the axis direction, pointing to +Z (else +Y, else +X) in the part coordinates, and its origin the start
+of the face along the axis, or `pos` projected on it.
+On a part (or, in `place`, without receiver: the part placed) they are in the part coordinates; on an instance, in the
+coordinates of its assembly. `instance.at(connector)` brings the connector of an instance inside a sub-assembly to the
+coordinates of the assembly where the sub-assembly is placed. A connector is adjusted with `offset(distance)` along its
+z (on a face, positive: a gap, negative: sunk into the face; on an axis, it slides along it) and `rotate(degrees)`
+around it. Its x direction belongs to the
+part (global X projected on the face, in the part coordinates), so that mated parts follow each other's orientation.
+
+Colors are `Color.RED`, `Color.ORANGE`, ..., `Color.rgb(255, 136, 0)`, `Color.hex('#ff8800')` or `new Color(1, 0.5, 0)`.
+
+`display()` shows every part with its color. To a `.step` file, the assembly tree is kept, with names and colors, and
+a part or sub-assembly placed several times is written once; to a `.stl` file, the parts are merged (STL has neither
+parts nor colors).
+
+.Cart: a chassis on two axles, each axle a sub-assembly (`AssemblyTest`)
+[source,groovy]
+----
+assembly('cart') {
+    def chassis = part('chassis', Color.hex('#3080ff')) {
+        box(40, 20, 4)
+    }
+    def wheel = part('wheel', Color.ORANGE) {
+        cylinder(5, 2).cut { cylinder(1, 2) }
+    }
+    CadDslInstance shaft = null, outerWheel = null
+    def axle = assembly('axle') {
+        shaft = place(part('shaft') { cylinder(1, 26) })
+        // on the shaft, flush with its ends
+        place(wheel) { align(axis(), shaft.axis()) }
+        outerWheel = place(wheel) { align(axis(), shaft.axis().offset(24)) }
+    }
+    def c = place(chassis) { translate(-20, 0, 4) }
+    // under the chassis, 3 mm out of its sides
+    place(axle) { mate(shaft.butZ(), c.butY(new Vec(-14, 0, 3)).offset(-23)) }
+    def rear = place(axle) { mate(shaft.butZ(), c.butY(new Vec(14, 0, 3)).offset(-23)) }
+    place(part('cap', Color.RED) { cylinder(2, 0.5) }) { mate(butZ(), rear.at(outerWheel.topZ())) }
+}.display()
+----
+
+.Cart Result
+image::cad-assembly.png[]
 
 == Distribution and Usage
 
