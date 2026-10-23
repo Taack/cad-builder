@@ -131,4 +131,28 @@ class SolidFuseAndCutTest {
         // outside and inside of both rings
         assertEquals(4, content.count('CYLINDRICAL_SURFACE'))
     }
+
+    @Test
+    void "Hole after a revolution"() {
+        File step = new File(dir, 'disc.step')
+        CadDsl c = cd()
+        // a disc, then a slot across it: the hole must not reuse the profile of the revolution
+        c.wireFrom(new Vec(0, 0, 0)) {
+            edge(new Vec(5, 0, 0))
+            edge(new Vec(5, 0, 2))
+            edge(new Vec(0, 0, 2))
+            edge(new Vec(0, 0, 0))
+        }.toFace().revolution(new Vec(), Vec.vZ)
+        c.wireFrom(new Vec(-1, -6, 0.5)) {
+            edge(new Vec(1, -6, 0.5))
+            edge(new Vec(1, -6, 1.5))
+            edge(new Vec(-1, -6, 1.5))
+            edge(new Vec(-1, -6, 0.5))
+        }.toFace().hole(new Vec(0, 12, 0))
+        c.display(step.path)
+        String content = step.text
+        assertEquals(1, content.count('MANIFOLD_SOLID_BREP'))
+        // both ends of the disc and the 4 sides of the slot
+        assertEquals(6, content.count('PLANE('))
+    }
 }

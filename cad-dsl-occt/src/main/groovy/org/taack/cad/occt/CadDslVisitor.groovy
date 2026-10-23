@@ -955,6 +955,9 @@ class CadDslVisitor implements ICadDslVisitor {
 
         boolShapes.peek() << shape
         if (!this.shape) this.shape = shape
+        // the face and its wires are consumed, as by a prism
+        face = null
+        makeWires.clear()
     }
 
     @Override
