@@ -172,7 +172,7 @@ class SprocketTest {
                 edge p4v
                 edge p5v
                 edge p1v
-            }.toFace().revolution(tooth_angle).mirror(new Vec(), new Vec(1)).translate(new Vec(0, 0, thickness))
+            }.toFace().revolution(toDegrees(tooth_angle)).mirror(new Vec(), new Vec(1)).translate(new Vec(0, 0, thickness))
         }.toCadDsl()
     }
 
@@ -212,7 +212,7 @@ class SprocketTest {
                 edge p4v2d
                 edge p5v2d
                 edge p2d_1v
-            }.toFace().revolution(new Vec(), new Vec(0, 1, 0), tooth_angle).rotate(new Vec(), new Vec(1, 0, 0), 90).mirror(new Vec(), new Vec(1)).translate(new Vec(0, 0, thickness))
+            }.toFace().revolution(new Vec(), new Vec(0, 1, 0), toDegrees(tooth_angle)).rotate(new Vec(), new Vec(1, 0, 0), 90).mirror(new Vec(), new Vec(1)).translate(new Vec(0, 0, thickness))
         }.toCadDsl()
     }
 

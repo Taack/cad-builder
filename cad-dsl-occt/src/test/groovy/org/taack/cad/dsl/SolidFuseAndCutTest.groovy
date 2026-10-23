@@ -13,7 +13,7 @@ class SolidFuseAndCutTest {
     static final BigDecimal radius = 4.0
 
     static CadDsl generateSphere() {
-        BigDecimal angle = atan(radianSphere)
+        double angle = toDegrees(atan(radianSphere))
         BigDecimal featureDiameter = 0.5
 
         def c = cd().sphere(radius, -angle, angle).topZ().wireFrom() {

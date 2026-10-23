@@ -20,6 +20,10 @@ interface ICadDslVisitor {
 
     void visitBox(double length, double height, double thickness)
 
+    /**
+     * @param radian1 Latitude where the sphere starts, from -PI / 2
+     * @param radian2 Latitude where the sphere ends, up to PI / 2
+     */
     void visitSphere(double radius, double radian1, double radian2)
 
     void visitCylinder(double radius, double height)
@@ -64,6 +68,9 @@ interface ICadDslVisitor {
 
     void visitToFaceFrom2d()
 
+    /**
+     * @param angle In radians, 0 for a full turn
+     */
     void visitRevolution(Vec from, Vec dir, double angle)
 
     void visitPrism(Vec dir, boolean cut)
