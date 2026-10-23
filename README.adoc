@@ -464,7 +464,7 @@ ratio = PI * r / 180 per degree.
 
 Parts placed on a moving instance (with `mate`, `align` or a joint on one of its connectors) follow it, through
 sub-assemblies too. There is no solver: the parts depend on each other as a tree, so closed loops (a crank and its
-connecting rod) need their law computed in the closure.
+connecting rod) need their law computed in the closure, see <<Crank and Slider>>.
 
 `display()` plays the animation in a loop, `display('frames/%03d.png')` renders each frame (a `String.format` pattern),
 to be turned into a video or a GIF, e.g. with `ffmpeg` or ImageMagick. STEP, STL and single images show it at `t = 0`.
@@ -514,6 +514,73 @@ assembly('gear train') {
 
 .Gear Train Result
 image::cad-animation.gif[]
+
+==== Crank and Slider
+
+The crank, its rod and the piston make a closed loop: the rod is placed on the crank pin, the piston slides on its own,
+and nothing makes the rod end meet the piston. Their laws do: from the crank angle `a`, the rod end rises to
+`r sin(a) + sqrt(l² - (r cos(a))²)` above the crank axis, which gives the piston height and the rod angle.
+
+.Crank and Slider (`AnimationTest`)
+[source,groovy]
+----
+assembly('crank and slider') {
+    // crank radius, rod length
+    double r = 8, l = 24
+    // Parts
+    def basePart = part('base', Color.GRAY) { box(30, 24, 2) }
+    def wallPart = part('wall', Color.hex('#a0a8b0')) { box(30, 4, 60) }
+    def crankPart = part('crank', Color.ORANGE) {
+        cylinder(4, 3).fuse {
+            position(new Vec(0, -2, 0)) { box(r, 4, 3) }
+            position(new Vec(r, 0, 0)) { cylinder(1, 6) }
+        }
+    }
+    def rodPart = part('rod', Color.BLUE) {
+        cylinder(2.5, 2).fuse {
+            position(new Vec(0, -1, 0)) { box(l, 2, 2) }
+            position(new Vec(l, 0, 0)) { cylinder(2.5, 2) }
+        }
+    }
+    def pistonPart = part('piston', Color.RED) {
+        position(new Vec(-5, -4, 0)) { box(10, 8, 8) }
+    }
+
+    // Placements
+    def base = place(basePart) { translate(-15, -20, -2) }
+    def wall = place(wallPart) { translate(-15, 0, 0) }
+    // its axis 15 mm high, out of the wall
+    def crank = place(crankPart) {
+        revolute(axis(), wall.butY(new Vec(0, 0, 15)))
+    }
+    // on the crank pin, in front of the crank
+    def rod = place(rodPart) {
+        revolute(axis(new Vec(0, 0, 0)), crank.at(crankPart.axis(new Vec(r, 0, 3))))
+    }
+    // its bottom on the rod end, sliding up from the base, against the wall
+    def piston = place(pistonPart) {
+        slider(butZ().reverse(), base.topZ(new Vec(0, -4, 0)))
+    }
+
+    // Motion: one turn in 2 s
+    // height of the rod end above the crank axis, the crank at a degrees
+    Closure<Double> rise = { double a ->
+        r * sin(toRadians(a)) + sqrt(l * l - pow(r * cos(toRadians(a)), 2))
+    }
+    animate(duration: 2, fps: 25) {
+        crank.angle = { double t -> 180 * t }
+        // from the crank pin to the rod end, relative to the crank
+        rod.angle = { double t ->
+            double a = 180 * t
+            toDegrees(atan2(rise(a) - r * sin(toRadians(a)), -r * cos(toRadians(a)))) - a
+        }
+        piston.distance = { double t -> 15 + rise(180 * t) }
+    }
+}.display()
+----
+
+.Crank and Slider Result
+image::cad-crank-slider.gif[]
 
 == Distribution and Usage
 

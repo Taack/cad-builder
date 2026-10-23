@@ -5,7 +5,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
 import org.taack.cad.dsl.geom.Vec
 
-import static java.lang.Math.PI
+import static java.lang.Math.*
 import static org.junit.jupiter.api.Assertions.assertEquals
 import static org.junit.jupiter.api.Assertions.assertThrows
 import static org.junit.jupiter.api.Assertions.assertTrue
@@ -66,6 +66,77 @@ class AnimationTest {
         }
     }
 
+    /**
+     * Crank and slider: the crank turns on a wall, the piston slides up and down in front of it.
+     * Without solver, the rod angle and the piston height are computed from the crank angle.
+     */
+    static CadDslAssembly crankSlider() {
+        assembly('crank and slider') {
+            // crank radius, rod length
+            double r = 8, l = 24
+            // Parts
+            def basePart = part('base', Color.GRAY) { box(30, 24, 2) }
+            def wallPart = part('wall', Color.hex('#a0a8b0')) { box(30, 4, 60) }
+            def crankPart = part('crank', Color.ORANGE) {
+                cylinder(4, 3).fuse {
+                    position(new Vec(0, -2, 0)) { box(r, 4, 3) }
+                    position(new Vec(r, 0, 0)) { cylinder(1, 6) }
+                }
+            }
+            def rodPart = part('rod', Color.BLUE) {
+                cylinder(2.5, 2).fuse {
+                    position(new Vec(0, -1, 0)) { box(l, 2, 2) }
+                    position(new Vec(l, 0, 0)) { cylinder(2.5, 2) }
+                }
+            }
+            def pistonPart = part('piston', Color.RED) {
+                position(new Vec(-5, -4, 0)) { box(10, 8, 8) }
+            }
+
+            // Placements
+            def base = place(basePart) { translate(-15, -20, -2) }
+            def wall = place(wallPart) { translate(-15, 0, 0) }
+            // its axis 15 mm high, out of the wall
+            def crank = place(crankPart) {
+                revolute(axis(), wall.butY(new Vec(0, 0, 15)))
+            }
+            // on the crank pin, in front of the crank
+            def rod = place(rodPart) {
+                revolute(axis(new Vec(0, 0, 0)), crank.at(crankPart.axis(new Vec(r, 0, 3))))
+            }
+            // its bottom on the rod end, sliding up from the base, against the wall
+            def piston = place(pistonPart) {
+                slider(butZ().reverse(), base.topZ(new Vec(0, -4, 0)))
+            }
+
+            // Motion: one turn in 2 s
+            // height of the rod end above the crank axis, the crank at a degrees
+            Closure<Double> rise = { double a ->
+                r * sin(toRadians(a)) + sqrt(l * l - pow(r * cos(toRadians(a)), 2))
+            }
+            animate(duration: 2, fps: 25) {
+                crank.angle = { double t -> 180 * t }
+                // from the crank pin to the rod end, relative to the crank
+                rod.angle = { double t ->
+                    double a = 180 * t
+                    toDegrees(atan2(rise(a) - r * sin(toRadians(a)), -r * cos(toRadians(a)))) - a
+                }
+                piston.distance = { double t -> 15 + rise(180 * t) }
+            }
+        }
+    }
+
+    @Test
+    void "Crank and slider: the rod end stays on the piston"() {
+        def engine = crankSlider()
+        CadDslInstance rod = engine.instances[3], piston = engine.instances[4]
+        [0d, 0.25d, 0.6d, 1d, 1.3d, 1.85d].each { double t ->
+            // the rod end axis, mid-height of its eye, and the bottom center of the piston
+            assertVec(piston.locationAt(t).apply(new Vec(0, 0, 0)), rod.locationAt(t).apply(new Vec(24, 0, 1)))
+        }
+        assertVec(new Vec(0, -4, 15 + 32), piston.locationAt(0.5).apply(new Vec()))
+    }
+
     @Test
     void "Revolute and slider joints move the part around and along the connectors"() {
         CadDslInstance wheel = null, piston = null
@@ -84,10 +155,6 @@ class AnimationTest {
         assertVec(new Vec(0, 0, 3), piston.location.apply(new Vec()))
         assertVec(new Vec(0, 0, 8), piston.locationAt(0.5).apply(new Vec()))
     }
-
-    private static double cos(double a) { Math.cos(a) }
-
-    private static double sin(double a) { Math.sin(a) }
 
     @Test
     void "Parts placed on a moving instance follow it, gears turn the joints they link"() {
