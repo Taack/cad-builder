@@ -11,6 +11,7 @@ import org.taack.cad.dsl.geom.Vec
 
 import java.lang.foreign.Arena
 import java.lang.foreign.MemorySegment
+import java.lang.foreign.ValueLayout
 
 import static org.taack.occt.NativeLib.*
 import org.taack.occt.NativeLib
@@ -26,6 +27,8 @@ class OcctAssemblyVisitor implements ICadDslAssemblyVisitor {
     private final Arena nativeScope = Natives.openScope()
 
     final MemorySegment node
+    private int frameCount = 0
+    private double fps = 0
 
     OcctAssemblyVisitor(String name) {
         try (Arena arena = Arena.ofConfined()) {
@@ -49,10 +52,30 @@ class OcctAssemblyVisitor implements ICadDslAssemblyVisitor {
     @Override
     void visitPlace(ICadDslNode node, Trsf location) {
         MemorySegment n = node instanceof OcctAssemblyVisitor ? ((OcctAssemblyVisitor) node).node : ((OcctPart) node).node
+        _CadNode__AddComponent__node_location(this.node, n, gpTrsf(location))
+    }
+
+    @Override
+    void visitMove(int component, Trsf location, List<Trsf> frames) {
+        _CadNode__SetLocation__index_location(node, component, gpTrsf(location))
+        try (Arena arena = Arena.ofConfined()) {
+            double[] values = new double[12 * (frames ? frames.size() : 0)]
+            frames?.eachWithIndex { Trsf f, int i -> System.arraycopy(f.values(), 0, values, 12 * i, 12) }
+            _CadNode__SetFrames__index_count_values(node, component, frames ? frames.size() : 0, arena.allocateFrom(ValueLayout.JAVA_DOUBLE, values))
+        }
+    }
+
+    @Override
+    void visitAnimation(int frameCount, double fps) {
+        this.frameCount = frameCount
+        this.fps = fps
+    }
+
+    private static MemorySegment gpTrsf(Trsf location) {
         double[] v = location.values()
         MemorySegment trsf = own(new_gp_Trsf(), NativeLib::delete_gp_Trsf)
         _gp_Trsf__SetValues(trsf, v[0], v[1], v[2], v[3], v[4], v[5], v[6], v[7], v[8], v[9], v[10], v[11])
-        _CadNode__AddComponent__node_location(this.node, n, trsf)
+        trsf
     }
 
     @Override
@@ -73,7 +96,15 @@ class OcctAssemblyVisitor implements ICadDslAssemblyVisitor {
 
     @Override
     void display(String fileName) {
-        if (fileName) {
+        if (fileName?.contains('%')) {
+            // an image per frame
+            int count = Math.max(frameCount, 1)
+            List<File> files = (0..<count).collect { int i -> new File(String.format(fileName, i)) }
+            files*.parentFile.findAll { it != null }.unique()*.mkdirs()
+            try (Arena arena = Arena.ofConfined()) {
+                dumpAssemblyFrames(node, frameCount ? count : 0, 1920, 1080, arena.allocateFrom(files*.path.join('\n')))
+            }
+        } else if (fileName) {
             try (Arena arena = Arena.ofConfined()) {
                 MemorySegment t = arena.allocateFrom(fileName)
                 if (fileName.endsWith(".step")) {
@@ -83,7 +114,8 @@ class OcctAssemblyVisitor implements ICadDslAssemblyVisitor {
                 } else
                     dumpAssembly(node, 1920, 1080, t)
             }
-        } else visualize_assembly(node)
+        } else if (frameCount > 1) visualize_animation(node, frameCount, fps)
+        else visualize_assembly(node)
     }
 
     private static MemorySegment cString(Arena arena, String s) {

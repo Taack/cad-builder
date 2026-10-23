@@ -651,4 +651,18 @@ OCCT_CAPI void write_stl_assembly(const OCCT_HANDLE(CadNode) *assembly, const ch
 
 OCCT_CAPI int visualize_assembly(const OCCT_HANDLE(CadNode) *assembly);
 
+/* Static location of the component index of assembly (in the order they were added). */
+OCCT_CAPI void _CadNode__SetLocation__index_location(OCCT_HANDLE(CadNode) *assembly, int index, const gp_Trsf *location);
+
+/* Locations of the component index for each frame of an animation, 12 values per frame (as _gp_Trsf__SetValues);
+   count = 0 removes them. */
+OCCT_CAPI void _CadNode__SetFrames__index_count_values(OCCT_HANDLE(CadNode) *assembly, int index, int count, const double *values);
+
+/* Renders the frames of the animation, from 0, into the image files named by fileNames, one per line; with
+   frameCount = 0, a single image of the static locations. Returns non-zero on success. */
+OCCT_CAPI int dumpAssemblyFrames(const OCCT_HANDLE(CadNode) *assembly, int frameCount, int width, int height, const char *fileNames);
+
+/* Same as visualize_assembly, playing the frameCount frames of the animation in a loop, fps frames per second. */
+OCCT_CAPI int visualize_animation(const OCCT_HANDLE(CadNode) *assembly, int frameCount, double fps);
+
 #endif /* OCCT_CAPI_H */

@@ -7,12 +7,17 @@
 #include <AIS_InteractiveContext.hxx>
 #include <AIS_Shape.hxx>
 #include <AIS_ViewController.hxx>
+#include <Bnd_Box.hxx>
 #include <BRepPrimAPI_MakeBox.hxx>
 #include <BRepPrimAPI_MakeSphere.hxx>
 #include <OpenGl_GraphicDriver.hxx>
 #include <OSD.hxx>
 #include <V3d_View.hxx>
 #include <V3d_Viewer.hxx>
+
+#include <chrono>
+#include <thread>
+#include <vector>
 
 #ifdef _WIN32
   #include <WNT_WClass.hxx>
@@ -38,7 +43,7 @@
 class OcctAisHello : public AIS_ViewController {
 public:
   //! Main constructor.
-  OcctAisHello(const CadNode &anAssembly) {
+  OcctAisHello(const CadNode &anAssembly, int theFrameCount) : myAssembly(anAssembly) {
     // graphic driver setup
     occ::handle<Aspect_DisplayConnection> aDisplay = new Aspect_DisplayConnection();
     occ::handle<Graphic3d_GraphicDriver> aDriver = new OpenGl_GraphicDriver(aDisplay);
@@ -83,8 +88,11 @@ public:
     // interactive context and demo scene
     myContext = new AIS_InteractiveContext(aViewer);
 
-    capi_display_assembly(myContext, anAssembly);
-    myView->FitAll(0.01, false);
+    myPresentations = capi_display_assembly(myContext, anAssembly);
+    // the whole motion in view
+    Bnd_Box aBox = capi_assembly_box(anAssembly, theFrameCount);
+    if (aBox.IsVoid()) myView->FitAll(0.01, false);
+    else myView->FitAll(aBox, 0.01, false);
 
     aWindow->Map();
     myView->Redraw();
@@ -95,6 +103,12 @@ public:
 
   //! Return view.
   const occ::handle<V3d_View> &View() const { return myView; }
+
+  //! Move the parts to their locations at frame and redraw.
+  void ShowFrame(int theFrame) {
+    capi_move_assembly(myContext, myAssembly, myPresentations, theFrame);
+    myContext->UpdateCurrentViewer();
+  }
 
 private:
   //! Handle expose event.
@@ -147,18 +161,61 @@ private:
 private:
   occ::handle<AIS_InteractiveContext> myContext;
   occ::handle<V3d_View> myView;
+  const CadNode &myAssembly;
+  std::vector<occ::handle<AIS_Shape>> myPresentations;
 };
 
-static int visualizeBodies(const CadNode &anAssembly) {
+// Frame of an animation at the current time, playing in a loop
+class AnimationClock {
+public:
+  AnimationClock(int theFrameCount, double theFps)
+      : myFrameCount(theFrameCount), myFps(theFps), myStart(std::chrono::steady_clock::now()) {}
+
+  bool IsAnimated() const { return myFrameCount > 1 && myFps > 0; }
+
+  int Frame() const {
+    double aSeconds = std::chrono::duration<double>(std::chrono::steady_clock::now() - myStart).count();
+    return (int) (aSeconds * myFps) % myFrameCount;
+  }
+
+private:
+  int myFrameCount;
+  double myFps;
+  std::chrono::steady_clock::time_point myStart;
+};
+
+static int visualizeBodies(const CadNode &anAssembly, int theFrameCount, double theFps) {
   // No OSD::SetSignal here: it replaces the JVM's SIGSEGV handler, which the JVM relies on
   // (implicit null checks, safepoints), and any later JVM fault then aborts the process.
 
-  OcctAisHello aViewer(anAssembly);
+  OcctAisHello aViewer(anAssembly, theFrameCount);
+  AnimationClock aClock(theFrameCount, theFps);
+  int aShown = 0;
 #ifdef _WIN32
-  // WinAPI message loop
+  // WinAPI message loop, not blocking while an animation plays
   for (;;)
   {
     MSG aMsg = {};
+    if (aClock.IsAnimated())
+    {
+      while (PeekMessageW (&aMsg, NULL, 0, 0, PM_REMOVE))
+      {
+        if (aMsg.message == WM_QUIT)
+        {
+          return 0;
+        }
+        TranslateMessage(&aMsg);
+        DispatchMessageW(&aMsg);
+      }
+      int aFrame = aClock.Frame();
+      if (aFrame != aShown)
+      {
+        aViewer.ShowFrame(aFrame);
+        aShown = aFrame;
+      }
+      Sleep(5);
+      continue;
+    }
     if (GetMessageW (&aMsg, NULL, 0, 0) <= 0)
     {
       return 0;
@@ -167,18 +224,26 @@ static int visualizeBodies(const CadNode &anAssembly) {
     DispatchMessageW(&aMsg);
   }
 #else
-  // X11 event loop
+  // X11 event loop, not blocking while an animation plays
   occ::handle<Xw_Window> aWindow = occ::down_cast<Xw_Window>(aViewer.View()->Window());
   occ::handle<Aspect_DisplayConnection> aDispConn = aViewer.View()->Viewer()->Driver()->GetDisplayConnection();
   Display *anXDisplay = (Display *) aDispConn->GetDisplayAspect();
   for (;;) {
-    XEvent anXEvent;
-    XNextEvent(anXDisplay, &anXEvent);
-    aWindow->ProcessMessage(aViewer, anXEvent);
-    if (anXEvent.type == ClientMessage && (Atom) anXEvent.xclient.data.l[0] == aDispConn->GetAtom(
-          Aspect_XA_DELETE_WINDOW)) {
-      return 0; // exit when window is closed
+    while (!aClock.IsAnimated() || XPending(anXDisplay)) {
+      XEvent anXEvent;
+      XNextEvent(anXDisplay, &anXEvent);
+      aWindow->ProcessMessage(aViewer, anXEvent);
+      if (anXEvent.type == ClientMessage && (Atom) anXEvent.xclient.data.l[0] == aDispConn->GetAtom(
+            Aspect_XA_DELETE_WINDOW)) {
+        return 0; // exit when window is closed
+      }
     }
+    int aFrame = aClock.Frame();
+    if (aFrame != aShown) {
+      aViewer.ShowFrame(aFrame);
+      aShown = aFrame;
+    }
+    std::this_thread::sleep_for(std::chrono::milliseconds(5));
   }
 #endif
   return 0;
@@ -187,9 +252,13 @@ static int visualizeBodies(const CadNode &anAssembly) {
 extern "C" int visualize(TopoDS_Shape* truc) {
   CadNode aPart;
   aPart.shape = *truc;
-  return visualizeBodies(aPart);
+  return visualizeBodies(aPart, 0, 0);
 }
 
 extern "C" int visualize_assembly(const occ::handle<CadNode>* anAssembly) {
-  return visualizeBodies(**anAssembly);
+  return visualizeBodies(**anAssembly, 0, 0);
+}
+
+extern "C" int visualize_animation(const occ::handle<CadNode>* anAssembly, int theFrameCount, double theFps) {
+  return visualizeBodies(**anAssembly, theFrameCount, theFps);
 }

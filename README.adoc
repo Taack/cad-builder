@@ -3,7 +3,7 @@
 
 The purpose of this tool is to share 3D parts and assemblies like java class binaries.
 
-As of today, the DSL is not complete to define bodies, and assemblies place parts face against face, without solver.
+As of today, the DSL is not complete to define bodies, and assemblies place and animate parts without solver.
 
 .The OCCT bottle tutorial, written with the DSL (`BottleTest`)
 image::cad-bottle.png[]
@@ -398,6 +398,7 @@ image::cad-propeller.png[]
 ** `mate(connector, target)` puts a connector of the part on a connector of the assembly, face against face: same
    origin, opposite normals, same x direction;
 ** `align(connector, target)` makes them coincide: same origin, same z and x directions, e.g. coaxial axes;
+** or a joint, `revolute` or `slider`, see <<Animations>>;
 ** then `translate(vec)` or `translate(x, y, z)` and `rotate(axis, degrees[, around])` move it, in the order they are
    written, in the assembly coordinates.
 * `body([color]) { ... }` and `body(solid[, color])` are shortcuts for a part placed once, where it was built.
@@ -410,8 +411,8 @@ of the face along the axis, or `pos` projected on it.
 On a part (or, in `place`, without receiver: the part placed) they are in the part coordinates; on an instance, in the
 coordinates of its assembly. `instance.at(connector)` brings the connector of an instance inside a sub-assembly to the
 coordinates of the assembly where the sub-assembly is placed. A connector is adjusted with `offset(distance)` along its
-z (on a face, positive: a gap, negative: sunk into the face; on an axis, it slides along it) and `rotate(degrees)`
-around it. Its x direction belongs to the
+z (on a face, positive: a gap, negative: sunk into the face; on an axis, it slides along it), `rotate(degrees)`
+around it, and `reverse()` turns its z the other way. Its x direction belongs to the
 part (global X projected on the face, in the part coordinates), so that mated parts follow each other's orientation.
 
 Colors are `Color.RED`, `Color.ORANGE`, ..., `Color.rgb(255, 136, 0)`, `Color.hex('#ff8800')` or `new Color(1, 0.5, 0)`.
@@ -447,6 +448,59 @@ assembly('cart') {
 
 .Cart Result
 image::cad-assembly.png[]
+
+=== Animations
+
+Joints place a part like `align`, leaving it a degree of freedom:
+
+* `revolute(connector, target[, degrees])` turns the part around the z of the connectors: a hinge, a wheel on its shaft;
+* `slider(connector, target[, distance])` moves it along their z: a piston, a drawer.
+
+`animate(duration: seconds[, fps: 25]) { ... }` drives them with laws of the time `t` in seconds:
+`instance.angle = { double t -> ... }` (degrees) for a revolute joint, `instance.distance = { double t -> ... }` for a
+slider. `gear(driver, driven, ratio)` makes the joint of `driven` follow the one of `driver`: driven value = ratio *
+driver value. For gears of z1 (driver) and z2 teeth, ratio = -z1 / z2; from a pinion of pitch radius r to a rack,
+ratio = PI * r / 180 per degree.
+
+Parts placed on a moving instance (with `mate`, `align` or a joint on one of its connectors) follow it, through
+sub-assemblies too. There is no solver: the parts depend on each other as a tree, so closed loops (a crank and its
+connecting rod) need their law computed in the closure.
+
+`display()` plays the animation in a loop, `display('frames/%03d.png')` renders each frame (a `String.format` pattern),
+to be turned into a video or a GIF, e.g. with `ffmpeg` or ImageMagick. STEP, STL and single images show it at `t = 0`.
+
+.Gear Train: two gears and a rack (`AnimationTest`)
+[source,groovy]
+----
+assembly('gear train') {
+    def base = place(part('base', Color.GRAY) { box(60, 30, 2) }) { translate(-20, -15, -2) }
+    def wheel = { double radius, Color color ->
+        part(color) {
+            cylinder(radius, 3).fuse {
+                position(new Vec(radius - 3, -1, 3)) { box(2, 2, 2) }
+            }
+        }
+    }
+    def big = place(wheel(10, Color.ORANGE)) { revolute(axis(), base.topZ(new Vec(0, 0, 0))) }
+    def small = place(wheel(5, Color.BLUE)) { revolute(axis(), base.topZ(new Vec(15, 0, 0))) }
+    // pins on top of the gears, they turn with them
+    def pin = part('pin', Color.RED) { cylinder(0.5, 4) }
+    place(pin) { align(butZ(), small.topZ(new Vec(12, 0, 3)).reverse()) }
+    place(pin) { align(butZ(), big.topZ(new Vec(-6, 0, 3)).reverse()) }
+    // against the small gear, sliding along Y from the base side
+    def rack = place(part('rack', Color.GREEN) { box(4, 50, 3) }) { slider(butY(), base.butY(new Vec(22, -15, 1.5))) }
+    gear(big, small, -2)
+    // the rack moves by the arc length of the small gear, towards +Y, against its slider z
+    gear(small, rack, -PI * 5 / 180)
+
+    animate(duration: 4, fps: 12) {
+        big.angle = { double t -> -45 * t }
+    }
+}.display()
+----
+
+.Gear Train Result
+image::cad-animation.gif[]
 
 == Distribution and Usage
 

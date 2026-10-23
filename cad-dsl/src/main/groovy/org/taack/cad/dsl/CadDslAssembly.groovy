@@ -1,6 +1,7 @@
 package org.taack.cad.dsl
 
 import groovy.transform.CompileStatic
+import org.taack.cad.dsl.geom.Trsf
 import org.taack.cad.dsl.kernel.CadKernels
 
 /**
@@ -13,6 +14,10 @@ class CadDslAssembly extends CadDslPart {
     final ICadDslAssemblyVisitor visitor
     // Once built, an assembly can be placed but no longer changed, so that it cannot contain itself
     private boolean built = false
+    // Components, in the order given to the kernel
+    private final List<CadDslInstance> instances = []
+    private double duration = 0
+    private double fps = 25
 
     private CadDslAssembly(String name, ICadDslAssemblyVisitor visitor) {
         super(name, visitor, visitor)
@@ -26,6 +31,13 @@ class CadDslAssembly extends CadDslPart {
         c.call()
         assembly.built = true
         assembly
+    }
+
+    /**
+     * @return The instances placed in this assembly, in order
+     */
+    List<CadDslInstance> getInstances() {
+        Collections.unmodifiableList(instances)
     }
 
     /**
@@ -73,8 +85,39 @@ class CadDslAssembly extends CadDslPart {
             c.resolveStrategy = Closure.DELEGATE_FIRST
             c.call()
         }
-        visitor.visitPlace(part.node, placement.location)
-        new CadDslInstance(part, this, placement.location)
+        CadDslInstance instance = new CadDslInstance(part, this, placement)
+        visitor.visitPlace(part.node, instance.location)
+        instances << instance
+        instance
+    }
+
+    /**
+     * Make the joint of driven follow the one of driver: driven value = ratio * driver value. With revolute joints,
+     * for gears of z1 (driver) and z2 teeth: ratio = -z1 / z2; from a revolute to a slider (rack and pinion) of pitch
+     * radius r: ratio = PI * r / 180 per degree.
+     */
+    CadDslAssembly gear(CadDslInstance driver, CadDslInstance driven, Number ratio) {
+        if (!driver.joint || !driven.joint) throw new IllegalArgumentException("A gear links instances placed with revolute or slider joints")
+        driven.joint.gear(driver.joint, ratio.toDouble())
+        this
+    }
+
+    /**
+     * Animate the assembly: in the closure, drive the joints with instance.angle = { double t -> ... } and
+     * instance.distance = { double t -> ... }, t in seconds. display() then plays it, and display('frames/%03d.png')
+     * renders each frame; STEP, STL and single images show it at t = 0.
+     * @param options duration (seconds, required), fps (frames per second, 25 by default)
+     */
+    CadDslAssembly animate(Map<String, ?> options, @DelegatesTo(value = CadDslAssembly, strategy = Closure.DELEGATE_FIRST) Closure c = null) {
+        if (!options.duration) throw new IllegalArgumentException("animate needs a duration in seconds: animate(duration: 4) { ... }")
+        duration = (options.duration as Number).toDouble()
+        if (options.fps) fps = (options.fps as Number).toDouble()
+        if (c) {
+            c.delegate = this
+            c.resolveStrategy = Closure.DELEGATE_FIRST
+            c.call()
+        }
+        this
     }
 
     /**
@@ -91,8 +134,25 @@ class CadDslAssembly extends CadDslPart {
         place(part(solid, null, color))
     }
 
+    /**
+     * @param fileName null to open the viewer, a .step, .stl or image file, or with an animation, an image file name
+     * pattern for String.format (e.g. 'frames/%03d.png') to render each frame
+     */
     CadDslAssembly display(String fileName = null) {
+        int frameCount = duration > 0 ? Math.max(1, Math.round(duration * fps) as int) : 0
+        moveAll(frameCount, Collections.newSetFromMap(new IdentityHashMap<CadDslAssembly, Boolean>()))
+        visitor.visitAnimation(frameCount, fps)
         visitor.display(fileName)
         this
+    }
+
+    // Gives the kernel the locations of the components of this assembly and of its sub-assemblies, each once
+    private void moveAll(int frameCount, Set<CadDslAssembly> done) {
+        if (!done.add(this)) return
+        instances.eachWithIndex { CadDslInstance instance, int i ->
+            List<Trsf> frames = frameCount ? (0..<frameCount).collect { int f -> instance.locationAt(f / fps) } : null
+            visitor.visitMove(i, instance.location, frames)
+            if (instance.part instanceof CadDslAssembly) ((CadDslAssembly) instance.part).moveAll(frameCount, done)
+        }
     }
 }

@@ -6,7 +6,7 @@ import org.taack.cad.dsl.geom.Vec
 
 /**
  * Occurrence of a part in an assembly, returned by {@link CadDslAssembly#place}.
- * Its face selectors return connectors in the assembly coordinates.
+ * Its face selectors return connectors in the assembly coordinates, which follow it when it moves.
  */
 @CompileStatic
 class CadDslInstance implements CadDslFaceSelectors {
@@ -15,15 +15,54 @@ class CadDslInstance implements CadDslFaceSelectors {
      * Assembly the part is placed in
      */
     final CadDslAssembly assembly
-    /**
-     * From the part coordinates to the assembly ones
-     */
-    final Trsf location
+    final CadDslPlacement placement
 
-    CadDslInstance(CadDslPart part, CadDslAssembly assembly, Trsf location) {
+    CadDslInstance(CadDslPart part, CadDslAssembly assembly, CadDslPlacement placement) {
         this.part = part
         this.assembly = assembly
-        this.location = location
+        this.placement = placement
+    }
+
+    /**
+     * @return From the part coordinates to the assembly ones, at the start of the animation
+     */
+    Trsf getLocation() {
+        locationAt(0)
+    }
+
+    /**
+     * @return From the part coordinates to the assembly ones, t seconds into the animation
+     */
+    Trsf locationAt(double t) {
+        placement.locationAt(t)
+    }
+
+    /**
+     * Joint the part was placed with, null if none
+     */
+    CadDslJoint getJoint() {
+        placement.joint
+    }
+
+    /**
+     * Drive the angle of a revolute joint
+     * @param law Angle in degrees from the time in seconds
+     */
+    void setAngle(Closure law) {
+        joint(CadDslJoint.Kind.REVOLUTE).drive(law)
+    }
+
+    /**
+     * Drive the distance of a slider joint
+     * @param law Distance from the time in seconds
+     */
+    void setDistance(Closure law) {
+        joint(CadDslJoint.Kind.SLIDER).drive(law)
+    }
+
+    CadDslJoint joint(CadDslJoint.Kind kind) {
+        if (joint?.kind != kind) throw new IllegalStateException("${part.name ?: 'This instance'} is not placed with a ${kind.name().toLowerCase()} joint")
+        joint
     }
 
     /**
@@ -49,6 +88,6 @@ class CadDslInstance implements CadDslFaceSelectors {
      */
     CadDslConnector at(CadDslConnector connector) {
         if (!connector.owner.is(part)) throw new IllegalArgumentException("$connector is not in the coordinates of $part")
-        new CadDslConnector(connector.frame.transformed(location), assembly)
+        new CadDslConnector(connector.local, [this] + connector.path, assembly)
     }
 }

@@ -32,6 +32,9 @@
 #include <XCAFDoc_ShapeTool.hxx>
 
 #include <cmath>
+#include <sstream>
+#include <string>
+#include <vector>
 #include <map>
 #include <stdexcept>
 
@@ -42,7 +45,8 @@
 #include <Xw_Window.hxx>
 #endif
 
-static int dump(const char *function, const CadNode &assembly, int width, int height, const char *fileName) {
+// Renders one image per file name: frame i into fileNames[i], or the static locations when there is one file and frameCount is 0
+static int dump(const char *function, const CadNode &assembly, int frameCount, int width, int height, const std::vector<std::string> &fileNames) {
     return guard(function, [&] {
         occ::handle<Aspect_DisplayConnection> _displayConnection = new Aspect_DisplayConnection();
 
@@ -95,11 +99,19 @@ static int dump(const char *function, const CadNode &assembly, int width, int he
         //* Dump
         occ::handle<Image_AlienPixMap> pixmap = new Image_AlienPixMap;
 
-        capi_display_assembly(_context, assembly);
-        _view->FitAll(0.1, true);
+        std::vector<occ::handle<AIS_Shape>> presentations = capi_display_assembly(_context, assembly);
+        // the same view for every frame, showing the whole motion
+        Bnd_Box box = capi_assembly_box(assembly, frameCount);
+        if (box.IsVoid()) _view->FitAll(0.1, true);
+        else _view->FitAll(box, 0.1, true);
 
-        _view->ToPixMap(*pixmap, width, height);
-        return pixmap->Save(fileName) ? 1 : 0;
+        int saved = 1;
+        for (size_t i = 0; i < fileNames.size(); i++) {
+            if (frameCount > 0) capi_move_assembly(_context, assembly, presentations, (int) i);
+            _view->ToPixMap(*pixmap, width, height);
+            if (!pixmap->Save(fileNames[i].c_str())) saved = 0;
+        }
+        return saved;
     });
 }
 
@@ -107,12 +119,20 @@ extern "C" int dumpShape(const TopoDS_Shape *shape, int width, int height, const
     TRACE("");
     CadNode part;
     part.shape = *shape;
-    return dump(__func__, part, width, height, fileName);
+    return dump(__func__, part, 0, width, height, {fileName});
 }
 
 extern "C" int dumpAssembly(const occ::handle<CadNode> *assembly, int width, int height, const char *fileName) {
     TRACE("");
-    return dump(__func__, **assembly, width, height, fileName);
+    return dump(__func__, **assembly, 0, width, height, {fileName});
+}
+
+extern "C" int dumpAssemblyFrames(const occ::handle<CadNode> *assembly, int frameCount, int width, int height, const char *fileNames) {
+    TRACE("");
+    std::vector<std::string> names;
+    std::istringstream lines(fileNames);
+    for (std::string line; std::getline(lines, line);) names.push_back(line);
+    return dump(__func__, **assembly, frameCount, width, height, names);
 }
 
 extern "C" void write_step(const TopoDS_Shape *shape, const char *fileName) {
@@ -180,13 +200,59 @@ extern "C" void _CadNode__AddComponent__node_location(occ::handle<CadNode> *asse
     });
 }
 
-void capi_display_assembly(const occ::handle<AIS_InteractiveContext> &context, const CadNode &assembly) {
+extern "C" void _CadNode__SetLocation__index_location(occ::handle<CadNode> *assembly, int index, const gp_Trsf *location) {
+    TRACE("");
+    guard(__func__, [&] { (*assembly)->components.at(index).location = *location; });
+}
+
+extern "C" void _CadNode__SetFrames__index_count_values(occ::handle<CadNode> *assembly, int index, int count, const double *values) {
+    TRACE("");
+    guard(__func__, [&] {
+        std::vector<gp_Trsf> &frames = (*assembly)->components.at(index).frames;
+        frames.assign(count, gp_Trsf());
+        for (int i = 0; i < count; i++) {
+            const double *v = values + 12 * i;
+            frames[i].SetValues(v[0], v[1], v[2], v[3], v[4], v[5], v[6], v[7], v[8], v[9], v[10], v[11]);
+        }
+    });
+}
+
+std::vector<occ::handle<AIS_Shape>> capi_display_assembly(const occ::handle<AIS_InteractiveContext> &context, const CadNode &assembly) {
+    std::vector<occ::handle<AIS_Shape>> presentations;
     assembly.forEachPart(gp_Trsf(), [&](const CadNode &part, const gp_Trsf &location) {
         occ::handle<AIS_Shape> prs = new AIS_Shape(part.shape);
         prs->SetLocalTransformation(location);
         if (part.hasColor) prs->SetColor(part.color);
         context->Display(prs, AIS_Shaded, 0, false);
+        presentations.push_back(prs);
     });
+    return presentations;
+}
+
+void capi_move_assembly(const occ::handle<AIS_InteractiveContext> &context, const CadNode &assembly,
+                        const std::vector<occ::handle<AIS_Shape>> &presentations, int frame) {
+    size_t i = 0;
+    assembly.forEachPart(gp_Trsf(), [&](const CadNode &, const gp_Trsf &location) {
+        context->SetLocation(presentations[i++], TopLoc_Location(location));
+    }, frame);
+}
+
+Bnd_Box capi_assembly_box(const CadNode &assembly, int frameCount) {
+    // the box of each part once, moved to each of its locations
+    std::map<const CadNode *, Bnd_Box> partBoxes;
+    Bnd_Box box;
+    for (int frame = frameCount > 0 ? 0 : -1; frame < frameCount; frame++) {
+        assembly.forEachPart(gp_Trsf(), [&](const CadNode &part, const gp_Trsf &location) {
+            auto found = partBoxes.find(&part);
+            if (found == partBoxes.end()) {
+                Bnd_Box b;
+                BRepBndLib::Add(part.shape, b);
+                found = partBoxes.emplace(&part, b).first;
+            }
+            if (!found->second.IsVoid()) box.Add(found->second.Transformed(location));
+        }, frame);
+    }
+    return box;
 }
 
 namespace {

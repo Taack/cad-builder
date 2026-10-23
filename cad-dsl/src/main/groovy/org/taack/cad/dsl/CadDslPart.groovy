@@ -27,7 +27,7 @@ class CadDslPart implements CadDslFaceSelectors {
         checkPart()
         Frame f = declaredIn.visitFaceFrame(node, direction, position)
         if (!f) throw new IllegalArgumentException("Part ${name ?: ''} has no planar face facing $direction")
-        new CadDslConnector(f, this)
+        new CadDslConnector(f, [], this)
     }
 
     @Override
@@ -35,7 +35,7 @@ class CadDslPart implements CadDslFaceSelectors {
         checkPart()
         Frame f = declaredIn.visitAxisFrame(node, position)
         if (!f) throw new IllegalArgumentException("Part ${name ?: ''} has no cylindrical face")
-        new CadDslConnector(f, this)
+        new CadDslConnector(f, [], this)
     }
 
     private void checkPart() {

@@ -16,10 +16,23 @@ interface ICadDslAssemblyVisitor extends ICadDslNode {
     ICadDslNode visitPart(String name, Color color, ICadDslVisitor solid)
 
     /**
-     * Add an occurrence of node to the assembly
+     * Add an occurrence of node to the assembly, the component following the ones added before
      * @param location From the node coordinates to the assembly ones
      */
     void visitPlace(ICadDslNode node, Trsf location)
+
+    /**
+     * Set where a component is
+     * @param component Index of the component, in the order they were added
+     * @param location  Its static location
+     * @param frames    Its location for each frame of the animation, null when there is no animation
+     */
+    void visitMove(int component, Trsf location, List<Trsf> frames)
+
+    /**
+     * Animation that {@link #display} plays, or renders an image per frame of, when frameCount is not 0
+     */
+    void visitAnimation(int frameCount, double fps)
 
     /**
      * @return The frame of the planar face of part whose outward normal is direction: the farthest along it when
@@ -35,5 +48,9 @@ interface ICadDslAssemblyVisitor extends ICadDslNode {
      */
     Frame visitAxisFrame(ICadDslNode part, Vec position)
 
+    /**
+     * @param fileName null to open the viewer, a .step, .stl or image file, or an image file name pattern for
+     * String.format (e.g. 'frames/%03d.png') to render each frame of the animation
+     */
     void display(String fileName)
 }
