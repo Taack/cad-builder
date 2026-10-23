@@ -14,6 +14,14 @@ class CadDsl extends CadDslSolid implements CadDslBase {
         new CadDsl(visitor: CadKernels.get().newVisitor())
     }
 
+    /**
+     * Assemble parts and sub-assemblies, see {@link CadDslAssembly}.
+     * @param name Assembly name, kept in STEP files
+     */
+    static CadDslAssembly assembly(String name = null, @DelegatesTo(value = CadDslAssembly, strategy = Closure.DELEGATE_FIRST) Closure c) {
+        CadDslAssembly.build(name, c)
+    }
+
     CadDslWire wireFrom(Vec pos, @DelegatesTo(value = CadDslEdge, strategy = Closure.DELEGATE_FIRST) Closure c = null) {
         visitor.visitFrom(pos)
         if (c) {
@@ -56,16 +64,15 @@ class CadDsl extends CadDslSolid implements CadDslBase {
     }
 
     /**
-     * Make a Sphere whose center is the current position
+     * Make a Sphere whose center is the current position, its poles along the current direction
      *
      * @param radius Sphere radius
-     * @param direction coordinate system for the construction of the sphere
-     * @param angleFrom first angle defining a spherical segment
-     * @param angleTo second angle defining a spherical segment
+     * @param latitudeFrom Latitude in degrees, from -90 (south pole), where a spherical band starts
+     * @param latitudeTo Latitude in degrees, up to 90 (north pole), where a spherical band ends
      * @return
      */
-    CadDslSolid sphere(Number radius, Number angleFrom = 0, Number angleTo = 2 * PI) {
-        visitor.visitSphere(radius.toDouble(), angleFrom.toDouble(), angleTo.toDouble())
+    CadDslSolid sphere(Number radius, Number latitudeFrom = -90, Number latitudeTo = 90) {
+        visitor.visitSphere(radius.toDouble(), toRadians(latitudeFrom.toDouble()), toRadians(latitudeTo.toDouble()))
         new CadDslSolid(visitor: visitor)
     }
 

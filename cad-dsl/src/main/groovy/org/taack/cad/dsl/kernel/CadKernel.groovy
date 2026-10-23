@@ -1,5 +1,6 @@
 package org.taack.cad.dsl.kernel
 
+import org.taack.cad.dsl.ICadDslAssemblyVisitor
 import org.taack.cad.dsl.ICadDslVisitor
 import org.taack.cad.dsl.geom.IClosedShape2d
 import org.taack.cad.dsl.geom.ITrimmable2d
@@ -17,6 +18,12 @@ interface CadKernel {
      * @return A visitor building a new model
      */
     ICadDslVisitor newVisitor()
+
+    /**
+     * @return A visitor building a new assembly
+     * @param name Assembly name, null for none
+     */
+    ICadDslAssemblyVisitor newAssemblyVisitor(String name)
 
     /**
      * @return First point of a trimmed 2D curve

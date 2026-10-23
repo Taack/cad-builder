@@ -83,8 +83,12 @@ class CadDslSolid implements CadDslBase {
         this
     }
 
-    CadDslSolid rotate(Vec position, Vec direction, Number angle, boolean clone = false) {
-        visitor.visitSolidRotate(position, direction, angle.toDouble(), clone)
+    /**
+     * @param degrees Angle, counterclockwise looking against direction
+     * @param clone   Keep the solid and add the rotated copy
+     */
+    CadDslSolid rotate(Vec position, Vec direction, Number degrees, boolean clone = false) {
+        visitor.visitSolidRotate(position, direction, Math.toRadians(degrees.toDouble()), clone)
         this
     }
 

@@ -142,6 +142,11 @@ extern "C" gp_Trsf *new_gp_Trsf(void) {
     return guard(__func__, [&] { return new gp_Trsf(); });
 }
 
+extern "C" void _gp_Trsf__SetValues(gp_Trsf *trsf, double a11, double a12, double a13, double a14, double a21, double a22, double a23, double a24, double a31, double a32, double a33, double a34) {
+    TRACE("");
+    guard(__func__, [&] { trsf->SetValues(a11, a12, a13, a14, a21, a22, a23, a24, a31, a32, a33, a34); });
+}
+
 extern "C" void _gp_Trsf__SetMirror__gp_Ax1(gp_Trsf *trsf, const gp_Ax1 *ax1) {
     TRACE("");
     guard(__func__, [&] { trsf->SetMirror(*ax1); });

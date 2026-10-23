@@ -91,6 +91,7 @@ OCCT_CAPI_HANDLE_TYPES(CAPI_DEFINE_DELETE_HANDLE)
 CAPI_DEFINE_DELETE(TopoDS_Shape)
 CAPI_DEFINE_DELETE(TopTools_ListOfShape)
 CAPI_DEFINE_DELETE(TColgp_Array1OfPnt)
+CAPI_DEFINE_DELETE_HANDLE(CadNode)
 
 extern "C" int TopAbs_ShapeEnumFromOrdinal(int ordinal) {
     return ordinal >= TopAbs_COMPOUND && ordinal <= TopAbs_SHAPE ? ordinal : TopAbs_SHAPE;

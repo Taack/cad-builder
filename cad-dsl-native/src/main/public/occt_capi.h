@@ -79,6 +79,10 @@ OCCT_CAPI_HANDLE_TYPES(OCCT_DECLARE_HANDLE)
 typedef struct TopoDS_Shape TopoDS_Shape;
 #endif
 
+/* Node of an assembly tree, held through OCCT_HANDLE(CadNode): a part (a shape with an optional color) or an
+   assembly of placed nodes (defined in capi_internal.hxx). */
+OCCT_DECLARE_HANDLE(CadNode)
+
 /***********************************************************************************************************************
 
     Runtime: errors and memory (capi_runtime.cpp)
@@ -100,6 +104,7 @@ OCCT_CAPI_HANDLE_TYPES(OCCT_DECLARE_DELETE_HANDLE)
 OCCT_DECLARE_DELETE(TopoDS_Shape)
 OCCT_DECLARE_DELETE(TopTools_ListOfShape)
 OCCT_DECLARE_DELETE(TColgp_Array1OfPnt)
+OCCT_DECLARE_DELETE_HANDLE(CadNode)
 #undef OCCT_DECLARE_DELETE
 #undef OCCT_DECLARE_DELETE_HANDLE
 
@@ -251,6 +256,9 @@ OCCT_CAPI gp_Trsf *new_gp_Trsf(void);
 OCCT_CAPI void _gp_Trsf__SetMirror__gp_Ax1(gp_Trsf *trsf, const gp_Ax1 *ax1);
 
 OCCT_CAPI void _gp_Trsf__SetMirror__gp_Ax2(gp_Trsf *trsf, const gp_Ax2 *ax2);
+
+/* Rotation and translation part of the matrix, row by row; the rotation must be orthogonal. */
+OCCT_CAPI void _gp_Trsf__SetValues(gp_Trsf *trsf, double a11, double a12, double a13, double a14, double a21, double a22, double a23, double a24, double a31, double a32, double a33, double a34);
 
 OCCT_CAPI void _gp_Trsf__SetTranslation__gp_Vec(gp_Trsf *gp_trsf, const gp_Vec *translation);
 
@@ -471,6 +479,16 @@ OCCT_CAPI OCCT_HANDLE(Geom_Surface) *handle_Geom_Surface__TopoDS_Face(const Topo
 
 OCCT_CAPI gp_Dir *new_gp_Dir__Normal__TopoDS_Face(const TopoDS_Face *aCurrentFace);
 
+/* Planar face of shape whose outward normal is (dx, dy, dz), within 1 degree: the farthest along it when hasPos = 0,
+   else the closest to (px, py, pz). Returns {ox, oy, oz, nx, ny, nz}: the centre of mass of the face, or the position
+   projected on its plane, and its outward normal; NULL when no face matches. Release with occt_free_doubles. */
+OCCT_CAPI double *R6_TopoDS_Shape__PlanarFace__dir_hasPos_pos(const TopoDS_Shape *shape, double dx, double dy, double dz, int hasPos, double px, double py, double pz);
+
+/* Axis of a cylindrical face of shape: the largest radius when hasPos = 0, else the face closest to (px, py, pz).
+   Returns {ox, oy, oz, dx, dy, dz}: the axis direction, pointing to +Z (else +Y, else +X), and on the axis, the start
+   of the face along it, or the position projected; NULL when no face matches. Release with occt_free_doubles. */
+OCCT_CAPI double *R6_TopoDS_Shape__CylindricalFaceAxis__hasPos_pos(const TopoDS_Shape *shape, int hasPos, double px, double py, double pz);
+
 OCCT_CAPI TopTools_ListOfShape *new_TopTools_ListOfShape(void);
 
 OCCT_CAPI void _TopTools_ListOfShape__Append__TopoDS_Shape(TopTools_ListOfShape *l, const TopoDS_Shape *shape);
@@ -613,5 +631,38 @@ OCCT_CAPI void analyze(const TopoDS_Shape *myShape);
 
 /* Opens an interactive viewer window and blocks until it is closed. */
 OCCT_CAPI int visualize(TopoDS_Shape *shape);
+
+/* name may be NULL. r, g, b are sRGB components in [0, 1], used when hasColor is set. */
+OCCT_CAPI OCCT_HANDLE(CadNode) *handle_CadNode__part__TopoDS_Shape_name_hasColor_r_g_b(const TopoDS_Shape *shape, const char *name, int hasColor, double r, double g, double b);
+
+/* An empty assembly; name may be NULL. */
+OCCT_CAPI OCCT_HANDLE(CadNode) *handle_CadNode__assembly__name(const char *name);
+
+/* Adds an occurrence of node to assembly, moved by location (from the node coordinates to the assembly ones). */
+OCCT_CAPI void _CadNode__AddComponent__node_location(OCCT_HANDLE(CadNode) *assembly, const OCCT_HANDLE(CadNode) *node, const gp_Trsf *location);
+
+/* Same as dumpShape, write_step, write_stl and visualize, for every part of the assembly tree, with its color.
+   To STEP, parts and sub-assemblies placed several times are written once. */
+OCCT_CAPI int dumpAssembly(const OCCT_HANDLE(CadNode) *assembly, int width, int height, const char *fileName);
+
+OCCT_CAPI void write_step_assembly(const OCCT_HANDLE(CadNode) *assembly, const char *fileName);
+
+OCCT_CAPI void write_stl_assembly(const OCCT_HANDLE(CadNode) *assembly, const char *fileName);
+
+OCCT_CAPI int visualize_assembly(const OCCT_HANDLE(CadNode) *assembly);
+
+/* Static location of the component index of assembly (in the order they were added). */
+OCCT_CAPI void _CadNode__SetLocation__index_location(OCCT_HANDLE(CadNode) *assembly, int index, const gp_Trsf *location);
+
+/* Locations of the component index for each frame of an animation, 12 values per frame (as _gp_Trsf__SetValues);
+   count = 0 removes them. */
+OCCT_CAPI void _CadNode__SetFrames__index_count_values(OCCT_HANDLE(CadNode) *assembly, int index, int count, const double *values);
+
+/* Renders the frames of the animation, from 0, into the image files named by fileNames, one per line; with
+   frameCount = 0, a single image of the static locations. Returns non-zero on success. */
+OCCT_CAPI int dumpAssemblyFrames(const OCCT_HANDLE(CadNode) *assembly, int frameCount, int width, int height, const char *fileNames);
+
+/* Same as visualize_assembly, playing the frameCount frames of the animation in a loop, fps frames per second. */
+OCCT_CAPI int visualize_animation(const OCCT_HANDLE(CadNode) *assembly, int frameCount, double fps);
 
 #endif /* OCCT_CAPI_H */

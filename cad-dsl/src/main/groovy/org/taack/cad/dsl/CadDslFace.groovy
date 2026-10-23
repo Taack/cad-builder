@@ -7,11 +7,19 @@ import org.taack.cad.dsl.geom.Vec2d
 @CompileStatic
 class CadDslFace implements CadDslBase {
 
-    CadDslSolid revolution(Number angle) {
-        revolution(new Vec(), new Vec(1), angle)
+    /**
+     * @param degrees Revolution angle
+     */
+    CadDslSolid revolution(Number degrees) {
+        revolution(new Vec(), new Vec(1), degrees)
     }
-    CadDslSolid revolution(Vec from = new Vec(), Vec dir = new Vec(1), Number angle = 0) {
-        visitor.visitRevolution(from, dir, angle.toDouble())
+
+    /**
+     * @param degrees Revolution angle, a full turn by default
+     */
+    CadDslSolid revolution(Vec from = new Vec(), Vec dir = new Vec(1), Number degrees = 360) {
+        double d = degrees.toDouble()
+        visitor.visitRevolution(from, dir, Math.abs(d) >= 360 ? 0d : Math.toRadians(d))
         new CadDslSolid(visitor: visitor)
     }
 
