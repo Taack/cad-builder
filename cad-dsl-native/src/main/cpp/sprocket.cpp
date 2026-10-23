@@ -78,8 +78,6 @@ g++ -I /usr/include/opencascade/ -lTKBinL -lTKBin -lTKBinTObj -lTKBinXCAF -lTKBo
 #include <AIS_ViewController.hxx>
 #include <AIS_Shape.hxx>
 #include <OpenGl_GraphicDriver.hxx>
-#include <Xw_Window.hxx>
-#include <X11/Xlib.h>
 
 using namespace std;
 

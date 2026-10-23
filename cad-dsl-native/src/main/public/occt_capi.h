@@ -29,7 +29,12 @@
 #include <TopoDS_Shape.hxx>
 #include <gp_Pnt.hxx>
 
+#ifdef _WIN32
+// A DLL only exports what is marked so; jextract looks the functions up by name.
+#define OCCT_CAPI extern "C" __declspec(dllexport)
+#else
 #define OCCT_CAPI extern "C"
+#endif
 #define OCCT_HANDLE(T) occ::handle<T>
 #define OCCT_DECLARE_OBJECT(T) class T;
 #define OCCT_DECLARE_HANDLE(T) class T;
