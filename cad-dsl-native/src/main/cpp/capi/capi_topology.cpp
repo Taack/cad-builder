@@ -11,6 +11,7 @@
 #include <BRepBuilderAPI_MakePolygon.hxx>
 #include <BRepBuilderAPI_MakeVertex.hxx>
 #include <BRepBuilderAPI_MakeWire.hxx>
+#include <BRepClass_FaceClassifier.hxx>
 #include <BRepExtrema_DistShapeShape.hxx>
 #include <BRepGProp.hxx>
 #include <BRepCheck_Wire.hxx>
@@ -41,7 +42,10 @@
 #include <gp_Cylinder.hxx>
 #include <gp_Pln.hxx>
 
+#include <algorithm>
 #include <cmath>
+#include <stdexcept>
+#include <vector>
 
 /*
 
@@ -575,6 +579,54 @@ extern "C" void _TopoDS_Builder__MakeCompound__TopoDS_Compound(const TopoDS_Buil
 extern "C" void _BRepLib__BuildCurves3d__TopoDS_Shape(const TopoDS_Shape *w1) {
     TRACE("");
     guard(__func__, [&] { BRepLib::BuildCurves3d(*w1); });
+}
+
+extern "C" TopoDS_Shape *new_TopoDS_Shape__BRepBuilderAPI_MakeFace__nested_wires(const TopoDS_Face *face) {
+    TRACE("");
+    return guard(__func__, [&] {
+        std::vector<TopoDS_Wire> wires;
+        // each wire filled, to find the wires it contains
+        std::vector<TopoDS_Face> filled;
+        for (TopExp_Explorer it(*face, TopAbs_WIRE); it.More(); it.Next()) {
+            BRepLib::BuildCurves3d(it.Current());
+            wires.push_back(TopoDS::Wire(it.Current()));
+            filled.push_back(BRepBuilderAPI_MakeFace(wires.back(), Standard_True).Face());
+        }
+        const size_t n = wires.size();
+        // containers[i]: the wires around wire i
+        std::vector<std::vector<size_t>> containers(n);
+        for (size_t i = 0; i < n; i++) {
+            const gp_Pnt p = BRep_Tool::Pnt(TopoDS::Vertex(TopExp_Explorer(wires[i], TopAbs_VERTEX).Current()));
+            for (size_t j = 0; j < n; j++) {
+                if (j != i && BRepClass_FaceClassifier(filled[j], p, Precision::Confusion()).State() == TopAbs_IN)
+                    containers[i].push_back(j);
+            }
+        }
+        // a wire inside an even number of wires bounds a face, the wires just inside it are its holes
+        BRep_Builder builder;
+        TopoDS_Compound faces;
+        builder.MakeCompound(faces);
+        TopoDS_Shape last;
+        int count = 0;
+        for (size_t i = 0; i < n; i++) {
+            if (containers[i].size() % 2 != 0) continue;
+            BRepBuilderAPI_MakeFace makeFace(filled[i]);
+            for (size_t k = 0; k < n; k++) {
+                if (containers[k].size() == containers[i].size() + 1
+                    && std::find(containers[k].begin(), containers[k].end(), i) != containers[k].end())
+                    makeFace.Add(wires[k]);
+            }
+            ShapeFix_Face fix(makeFace.Face());
+            fix.FixOrientation();
+            fix.Perform();
+            last = fix.Face();
+            builder.Add(faces, last);
+            count++;
+        }
+        if (count == 0) throw std::runtime_error("no face bounded by the wires");
+        // a single face stays a face, for the operations expecting one
+        return new TopoDS_Shape(count == 1 ? last : faces);
+    });
 }
 
 /*

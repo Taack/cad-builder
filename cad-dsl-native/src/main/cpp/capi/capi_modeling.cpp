@@ -316,8 +316,7 @@ extern "C" TopoDS_Shape *new_TopoDS_Shape__brep_algoapi_fuse__s1_listrOfShape(co
         aBuilder.SetRunParallel(false);
         // Fuzzy value left to its default (Precision::Confusion())
         aBuilder.SetNonDestructive(false);
-        // Gluing mode for coinciding arguments
-        aBuilder.SetGlue(BOPAlgo_GlueFull);
+        // No gluing: it skips the intersection of overlapping solids, which stay apart in the result
         aBuilder.SetCheckInverted(false);
         aBuilder.SetUseOBB(true);
         aBuilder.Build();

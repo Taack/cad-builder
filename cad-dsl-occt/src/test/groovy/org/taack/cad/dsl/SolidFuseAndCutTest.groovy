@@ -2,13 +2,18 @@ package org.taack.cad.dsl
 
 import groovy.transform.CompileStatic
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.io.TempDir
 import org.taack.cad.dsl.geom.Vec
 
+import static org.junit.jupiter.api.Assertions.assertEquals
 import static org.taack.cad.dsl.CadDsl.cd
 import static java.lang.Math.*
 
 @CompileStatic
 class SolidFuseAndCutTest {
+    @TempDir
+    File dir
+
     static final Double radianSphere = 0.5
     static final BigDecimal radius = 4.0
 
@@ -90,5 +95,40 @@ class SolidFuseAndCutTest {
     @Test
     void "Build Basic Shape Revolution"() {
         revolvedCut(fuseTorus(cylindersCut(generateSphere()))).display()
+    }
+
+    @Test
+    void "Prism overlapping the solid merges with it"() {
+        File step = new File(dir, 'prism.step')
+        CadDsl c = cd()
+        c.box(10, 10, 10)
+        // a bar sunk 1 mm into the side of the box
+        c.wireFrom(new Vec(9, 2, 2)) {
+            edge(new Vec(12, 2, 2))
+            edge(new Vec(12, 2, 5))
+            edge(new Vec(9, 2, 5))
+            edge(new Vec(9, 2, 2))
+        }.toFace().prism(new Vec(0, 3, 0))
+        c.display(step.path)
+        assertEquals(1, step.text.count('MANIFOLD_SOLID_BREP'))
+    }
+
+    @Test
+    void "Prism of contours side by side, each with a hole"() {
+        File step = new File(dir, 'rings.step')
+        CadDsl c = cd()
+        c.box(40, 20, 5).topZ().wireFrom() {
+            to(10, 10)
+            circle(6)
+            circle(4, true)
+            to(30, 10)
+            circle(6)
+            circle(4, true)
+        }.toFace().prism(5)
+        c.display(step.path)
+        String content = step.text
+        assertEquals(1, content.count('MANIFOLD_SOLID_BREP'))
+        // outside and inside of both rings
+        assertEquals(4, content.count('CYLINDRICAL_SURFACE'))
     }
 }

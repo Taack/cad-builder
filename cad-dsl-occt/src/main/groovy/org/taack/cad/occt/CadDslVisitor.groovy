@@ -936,6 +936,9 @@ class CadDslVisitor implements ICadDslVisitor {
 //                }
 
             }
+            // the face has all the wires as holes of the first one: a face per outer wire instead, with the wires inside
+            // it as holes
+            face = own(new_TopoDS_Shape__BRepBuilderAPI_MakeFace__nested_wires(face), NativeLib::delete_TopoDS_Shape)
         }
     }
 

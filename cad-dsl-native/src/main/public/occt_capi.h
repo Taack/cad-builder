@@ -514,6 +514,10 @@ OCCT_CAPI void _TopoDS_Builder__MakeCompound__TopoDS_Compound(const TopoDS_Build
 
 OCCT_CAPI void _BRepLib__BuildCurves3d__TopoDS_Shape(const TopoDS_Shape *w1);
 
+/* The faces bounded by the wires of face, nested or side by side: a wire inside an even number of others bounds a
+   face, with the wires just inside it as holes. A face if there is one, else a compound of faces. */
+OCCT_CAPI TopoDS_Shape *new_TopoDS_Shape__BRepBuilderAPI_MakeFace__nested_wires(const TopoDS_Face *face);
+
 OCCT_CAPI OCCT_HANDLE(ShapeExtend_WireData) *new_ShapeExtend_WireData(void);
 
 OCCT_CAPI void _ShapeExtend_WireData__Add__TopoDS_Edge(OCCT_HANDLE(ShapeExtend_WireData) *data, const TopoDS_Edge *edge, int atnum);
