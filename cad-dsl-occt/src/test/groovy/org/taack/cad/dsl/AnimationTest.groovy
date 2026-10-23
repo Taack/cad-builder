@@ -126,6 +126,79 @@ class AnimationTest {
         }
     }
 
+    /**
+     * A cart rolling on the ground: the wheels turn in the axle sub-assembly, placed twice in the cart sub-assembly,
+     * which slides along the ground.
+     */
+    static CadDslAssembly rollingCart() {
+        assembly('rolling cart') {
+            // Parts
+            def groundPart = part('ground', Color.GRAY) { box(200, 40, 2) }
+            def chassisPart = part('chassis', Color.hex('#3080ff')) { box(40, 20, 4) }
+            def shaftPart = part('shaft') { cylinder(1, 26) }
+            def wheelPart = part('wheel', Color.ORANGE) { cylinder(5, 2).cut { cylinder(1, 2) } }
+            // a spoke on the outer face of the wheels, to see them turn
+            def spokePart = part('spoke', Color.RED) {
+                position(new Vec(-2, -0.5, 0)) { box(4, 1, 1) }
+            }
+
+            // Axle: the wheels turn on the shaft, the spokes with them
+            CadDslInstance shaft = null, left = null, right = null
+            def axle = assembly('axle') {
+                shaft = place(shaftPart)
+                left = place(wheelPart) { revolute(axis(), shaft.axis()) }
+                right = place(wheelPart) { revolute(axis(), shaft.axis().offset(24)) }
+                place(spokePart) { mate(butZ(), left.butZ(new Vec(3, 0, 0))) }
+                place(spokePart) { mate(butZ(), right.topZ(new Vec(3, 0, 26))) }
+            }
+
+            // Cart: a chassis on two axles
+            CadDslInstance chassis = null
+            def cart = assembly('cart') {
+                chassis = place(chassisPart) { translate(-20, 0, 4) }
+                place(axle) { mate(shaft.butZ(), chassis.butY(new Vec(-14, 0, 3)).offset(-23)) }
+                place(axle) { mate(shaft.butZ(), chassis.butY(new Vec(14, 0, 3)).offset(-23)) }
+            }
+
+            // Placements: the back of the chassis at the start of the ground, the wheels on it, sliding along +X
+            def ground = place(groundPart) { translate(-100, -10, -2) }
+            def rolling = place(cart) {
+                slider(chassis.butX().reverse(), ground.butX(new Vec(-100, 10, 8)).reverse())
+            }
+
+            // Motion: the cart rolls 120 mm in 2 s, the wheels turn around -Y without slipping
+            gear(rolling, left, -180 / (PI * 5))
+            gear(rolling, right, -180 / (PI * 5))
+            animate(duration: 2, fps: 25) {
+                rolling.distance = { double t -> 60 * t }
+            }
+        }
+    }
+
+    @Test
+    void "Rolling cart: animations in sub-assemblies, the wheels roll without slipping"() {
+        def scene = rollingCart()
+        CadDslInstance rolling = scene.instances[1]
+        CadDslAssembly cart = (CadDslAssembly) rolling.part
+        CadDslInstance rearAxle = cart.instances[2]
+        CadDslInstance wheel = ((CadDslAssembly) rearAxle.part).instances[2]
+        // from the wheel coordinates to the scene ones
+        def wheelAt = { double t -> rolling.locationAt(t) * rearAxle.locationAt(t) * wheel.locationAt(t) }
+        double h = 1e-4
+        [0.1d, 0.7d, 1.5d].each { double t ->
+            Vec center = wheelAt(t).apply(new Vec(0, 0, 1))
+            assertEquals(14 - 100 + 20 + 60 * t, center.x, 1e-6)
+            // on the ground
+            Vec contact = center - new Vec(0, 0, 5)
+            assertEquals(0, contact.z, 1e-6)
+            // the point of the wheel touching the ground does not move: its speed is 0 (the cart goes at 60 mm/s),
+            // up to the error of the finite difference
+            Vec p = wheelAt(t).inverse().apply(contact)
+            Vec speed = (wheelAt(t + h).apply(p) - wheelAt(t - h).apply(p)) * (1 / (2 * h))
+            assertTrue(Math.sqrt(speed.cord(speed)) < 1e-3, "$speed")
+        }
+    }
+
     @Test
     void "Crank and slider: the rod end stays on the piston"() {
         def engine = crankSlider()

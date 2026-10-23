@@ -582,6 +582,63 @@ assembly('crank and slider') {
 .Crank and Slider Result
 image::cad-crank-slider.gif[]
 
+==== Animated Sub-assemblies
+
+Joints animate inside sub-assemblies as well: the wheels turn on the shaft of the axle, the axle is placed twice in the
+cart, and the cart slides on the ground. The laws and gears can link any joints of the tree: here, gears make the
+wheels turn as the cart moves, so that they roll without slipping (a turn every `2 PI r` along the ground). A
+sub-assembly placed several times moves the same way everywhere, as all its occurrences share it.
+
+.Rolling Cart (`AnimationTest`)
+[source,groovy]
+----
+assembly('rolling cart') {
+    // Parts
+    def groundPart = part('ground', Color.GRAY) { box(200, 40, 2) }
+    def chassisPart = part('chassis', Color.hex('#3080ff')) { box(40, 20, 4) }
+    def shaftPart = part('shaft') { cylinder(1, 26) }
+    def wheelPart = part('wheel', Color.ORANGE) { cylinder(5, 2).cut { cylinder(1, 2) } }
+    // a spoke on the outer face of the wheels, to see them turn
+    def spokePart = part('spoke', Color.RED) {
+        position(new Vec(-2, -0.5, 0)) { box(4, 1, 1) }
+    }
+
+    // Axle: the wheels turn on the shaft, the spokes with them
+    CadDslInstance shaft = null, left = null, right = null
+    def axle = assembly('axle') {
+        shaft = place(shaftPart)
+        left = place(wheelPart) { revolute(axis(), shaft.axis()) }
+        right = place(wheelPart) { revolute(axis(), shaft.axis().offset(24)) }
+        place(spokePart) { mate(butZ(), left.butZ(new Vec(3, 0, 0))) }
+        place(spokePart) { mate(butZ(), right.topZ(new Vec(3, 0, 26))) }
+    }
+
+    // Cart: a chassis on two axles
+    CadDslInstance chassis = null
+    def cart = assembly('cart') {
+        chassis = place(chassisPart) { translate(-20, 0, 4) }
+        place(axle) { mate(shaft.butZ(), chassis.butY(new Vec(-14, 0, 3)).offset(-23)) }
+        place(axle) { mate(shaft.butZ(), chassis.butY(new Vec(14, 0, 3)).offset(-23)) }
+    }
+
+    // Placements: the back of the chassis at the start of the ground, the wheels on it, sliding along +X
+    def ground = place(groundPart) { translate(-100, -10, -2) }
+    def rolling = place(cart) {
+        slider(chassis.butX().reverse(), ground.butX(new Vec(-100, 10, 8)).reverse())
+    }
+
+    // Motion: the cart rolls 120 mm in 2 s, the wheels turn around -Y without slipping
+    gear(rolling, left, -180 / (PI * 5))
+    gear(rolling, right, -180 / (PI * 5))
+    animate(duration: 2, fps: 25) {
+        rolling.distance = { double t -> 60 * t }
+    }
+}.display()
+----
+
+.Rolling Cart Result
+image::cad-rolling-cart.gif[]
+
 == Distribution and Usage
 
 `cad-dsl` does not depend on native code: parts and assemblies compiled against it can be shared as plain jars.
