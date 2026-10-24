@@ -730,6 +730,9 @@ cd().position(new Vec(0, 0, 1)) {
 }.display(args ? args[0] : null)
 ----
 
+Classes in the directory of the script are found too (`Contour.groovy` for a class `Contour`), to share parts
+between scripts.
+
 To get code completion, write the imports anyway (see `samples/pillow-block.groovy`) and open the scripts
 in a project depending on `org.taack.cad:cad-dsl` only.
 
