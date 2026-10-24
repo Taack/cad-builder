@@ -3,6 +3,7 @@ package org.taack.cad.dsl
 import groovy.transform.CompileStatic
 import org.taack.cad.dsl.geom.ITrimmable2d
 import org.taack.cad.dsl.geom.Vec
+import org.taack.cad.dsl.svg.SvgDrawing
 
 @CompileStatic
 class CadDslEdge extends CadDslEdge2d {
@@ -42,5 +43,32 @@ class CadDslEdge extends CadDslEdge2d {
      */
     void arc(Vec to, Vec via) {
         visitor.visitArc(to, via)
+    }
+
+    /**
+     * Draw the contours of a line of text at the last position, in absolute coordinates.
+     * @param options as for a text on a face (font, bold, italic, align, valign), with direction: along the text
+     *                (default X) and normal: of its plane, the side it reads from (default Z)
+     * @param content Text, in one line
+     * @param size    Size of the font, in model units
+     */
+    @Override
+    CadDslEdge2d text(Map<String, ?> options = [:], String content, Number size) {
+        visitor.visitText3d(content, size.toDouble(), new TextOptions(options))
+        this
+    }
+
+    /**
+     * Draw the contours of the filled shapes of an SVG drawing at the last position, in absolute coordinates.
+     * @param options as on a face (align, valign), with direction: of the x axis of the drawing (default X) and
+     *                normal: of its plane, the side it reads from (default Z)
+     * @param source  An SVG document, the path of an SVG file, or the data of a path (as its d attribute)
+     * @param width   Width of the drawing (of its bounding box), in model units
+     */
+    @Override
+    CadDslEdge2d svg(Map<String, ?> options = [:], String source, Number width) {
+        SvgOptions o = new SvgOptions(options)
+        visitor.visitSvg3d(SvgDrawing.fit(source, width.toDouble(), o), o)
+        this
     }
 }

@@ -9,6 +9,7 @@ import org.taack.cad.dsl.geom.IClosedShape2d
 import org.taack.cad.dsl.geom.IConstruction
 import org.taack.cad.dsl.geom.ITrimmable2d
 import org.taack.cad.dsl.geom.Naca
+import org.taack.cad.dsl.svg.SvgDrawing
 
 /**
  * Manage Drawing in face, directly or via construction closures
@@ -97,11 +98,31 @@ class CadDslEdge2d implements CadDslBase {
     }
 
     /**
-     * Draw a closed circle at the last position
-     * @param diameter Diameter of the circle
+     * Draw the contours of a line of text at the last position, along the u direction of the face, read from
+     * outside it. Its letters are closed contours, their holes found as for any contours drawn inside others.
+     * @param options font: a font name (default sans-serif) or the path of a font file; bold, italic;
+     *                align: left (default), center or right; valign: bottom (default, the baseline), center or top;
+     *                angle: from the u direction, in degrees, counterclockwise seen from outside
+     * @param content Text, in one line
+     * @param size    Size of the font, in model units
      */
-    CadDslEdge2d text(String fontPath, Number size, @DelegatesTo(value = CadDslEdge2dText, strategy = Closure.DELEGATE_FIRST) Closure c) {
-//        visitor.visitText(diameter)
+    CadDslEdge2d text(Map<String, ?> options = [:], String content, Number size) {
+        visitor.visitText(content, size.toDouble(), new TextOptions(options))
+        this
+    }
+
+    /**
+     * Draw the contours of the filled shapes of an SVG drawing at the last position, its x axis along the u direction
+     * of the face, read from outside it. Holes are found as for any contours drawn inside others (the even-odd rule).
+     * @param options align: left (default), center or right; valign: bottom (default), center or top, the last
+     *                position on the bounding box of the drawing; angle: from the u direction, in degrees,
+     *                counterclockwise seen from outside
+     * @param source  An SVG document, the path of an SVG file, or the data of a path (as its d attribute)
+     * @param width   Width of the drawing (of its bounding box), in model units
+     */
+    CadDslEdge2d svg(Map<String, ?> options = [:], String source, Number width) {
+        SvgOptions o = new SvgOptions(options)
+        visitor.visitSvg(SvgDrawing.fit(source, width.toDouble(), o), o)
         this
     }
 

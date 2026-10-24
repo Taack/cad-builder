@@ -8,6 +8,7 @@ import org.taack.cad.dsl.geom.Ellipse2d
 import org.taack.cad.dsl.geom.IClosedShape2d
 import org.taack.cad.dsl.geom.IConstruction
 import org.taack.cad.dsl.geom.ITrimmable2d
+import org.taack.cad.dsl.svg.SvgContour
 
 interface ICadDslVisitor {
     void visitFrom(Vec pos)
@@ -47,6 +48,14 @@ interface ICadDslVisitor {
     void visitCenterEnd()
 
     Circle2d visitCircle2d(double diameter, boolean reverse)
+
+    void visitText(String content, double size, TextOptions options)
+
+    void visitText3d(String content, double size, TextOptions options)
+
+    void visitSvg(List<SvgContour> contours, SvgOptions options)
+
+    void visitSvg3d(List<SvgContour> contours, SvgOptions options)
 
     void visitMove(Vec2d to)
 
