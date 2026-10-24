@@ -404,17 +404,20 @@ become cubic Bezier curves. Shapes not filled (`fill="none"`), hidden ones, and 
 `mask`, `pattern`, `marker` and `symbol` are left out. Strokes are not read: convert them to paths first (Inkscape:
 _Path > Stroke to Path_).
 
-.Embossed Path with a Hole (`SvgTest`)
+.Embossed Sun of the CITEL Logo (`SvgTest`)
+====
+The sun of the CITEL logo, `citel-sun.svg`, is a single path of lines and arcs: a disc, with the rays of
+the sun cut out of it.
+
 [source,groovy]
 ----
 cd().box(30, 30, 5).topZ().wireFrom() {
-    // a square around a square: the even-odd rule makes a ring of it
-    svg('M0 0H10V10H0Z M3 3H7V7H3Z', 10, align: 'center', valign: 'center')
+    svg('citel-sun.svg', 20, align: 'center', valign: 'center')
 }.toFace().prism(1).display()
 ----
 
-.SVG Result
 image::cad-svg.png[]
+====
 
 === Assemblies
 

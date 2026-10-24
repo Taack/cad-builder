@@ -33,6 +33,18 @@ class SvgTest {
     }
 
     @Test
+    void "Embossed sun of the CITEL logo"() {
+        File step = new File(dir, 'sun.step')
+        cd().box(30, 30, 5).topZ().wireFrom() {
+            svg('../citel-sun.svg', 20, align: 'center', valign: 'center')
+        }.toFace().prism(1).display(step.path)
+        String content = step.text
+        assertEquals(1, content.count('MANIFOLD_SOLID_BREP'))
+        // the two arcs of the disc stay cylinders
+        assertEquals(2, content.count('CYLINDRICAL_SURFACE'))
+    }
+
+    @Test
     void "Engraved circle, exact cylinders"() {
         File step = new File(dir, 'circle.step')
         cd().box(30, 30, 5).topZ().wireFrom() {
