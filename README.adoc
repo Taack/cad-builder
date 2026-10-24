@@ -7,7 +7,7 @@ The purpose of this tool is to share 3D parts and assemblies like java class bin
 
 The DSL does not cover every way to define a body yet, and assemblies place and animate parts without a solver.
 
-.The OCCT bottle tutorial, written with the DSL (`BottleTest`)
+.Assembly, with svg (`BottleTest`)
 image::mj32.jpg[]
 
 == Modules
