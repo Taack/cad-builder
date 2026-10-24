@@ -1,6 +1,7 @@
 plugins {
     id 'groovy'
     id 'java-library'
+    id 'java-test-fixtures'
     id 'maven-publish'
 }
 
@@ -22,6 +23,9 @@ java {
 dependencies {
     // Closures and @DelegatesTo are part of the DSL API
     api 'org.apache.groovy:groovy:6.0.0'
+    // The DSL tests (src/testFixtures), run by each kernel module with its kernel, see gradle/kernel-tests.gradle
+    testFixturesImplementation platform('org.junit:junit-bom:6.0.3')
+    testFixturesImplementation 'org.junit.jupiter:junit-jupiter'
     testImplementation platform('org.junit:junit-bom:6.0.3')
     testImplementation 'org.junit.jupiter:junit-jupiter'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
@@ -30,5 +34,9 @@ dependencies {
 test {
     useJUnitPlatform()
 }
+
+// The DSL tests are not published
+components.java.withVariantsFromConfiguration(configurations.testFixturesApiElements) { skip() }
+components.java.withVariantsFromConfiguration(configurations.testFixturesRuntimeElements) { skip() }
 
 apply from: "$rootDir/gradle/publishing.gradle"

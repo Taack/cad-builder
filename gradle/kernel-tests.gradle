@@ -1,0 +1,12 @@
+// The DSL tests of cad-dsl (src/testFixtures), run by a kernel module with its kernel.
+// A kernel lacking a capability excludes the tests tagged with it, e.g. test { useJUnitPlatform { excludeTags 'images' } }
+
+evaluationDependsOn(':cad-dsl')
+
+dependencies {
+    testImplementation testFixtures(project(':cad-dsl'))
+}
+
+tasks.named('test', Test) {
+    testClassesDirs += project(':cad-dsl').sourceSets.testFixtures.output.classesDirs
+}

@@ -18,16 +18,23 @@ image::cad-bottle.png[]
 ** `org.taack.cad.builder`, a builder API to try what OCCT can do before it gets into the DSL;
 ** `org.taack.cad.binding` (tests), direct calls to the OCCT symbols bound by jextract.
 * `cad-dsl-native`: the C API over OCCT, loaded by `cad-dsl-occt`.
+* `cad-dsl-freecad`: the FreeCAD kernel (`org.taack.cad.freecad`), building the models in a `FreeCADCmd` process, and
+  saving them as editable FCStd files, their parameters in a spreadsheet (see <<FreeCAD Kernel>>).
+* `cad-dsl-step`: `step2dsl`, converting STEP files to DSL scripts, with FreeCAD (see <<STEP to DSL>>).
 
 The DSL finds its kernel at runtime with `ServiceLoader` (`org.taack.cad.dsl.kernel.CadKernel`), so `cd()` works as soon as
-`cad-dsl-occt` is on the classpath and `cad-dsl-native` in `java.library.path` (see <<Native Library>>).
+`cad-dsl-occt` is on the classpath and `cad-dsl-native` in `java.library.path` (see <<Native Library>>), or
+`cad-dsl-freecad` is on the classpath and FreeCAD installed.
+
+The tests of the DSL are in `cad-dsl/src/testFixtures`: they need a kernel, and each kernel module runs them with its own
+(see `gradle/kernel-tests.gradle`). A kernel lacking a capability excludes the tests tagged with it (`images`, `colors`).
 
 == DSL
 
 WARNING: The DSL is evolving.
 
 It takes inspiration from https://github.com/CadQuery/cadquery[CadQuery], in Groovy. The tests in
-`cad-dsl-occt/src/test/groovy/org/taack/cad/dsl` give an overview of its constructions; the examples below come from them.
+`cad-dsl/src/testFixtures/groovy/org/taack/cad/dsl` give an overview of its constructions; the examples below come from them.
 
 `display()` opens the shape in an interactive OCCT viewer window, `display("x.png")` renders it off-screen
 (the images of this README are made this way), and `display("x.step")` / `display("x.stl")` export it.
@@ -743,9 +750,79 @@ It only needs `cad-dsl` on the classpath, neither OCCT nor native code.
 
 video::https://github.com/user-attachments/assets/c4763c7e-746c-4a55-a299-8d4375b2f001[]
 
+== FreeCAD Kernel
+
+`cad-dsl-freecad` runs the DSL in https://www.freecad.org[FreeCAD] 1.0 or later: each model is a FreeCAD document,
+built by a `FreeCADCmd` process the kernel starts on first use. It makes features, not plain shapes: primitives
+(`Part::Box`, `Part::Cylinder`...), sketches for the contours drawn on the faces, `Part::Extrusion` for the prisms and
+the holes, `Part::Revolution`, `Part::Cut`, `Part::MultiFuse`, fillets, lofts, sweeps along helices, fillings for the
+plates, `Draft` shape strings for the texts. Assemblies are `App::Part` of `App::Link`.
+
+`display("x.FCStd")` saves the document, editable in FreeCAD; `display("x.step")`, `.stl`, `.brep` and `.iges` export
+the shape. `display()` checks the model, and opens it in FreeCAD with `-Dcad.freecad.gui=true` (the default of the
+`cad-dsl-freecad` script). FreeCADCmd renders no images, and does not keep the colors (they belong to its GUI).
+
+Declare the dimensions as parameters with `param(name, value)`: they go to the `Params` spreadsheet of the FCStd file,
+and every number given to a feature equal to a parameter (or to its opposite) is bound to its cell: the dimensions of
+the primitives, the lengths of the prisms, the radii of the circles and arcs of the sketches (as constraints), the
+positions of the primitives and sketches. Change a cell in FreeCAD, and the model follows.
+
+.samples/pillow-block-params.groovy
+[source,groovy]
+----
+double length = param('length', 80)
+double thickness = param('thickness', 10)
+double holeRadius = param('holeRadius', 4)
+
+cd().box(length, 60, thickness).topZ().wireFrom() {
+    circle(holeRadius)
+}.toFace().hole(-thickness).display(args ? args[0] : null)
+----
+
+[source,bash]
+----
+./gradlew :cad-dsl-freecad:installDist
+cad-dsl-freecad/build/install/cad-dsl-freecad/bin/cad-dsl-freecad samples/pillow-block-params.groovy block.FCStd
+----
+
+NOTE: The binding goes by value: give the parameters distinct values, different from the other numbers of the model.
+A parameter can also be set from outside the script: `-Dcad.param.thickness=12` (in `JAVA_OPTS`), with any kernel.
+
+`FreeCADCmd` is found on the `PATH`, or set with the `freecad.cmd` system property (or `FREECAD_CMD`); the GUI is
+`FreeCAD`, or the `freecad.gui` system property (or `FREECAD_GUI`).
+
+Both kernels build the same solids from the shared tests, within 1% for the conical helices and the lofts (B-spline
+approximations). FreeCAD is slower on large models: it recomputes the document at `display()`, and checks each boolean.
+
+== STEP to DSL
+
+`step2dsl` (`cad-dsl-step`) converts a STEP file to a DSL script rebuilding it. It reads the STEP file in FreeCAD, and
+keeps its assembly tree: a part per distinct solid, a sub-assembly per distinct sub-assembly, placed as in the STEP file.
+Each solid is recognized, from the simplest to the most general form:
+
+* a primitive: a box along the axes, a cylinder, a sphere;
+* a 2.5D solid, whose faces are all normal or parallel to an axis: prisms of its cross-sections;
+* a solid of revolution: the revolution of its section by a half-plane through the axis;
+* else a 2.5D base, the faces that do not fit removed (defeaturing), then the holes, pockets and bosses on it (the
+  material removed from the base and added to it), each one a 2.5D solid, a primitive or a revolution.
+
+Lines and arcs of circle are kept, the other curves become polylines; what is approximated is listed in the header of
+the script. Free-form parts (molded, with drafts and B-spline faces) are approximated by stacks of prisms: their scripts
+are long, slow to build, and FreeCAD may reject their booleans (its `CheckModel` preference).
+
+[source,bash]
+----
+./gradlew :cad-dsl-step:installDist
+cad-dsl-step/build/install/step2dsl/bin/step2dsl part.step part.groovy --check   # <1>
+cad-dsl-freecad/build/install/cad-dsl-freecad/bin/cad-dsl-freecad part.groovy part.FCStd
+----
+
+<1> `--check` runs the script with the FreeCAD kernel, and prints how far what it builds is from the STEP file
+(the volume of their symmetric difference); without a script file, the script goes to the standard output.
+
 == Building
 
-`./gradlew cad-dsl:build` only needs a JDK. The native part requires https://github.com/Open-Cascade-SAS/OCCT[Open CASCADE Technology] 8.0 (C++17).
+`./gradlew cad-dsl:build` only needs a JDK, `cad-dsl-freecad` and `cad-dsl-step` FreeCAD 1.0 or later. The native part requires https://github.com/Open-Cascade-SAS/OCCT[Open CASCADE Technology] 8.0 (C++17).
 Use your distribution package if it ships 8.0, otherwise build it from source:
 
 .Build OCCT 8.0.1 into a local prefix
@@ -765,6 +842,7 @@ To avoid passing it each time, add `occtHome=/home/<you>/.local/occt-8.0.1` to `
 [source,bash]
 ----
 ./gradlew -PocctHome=$HOME/.local/occt-8.0.1 cad-dsl-occt:test
+./gradlew cad-dsl-freecad:test cad-dsl-step:test
 ./gradlew clean <1>
 ----
 
