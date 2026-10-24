@@ -416,7 +416,7 @@ cd().box(30, 30, 5).topZ().wireFrom() {
 }.toFace().prism(1).display()
 ----
 
-image::cad-svg.png[]
+image::cad-svg2.png[]
 ====
 
 === Assemblies
