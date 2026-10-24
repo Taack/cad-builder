@@ -23,6 +23,8 @@ V2 = App.Base.Vector2d
 G = Part.Geom2d
 
 FACE_MAKER = 'Part::FaceMakerBullseye'
+# A link is named as the part it shows. The preferences are not saved (see cad_dsl_server.py)
+App.ParamGet('User parameter:BaseApp/Preferences/Document').SetBool('DuplicateLabels', True)
 # Distance under which two end points of a sketch are joined by a coincident constraint
 COINCIDENCE = 1e-5
 # Contours of more edges are not constrained: solving the sketch would take long
@@ -1311,7 +1313,26 @@ def save_document(doc, visible, file_name, bindings):
         for o in doc.Objects:
             if hasattr(o, 'Visibility'):
                 o.Visibility = o in visible
+    fit_view(doc)
     doc.saveAs(os.path.abspath(file_name))
+
+
+# Orientation of the isometric view of FreeCAD (x, y, z, w)
+ISOMETRIC = (0.424708, 0.17592, 0.339851, 0.820473)
+
+
+def fit_view(doc):
+    """Show the visible features of doc in an isometric view, saved with it: the camera of a new view looks at the
+    origin from the top, 4 mm high. The camera is set at once (viewIsometric animates, it needs the Qt event loop)."""
+    if not App.GuiUp:
+        return
+    import FreeCADGui
+    views = FreeCADGui.getDocument(doc.Name).mdiViewsOfType('Gui::View3DInventor')
+    if not views:
+        return
+    r = App.Rotation(*ISOMETRIC)
+    views[0].setCamera('OrthographicCamera { orientation %r %r %r %r }' % (r.Axis.x, r.Axis.y, r.Axis.z, r.Angle))
+    views[0].fitAll()
 
 
 # ---------------------------------------------------------------------------------------------------------------------
@@ -1322,6 +1343,7 @@ class PartNode:
     """A part of an assembly: the result of a model"""
 
     def __init__(self, model, name, color):
+        """color: [r, g, b] in [0, 1], None for the default one"""
         self.model = model
         self.obj = model.result_shape()
         if self.obj is None:
@@ -1345,6 +1367,7 @@ class Assembly:
         self.sources.Visibility = False
         self.links = []
         self.imported = {}
+        self.placed = {}
 
     def visitPart(self, name, color, model):
         return register(PartNode(handles[model], name, color))
@@ -1362,15 +1385,23 @@ class Assembly:
         for o in copied:
             o.Visibility = False
         self.sources.addObjects(copied)
-        if isinstance(node, PartNode) and node.name:
-            copy.Label = node.name
+        if isinstance(node, PartNode):
+            if node.name:
+                copy.Label = node.name
+            if node.color and App.GuiUp:
+                copy.ViewObject.ShapeAppearance = (App.Material(DiffuseColor=tuple(node.color)),)
         self.imported[handle] = copy
         return copy
 
     def visitPlace(self, handle, location):
         target = self.import_node(handle)
-        o = self.doc.addObject('App::Link', 'Link')
+        # the name of the part or assembly, numbered when it is placed several times; FreeCAD makes an identifier of
+        # the internal name, unique (contact, contact001, ...). It would increment the number ending a name (M4 -> M5),
+        # followed by _ then (M4_, M4_001)
+        o = self.doc.addObject('App::Link', target.Label + ('_' if target.Label[-1:].isdigit() else ''))
         o.LinkedObject = target
+        self.placed[handle] = self.placed.get(handle, 0) + 1
+        o.Label = target.Label if self.placed[handle] == 1 else '%s (%d)' % (target.Label, self.placed[handle])
         o.Placement = to_placement(location)
         self.root.addObject(o)
         self.links.append(o)
@@ -1399,8 +1430,12 @@ class Assembly:
             raise ValueError('%s: the FreeCAD kernel renders no animation frames' % file_name)
         ext = os.path.splitext(file_name)[1].lower()
         if ext in ('.step', '.stp'):
-            import Import
-            Import.export([self.root], file_name)
+            # with the colors when the GUI has them
+            if App.GuiUp:
+                import ImportGui as exporter
+            else:
+                import Import as exporter
+            exporter.export([self.root], file_name)
         elif ext == '.fcstd':
             self.save(file_name)
         else:

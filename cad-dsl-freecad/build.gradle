@@ -38,9 +38,9 @@ application {
 }
 
 test {
-    // FreeCADCmd renders no images, and has no colors (they belong to the GUI)
+    // FreeCAD renders no images off screen
     useJUnitPlatform {
-        excludeTags 'images', 'colors'
+        excludeTags 'images'
     }
 }
 

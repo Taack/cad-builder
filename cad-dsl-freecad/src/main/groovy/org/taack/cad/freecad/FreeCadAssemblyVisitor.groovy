@@ -12,7 +12,7 @@ import org.taack.cad.dsl.geom.Vec
 
 /**
  * Assembly built in a FreeCAD document: an App::Part of App::Links to the parts and sub-assemblies, copied in it.
- * The colors are not kept (FreeCADCmd has no view providers), nor the animations.
+ * The colors are kept when the GUI of FreeCAD starts off screen (see cad_dsl_server.py), not the animations.
  */
 @CompileStatic
 class FreeCadAssemblyVisitor implements ICadDslAssemblyVisitor {

@@ -5,6 +5,8 @@ answers its requests, one JSON object per line.
 A request is {"o": handle or null, "m": method, "a": [arguments]}; the answer {"r": result}, or {"e": message,
 "t": traceback} when the method failed. Requests on a handle go to the model or assembly it names, the others to the
 functions of cad_dsl_freecad. The server stops at the end of its input.
+
+In the GUI, FreeCAD prints its messages in its report view: the errors come back in the answers.
 """
 import json
 import os
@@ -13,6 +15,19 @@ import sys
 import traceback
 
 sys.path.insert(0, os.environ['CAD_DSL_LIB'])
+
+# The GUI, off screen (QT_QPA_PLATFORM=offscreen): the documents get their view, colors and visibility; FreeCADCmd
+# alone when it cannot start, or with CAD_DSL_HEADLESS=true
+if os.environ.get('CAD_DSL_HEADLESS') != 'true':
+    try:
+        import FreeCADGui
+        FreeCADGui.showMainWindow()
+        # Qt sets the numbers of the user's locale (fr_FR: 0,5): the preferences would be read wrong, the deviation
+        # of the meshes of the views 0.5 as 0, and the curved faces meshed without end
+        import locale
+        locale.setlocale(locale.LC_NUMERIC, 'C')
+    except Exception as e:
+        print('cad-dsl-freecad: no FreeCAD GUI (%s), the documents have no colors' % e)
 
 import cad_dsl_freecad
 
@@ -35,3 +50,5 @@ def serve():
 
 
 serve()
+# now, without letting FreeCAD save its preferences (the GUI would save its window)
+os._exit(0)

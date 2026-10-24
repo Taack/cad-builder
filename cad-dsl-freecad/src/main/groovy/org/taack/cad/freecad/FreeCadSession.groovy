@@ -52,6 +52,8 @@ final class FreeCadSession {
                 .redirectError(ProcessBuilder.Redirect.INHERIT)
         builder.environment().put('CAD_DSL_PORT', server.localPort.toString())
         builder.environment().put('CAD_DSL_LIB', lib.path)
+        // the GUI of FreeCAD, for the colors and the visibility of the documents, without window
+        builder.environment().put('QT_QPA_PLATFORM', 'offscreen')
         try {
             process = builder.start()
             process.outputStream.close()
