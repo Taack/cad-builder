@@ -531,6 +531,18 @@ OCCT_CAPI TopoDS_Shape *new_TopoDS_Shape__StdPrs_BRepTextBuilder__Perform__pen(
     const gp_Pnt *position, const gp_Dir *normal, const gp_Dir *direction, const char *text, const char *font,
     double size, int bold, int italic, int hAlign, int vAlign);
 
+/* A compound of the wires of closed contours, drawn at (u, v) on face: their x along u turned by angle (radians),
+   read from outside the face. data (size doubles) holds the number of contours, then for each one its number of
+   segments, its start (x, y), and for each segment its kind and points: 1, a line to (x, y); 2, an arc of circle
+   through (x, y) to (x, y); 3, a cubic Bezier curve of control points (x, y), (x, y) to (x, y). NULL if the data is
+   wrong (see occt_last_error). */
+OCCT_CAPI TopoDS_Shape *new_TopoDS_Shape__BRepBuilderAPI_MakeWire__contours_face_u_v(
+    const TopoDS_Face *face, double u, double v, double angle, const double *data, int size);
+
+/* The same, from position: x along direction, read from the normal side. */
+OCCT_CAPI TopoDS_Shape *new_TopoDS_Shape__BRepBuilderAPI_MakeWire__contours_pen(
+    const gp_Pnt *position, const gp_Dir *normal, const gp_Dir *direction, const double *data, int size);
+
 OCCT_CAPI OCCT_HANDLE(ShapeExtend_WireData) *new_ShapeExtend_WireData(void);
 
 OCCT_CAPI void _ShapeExtend_WireData__Add__TopoDS_Edge(OCCT_HANDLE(ShapeExtend_WireData) *data, const TopoDS_Edge *edge, int atnum);

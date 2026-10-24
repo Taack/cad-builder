@@ -15,6 +15,8 @@
 #include <BRepExtrema_DistShapeShape.hxx>
 #include <BRepGProp.hxx>
 #include <BRepGProp_Face.hxx>
+#include <GC_MakeArcOfCircle.hxx>
+#include <Geom_BezierCurve.hxx>
 #include <BRepCheck_Wire.hxx>
 #include <BRepLib.hxx>
 #include <BRepTools.hxx>
@@ -37,6 +39,7 @@
 #include <ShapeFix_Wire.hxx>
 #include <StdPrs_BRepFont.hxx>
 #include <StdPrs_BRepTextBuilder.hxx>
+#include <TColgp_Array1OfPnt.hxx>
 #include <TopExp_Explorer.hxx>
 #include <TopoDS.hxx>
 #include <TopoDS_Compound.hxx>
@@ -659,21 +662,25 @@ static TopoDS_Shape text_shape(const gp_Ax3 &pen, const char *text, const char *
     return shape;
 }
 
+// Pen at (u, v) on face: x along u turned by angle, z out of the face, so that what it draws reads from outside
+static gp_Ax3 pen_on_face(const TopoDS_Face &face, double u, double v, double angle) {
+    gp_Pnt p;
+    gp_Vec normal, du, dv;
+    BRepGProp_Face(face).Normal(u, v, p, normal);
+    BRepAdaptor_Surface(face, Standard_False).D1(u, v, p, du, dv);
+    if (normal.Magnitude() < Precision::Confusion() || du.Magnitude() < Precision::Confusion())
+        throw std::runtime_error("no tangent plane on the face");
+    gp_Ax3 pen(p, gp_Dir(normal), gp_Dir(du));
+    pen.Rotate(gp_Ax1(p, gp_Dir(normal)), angle);
+    return pen;
+}
+
 extern "C" TopoDS_Shape *new_TopoDS_Shape__StdPrs_BRepTextBuilder__Perform__face_u_v(
     const TopoDS_Face *face, double u, double v, double angle, const char *text, const char *font, double size,
     int bold, int italic, int hAlign, int vAlign) {
     TRACE(text);
     return guard(__func__, [&] {
-        // pen at (u, v) on the face: x along u turned by angle, z out of the face, so that the text reads from outside
-        gp_Pnt p;
-        gp_Vec normal, du, dv;
-        BRepGProp_Face(*face).Normal(u, v, p, normal);
-        BRepAdaptor_Surface(*face, Standard_False).D1(u, v, p, du, dv);
-        if (normal.Magnitude() < Precision::Confusion() || du.Magnitude() < Precision::Confusion())
-            throw std::runtime_error("no tangent plane on the face for the text");
-        gp_Ax3 pen(p, gp_Dir(normal), gp_Dir(du));
-        pen.Rotate(gp_Ax1(p, gp_Dir(normal)), angle);
-        return new TopoDS_Shape(text_shape(pen, text, font, size, bold, italic, hAlign, vAlign));
+        return new TopoDS_Shape(text_shape(pen_on_face(*face, u, v, angle), text, font, size, bold, italic, hAlign, vAlign));
     });
 }
 
@@ -685,6 +692,70 @@ extern "C" TopoDS_Shape *new_TopoDS_Shape__StdPrs_BRepTextBuilder__Perform__pen(
         const gp_Ax3 pen(*position, *normal, *direction);
         return new TopoDS_Shape(text_shape(pen, text, font, size, bold, italic, hAlign, vAlign));
     });
+}
+
+// The wires of contours drawn in the (x, y) plane of pen. data holds the number of contours, then for each one its
+// number of segments, its start (x, y), and for each segment its kind and points: 1, a line to (x, y); 2, an arc of
+// circle through (x, y) to (x, y); 3, a cubic Bezier curve of control points (x, y), (x, y) to (x, y)
+static TopoDS_Shape contour_wires(const gp_Ax3 &pen, const double *data, int size) {
+    int i = 0;
+    auto next = [&]() {
+        if (i >= size) throw std::runtime_error("contours: data too short");
+        return data[i++];
+    };
+    auto point = [&]() {
+        const double x = next();
+        const double y = next();
+        return pen.Location().Translated(gp_Vec(pen.XDirection()) * x + gp_Vec(pen.YDirection()) * y);
+    };
+    BRep_Builder builder;
+    TopoDS_Compound wires;
+    builder.MakeCompound(wires);
+    const int contours = static_cast<int>(next());
+    for (int c = 0; c < contours; c++) {
+        const int segments = static_cast<int>(next());
+        gp_Pnt from = point();
+        BRepBuilderAPI_MakeWire wire;
+        for (int k = 0; k < segments; k++) {
+            const int kind = static_cast<int>(next());
+            gp_Pnt to;
+            TopoDS_Edge edge;
+            if (kind == 1) {
+                to = point();
+                edge = BRepBuilderAPI_MakeEdge(from, to).Edge();
+            } else if (kind == 2) {
+                const gp_Pnt via = point();
+                to = point();
+                edge = BRepBuilderAPI_MakeEdge(GC_MakeArcOfCircle(from, via, to).Value()).Edge();
+            } else if (kind == 3) {
+                TColgp_Array1OfPnt poles(1, 4);
+                poles.SetValue(1, from);
+                poles.SetValue(2, point());
+                poles.SetValue(3, point());
+                to = point();
+                poles.SetValue(4, to);
+                edge = BRepBuilderAPI_MakeEdge(occ::handle<Geom_BezierCurve>(new Geom_BezierCurve(poles))).Edge();
+            } else throw std::runtime_error("contours: unknown segment kind " + std::to_string(kind));
+            wire.Add(edge);
+            if (!wire.IsDone()) throw std::runtime_error("contours: segment " + std::to_string(k) + " of contour " + std::to_string(c) + " does not follow the previous one");
+            from = to;
+        }
+        builder.Add(wires, wire.Wire());
+    }
+    if (i != size) throw std::runtime_error("contours: data too long");
+    return wires;
+}
+
+extern "C" TopoDS_Shape *new_TopoDS_Shape__BRepBuilderAPI_MakeWire__contours_face_u_v(
+    const TopoDS_Face *face, double u, double v, double angle, const double *data, int size) {
+    TRACE("");
+    return guard(__func__, [&] { return new TopoDS_Shape(contour_wires(pen_on_face(*face, u, v, angle), data, size)); });
+}
+
+extern "C" TopoDS_Shape *new_TopoDS_Shape__BRepBuilderAPI_MakeWire__contours_pen(
+    const gp_Pnt *position, const gp_Dir *normal, const gp_Dir *direction, const double *data, int size) {
+    TRACE("");
+    return guard(__func__, [&] { return new TopoDS_Shape(contour_wires(gp_Ax3(*position, *normal, *direction), data, size)); });
 }
 
 /*

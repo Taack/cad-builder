@@ -385,6 +385,37 @@ image::cad-text.png[]
 
 NOTE: Text needs OCCT built with FreeType (`-DUSE_FREETYPE=ON`), which the Windows build below turns off.
 
+=== SVG Drawings
+
+`svg(source, width)` draws the filled shapes of an SVG drawing at the current position of a sketch, as `text` does:
+its contours join the other ones of the sketch, the contours inside others are holes (the even-odd rule), and
+`prism(...)` or `hole(...)` emboss or engrave the drawing. `source` is an SVG document, the path of an SVG file, or
+the data of a single path (its `d` attribute); `width` is the width of the drawing, of its bounding box, in model
+units.
+
+The SVG `y` axis, down, is turned up. On a face, the `x` axis of the drawing runs along the u direction of the face,
+`angle:` turns it; in a 3D wire, `direction:` and `normal:` set it, as for a text. `align:` (`left`, `center`,
+`right`) and `valign:` (`bottom`, `center`, `top`) put the current position on the bounding box of the drawing, at its
+bottom left by default.
+
+It reads `path` (every command), `rect` (rounded too), `circle`, `ellipse`, `polygon` and `polyline`, in groups, with
+their `transform`. Arcs of circle stay exact when the transforms keep circles; other arcs, and quadratic curves,
+become cubic Bezier curves. Shapes not filled (`fill="none"`), hidden ones, and the content of `defs`, `clipPath`,
+`mask`, `pattern`, `marker` and `symbol` are left out. Strokes are not read: convert them to paths first (Inkscape:
+_Path > Stroke to Path_).
+
+.Embossed Path with a Hole (`SvgTest`)
+[source,groovy]
+----
+cd().box(30, 30, 5).topZ().wireFrom() {
+    // a square around a square: the even-odd rule makes a ring of it
+    svg('M0 0H10V10H0Z M3 3H7V7H3Z', 10, align: 'center', valign: 'center')
+}.toFace().prism(1).display()
+----
+
+.SVG Result
+image::cad-svg.png[]
+
 === Assemblies
 
 `assembly([name]) { ... }` assembles parts and sub-assemblies:

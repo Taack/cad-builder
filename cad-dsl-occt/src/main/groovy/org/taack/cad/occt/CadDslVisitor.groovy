@@ -4,11 +4,14 @@ import groovy.transform.CompileStatic
 import org.taack.cad.builder.*
 import org.taack.cad.dsl.ICadDslVisitor
 import org.taack.cad.dsl.PlateOptions
+import org.taack.cad.dsl.SvgOptions
 import org.taack.cad.dsl.TextOptions
 import org.taack.cad.dsl.geom.*
+import org.taack.cad.dsl.svg.SvgContour
 
 import java.lang.foreign.Arena
 import java.lang.foreign.MemorySegment
+import java.lang.foreign.ValueLayout
 
 import static org.taack.occt.NativeLib.*
 import static org.taack.cad.occt.Occt.*
@@ -42,8 +45,8 @@ class CadDslVisitor implements ICadDslVisitor {
     MemorySegment shapeCutBase = null
     MemorySegment face
     final List<MemorySegment> makeWires = []
-    // Faces of the texts drawn in the current sketch, joined to its wires by visitToFaceFrom2d
-    final List<MemorySegment> textShapes = []
+    // Texts (faces) and SVG drawings (wires) of the current sketch, joined to its wires by toFace()
+    final List<MemorySegment> drawnShapes = []
     MemorySegment currentSurface
     // Surface the wires of a thru section are drawn on; kept apart since leaving a position resets currentSurface
     MemorySegment sectionSurface
@@ -879,6 +882,48 @@ class CadDslVisitor implements ICadDslVisitor {
         }
     }
 
+    @Override
+    void visitSvg(List<SvgContour> contours, SvgOptions options) {
+        if (!face) face = own(new_TopoDS_Face__BRepBuilderAPI_MakeFace__gp_Pln(gpPln(direction, 0)), NativeLib::delete_TopoDS_Face)
+        Vec2d pos = fromVec2d ?: new Vec2d()
+        addSvg(contours, "at $pos") { MemorySegment data, int size ->
+            new_TopoDS_Shape__BRepBuilderAPI_MakeWire__contours_face_u_v(face, pos.x, pos.y, Math.toRadians(options.angle), data, size)
+        }
+    }
+
+    @Override
+    void visitSvg3d(List<SvgContour> contours, SvgOptions options) {
+        Vec pos = openShapeList ? openShapeList.last().to : fromVec
+        addSvg(contours, "at $pos") { MemorySegment data, int size ->
+            new_TopoDS_Shape__BRepBuilderAPI_MakeWire__contours_pen(gpPnt(pos), gpDir(options.normal), gpDir(options.direction), data, size)
+        }
+    }
+
+    private void addSvg(List<SvgContour> contours, String where, Closure<MemorySegment> build) {
+        double[] data = encode(contours)
+        MemorySegment wires
+        try (Arena arena = Arena.ofConfined()) {
+            wires = own(build(arena.allocateFrom(ValueLayout.JAVA_DOUBLE, data), data.length), NativeLib::delete_TopoDS_Shape)
+        }
+        if (wires == MemorySegment.NULL) throw new IllegalArgumentException("svg: ${lastError()}")
+        Tr.cur "svg, ${contours.size()} contours $where"
+        drawnShapes << wires
+    }
+
+    // see new_TopoDS_Shape__BRepBuilderAPI_MakeWire__contours_pen
+    private static double[] encode(List<SvgContour> contours) {
+        List<Double> data = [contours.size() as double]
+        for (SvgContour c in contours) {
+            data.addAll([c.segments.size() as double, c.start.x, c.start.y])
+            for (SvgContour.Segment s in c.segments) {
+                if (s instanceof SvgContour.Line) data.addAll([1d, s.to.x, s.to.y])
+                else if (s instanceof SvgContour.Arc) data.addAll([2d, s.via.x, s.via.y, s.to.x, s.to.y])
+                else if (s instanceof SvgContour.Cubic) data.addAll([3d, s.control1.x, s.control1.y, s.control2.x, s.control2.y, s.to.x, s.to.y])
+            }
+        }
+        data as double[]
+    }
+
     private void addText(String content, double size, TextOptions options, String where, Closure<MemorySegment> build) {
         MemorySegment text
         try (Arena arena = Arena.ofConfined()) {
@@ -886,7 +931,7 @@ class CadDslVisitor implements ICadDslVisitor {
         }
         if (text == MemorySegment.NULL) throw new IllegalArgumentException("text('$content', $size, $options): ${lastError()}")
         Tr.cur "text('$content', $size) $where, $options"
-        textShapes << text
+        drawnShapes << text
     }
 
     @Override
@@ -942,10 +987,10 @@ class CadDslVisitor implements ICadDslVisitor {
     }
 
     /**
-     * The face bounded by the wires and the texts drawn, a face per outer contour if they are several
+     * The face bounded by the wires, texts and SVG drawings of the sketch, a face per outer contour if they are several
      */
     private void contoursToFace() {
-        Tr.cur("toFace: makeWires: $makeWires, textShapes: $textShapes")
+        Tr.cur("toFace: makeWires: $makeWires, drawnShapes: $drawnShapes")
         if (makeWires) {
             MemorySegment wire = ref_TopoDS_Wire__BRepBuilderAPI_MakeWire__Wire(makeWires.first())
             face = own(new_TopoDS_Face__BRepBuilderAPI_MakeFace__TopoDS_Wire(wire), NativeLib::delete_TopoDS_Face)
@@ -954,17 +999,17 @@ class CadDslVisitor implements ICadDslVisitor {
                 _TopoDS_Builder__Add__resTopoDS_Shape_toAddTopoDS_Shape(builder, face, ref_TopoDS_Shape__BRepBuilderAPI_MakeWire__Shape(w))
             }
         }
-        if (makeWires.size() > 1 || textShapes) {
-            // the face has all the wires as holes of the first one, the texts are apart: a face per outer wire
-            // instead, with the wires inside it as holes
+        if (makeWires.size() > 1 || drawnShapes) {
+            // the face has all the wires as holes of the first one, the texts and drawings are apart: a face per
+            // outer wire instead, with the wires inside it as holes
             MemorySegment contours = makeWires ? face : MemorySegment.NULL
-            if (textShapes) {
+            if (drawnShapes) {
                 def builder = own(new_BRep_Builder(), NativeLib::delete_BRep_Builder)
                 contours = own(new_TopoDS_Compound(), NativeLib::delete_TopoDS_Compound)
                 _TopoDS_Builder__MakeCompound__TopoDS_Compound(builder, contours)
                 if (makeWires) _TopoDS_Builder__Add__resTopoDS_Shape_toAddTopoDS_Shape(builder, contours, face)
-                for (MemorySegment t in textShapes) _TopoDS_Builder__Add__resTopoDS_Shape_toAddTopoDS_Shape(builder, contours, t)
-                textShapes.clear()
+                for (MemorySegment t in drawnShapes) _TopoDS_Builder__Add__resTopoDS_Shape_toAddTopoDS_Shape(builder, contours, t)
+                drawnShapes.clear()
             }
             face = own(new_TopoDS_Shape__BRepBuilderAPI_MakeFace__nested_wires(contours), NativeLib::delete_TopoDS_Shape)
             if (face == MemorySegment.NULL) throw new IllegalStateException("toFace: ${lastError()}")
