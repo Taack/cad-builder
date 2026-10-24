@@ -14,6 +14,7 @@
 #include <BRepClass_FaceClassifier.hxx>
 #include <BRepExtrema_DistShapeShape.hxx>
 #include <BRepGProp.hxx>
+#include <BRepGProp_Face.hxx>
 #include <BRepCheck_Wire.hxx>
 #include <BRepLib.hxx>
 #include <BRepTools.hxx>
@@ -25,12 +26,17 @@
 #include <Geom_Curve.hxx>
 #include <GProp_GProps.hxx>
 #include <Geom_Surface.hxx>
+#include <Font_FontAspect.hxx>
+#include <Graphic3d_HorizontalTextAlignment.hxx>
+#include <Graphic3d_VerticalTextAlignment.hxx>
 #include <Precision.hxx>
 #include <ShapeAnalysis_Wire.hxx>
 #include <ShapeExtend_WireData.hxx>
 #include <ShapeFix_Face.hxx>
 #include <ShapeFix_ShapeTolerance.hxx>
 #include <ShapeFix_Wire.hxx>
+#include <StdPrs_BRepFont.hxx>
+#include <StdPrs_BRepTextBuilder.hxx>
 #include <TopExp_Explorer.hxx>
 #include <TopoDS.hxx>
 #include <TopoDS_Compound.hxx>
@@ -40,11 +46,14 @@
 #include <TopoDS_Wire.hxx>
 #include <gp_Dir.hxx>
 #include <gp_Cylinder.hxx>
+#include <gp_Ax1.hxx>
+#include <gp_Ax3.hxx>
 #include <gp_Pln.hxx>
 
 #include <algorithm>
 #include <cmath>
 #include <stdexcept>
+#include <string>
 #include <vector>
 
 /*
@@ -581,13 +590,13 @@ extern "C" void _BRepLib__BuildCurves3d__TopoDS_Shape(const TopoDS_Shape *w1) {
     guard(__func__, [&] { BRepLib::BuildCurves3d(*w1); });
 }
 
-extern "C" TopoDS_Shape *new_TopoDS_Shape__BRepBuilderAPI_MakeFace__nested_wires(const TopoDS_Face *face) {
+extern "C" TopoDS_Shape *new_TopoDS_Shape__BRepBuilderAPI_MakeFace__nested_wires(const TopoDS_Shape *shape) {
     TRACE("");
     return guard(__func__, [&] {
         std::vector<TopoDS_Wire> wires;
         // each wire filled, to find the wires it contains
         std::vector<TopoDS_Face> filled;
-        for (TopExp_Explorer it(*face, TopAbs_WIRE); it.More(); it.Next()) {
+        for (TopExp_Explorer it(*shape, TopAbs_WIRE); it.More(); it.Next()) {
             BRepLib::BuildCurves3d(it.Current());
             wires.push_back(TopoDS::Wire(it.Current()));
             filled.push_back(BRepBuilderAPI_MakeFace(wires.back(), Standard_True).Face());
@@ -626,6 +635,55 @@ extern "C" TopoDS_Shape *new_TopoDS_Shape__BRepBuilderAPI_MakeFace__nested_wires
         if (count == 0) throw std::runtime_error("no face bounded by the wires");
         // a single face stays a face, for the operations expecting one
         return new TopoDS_Shape(count == 1 ? last : faces);
+    });
+}
+
+// The faces of a line of text, from pen: along its x, read from its z side
+static TopoDS_Shape text_shape(const gp_Ax3 &pen, const char *text, const char *font, double size, int bold,
+                               int italic, int hAlign, int vAlign) {
+    // a font file, or a font name found by Font_FontMgr
+    const std::string name(font);
+    const bool isFile = name.find_first_of("/\\") != std::string::npos;
+    const Font_FontAspect aspect = bold ? (italic ? Font_FontAspect_BoldItalic : Font_FontAspect_Bold)
+                                        : (italic ? Font_FontAspect_Italic : Font_FontAspect_Regular);
+    StdPrs_BRepFont brepFont;
+    const bool found = isFile ? brepFont.Init(NCollection_String(font), size, 0)
+                              : brepFont.FindAndInit(TCollection_AsciiString(font), aspect, size, Font_StrictLevel_Aliases);
+    if (!found) throw std::runtime_error("font not found: " + name);
+
+    StdPrs_BRepTextBuilder builder;
+    const TopoDS_Shape shape = builder.Perform(brepFont, NCollection_String(text), pen,
+                                               static_cast<Graphic3d_HorizontalTextAlignment>(hAlign),
+                                               static_cast<Graphic3d_VerticalTextAlignment>(vAlign));
+    if (shape.IsNull()) throw std::runtime_error("no glyph for the text");
+    return shape;
+}
+
+extern "C" TopoDS_Shape *new_TopoDS_Shape__StdPrs_BRepTextBuilder__Perform__face_u_v(
+    const TopoDS_Face *face, double u, double v, double angle, const char *text, const char *font, double size,
+    int bold, int italic, int hAlign, int vAlign) {
+    TRACE(text);
+    return guard(__func__, [&] {
+        // pen at (u, v) on the face: x along u turned by angle, z out of the face, so that the text reads from outside
+        gp_Pnt p;
+        gp_Vec normal, du, dv;
+        BRepGProp_Face(*face).Normal(u, v, p, normal);
+        BRepAdaptor_Surface(*face, Standard_False).D1(u, v, p, du, dv);
+        if (normal.Magnitude() < Precision::Confusion() || du.Magnitude() < Precision::Confusion())
+            throw std::runtime_error("no tangent plane on the face for the text");
+        gp_Ax3 pen(p, gp_Dir(normal), gp_Dir(du));
+        pen.Rotate(gp_Ax1(p, gp_Dir(normal)), angle);
+        return new TopoDS_Shape(text_shape(pen, text, font, size, bold, italic, hAlign, vAlign));
+    });
+}
+
+extern "C" TopoDS_Shape *new_TopoDS_Shape__StdPrs_BRepTextBuilder__Perform__pen(
+    const gp_Pnt *position, const gp_Dir *normal, const gp_Dir *direction, const char *text, const char *font,
+    double size, int bold, int italic, int hAlign, int vAlign) {
+    TRACE(text);
+    return guard(__func__, [&] {
+        const gp_Ax3 pen(*position, *normal, *direction);
+        return new TopoDS_Shape(text_shape(pen, text, font, size, bold, italic, hAlign, vAlign));
     });
 }
 

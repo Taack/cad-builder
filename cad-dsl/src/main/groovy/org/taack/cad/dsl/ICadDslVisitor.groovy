@@ -48,6 +48,10 @@ interface ICadDslVisitor {
 
     Circle2d visitCircle2d(double diameter, boolean reverse)
 
+    void visitText(String content, double size, TextOptions options)
+
+    void visitText3d(String content, double size, TextOptions options)
+
     void visitMove(Vec2d to)
 
     void visitMove(Vec to)

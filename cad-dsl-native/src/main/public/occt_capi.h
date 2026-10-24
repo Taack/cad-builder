@@ -514,9 +514,22 @@ OCCT_CAPI void _TopoDS_Builder__MakeCompound__TopoDS_Compound(const TopoDS_Build
 
 OCCT_CAPI void _BRepLib__BuildCurves3d__TopoDS_Shape(const TopoDS_Shape *w1);
 
-/* The faces bounded by the wires of face, nested or side by side: a wire inside an even number of others bounds a
+/* The faces bounded by the wires of shape, nested or side by side: a wire inside an even number of others bounds a
    face, with the wires just inside it as holes. A face if there is one, else a compound of faces. */
-OCCT_CAPI TopoDS_Shape *new_TopoDS_Shape__BRepBuilderAPI_MakeFace__nested_wires(const TopoDS_Face *face);
+OCCT_CAPI TopoDS_Shape *new_TopoDS_Shape__BRepBuilderAPI_MakeFace__nested_wires(const TopoDS_Shape *shape);
+
+/* The faces of a line of text, its pen at (u, v) on face: along u turned by angle (radians), read from outside the
+   face. font is a font name (found by Font_FontMgr) or the path of a font file; hAlign and vAlign are
+   Graphic3d_HorizontalTextAlignment and Graphic3d_VerticalTextAlignment values. NULL if the font is not found (see
+   occt_last_error). */
+OCCT_CAPI TopoDS_Shape *new_TopoDS_Shape__StdPrs_BRepTextBuilder__Perform__face_u_v(
+    const TopoDS_Face *face, double u, double v, double angle, const char *text, const char *font, double size,
+    int bold, int italic, int hAlign, int vAlign);
+
+/* The same, from position along direction, read from the normal side. */
+OCCT_CAPI TopoDS_Shape *new_TopoDS_Shape__StdPrs_BRepTextBuilder__Perform__pen(
+    const gp_Pnt *position, const gp_Dir *normal, const gp_Dir *direction, const char *text, const char *font,
+    double size, int bold, int italic, int hAlign, int vAlign);
 
 OCCT_CAPI OCCT_HANDLE(ShapeExtend_WireData) *new_ShapeExtend_WireData(void);
 

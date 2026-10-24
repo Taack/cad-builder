@@ -43,4 +43,17 @@ class CadDslEdge extends CadDslEdge2d {
     void arc(Vec to, Vec via) {
         visitor.visitArc(to, via)
     }
+
+    /**
+     * Draw the contours of a line of text at the last position, in absolute coordinates.
+     * @param options as for a text on a face (font, bold, italic, align, valign), with direction: along the text
+     *                (default X) and normal: of its plane, the side it reads from (default Z)
+     * @param content Text, in one line
+     * @param size    Size of the font, in model units
+     */
+    @Override
+    CadDslEdge2d text(Map<String, ?> options = [:], String content, Number size) {
+        visitor.visitText3d(content, size.toDouble(), new TextOptions(options))
+        this
+    }
 }

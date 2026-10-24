@@ -353,6 +353,38 @@ static CadDslSolid solidUnderPlate() {
 .Plate Result
 image::cad-plate.png[]
 
+=== Text
+
+`text(content, size)` draws the contours of a line of text at the current position of a sketch, in a TrueType or
+OpenType font. The letters join the other contours of the sketch: `toFace()` makes a face of each, with its holes (the
+inside of an `O`, an `e`), so `prism(...)` embosses the text and `hole(...)` engraves it. `size` is the size of the font
+in model units; the capitals are about 0.7 of it, depending on the font.
+
+* On a face (`topZ().wireFrom() { ... }`), the text runs along the u direction of the face and reads from outside it;
+  `angle:` turns it, in degrees.
+* In a 3D wire (`wireFrom(new Vec(...)) { ... }`), it starts at the current point, in absolute coordinates:
+  `direction:` along the text (X by default), `normal:` the side it reads from (Z by default).
+
+Its other options: `font:` a font name, found among the fonts of the system (`sans-serif` by default, `serif`,
+`monospace`, or a family such as `'Liberation Serif'`), or the path of a font file; `bold:`, `italic:`; `align:` the
+current position at the `left` (default), `center` or `right` of the text; `valign:` at its `bottom` (default, the
+baseline), `center` or `top`.
+
+.Embossed Text and a Circle in the Same Sketch (`TextTest`)
+[source,groovy]
+----
+cd().box(60, 20, 5).topZ().wireFrom() {
+    text('CITEL', 6, font: 'serif', bold: true, align: 'center', valign: 'center')
+    move(-22, 0)
+    circle(3)
+}.toFace().prism(1).display()
+----
+
+.Text Result
+image::cad-text.png[]
+
+NOTE: Text needs OCCT built with FreeType (`-DUSE_FREETYPE=ON`), which the Windows build below turns off.
+
 === Assemblies
 
 `assembly([name]) { ... }` assembles parts and sub-assemblies:
