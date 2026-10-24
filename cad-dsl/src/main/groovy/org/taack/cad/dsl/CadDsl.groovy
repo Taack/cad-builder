@@ -15,6 +15,14 @@ class CadDsl extends CadDslSolid implements CadDslBase {
     }
 
     /**
+     * Declare a named parameter of the model, see {@link CadParams}: double length = param('length', 80)
+     * @return Its value: the cad.param.&lt;name&gt; system property when it is set, else value
+     */
+    static double param(String name, Number value) {
+        CadParams.param(name, value)
+    }
+
+    /**
      * Assemble parts and sub-assemblies, see {@link CadDslAssembly}.
      * @param name Assembly name, kept in STEP files
      */

@@ -47,7 +47,7 @@ dependencies {
 
 // cad-dsl <script.groovy>: ./gradlew :cad-dsl-occt:installDist, then build/install/cad-dsl/bin/cad-dsl
 application {
-    mainClass = 'org.taack.cad.occt.CadScript'
+    mainClass = 'org.taack.cad.dsl.CadScript'
     applicationName = 'cad-dsl'
     applicationDefaultJvmArgs = ['--enable-native-access=ALL-UNNAMED']
 }
@@ -64,4 +64,5 @@ test {
     useJUnitPlatform()
 }
 
+apply from: "$rootDir/gradle/kernel-tests.gradle"
 apply from: "$rootDir/gradle/publishing.gradle"

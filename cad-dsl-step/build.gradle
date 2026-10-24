@@ -1,0 +1,42 @@
+plugins {
+    id 'groovy'
+    id 'java-library'
+    id 'maven-publish'
+    id 'application'
+}
+
+group = 'org.taack'
+version = '0.1'
+description = 'Converts STEP files to CAD DSL scripts, with FreeCAD'
+ext.pomName = 'Groovy CAD DSL STEP Converter'
+
+repositories {
+    mavenCentral()
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of 25
+    }
+}
+
+dependencies {
+    // reads the STEP files, and runs the scripts made to check them
+    api project(':cad-dsl-freecad')
+    testImplementation testFixtures(project(':cad-dsl'))
+    testImplementation platform('org.junit:junit-bom:6.0.3')
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+// step2dsl <file.step> [script.groovy] [--check]: ./gradlew :cad-dsl-step:installDist, then build/install/step2dsl/bin/step2dsl
+application {
+    mainClass = 'org.taack.cad.step.StepToDsl'
+    applicationName = 'step2dsl'
+}
+
+test {
+    useJUnitPlatform()
+}
+
+apply from: "$rootDir/gradle/publishing.gradle"

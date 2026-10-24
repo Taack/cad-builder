@@ -1,0 +1,48 @@
+plugins {
+    id 'groovy'
+    id 'java-library'
+    id 'maven-publish'
+    id 'application'
+}
+
+group = 'org.taack'
+version = '0.1'
+description = 'FreeCAD kernel for the CAD DSL, saving editable FCStd files'
+ext.pomName = 'Groovy CAD DSL FreeCAD Kernel'
+
+repositories {
+    mavenCentral()
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of 25
+    }
+}
+
+dependencies {
+    api project(':cad-dsl')
+    implementation 'org.apache.groovy:groovy-json:6.0.0'
+    testImplementation platform('org.junit:junit-bom:6.0.3')
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+// cad-dsl-freecad <script.groovy>: ./gradlew :cad-dsl-freecad:installDist, then build/install/cad-dsl-freecad/bin/cad-dsl-freecad
+// FreeCADCmd is found on the PATH, or set with -Dfreecad.cmd=<path> (JAVA_OPTS) or FREECAD_CMD
+application {
+    mainClass = 'org.taack.cad.dsl.CadScript'
+    applicationName = 'cad-dsl-freecad'
+    // display() opens the model in FreeCAD
+    applicationDefaultJvmArgs = ['-Dcad.freecad.gui=true']
+}
+
+test {
+    // FreeCAD renders no images off screen
+    useJUnitPlatform {
+        excludeTags 'images'
+    }
+}
+
+apply from: "$rootDir/gradle/kernel-tests.gradle"
+apply from: "$rootDir/gradle/publishing.gradle"

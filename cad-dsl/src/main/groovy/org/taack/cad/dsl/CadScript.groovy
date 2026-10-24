@@ -1,4 +1,4 @@
-package org.taack.cad.occt
+package org.taack.cad.dsl
 
 import groovy.transform.CompileStatic
 import org.codehaus.groovy.control.CompilerConfiguration
@@ -24,6 +24,7 @@ final class CadScript {
         def config = new CompilerConfiguration().addCompilationCustomizers(imports())
         // classes beside the script (Contour.groovy for a class Contour) are found as on a classpath
         config.classpathList = [script.absoluteFile.parent]
+        CadParams.clear()
         new GroovyShell(CadScript.classLoader, config).run(script, args)
     }
 

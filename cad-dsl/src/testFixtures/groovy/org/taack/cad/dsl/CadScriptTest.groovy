@@ -1,4 +1,4 @@
-package org.taack.cad.occt
+package org.taack.cad.dsl
 
 import groovy.transform.CompileStatic
 import org.junit.jupiter.api.Test

@@ -1,6 +1,7 @@
 package org.taack.cad.dsl
 
 import groovy.transform.CompileStatic
+import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
 import org.taack.cad.dsl.geom.Vec
@@ -52,10 +53,18 @@ class AssemblyTest {
         // cart: chassis + 2 axles + cap, axle: shaft + 2 wheels
         assertEquals(7, content.count('NEXT_ASSEMBLY_USAGE_OCCURRENCE('))
         ['cart', 'axle', 'chassis', 'wheel', 'shaft', 'cap'].each { assertTrue(content.contains("'$it'"), it) }
-        assertTrue(content.contains('COLOUR_RGB'))
     }
 
     @Test
+    @Tag('colors')
+    void "STEP export keeps the colors"() {
+        File step = new File(dir, 'cart.step')
+        cart().display(step.path)
+        assertTrue(step.text.contains('COLOUR_RGB'))
+    }
+
+    @Test
+    @Tag('images')
     void "Assembly exports to STL and image"() {
         File stl = new File(dir, 'cart.stl')
         File png = new File(dir, 'cart.png')

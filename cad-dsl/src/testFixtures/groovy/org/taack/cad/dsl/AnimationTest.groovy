@@ -1,6 +1,7 @@
 package org.taack.cad.dsl
 
 import groovy.transform.CompileStatic
+import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
 import org.taack.cad.dsl.geom.Vec
@@ -245,6 +246,7 @@ class AnimationTest {
     }
 
     @Test
+    @Tag('images')
     void "Each frame of the animation is rendered"() {
         gearTrain().display(new File(dir, 'frames/f%02d.png').path)
         List<File> frames = new File(dir, 'frames').listFiles().toList()

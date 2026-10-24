@@ -222,8 +222,8 @@ class CadDslVisitor implements ICadDslVisitor {
         }
         shape = firstShape
         boolShapes.pop()
-//        boolShapes.peek().removeFirst()
-//        boolShapes.peek().addFirst(shape)
+        // the result is the last solid, as after a fuse or a prism
+        boolShapes.peek() << shape
         Tr.dec("visitCutEnd $shape")
     }
 
@@ -1048,6 +1048,8 @@ class CadDslVisitor implements ICadDslVisitor {
                 _TopTools_ListOfShape__Append__TopoDS_Shape(los, shape)
                 shape = own(new_TopoDS_Shape__brep_algoapi_fuse__s1_listrOfShape(this.shape, los), NativeLib::delete_TopoDS_Shape)
             }
+            // the result replaces the solid it is made from, which stays the last solid
+            boolShapes.peek().remove(this.shape)
             boolShapes.peek() << shape
         }
 
