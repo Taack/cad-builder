@@ -20,6 +20,7 @@ final class CadFeatureDump {
             CadScript.run(new File(args[0]), args.toList().drop(1))
         } catch (Throwable t) {
             failure = t
+            recorder.failed = true
         }
         long ms = (System.nanoTime() - start).intdiv(1_000_000L)
         print recorder.text()

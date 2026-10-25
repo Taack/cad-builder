@@ -139,10 +139,10 @@ public final class CadRunner implements Disposable {
                     models.add(new CadModel(glb.getFileName().toString(), Files.readAllBytes(glb)));
                 }
                 case "done" -> {
-                    return new CadRunResult(request, models, params(event), millis(event, start), null, null);
+                    return new CadRunResult(request, models, params(event), features(event), millis(event, start), null, null);
                 }
                 case "error" -> {
-                    return new CadRunResult(request, models, params(event), millis(event, start),
+                    return new CadRunResult(request, models, params(event), features(event), millis(event, start),
                             event.get("message").getAsString(), event.has("trace") ? event.get("trace").getAsString() : null);
                 }
                 default -> LOG.warn("Unknown runner event: " + line);
@@ -246,6 +246,10 @@ public final class CadRunner implements Disposable {
             }
         }
         return params;
+    }
+
+    private static List<CadFeature> features(JsonObject event) {
+        return CadFeature.read(event.has("features") ? event.getAsJsonArray("features") : null);
     }
 
     private static long millis(JsonObject event, long start) {

@@ -110,6 +110,35 @@ class CadRunnerTest {
     }
 
     @Test
+    void "A run reports the features of its script, with their lines"() {
+        File block = script('block.groovy', '''\
+            cd().box(10, 10, 5).cut {
+                position(new Vec(5, 5, 0)) { cylinder(2, 10) }
+            }.display()'''.stripIndent())
+
+        Map done = serve([[type: 'run', id: 1, script: block.path]]).last()
+
+        Map solid = ((List<Map>) done.features).first()
+        List<Map> features = (List<Map>) solid.children
+        assertEquals(['box 10 × 10 × 5', 'cut'], features*.label)
+        assertEquals([1, 1], features*.line)
+        Map cylinder = ((List<Map>) features[1].children).first()
+        assertEquals([id: 'solid0/cut0/cylinder0', label: 'cylinder r2 × 10 at (5, 5, 0)', file: 'block.groovy', line: 2],
+                cylinder.subMap(['id', 'label', 'file', 'line']))
+    }
+
+    @Test
+    void "A failed run reports its features up to the failing one"() {
+        File broken = script('broken.groovy', 'cd().box(1, 2, 3)\ncd().cylinder(1, 2)\nthrow new IllegalStateException("no rail")')
+
+        Map error = serve([[type: 'run', id: 1, script: broken.path]]).last()
+
+        List<Map> features = ((List<Map>) error.features).collectMany { (List<Map>) it.children }
+        assertEquals(['box 1 × 2 × 3', 'cylinder r1 × 2'], features*.label)
+        assertEquals([null, true], features*.error)
+    }
+
+    @Test
     void "The files of a run are deleted when the next one starts"() {
         File fine = script('fine.groovy', 'cd().box(1, 2, 3).display()')
 

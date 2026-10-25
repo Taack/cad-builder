@@ -55,14 +55,18 @@ public final class CadPreview {
     }
 
     /**
-     * Shows result, and opens the tool window the first time it has models to show
+     * Shows result, and opens the preview tool window when it has models to show, the structure one when it has features
      */
     void show(@NotNull CadRunResult result) {
         last = result;
         listeners.forEach(it -> it.shown(result));
-        if (result.models().isEmpty()) return;
+        if (!result.models().isEmpty()) showToolWindow(TOOL_WINDOW_ID);
+        if (!result.features().isEmpty()) showToolWindow(CadStructurePanel.TOOL_WINDOW_ID);
+    }
+
+    private void showToolWindow(String id) {
         ApplicationManager.getApplication().invokeLater(() -> {
-            ToolWindow window = ToolWindowManager.getInstance(project).getToolWindow(TOOL_WINDOW_ID);
+            ToolWindow window = ToolWindowManager.getInstance(project).getToolWindow(id);
             if (window != null && !window.isVisible()) window.show();
         }, project.getDisposed());
     }

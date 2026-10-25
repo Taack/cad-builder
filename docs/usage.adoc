@@ -76,7 +76,7 @@ it on the loopback interface, reads one JSON request per line, and answers with 
 ----
 {"type": "run", "id": 1, "script": "/models/rail.groovy", "args": [], "params": {"length": 120}, "classpath": ["/m2/parts-0.1.jar"]}
 {"type": "display", "id": 1, "file": "/tmp/cad-dsl-runner.../run-1/1.glb"}
-{"type": "done", "id": 1, "params": {"length": 120.0}, "millis": 840}
+{"type": "done", "id": 1, "params": {"length": 120.0}, "millis": 840, "features": [...]}
 ----
 
 The `display()` calls without a file name write binary glTF files instead of opening the viewer (see `CadDisplay`): a
@@ -84,7 +84,10 @@ mesh per part, once however many times it is placed, with its faces (triangles) 
 part or assembly placed, named after it; an animation channel per moving component. The model is turned from
 millimeters and Z up to meters and Y up, as glTF expects (see `write_glb_assembly` in `occt_capi.h`).
 `params` set the `param()` values of the script, and `classpath` adds jars and directories of classes to its own, for
-this run only: the shared parts it uses (see <<sharing-parts>>). The protocol is described in `CadRunner`.
+this run only: the shared parts it uses (see <<sharing-parts>>). `features` is the tree of the operations of the script,
+recorded while it runs (see `CadFeatureRecorder`): assemblies, parts, booleans, prisms, sketches, each with the file and
+line that made it, those built by a method of the user grouped under it; up to the failing one, marked with `"error":
+true`, when the run fails. The protocol is described in `CadRunner`.
 
 [source,bash]
 ----
@@ -116,6 +119,9 @@ output goes to the Run tool window. Stopping the run stops the runner.
 * *CAD Preview tool window*: the models the `display()` calls of the last run wrote, shown with three.js in the IDE
 browser (JCEF). Orbit, fit, edges on or off, and a time bar for the animations. Saving the script, or a class of its
 directory, runs it again.
+* *CAD Structure tool window*: the tree of the features of the last run. Double-clicking a feature, or Enter, opens the
+line that made it, in the script, a class beside it or a class of a jar of parts. The edges, arcs and texts of the
+sketches are hidden unless asked for; the failing feature of a failed run is selected, in red.
 
 The runner and the native library are found in the project when it is cad-builder, after:
 

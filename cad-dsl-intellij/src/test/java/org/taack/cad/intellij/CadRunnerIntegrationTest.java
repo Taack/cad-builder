@@ -53,6 +53,15 @@ public class CadRunnerIntegrationTest extends BasePlatformTestCase {
         assertEquals("10", result.params().get("length").replaceFirst("\\.0$", ""));
     }
 
+    public void testARunReturnsTheFeaturesOfItsScript() throws Exception {
+        CadRunResult result = run(script("cut.groovy", "cd().box(10, 10, 5).cut {\n    cylinder(2, 10)\n}.display()"));
+        assertNull(result.trace(), result.error());
+        CadFeature cut = result.features().getFirst().children().get(1);
+        assertEquals("cut", cut.label());
+        CadFeature cylinder = cut.children().getFirst();
+        assertEquals(List.of("cylinder r2 × 10", "cut.groovy", 2), List.of(cylinder.label(), cylinder.file(), cylinder.line()));
+    }
+
     public void testTheArgumentsReachTheScript() throws Exception {
         CadRunResult result = run(new CadRunRequest(script("arguments.groovy", "assert args.toList() == ['a', 'b c']").toString(), List.of("a", "b c")));
         assertTrue(result.error(), result.succeeded());

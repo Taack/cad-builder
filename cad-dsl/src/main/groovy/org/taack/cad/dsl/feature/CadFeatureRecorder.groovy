@@ -24,6 +24,10 @@ final class CadFeatureRecorder {
      * Last feature recorded: the one failing when the kernel throws
      */
     CadFeature last
+    /**
+     * Whether the run failed, at the last feature or after it
+     */
+    boolean failed
 
     CadFeature root(CadFeature f) {
         roots << f
@@ -31,8 +35,8 @@ final class CadFeatureRecorder {
     }
 
     /**
-     * @return The tree of the features: maps of id, kind, label, file, line, children, plus detail, placed and class
-     * when they apply
+     * @return The tree of the features: maps of id, kind, label, children, plus class, file and line of the call, detail,
+     * placed (the id of the feature placed) and error (on the last feature of a failed run) when they apply
      */
     List<Map<String, Object>> tree() {
         ids.clear()
@@ -102,7 +106,7 @@ final class CadFeatureRecorder {
         }
         if (f.detail) node.detail = true
         if (f.placed) node.placed = ids.get(f.placed)
-        if (f.is(last)) node.last = true
+        if (failed && f.is(last)) node.error = true
         node.children = children(f, f.children, id)
         node
     }
