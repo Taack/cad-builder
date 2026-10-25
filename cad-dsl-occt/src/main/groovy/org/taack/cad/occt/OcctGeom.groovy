@@ -33,7 +33,7 @@ final class OcctGeom {
             case Arc2d:
                 Arc2d arc = (Arc2d) s
                 CadDslVisitor.Tr.cur("Arc2d from: $fromLocal, to: ${arc.to}")
-                return own(handle_Geom2d_TrimmedCurve__GCE2d_MakeArcOfCircle__p1_p2_p3(gpPnt2d(fromLocal), gpPnt2d(arc.center), gpPnt2d(arc.to)), NativeLib::delete_handle_Geom2d_TrimmedCurve)
+                return own(handle_Geom2d_TrimmedCurve__GCE2d_MakeArcOfCircle__p1_p2_p3(gpPnt2d(fromLocal), gpPnt2d(arc.via), gpPnt2d(arc.to)), NativeLib::delete_handle_Geom2d_TrimmedCurve)
             case Spline2d:
                 return spline2d((Spline2d) s, fromLocal)
             case ITrimmable2d:
@@ -84,7 +84,7 @@ final class OcctGeom {
                 return own(new_BRepBuilderAPI_MakeEdge__ptFrom_ptTo(gpPnt(fromLocal), gpPnt(s.to)), NativeLib::delete_BRepBuilderAPI_MakeEdge)
             case Arc:
                 Arc arc = (Arc) s
-                def curve = own(handle_Geom_TrimmedCurve__GC_MakeArcOfCircle_p1_p2_p3(gpPnt(fromLocal), gpPnt(arc.center), gpPnt(arc.to)), NativeLib::delete_handle_Geom_TrimmedCurve)
+                def curve = own(handle_Geom_TrimmedCurve__GC_MakeArcOfCircle_p1_p2_p3(gpPnt(fromLocal), gpPnt(arc.via), gpPnt(arc.to)), NativeLib::delete_handle_Geom_TrimmedCurve)
                 return own(new_BRepBuilderAPI_MakeEdge__Geom_Curve(curve), NativeLib::delete_BRepBuilderAPI_MakeEdge)
             case Trimmable2dToIOpenShapeAdapter:
                 return ((Trimmable2dToIOpenShapeAdapter) s).makeWireAdd(fromLocal)

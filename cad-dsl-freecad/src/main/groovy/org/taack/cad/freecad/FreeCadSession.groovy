@@ -242,7 +242,7 @@ final class FreeCadSession {
                 break
             case Arc2d:
                 Arc2d a = (Arc2d) o
-                d.putAll(to: encode(a.to), via: encode(a.center))
+                d.putAll(to: encode(a.to), via: encode(a.via))
                 break
             default:
                 throw new IllegalArgumentException("Unsupported 2D shape: $o")

@@ -16,6 +16,13 @@ import org.taack.cad.dsl.svg.SvgDrawing
  */
 @CompileStatic
 class CadDslEdge2d implements CadDslBase {
+    /**
+     * The last position, where {@link #arcAround} starts: null when it is not known
+     */
+    Vec2d at2d
+
+    // How far from the center the ends of an arcAround may be, beyond a radius of 1 relative to it
+    protected static final double ARC_TOLERANCE = 1e-3
 
     /**
      * Displace new position on this face.
@@ -23,6 +30,7 @@ class CadDslEdge2d implements CadDslBase {
      */
     void move(Vec2d to) {
         visitor.visitMove(to)
+        at2d = at2d == null ? null : at2d + to
     }
 
     /**
@@ -30,7 +38,7 @@ class CadDslEdge2d implements CadDslBase {
      * @param to Move, starting from the old position
      */
     void move(Number x, Number y) {
-        visitor.visitMove(new Vec2d(x, y))
+        move(new Vec2d(x, y))
     }
 
     /**
@@ -39,6 +47,7 @@ class CadDslEdge2d implements CadDslBase {
      */
     void to(Vec2d to) {
         visitor.visitTo(to)
+        at2d = to
     }
 
     /**
@@ -46,7 +55,7 @@ class CadDslEdge2d implements CadDslBase {
      * @param to New start positon
      */
     void to(Number x, Number y) {
-        visitor.visitTo(new Vec2d(x, y))
+        to(new Vec2d(x, y))
     }
 
     /**
@@ -55,6 +64,7 @@ class CadDslEdge2d implements CadDslBase {
      */
     CadDslEdge2d edge(Vec2d to) {
         visitor.visitEdge(to)
+        at2d = to
         this
     }
 
@@ -66,7 +76,25 @@ class CadDslEdge2d implements CadDslBase {
      */
     CadDslEdge2d arc(Vec2d to, Vec2d via) {
         visitor.visitArc(to, via)
+        at2d = to
         this
+    }
+
+    /**
+     * Draw an arc of circle around center from the last position to the "to" position (which will become the last
+     * position), the short way, or the long one. The last position is the start of the wire, or the one left by the
+     * last edge, arc, spline, to or move.
+     * @param to      End of the arc, as far from the center as the last position: within 0.001, or 0.1% beyond a radius
+     *                of 1, the arc passing at their mean distance
+     * @param longWay The arc going more than half a turn
+     */
+    CadDslEdge2d arcAround(Vec2d to, Vec2d center, boolean longWay = false) {
+        if (at2d == null) throw new IllegalStateException("arcAround($to, $center): the last position is not known, draw an edge, an arc or a spline, or call to() first")
+        Vec2d u = at2d - center, w = to - center
+        double r1 = u.distance(new Vec2d()), r2 = w.distance(new Vec2d()), r = (r1 + r2) / 2, bisector = (u + w).distance(new Vec2d())
+        if (Math.abs(r1 - r2) > ARC_TOLERANCE * Math.max(1d, r)) throw new IllegalArgumentException("arcAround($to, $center): its ends $at2d and $to are not as far from the center, $r1 and $r2")
+        if (bisector < 1e-9 * Math.max(1d, r)) throw new IllegalArgumentException("arcAround($to, $center): half a turn, either way: draw it with arc(to, via)")
+        arc(to, center + (u + w) * ((longWay ? -r : r) / bisector))
     }
 
     /**
@@ -75,6 +103,7 @@ class CadDslEdge2d implements CadDslBase {
      */
     CadDslEdge2d spline(Vec2d... through) {
         visitor.visitSpline(through.toList())
+        if (through) at2d = through.last()
         this
     }
 
@@ -86,6 +115,7 @@ class CadDslEdge2d implements CadDslBase {
     CadDslEdge2d naca(String code, int nbPoints = 40) {
         visitor.visitTo(new Vec2d(1, 0))
         visitor.visitSpline(Naca.points(code, nbPoints))
+        at2d = null
         this
     }
 

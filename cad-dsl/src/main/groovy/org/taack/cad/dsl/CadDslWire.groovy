@@ -14,7 +14,7 @@ class CadDslWire implements CadDslBase {
     CadDslWire move(Vec pos, @DelegatesTo(value = CadDslEdge, strategy = Closure.DELEGATE_FIRST) Closure c = null) {
         visitor.visitFrom(pos)
         if (c) {
-            c.delegate = new CadDslEdge(visitor: visitor)
+            c.delegate = new CadDslEdge(visitor: visitor, at3d: pos)
             c.call()
         }
         visitor.visitFromEnd(pos)

@@ -14,7 +14,7 @@ class CadDslHelix implements CadDslBase {
      */
     CadDslSolid profile(Vec2d from, @DelegatesTo(value = CadDslEdge2d, strategy = Closure.DELEGATE_FIRST) Closure c) {
         visitor.visitHelixProfile(from)
-        c.delegate = new CadDslEdge2d(visitor: visitor)
+        c.delegate = new CadDslEdge2d(visitor: visitor, at2d: from)
         c.call()
         visitor.visitHelixProfileEnd(from)
         new CadDslSolid(visitor: visitor)
