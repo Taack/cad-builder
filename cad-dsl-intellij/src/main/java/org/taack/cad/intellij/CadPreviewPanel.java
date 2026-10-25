@@ -26,6 +26,7 @@ import org.cef.browser.CefBrowser;
 import org.cef.browser.CefFrame;
 import org.cef.handler.CefLoadHandlerAdapter;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import javax.swing.BorderFactory;
 import javax.swing.DefaultComboBoxModel;
@@ -50,6 +51,7 @@ final class CadPreviewPanel implements CadPreview.Listener, Disposable {
     private static final String PROTOCOL = "http";
     private static final String HOST = "cad-preview";
     private static final String MODEL_PATH = "model.glb";
+    private static final String SHAPE_PATH = "shape.glb";
     private static final List<String> PAGE_FILES = List.of("index.html", "preview.js");
     private static final String THREE_DIR = "three/";
     private static final String THREE_FILES = THREE_DIR + "files.txt";
@@ -61,6 +63,10 @@ final class CadPreviewPanel implements CadPreview.Listener, Disposable {
     private final ComboBox<String> modelChoice = new ComboBox<>();
     private JBCefBrowser browser;
     private volatile List<CadModel> models = List.of();
+    // the features of the run whose models are shown, and the shapes of the selected one
+    private List<CadFeature> features = List.of();
+    private volatile byte[] shape = new byte[0];
+    private int highlights;
     private volatile int selected;
     private volatile boolean pageLoaded;
     private boolean edges = true;
@@ -76,6 +82,7 @@ final class CadPreviewPanel implements CadPreview.Listener, Disposable {
             if (modelChoice.getSelectedIndex() >= 0 && modelChoice.getSelectedIndex() != selected) {
                 selected = modelChoice.getSelectedIndex();
                 showModel(true);
+                highlight();
             }
         });
         JPanel top = new JPanel(new BorderLayout());
@@ -104,6 +111,7 @@ final class CadPreviewPanel implements CadPreview.Listener, Disposable {
             files.addResource(file, () -> new JBCefStreamResourceHandler(pageFile(file), mimeType(file), this, Map.of()));
         }
         files.addResource(MODEL_PATH, () -> new JBCefStreamResourceHandler(model(), "model/gltf-binary", this, NOT_CACHED));
+        files.addResource(SHAPE_PATH, () -> new JBCefStreamResourceHandler(new ByteArrayInputStream(shape), "model/gltf-binary", this, NOT_CACHED));
         browser.getJBCefClient().addRequestHandler(files, browser.getCefBrowser());
         browser.getJBCefClient().addLoadHandler(new CefLoadHandlerAdapter() {
             @Override
@@ -111,7 +119,10 @@ final class CadPreviewPanel implements CadPreview.Listener, Disposable {
                 if (!frame.isMain()) return;
                 pageLoaded = true;
                 ApplicationManager.getApplication().invokeLater(() -> {
-                    if (!models.isEmpty()) showModel(true);
+                    if (!models.isEmpty()) {
+                        showModel(true);
+                        highlight();
+                    }
                 });
             }
         }, browser.getCefBrowser());
@@ -248,8 +259,35 @@ final class CadPreviewPanel implements CadPreview.Listener, Disposable {
             names.setSelectedItem(models.get(selected).name());
             modelChoice.setModel(names);
             modelChoice.setVisible(models.size() > 1);
+            features = result.features();
             showModel(refit);
+            highlight();
         }, project.getDisposed());
+    }
+
+    @Override
+    public void featureSelected(@Nullable String feature) {
+        ApplicationManager.getApplication().invokeLater(this::highlight, project.getDisposed());
+    }
+
+    // Highlights the parts of the selected feature in the model shown, and shows its own shapes over them
+    private void highlight() {
+        List<CadModel> shown = models;
+        String feature = CadPreview.getInstance(project).selectedFeature();
+        CadHighlight highlight = new CadHighlight(features, selected < shown.size() ? shown.get(selected).feature() : null);
+        List<Integer> nodes = highlight.nodes(feature);
+        int request = ++highlights;
+        call("cadPreview.highlight(" + nodes + ")");
+        if (feature == null || nodes.isEmpty() || !highlight.hasShape(feature)) {
+            call("cadPreview.overlay(null)");
+            return;
+        }
+        CadRunner.getInstance(project).shape(feature).thenAccept(glb -> ApplicationManager.getApplication().invokeLater(() -> {
+            // a later selection wins
+            if (request != highlights) return;
+            shape = glb == null ? new byte[0] : glb;
+            call(glb == null ? "cadPreview.overlay(null)" : "cadPreview.overlay('" + PROTOCOL + "://" + HOST + "/" + SHAPE_PATH + "?v=" + request + "')");
+        }, project.getDisposed()));
     }
 
     private void showModel(boolean refit) {

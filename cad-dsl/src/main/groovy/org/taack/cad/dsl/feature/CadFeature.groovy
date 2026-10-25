@@ -22,6 +22,11 @@ final class CadFeature {
      * Feature placed, for a placement
      */
     CadFeature placed
+    /**
+     * Shape the operation made, given by the kernel visitor when it is {@link ICadDslFeatureShapes}
+     */
+    Object shape
+    ICadDslFeatureShapes shapes
 
     CadFeature(String kind, String label, List<CadFeatureFrame> stack, boolean detail = false) {
         this.kind = kind

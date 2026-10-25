@@ -34,6 +34,15 @@ let duration = 0;
 let playing = true;
 let edgesVisible = true;
 let loading = 0;
+// the glTF node objects of the model, by index; the nodes of the selected feature, and the shapes shown over them
+let nodeObjects = [];
+let highlighted = [];
+let shapeUrl = null;
+let shapes = [];
+let shapeLoading = 0;
+const style = getComputedStyle(document.documentElement);
+const highlightColor = new THREE.Color(style.getPropertyValue('--highlight').trim());
+const shapeColor = new THREE.Color(style.getPropertyValue('--shape').trim());
 
 function showMessage(text) {
     message.textContent = text;
@@ -59,11 +68,83 @@ function prepare(root) {
 }
 
 function dispose(root) {
-    scene.remove(root);
+    root.removeFromParent();
     root.traverse(object => {
         object.geometry?.dispose();
         object.material?.dispose();
+        object.userData.original?.dispose();
     });
+}
+
+// Puts back the materials the highlight replaced
+function restoreMaterials() {
+    model?.traverse(object => {
+        if (!object.userData.original) return;
+        object.material.dispose();
+        object.material = object.userData.original;
+        delete object.userData.original;
+    });
+}
+
+// The parts of the selected feature tinted, the others faded so that they show through
+function applyHighlight() {
+    restoreMaterials();
+    if (!model || !highlighted.length) return;
+    const selected = new Set(highlighted.map(i => nodeObjects[i]).filter(Boolean));
+    model.traverse(object => {
+        if (!object.isMesh && !object.isLineSegments && !object.isLine || object.userData.shape) return;
+        let inside = false;
+        for (let o = object; o && !inside; o = o.parent) inside = selected.has(o);
+        const material = object.material.clone();
+        object.userData.original = object.material;
+        if (inside && object.isMesh) {
+            material.emissive.copy(highlightColor);
+            material.emissiveIntensity = 0.35;
+        } else if (!inside) {
+            material.transparent = true;
+            material.opacity = 0.15;
+            material.depthWrite = false;
+        }
+        object.material = material;
+    });
+}
+
+// The shapes of the feature, drawn over its parts and through them, in each place of its part
+function applyShapes(gltf) {
+    shapes.forEach(dispose);
+    shapes = [];
+    if (!gltf || !model) return;
+    // the shapes are in the coordinates of the part: their root node, which turns them to glTF units, is dropped
+    const content = gltf.scene.children[0];
+    content.traverse(object => {
+        if (object.isMesh) object.material = new THREE.MeshStandardMaterial({ color: shapeColor, transparent: true,
+            opacity: 0.45, depthTest: false, depthWrite: false, side: THREE.DoubleSide });
+        if (object.isLineSegments || object.isLine) object.material = new THREE.LineBasicMaterial({ color: shapeColor,
+            depthTest: false });
+        object.renderOrder = 1;
+        object.userData.shape = true;
+    });
+    for (const i of highlighted) {
+        const node = nodeObjects[i];
+        if (!node) continue;
+        const shape = content.clone();
+        shape.position.set(0, 0, 0);
+        shape.quaternion.identity();
+        shape.scale.set(1, 1, 1);
+        node.add(shape);
+        shapes.push(shape);
+    }
+}
+
+function loadShapes() {
+    const request = ++shapeLoading;
+    if (!shapeUrl) {
+        applyShapes(null);
+        return;
+    }
+    loader.load(shapeUrl, gltf => {
+        if (request === shapeLoading) applyShapes(gltf);
+    }, undefined, error => console.warn('Cannot read the shapes: ' + (error.message || error)));
 }
 
 function fit() {
@@ -103,15 +184,32 @@ window.cadPreview = {
             // a slower load of an older model is dropped
             if (request !== loading) return;
             if (model) dispose(model);
+            shapes = [];
             model = gltf.scene;
+            nodeObjects = [];
+            gltf.parser.associations.forEach((value, object) => {
+                if (value?.nodes !== undefined) nodeObjects[value.nodes] = object;
+            });
             prepare(model);
             scene.add(model);
+            applyHighlight();
+            loadShapes();
             setAnimation(gltf);
             showMessage('');
             if (refit) fit();
         }, undefined, error => showMessage('Cannot read the model: ' + (error.message || error)));
     },
     fit,
+    /** Highlights the parts of the glTF nodes, none for an empty list */
+    highlight(nodes) {
+        highlighted = nodes;
+        applyHighlight();
+    },
+    /** Shows the shapes of the glTF file at url over the highlighted parts, none for null */
+    overlay(url) {
+        shapeUrl = url;
+        loadShapes();
+    },
     edges(visible) {
         edgesVisible = visible;
         if (model) prepare(model);

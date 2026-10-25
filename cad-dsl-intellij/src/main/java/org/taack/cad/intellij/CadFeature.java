@@ -16,10 +16,11 @@ import java.util.List;
  * @param line      Line of the call, 0 when unknown
  * @param detail    Sketch element: an edge, an arc, a text...
  * @param error     Last operation of a failed run
+ * @param placed    Id of the part or assembly placed, for a placement
  */
 public record CadFeature(String id, String kind, String label,
                          @Nullable String className, @Nullable String file, int line,
-                         boolean detail, boolean error, List<CadFeature> children) {
+                         boolean detail, boolean error, @Nullable String placed, List<CadFeature> children) {
 
     static List<CadFeature> read(@Nullable JsonArray features) {
         List<CadFeature> read = new ArrayList<>();
@@ -32,7 +33,7 @@ public record CadFeature(String id, String kind, String label,
                 string(feature, "class"), string(feature, "file"), feature.has("line") ? feature.get("line").getAsInt() : 0,
                 feature.has("detail") && feature.get("detail").getAsBoolean(),
                 feature.has("error") && feature.get("error").getAsBoolean(),
-                read(feature.getAsJsonArray("children")));
+                string(feature, "placed"), read(feature.getAsJsonArray("children")));
     }
 
     private static @Nullable String string(JsonObject feature, String name) {

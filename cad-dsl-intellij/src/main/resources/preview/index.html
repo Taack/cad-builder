@@ -4,8 +4,10 @@
     <meta charset="utf-8">
     <title>CAD Preview</title>
     <style>
-        :root { --background: #f7f8fa; --text: #1e1f22; --panel: rgba(255, 255, 255, 0.85); }
-        :root[data-theme="dark"] { --background: #1e1f22; --text: #dfe1e5; --panel: rgba(43, 45, 48, 0.85); }
+        :root { --background: #f7f8fa; --text: #1e1f22; --panel: rgba(255, 255, 255, 0.85);
+            --highlight: #3574f0; --shape: #e66d17; }
+        :root[data-theme="dark"] { --background: #1e1f22; --text: #dfe1e5; --panel: rgba(43, 45, 48, 0.85);
+            --highlight: #548af7; --shape: #f08c3a; }
         html, body { margin: 0; height: 100%; overflow: hidden; background: var(--background); color: var(--text);
             font: 12px system-ui, sans-serif; }
         canvas { display: block; }

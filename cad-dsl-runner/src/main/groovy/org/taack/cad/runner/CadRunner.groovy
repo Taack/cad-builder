@@ -28,6 +28,7 @@ import java.util.function.Consumer
  * <pre>
  * {"type": "run", "id": 1, "script": "/models/rail.groovy", "args": [], "params": {"length": 120},
  *  "classpath": ["/home/me/.m2/repository/com/acme/parts/1.0/parts-1.0.jar"]}
+ * {"type": "shape", "id": 2, "feature": "assembly:rail/part:body/cut0"}
  * {"type": "stop"}
  * </pre>
  * The classpath of a run, optional, holds the jars and directories of classes its script uses: shared parts for
@@ -35,12 +36,17 @@ import java.util.function.Consumer
  * Events:
  * <pre>
  * {"type": "ready", "protocol": 1}                                  once connected
- * {"type": "display", "id": 1, "file": "/tmp/.../run-1/1.glb"}       for each display() given no file name
+ * {"type": "display", "id": 1, "file": "/tmp/.../run-1/1.glb", "feature": "assembly:rail"}
+ *                                                                   for each display() given no file name
  * {"type": "done", "id": 1, "params": {"length": 120.0}, "millis": 840, "features": [...]}
  * {"type": "error", "id": 1, "message": "...", "trace": "...", "params": {}, "millis": 12, "features": [...]}
  * </pre>
+ * {"type": "shape", "id": 2, "file": "/tmp/.../run-1/shape-2.glb"}   no file when the feature has no shape
+ * </pre>
  * The features are the tree of the operations of the script, see CadFeatureRecorder.tree() in cad-dsl: up to the
- * failing one, marked with "error": true, when the run fails.
+ * failing one, marked with "error": true, when the run fails. The feature of a display event is the one displayed.
+ * A shape request writes the shapes of a feature of the last run (a primitive, a prism, the tools of a cut...) to a
+ * glTF file, in the coordinates of its part.
  * The glTF files of a run are deleted when the next run starts, and all of them when the runner stops.
  */
 @CompileStatic
@@ -50,6 +56,8 @@ final class CadRunner {
     private final File workDir
     private int runCount = 0
     private File runDir
+    // Features of the last run, with their shapes
+    private CadFeatureRecorder recorder
 
     CadRunner(File workDir) {
         this.workDir = workDir
@@ -66,6 +74,7 @@ final class CadRunner {
             Map request = (Map) new JsonSlurper().parseText(line)
             if (request.type == 'stop') return
             if (request.type == 'run') run(request, emit)
+            else if (request.type == 'shape') shape(request, emit)
             else emit.accept([type: 'error', id: request.id, message: "Unknown request type: ${request.type}".toString()])
         }
     }
@@ -85,7 +94,7 @@ final class CadRunner {
         }
         Map<String, String> previous = setParams((Map) request.params ?: [:])
         CadKernel kernel = CadKernels.get()
-        def recorder = new CadFeatureRecorder()
+        recorder = new CadFeatureRecorder()
         CadKernels.set(new RecordingKernel(kernel, recorder))
         long start = System.nanoTime()
         Map end
@@ -101,11 +110,30 @@ final class CadRunner {
             CadDisplay.redirect(null)
             restoreParams(previous)
         }
-        displayed.findAll { it.file }.each { File gltf -> emit.accept([type: 'display', id: id, file: gltf.path]) }
+        long millis = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - start)
+        List<Map<String, Object>> features = recorder.tree()
+        displayed.findAll { it.file }.each { File gltf ->
+            emit.accept([type: 'display', id: id, file: gltf.path, feature: recorder.displayedId(gltf.path)])
+        }
         end.params = CadParams.values()
-        end.millis = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - start)
-        end.features = recorder.tree()
+        end.millis = millis
+        end.features = features
         emit.accept(end)
+    }
+
+    /**
+     * Writes the shapes of a feature of the last run to a glTF file, and emits a shape event, without a file when the
+     * feature has no shape
+     */
+    void shape(Map request, Consumer<Map> emit) {
+        Map event = [type: 'shape', id: request.id]
+        try {
+            File gltf = new File(runDir, "shape-${request.id}${CadDisplay.GLTF_EXTENSION}")
+            if (recorder?.writeShapes((String) request.feature, gltf.path)) event.file = gltf.path
+        } catch (Throwable failure) {
+            event = [type: 'error', id: request.id, message: failure.message ?: failure.class.name, trace: stackTrace(failure)]
+        }
+        emit.accept(event)
     }
 
     private File newRunDir() {

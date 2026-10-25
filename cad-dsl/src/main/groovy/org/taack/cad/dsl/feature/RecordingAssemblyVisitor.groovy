@@ -61,6 +61,12 @@ final class RecordingAssemblyVisitor implements ICadDslAssemblyVisitor {
     }
 
     @Override
+    void display(String fileName) {
+        recorder.displayed(fileName, feature)
+        kernel.display(fileName)
+    }
+
+    @Override
     Frame visitFaceFrame(ICadDslNode part, Vec direction, Vec position) {
         kernel.visitFaceFrame(unwrap(part), direction, position)
     }

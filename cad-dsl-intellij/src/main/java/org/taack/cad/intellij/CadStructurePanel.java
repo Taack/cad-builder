@@ -76,6 +76,10 @@ final class CadStructurePanel implements CadPreview.Listener, Disposable {
                 return navigate();
             }
         }.installOn(tree);
+        tree.addTreeSelectionListener(event -> {
+            TreePath path = tree.getSelectionPath();
+            CadPreview.getInstance(project).selectFeature(path != null && feature(path.getLastPathComponent()) instanceof CadFeature f ? f.id() : null);
+        });
         tree.addKeyListener(new KeyAdapter() {
             @Override
             public void keyPressed(KeyEvent event) {

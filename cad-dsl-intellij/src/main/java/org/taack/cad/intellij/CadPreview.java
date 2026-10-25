@@ -26,12 +26,16 @@ public final class CadPreview {
         void running(@NotNull CadRunRequest request);
 
         void shown(@NotNull CadRunResult result);
+
+        /** The feature selected in the CAD Structure tool window, null when none is */
+        default void featureSelected(@Nullable String feature) {}
     }
 
     private final Project project;
     private final List<Listener> listeners = new CopyOnWriteArrayList<>();
     private final AtomicBoolean rerunPending = new AtomicBoolean();
     private volatile @Nullable CadRunResult last;
+    private volatile @Nullable String selectedFeature;
 
     public CadPreview(Project project) {
         this.project = project;
@@ -43,6 +47,18 @@ public final class CadPreview {
 
     public @Nullable CadRunResult last() {
         return last;
+    }
+
+    public @Nullable String selectedFeature() {
+        return selectedFeature;
+    }
+
+    /**
+     * Selects a feature of the last run, to highlight it in the preview
+     */
+    public void selectFeature(@Nullable String feature) {
+        selectedFeature = feature;
+        listeners.forEach(it -> it.featureSelected(feature));
     }
 
     public void addListener(@NotNull Listener listener, @NotNull Disposable parent) {

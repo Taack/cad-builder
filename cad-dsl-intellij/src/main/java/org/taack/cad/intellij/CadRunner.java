@@ -36,6 +36,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
@@ -136,7 +137,9 @@ public final class CadRunner implements Disposable {
             switch (event.get("type").getAsString()) {
                 case "display" -> {
                     Path glb = Path.of(event.get("file").getAsString());
-                    models.add(new CadModel(glb.getFileName().toString(), Files.readAllBytes(glb)));
+                    JsonElement feature = event.get("feature");
+                    models.add(new CadModel(glb.getFileName().toString(), Files.readAllBytes(glb),
+                            feature == null || feature.isJsonNull() ? null : feature.getAsString()));
                 }
                 case "done" -> {
                     return new CadRunResult(request, models, params(event), features(event), millis(event, start), null, null);
@@ -147,6 +150,46 @@ public final class CadRunner implements Disposable {
                 }
                 default -> LOG.warn("Unknown runner event: " + line);
             }
+        }
+        throw new IOException("The runner stopped" + exitCode());
+    }
+
+    /**
+     * Writes the shapes of a feature of the last run, after the runs submitted before
+     *
+     * @return The binary glTF of its shapes, in the coordinates of its part; null when it has none, or when the runner is
+     * not up: the features are those of its last run
+     */
+    public CompletableFuture<byte @Nullable []> shape(@NotNull String feature) {
+        CompletableFuture<byte @Nullable []> shape = new CompletableFuture<>();
+        queue.submit(() -> {
+            try {
+                shape.complete(readShape(feature));
+            } catch (IOException | RuntimeException e) {
+                // the next run starts the runner again
+                LOG.info("No shape for " + feature, e);
+                shutdown();
+                shape.complete(null);
+            }
+        });
+        return shape;
+    }
+
+    private byte @Nullable [] readShape(String feature) throws IOException {
+        KillableProcessHandler running = process;
+        if (running == null || running.isProcessTerminated() || socket == null) return null;
+        int id = ++lastId;
+        JsonObject request = new JsonObject();
+        request.addProperty("type", "shape");
+        request.addProperty("id", id);
+        request.addProperty("feature", feature);
+        send(request);
+        for (String line = events.readLine(); line != null; line = events.readLine()) {
+            JsonObject event = JsonParser.parseString(line).getAsJsonObject();
+            if (!event.has("id") || event.get("id").getAsInt() != id) continue;
+            if (event.has("file")) return Files.readAllBytes(Path.of(event.get("file").getAsString()));
+            if (event.has("message")) LOG.info("No shape for " + feature + ": " + event.get("message").getAsString());
+            return null;
         }
         throw new IOException("The runner stopped" + exitCode());
     }

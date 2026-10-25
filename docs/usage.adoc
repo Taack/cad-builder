@@ -75,8 +75,10 @@ it on the loopback interface, reads one JSON request per line, and answers with 
 [source,json]
 ----
 {"type": "run", "id": 1, "script": "/models/rail.groovy", "args": [], "params": {"length": 120}, "classpath": ["/m2/parts-0.1.jar"]}
-{"type": "display", "id": 1, "file": "/tmp/cad-dsl-runner.../run-1/1.glb"}
+{"type": "display", "id": 1, "file": "/tmp/cad-dsl-runner.../run-1/1.glb", "feature": "assembly:rail"}
 {"type": "done", "id": 1, "params": {"length": 120.0}, "millis": 840, "features": [...]}
+{"type": "shape", "id": 2, "feature": "assembly:rail/part:body/cut0"}
+{"type": "shape", "id": 2, "file": "/tmp/cad-dsl-runner.../run-1/shape-2.glb"}
 ----
 
 The `display()` calls without a file name write binary glTF files instead of opening the viewer (see `CadDisplay`): a
@@ -87,7 +89,9 @@ millimeters and Z up to meters and Y up, as glTF expects (see `write_glb_assembl
 this run only: the shared parts it uses (see <<sharing-parts>>). `features` is the tree of the operations of the script,
 recorded while it runs (see `CadFeatureRecorder`): assemblies, parts, booleans, prisms, sketches, each with the file and
 line that made it, those built by a method of the user grouped under it; up to the failing one, marked with `"error":
-true`, when the run fails. The protocol is described in `CadRunner`.
+true`, when the run fails. A display event names the feature it shows, and a `shape` request writes the shapes of a
+feature of the last run (a primitive, a prism, the tools of a cut...) to a glTF file, in the coordinates of its part.
+The protocol is described in `CadRunner`.
 
 [source,bash]
 ----
@@ -121,7 +125,9 @@ browser (JCEF). Orbit, fit, edges on or off, and a time bar for the animations. 
 directory, runs it again.
 * *CAD Structure tool window*: the tree of the features of the last run. Double-clicking a feature, or Enter, opens the
 line that made it, in the script, a class beside it or a class of a jar of parts. The edges, arcs and texts of the
-sketches are hidden unless asked for; the failing feature of a failed run is selected, in red.
+sketches are hidden unless asked for; the failing feature of a failed run is selected, in red. Selecting a feature
+highlights its part in the preview, in every place the part occupies, fades the others, and draws the shapes of the
+feature over it, through the solid: the primitive, the prism or the tools of a cut, with the OCCT kernel.
 
 The runner and the native library are found in the project when it is cad-builder, after:
 

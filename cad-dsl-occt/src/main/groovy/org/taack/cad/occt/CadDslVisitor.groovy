@@ -7,6 +7,7 @@ import org.taack.cad.dsl.ICadDslVisitor
 import org.taack.cad.dsl.PlateOptions
 import org.taack.cad.dsl.SvgOptions
 import org.taack.cad.dsl.TextOptions
+import org.taack.cad.dsl.feature.ICadDslFeatureShapes
 import org.taack.cad.dsl.geom.*
 import org.taack.cad.dsl.svg.SvgContour
 
@@ -21,7 +22,7 @@ import static org.taack.cad.occt.Natives.lastError
 import static org.taack.cad.occt.Natives.own
 
 @CompileStatic
-class CadDslVisitor implements ICadDslVisitor {
+class CadDslVisitor implements ICadDslVisitor, ICadDslFeatureShapes {
 
     class Tr {
         private static int inc = 0
@@ -1062,8 +1063,12 @@ class CadDslVisitor implements ICadDslVisitor {
         visitPrism(direction * high, cut, draft)
     }
 
+    // The last prism, before it was fused to the solid or cut from it, see featureShape
+    private MemorySegment lastPrism
+
     // Fuses the prism to the current solid, or cuts it
     private void addPrism(MemorySegment shape, boolean cut) {
+        lastPrism = shape
         if (this.shape) {
             Tr.cur "cut: $cut"
             if (cut) {
@@ -1105,4 +1110,32 @@ class CadDslVisitor implements ICadDslVisitor {
         direction = axis
     }
 
+
+    @Override
+    Object featureShape(String kind) {
+        switch (kind) {
+            case ['box', 'sphere', 'cylinder', 'torus', 'cone', 'revolution']:
+                // the primitives and revolutions are the last shape added, until a boolean uses them
+                return !boolShapes.empty() && !boolShapes.peek().empty ? boolShapes.peek().last() : null
+            case ['prism', 'pocket']:
+                return lastPrism
+            case 'face':
+                return face
+            case ['text3d', 'svg3d']:
+                return drawnShapes ? drawnShapes.last() : null
+            default:
+                return null
+        }
+    }
+
+    @Override
+    void writeShapes(List<Object> shapes, String fileName) {
+        def builder = own(new_BRep_Builder(), NativeLib::delete_BRep_Builder)
+        def compound = own(new_TopoDS_Compound(), NativeLib::delete_TopoDS_Compound)
+        _TopoDS_Builder__MakeCompound__TopoDS_Compound(builder, compound)
+        for (Object s in shapes) _TopoDS_Builder__Add__resTopoDS_Shape_toAddTopoDS_Shape(builder, compound, (MemorySegment) s)
+        try (Arena arena = Arena.ofConfined()) {
+            if (!write_glb(compound, arena.allocateFrom(fileName))) throw new IllegalStateException("writeShapes($fileName): ${lastError()}")
+        }
+    }
 }

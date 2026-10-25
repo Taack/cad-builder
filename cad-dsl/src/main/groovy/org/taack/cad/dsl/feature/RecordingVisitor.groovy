@@ -56,6 +56,14 @@ final class RecordingVisitor implements ICadDslVisitor {
         open.size() > 1 ? open.pop() : root
     }
 
+    // The shape f made, once the kernel made it
+    private void shape(CadFeature f) {
+        if (!(kernel instanceof ICadDslFeatureShapes)) return
+        ICadDslFeatureShapes shapes = (ICadDslFeatureShapes) kernel
+        f.shape = shapes.featureShape(f.kind)
+        f.shapes = shapes
+    }
+
     // The siblings of kind just before f, moved under it
     private void adopt(CadFeature f, Collection<String> kinds, boolean all) {
         List<CadFeature> siblings = open.peek().children
@@ -273,50 +281,62 @@ final class RecordingVisitor implements ICadDslVisitor {
 
     @Override
     void visitToFace() {
-        adopt(add('face', 'face'), ['sketch'], true)
+        CadFeature f = add('face', 'face')
+        adopt(f, ['sketch'], true)
         kernel.visitToFace()
+        shape(f)
     }
 
     @Override
     void visitToFaceFrom2d() {
-        adopt(add('face', 'face'), ['sketch'], true)
+        CadFeature f = add('face', 'face')
+        adopt(f, ['sketch'], true)
         kernel.visitToFaceFrom2d()
+        shape(f)
     }
 
-    private void prism(String size, boolean cut, Double draft) {
+    private CadFeature prism(String size, boolean cut, Double draft) {
         String label = (cut ? 'pocket ' : 'prism ') + size + (draft != null ? ", draft ${n(Math.toDegrees(draft))}°" : '')
-        adopt(add(cut ? 'pocket' : 'prism', label), ['face'], false)
+        CadFeature f = add(cut ? 'pocket' : 'prism', label)
+        adopt(f, ['face'], false)
+        f
     }
 
     @Override
     void visitPrism(Vec dir, boolean cut) {
-        prism(v(dir), cut, null)
+        CadFeature f = prism(v(dir), cut, null)
         kernel.visitPrism(dir, cut)
+        shape(f)
     }
 
     @Override
     void visitPrism(double high, boolean cut) {
-        prism(n(high), cut, null)
+        CadFeature f = prism(n(high), cut, null)
         kernel.visitPrism(high, cut)
+        shape(f)
     }
 
     @Override
     void visitPrism(Vec dir, boolean cut, double draft) {
-        prism(v(dir), cut, draft)
+        CadFeature f = prism(v(dir), cut, draft)
         kernel.visitPrism(dir, cut, draft)
+        shape(f)
     }
 
     @Override
     void visitPrism(double high, boolean cut, double draft) {
-        prism(n(high), cut, draft)
+        CadFeature f = prism(n(high), cut, draft)
         kernel.visitPrism(high, cut, draft)
+        shape(f)
     }
 
     @Override
     void visitRevolution(Vec from, Vec dir, double angle) {
         String turn = angle == 0d ? 'full turn' : "${n(Math.toDegrees(angle))}°"
-        adopt(add('revolution', "revolution about ${v(dir)}, $turn"), ['face', 'sketch'], false)
+        CadFeature f = add('revolution', "revolution about ${v(dir)}, $turn")
+        adopt(f, ['face', 'sketch'], false)
         kernel.visitRevolution(from, dir, angle)
+        shape(f)
     }
 
     @Override
@@ -327,46 +347,53 @@ final class RecordingVisitor implements ICadDslVisitor {
 
     @Override
     void visitText3d(String content, double size, TextOptions options) {
-        add('text3d', "text '$content' ${n(size)}")
+        CadFeature f = add('text3d', "text '$content' ${n(size)}")
         kernel.visitText3d(content, size, options)
+        shape(f)
     }
 
     @Override
     void visitSvg3d(List<SvgContour> contours, SvgOptions options) {
-        add('svg3d', "svg, ${contours.size()} contours")
+        CadFeature f = add('svg3d', "svg, ${contours.size()} contours")
         kernel.visitSvg3d(contours, options)
+        shape(f)
     }
 
     // Primitives
 
     @Override
     void visitBox(double length, double height, double thickness) {
-        add('box', "box ${n(length)} × ${n(height)} × ${n(thickness)}")
+        CadFeature f = add('box', "box ${n(length)} × ${n(height)} × ${n(thickness)}")
         kernel.visitBox(length, height, thickness)
+        shape(f)
     }
 
     @Override
     void visitSphere(double radius, double radian1, double radian2) {
-        add('sphere', "sphere r${n(radius)}")
+        CadFeature f = add('sphere', "sphere r${n(radius)}")
         kernel.visitSphere(radius, radian1, radian2)
+        shape(f)
     }
 
     @Override
     void visitCylinder(double radius, double height) {
-        add('cylinder', "cylinder r${n(radius)} × ${n(height)}")
+        CadFeature f = add('cylinder', "cylinder r${n(radius)} × ${n(height)}")
         kernel.visitCylinder(radius, height)
+        shape(f)
     }
 
     @Override
     void visitTorus(double torusRadius, double ringRadius) {
-        add('torus', "torus r${n(torusRadius)}, ring r${n(ringRadius)}")
+        CadFeature f = add('torus', "torus r${n(torusRadius)}, ring r${n(ringRadius)}")
         kernel.visitTorus(torusRadius, ringRadius)
+        shape(f)
     }
 
     @Override
     void visitCone(double r1, double r2, double height) {
-        add('cone', "cone r${n(r1)} to r${n(r2)} × ${n(height)}")
+        CadFeature f = add('cone', "cone r${n(r1)} to r${n(r2)} × ${n(height)}")
         kernel.visitCone(r1, r2, height)
+        shape(f)
     }
 
     @Override
@@ -513,6 +540,12 @@ final class RecordingVisitor implements ICadDslVisitor {
     void visitPlateEnd() {
         end()
         kernel.visitPlateEnd()
+    }
+
+    @Override
+    void display(String fileName) {
+        recorder.displayed(fileName, root)
+        kernel.display(fileName)
     }
 
     @Override

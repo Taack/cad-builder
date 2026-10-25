@@ -128,6 +128,26 @@ class CadRunnerTest {
     }
 
     @Test
+    void "The shapes of a feature of the last run are written on request"() {
+        File block = script('block.groovy', '''\
+            cd().box(10, 10, 5).cut {
+                position(new Vec(5, 5, 0)) { cylinder(2, 10) }
+            }.display()'''.stripIndent())
+
+        List<Map> events = serve([
+                [type: 'run', id: 1, script: block.path],
+                [type: 'shape', id: 2, feature: 'solid0/cut0'],
+                [type: 'shape', id: 3, feature: 'solid0']])
+
+        assertEquals('solid0', events.find { it.type == 'display' }.feature)
+        // the tool of the cut, a cylinder 4 wide
+        GlbFile tool = GlbFile.read(new File((String) events.find { it.id == 2 }.file))
+        Map position = tool.list('accessors')[((Map) tool.primitive(0, GlbFile.MODE_TRIANGLES).attributes).POSITION as int]
+        assertEquals(4d, ((List<Number>) position.max)[0].doubleValue() - ((List<Number>) position.min)[0].doubleValue(), 1e-6d)
+        assertEquals([type: 'shape', id: 3], events.last())
+    }
+
+    @Test
     void "A failed run reports its features up to the failing one"() {
         File broken = script('broken.groovy', 'cd().box(1, 2, 3)\ncd().cylinder(1, 2)\nthrow new IllegalStateException("no rail")')
 

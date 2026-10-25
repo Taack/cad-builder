@@ -29,9 +29,45 @@ final class CadFeatureRecorder {
      */
     boolean failed
 
+    // Feature each display() of the run showed, by the file it wrote
+    private final Map<String, CadFeature> displays = [:]
+
     CadFeature root(CadFeature f) {
         roots << f
         f
+    }
+
+    void displayed(String fileName, CadFeature f) {
+        if (fileName) displays[fileName] = f
+    }
+
+    /**
+     * @return The id, in the last {@link #tree}, of the feature whose display() wrote fileName, null if none
+     */
+    String displayedId(String fileName) {
+        CadFeature f = displays[fileName]
+        f == null ? null : ids.get(f)
+    }
+
+    /**
+     * Writes the shapes of the feature of id in the last {@link #tree} to a binary glTF file: its own, else those of
+     * the features under it (the tools of a cut...), in the coordinates of its solid
+     * @return Whether the feature has shapes
+     */
+    boolean writeShapes(String id, String fileName) {
+        CadFeature f = ids.find { it.value == id }?.key
+        if (f == null || f.kind in ['part', 'solid', 'assembly', 'place']) return false
+        List<CadFeature> shaped = f.shape != null ? [f] : shaped(f)
+        if (!shaped) return false
+        shaped.first().shapes.writeShapes(shaped*.shape, fileName)
+        true
+    }
+
+    // The features with a shape under f, not under a part or an assembly: those have their own coordinates
+    private static List<CadFeature> shaped(CadFeature f) {
+        f.children.collectMany { CadFeature c ->
+            c.shape != null ? [c] : c.kind in ['part', 'solid', 'assembly'] ? [] : shaped(c)
+        }
     }
 
     /**
