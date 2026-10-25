@@ -11,7 +11,7 @@ version = '0.1'
 description = 'Open CASCADE kernel for the CAD DSL'
 ext.pomName = 'Groovy CAD DSL OCCT Kernel'
 
-// cad-dsl-native is loaded from java.library.path; it finds OCCT through its rpath (see README, Native Library)
+// cad-dsl-native is loaded from java.library.path; it finds OCCT through its rpath (see docs/building.adoc, Native Library)
 def nativeLibDir = file("$rootDir/cad-dsl-native/build/lib/main/release").absolutePath
 
 repositories {

@@ -1,0 +1,258 @@
+= Assemblies and Animations
+:icons: font
+:toc:
+:toclevels: 2
+
+xref:../README.adoc[Back to the README]
+
+`assembly([name]) { ... }` assembles parts and sub-assemblies:
+
+* `part([name], [color]) { ... }` declares a part, built with the usual DSL (as from `cd()`) in its own coordinates;
+  `part(solid, [name], [color])` uses a solid already built. Without color, a part keeps the kernel default one.
+* `assembly([name]) { ... }` declares a sub-assembly.
+* `place(part) { ... }` puts an occurrence of a part, or of a sub-assembly, in the assembly, as many times as needed,
+  and returns it (`CadDslInstance`). Its closure positions it:
+** `mate(connector, target)` puts a connector of the part on a connector of the assembly, face against face: same
+   origin, opposite normals, same x direction;
+** `align(connector, target)` makes them coincide: same origin, same z and x directions, e.g. coaxial axes;
+** or a joint, `revolute` or `slider`, see <<Animations>>;
+** then `translate(vec)` or `translate(x, y, z)` and `rotate(axis, degrees[, around])` move it, in the order they are
+   written, in the assembly coordinates.
+* `body([color]) { ... }` and `body(solid[, color])` are shortcuts for a part placed once, where it was built.
+
+Connectors are frames on planar faces, taken with the same selectors as solids: `topZ()` is the face facing +Z the
+farthest along Z, `butX(pos)` the face facing -X closest to `pos`, with the origin at `pos` projected on it, and so on.
+`axis()` is on the axis of the cylindrical face of largest radius (a shaft, a hole), `axis(pos)` of the one closest to
+`pos`: its z is the axis direction, pointing to +Z (else +Y, else +X) in the part coordinates, and its origin the start
+of the face along the axis, or `pos` projected on it.
+
+On a part (or, in `place`, without receiver: the part placed) they are in the part coordinates; on an instance, in the
+coordinates of its assembly. `instance.at(connector)` brings the connector of an instance inside a sub-assembly to the
+coordinates of the assembly where the sub-assembly is placed. A connector is adjusted with `offset(distance)` along its
+z (on a face, positive: a gap, negative: sunk into the face; on an axis, it slides along it), `rotate(degrees)`
+around it, and `reverse()` turns its z the other way. Its x direction belongs to the
+part (global X projected on the face, in the part coordinates), so that mated parts follow each other's orientation.
+
+Colors are `Color.RED`, `Color.ORANGE`, ..., `Color.rgb(255, 136, 0)`, `Color.hex('#ff8800')` or `new Color(1, 0.5, 0)`.
+
+`display()` shows every part with its color. To a `.step` file, the assembly tree is kept, with names and colors, and
+a part or sub-assembly placed several times is written once; to a `.stl` file, the parts are merged (STL has neither
+parts nor colors).
+
+.Cart: a chassis on two axles, each axle a sub-assembly (`AssemblyTest`)
+[source,groovy]
+----
+assembly('cart') {
+    def chassis = part('chassis', Color.hex('#3080ff')) {
+        box(40, 20, 4)
+    }
+    def wheel = part('wheel', Color.ORANGE) {
+        cylinder(5, 2).cut { cylinder(1, 2) }
+    }
+    CadDslInstance shaft = null, outerWheel = null
+    def axle = assembly('axle') {
+        shaft = place(part('shaft') { cylinder(1, 26) })
+        // on the shaft, flush with its ends
+        place(wheel) { align(axis(), shaft.axis()) }
+        outerWheel = place(wheel) { align(axis(), shaft.axis().offset(24)) }
+    }
+    def c = place(chassis) { translate(-20, 0, 4) }
+    // under the chassis, 3 mm out of its sides
+    place(axle) { mate(shaft.butZ(), c.butY(new Vec(-14, 0, 3)).offset(-23)) }
+    def rear = place(axle) { mate(shaft.butZ(), c.butY(new Vec(14, 0, 3)).offset(-23)) }
+    place(part('cap', Color.RED) { cylinder(2, 0.5) }) { mate(butZ(), rear.at(outerWheel.topZ())) }
+}.display()
+----
+
+.Cart Result
+image::../cad-assembly.png[]
+
+== Animations
+
+Joints place a part like `align`, leaving it a degree of freedom:
+
+* `revolute(connector, target[, degrees])` turns the part around the z of the connectors: a hinge, a wheel on its shaft;
+* `slider(connector, target[, distance])` moves it along their z: a piston, a drawer.
+
+`animate(duration: seconds[, fps: 25]) { ... }` drives them with laws of the time `t` in seconds:
+`instance.angle = { double t -> ... }` (degrees) for a revolute joint, `instance.distance = { double t -> ... }` for a
+slider. `gear(driver, driven, ratio)` makes the joint of `driven` follow the one of `driver`: driven value = ratio *
+driver value. For gears of z1 (driver) and z2 teeth, ratio = -z1 / z2; from a pinion of pitch radius r to a rack,
+ratio = PI * r / 180 per degree.
+
+Parts placed on a moving instance (with `mate`, `align` or a joint on one of its connectors) follow it, through
+sub-assemblies too. There is no solver: the parts depend on each other as a tree, so closed loops (a crank and its
+connecting rod) need their law computed in the closure, see <<Crank and Slider>>.
+
+`display()` plays the animation in a loop, `display('frames/%03d.png')` renders each frame (a `String.format` pattern),
+to be turned into a video or a GIF, e.g. with `ffmpeg` or ImageMagick. STEP, STL and single images show it at `t = 0`.
+
+.Gear Train: two gears and a rack (`AnimationTest`)
+[source,groovy]
+----
+assembly('gear train') {
+    // Parts
+    def basePart = part('base', Color.GRAY) { box(60, 30, 2) }
+    def pinPart = part('pin', Color.RED) { cylinder(0.5, 4) }
+    def rackPart = part('rack', Color.GREEN) { box(4, 50, 3) }
+    // a disc with a marker on top
+    def wheel = { double radius, Color color ->
+        part(color) {
+            cylinder(radius, 3).fuse {
+                position(new Vec(radius - 3, -1, 3)) { box(2, 2, 2) }
+            }
+        }
+    }
+
+    // Placements
+    def base = place(basePart) { translate(-20, -15, -2) }
+    def big = place(wheel(10, Color.ORANGE)) {
+        revolute(axis(), base.topZ(new Vec(0, 0, 0)))
+    }
+    def small = place(wheel(5, Color.BLUE)) {
+        revolute(axis(), base.topZ(new Vec(15, 0, 0)))
+    }
+    // pins on top of the gears, they turn with them
+    place(pinPart) { align(butZ(), small.topZ(new Vec(12, 0, 3)).reverse()) }
+    place(pinPart) { align(butZ(), big.topZ(new Vec(-6, 0, 3)).reverse()) }
+    // against the small gear, sliding along Y from the side of the base
+    def rack = place(rackPart) {
+        slider(butY(), base.butY(new Vec(22, -15, 1.5)))
+    }
+
+    // Motion
+    gear(big, small, -2)
+    // the rack moves by the arc length of the small gear, towards +Y (against its slider z)
+    gear(small, rack, -PI * 5 / 180)
+    animate(duration: 4, fps: 12) {
+        big.angle = { double t -> -45 * t }
+    }
+}.display()
+----
+
+.Gear Train Result
+image::../cad-animation.gif[]
+
+=== Crank and Slider
+
+The crank, its rod and the piston make a closed loop: the rod is placed on the crank pin, the piston slides on its own,
+and nothing makes the rod end meet the piston. Their laws do: from the crank angle `a`, the rod end rises to
+`r sin(a) + sqrt(l² - (r cos(a))²)` above the crank axis, which gives the piston height and the rod angle.
+
+.Crank and Slider (`AnimationTest`)
+[source,groovy]
+----
+assembly('crank and slider') {
+    // crank radius, rod length
+    double r = 8, l = 24
+    // Parts
+    def basePart = part('base', Color.GRAY) { box(30, 24, 2) }
+    def wallPart = part('wall', Color.hex('#a0a8b0')) { box(30, 4, 60) }
+    def crankPart = part('crank', Color.ORANGE) {
+        cylinder(4, 3).fuse {
+            position(new Vec(0, -2, 0)) { box(r, 4, 3) }
+            position(new Vec(r, 0, 0)) { cylinder(1, 6) }
+        }
+    }
+    def rodPart = part('rod', Color.BLUE) {
+        cylinder(2.5, 2).fuse {
+            position(new Vec(0, -1, 0)) { box(l, 2, 2) }
+            position(new Vec(l, 0, 0)) { cylinder(2.5, 2) }
+        }
+    }
+    def pistonPart = part('piston', Color.RED) {
+        position(new Vec(-5, -4, 0)) { box(10, 8, 8) }
+    }
+
+    // Placements
+    def base = place(basePart) { translate(-15, -20, -2) }
+    def wall = place(wallPart) { translate(-15, 0, 0) }
+    // its axis 15 mm high, out of the wall
+    def crank = place(crankPart) {
+        revolute(axis(), wall.butY(new Vec(0, 0, 15)))
+    }
+    // on the crank pin, in front of the crank
+    def rod = place(rodPart) {
+        revolute(axis(new Vec(0, 0, 0)), crank.at(crankPart.axis(new Vec(r, 0, 3))))
+    }
+    // its bottom on the rod end, sliding up from the base, against the wall
+    def piston = place(pistonPart) {
+        slider(butZ().reverse(), base.topZ(new Vec(0, -4, 0)))
+    }
+
+    // Motion: one turn in 2 s
+    // height of the rod end above the crank axis, the crank at a degrees
+    Closure<Double> rise = { double a ->
+        r * sin(toRadians(a)) + sqrt(l * l - pow(r * cos(toRadians(a)), 2))
+    }
+    animate(duration: 2, fps: 25) {
+        crank.angle = { double t -> 180 * t }
+        // from the crank pin to the rod end, relative to the crank
+        rod.angle = { double t ->
+            double a = 180 * t
+            toDegrees(atan2(rise(a) - r * sin(toRadians(a)), -r * cos(toRadians(a)))) - a
+        }
+        piston.distance = { double t -> 15 + rise(180 * t) }
+    }
+}.display()
+----
+
+.Crank and Slider Result
+image::../cad-crank-slider.gif[]
+
+=== Animated Sub-assemblies
+
+Joints animate inside sub-assemblies as well: the wheels turn on the shaft of the axle, the axle is placed twice in the
+cart, and the cart slides on the ground. The laws and gears can link any joints of the tree: here, gears make the
+wheels turn as the cart moves, so that they roll without slipping (a turn every `2 PI r` along the ground). A
+sub-assembly placed several times moves the same way everywhere, as all its occurrences share it.
+
+.Rolling Cart (`AnimationTest`)
+[source,groovy]
+----
+assembly('rolling cart') {
+    // Parts
+    def groundPart = part('ground', Color.GRAY) { box(200, 40, 2) }
+    def chassisPart = part('chassis', Color.hex('#3080ff')) { box(40, 20, 4) }
+    def shaftPart = part('shaft') { cylinder(1, 26) }
+    def wheelPart = part('wheel', Color.ORANGE) { cylinder(5, 2).cut { cylinder(1, 2) } }
+    // a spoke on the outer face of the wheels, to see them turn
+    def spokePart = part('spoke', Color.RED) {
+        position(new Vec(-2, -0.5, 0)) { box(4, 1, 1) }
+    }
+
+    // Axle: the wheels turn on the shaft, the spokes with them
+    CadDslInstance shaft = null, left = null, right = null
+    def axle = assembly('axle') {
+        shaft = place(shaftPart)
+        left = place(wheelPart) { revolute(axis(), shaft.axis()) }
+        right = place(wheelPart) { revolute(axis(), shaft.axis().offset(24)) }
+        place(spokePart) { mate(butZ(), left.butZ(new Vec(3, 0, 0))) }
+        place(spokePart) { mate(butZ(), right.topZ(new Vec(3, 0, 26))) }
+    }
+
+    // Cart: a chassis on two axles
+    CadDslInstance chassis = null
+    def cart = assembly('cart') {
+        chassis = place(chassisPart) { translate(-20, 0, 4) }
+        place(axle) { mate(shaft.butZ(), chassis.butY(new Vec(-14, 0, 3)).offset(-23)) }
+        place(axle) { mate(shaft.butZ(), chassis.butY(new Vec(14, 0, 3)).offset(-23)) }
+    }
+
+    // Placements: the back of the chassis at the start of the ground, the wheels on it, sliding along +X
+    def ground = place(groundPart) { translate(-100, -10, -2) }
+    def rolling = place(cart) {
+        slider(chassis.butX().reverse(), ground.butX(new Vec(-100, 10, 8)).reverse())
+    }
+
+    // Motion: the cart rolls 120 mm in 2 s, the wheels turn around -Y without slipping
+    gear(rolling, left, -180 / (PI * 5))
+    gear(rolling, right, -180 / (PI * 5))
+    animate(duration: 2, fps: 25) {
+        rolling.distance = { double t -> 60 * t }
+    }
+}.display()
+----
+
+.Rolling Cart Result
+image::../cad-rolling-cart.gif[]
