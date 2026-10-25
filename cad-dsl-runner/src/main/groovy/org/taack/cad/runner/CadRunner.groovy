@@ -7,6 +7,10 @@ import org.codehaus.groovy.runtime.StackTraceUtils
 import org.taack.cad.dsl.CadDisplay
 import org.taack.cad.dsl.CadParams
 import org.taack.cad.dsl.CadScript
+import org.taack.cad.dsl.feature.CadFeatureRecorder
+import org.taack.cad.dsl.feature.RecordingKernel
+import org.taack.cad.dsl.kernel.CadKernel
+import org.taack.cad.dsl.kernel.CadKernels
 
 import java.nio.charset.StandardCharsets
 import java.nio.file.Files
@@ -22,16 +26,21 @@ import java.util.function.Consumer
  *
  * Requests:
  * <pre>
- * {"type": "run", "id": 1, "script": "/models/rail.groovy", "args": [], "params": {"length": 120}}
+ * {"type": "run", "id": 1, "script": "/models/rail.groovy", "args": [], "params": {"length": 120},
+ *  "classpath": ["/home/me/.m2/repository/com/acme/parts/1.0/parts-1.0.jar"]}
  * {"type": "stop"}
  * </pre>
+ * The classpath of a run, optional, holds the jars and directories of classes its script uses: shared parts for
+ * instance. The classes of the runner, the DSL and Groovy among them, come first.
  * Events:
  * <pre>
  * {"type": "ready", "protocol": 1}                                  once connected
  * {"type": "display", "id": 1, "file": "/tmp/.../run-1/1.glb"}       for each display() given no file name
- * {"type": "done", "id": 1, "params": {"length": 120.0}, "millis": 840}
- * {"type": "error", "id": 1, "message": "...", "trace": "...", "params": {}, "millis": 12}
+ * {"type": "done", "id": 1, "params": {"length": 120.0}, "millis": 840, "features": [...]}
+ * {"type": "error", "id": 1, "message": "...", "trace": "...", "params": {}, "millis": 12, "features": [...]}
  * </pre>
+ * The features are the tree of the operations of the script, see CadFeatureRecorder.tree() in cad-dsl: up to the
+ * failing one, marked with "error": true, when the run fails.
  * The glTF files of a run are deleted when the next run starts, and all of them when the runner stops.
  */
 @CompileStatic
@@ -75,21 +84,27 @@ final class CadRunner {
             gltf.path
         }
         Map<String, String> previous = setParams((Map) request.params ?: [:])
+        CadKernel kernel = CadKernels.get()
+        def recorder = new CadFeatureRecorder()
+        CadKernels.set(new RecordingKernel(kernel, recorder))
         long start = System.nanoTime()
         Map end
         try {
-            CadScript.run(new File((String) request.script), (List<String>) request.args ?: [])
+            CadScript.run(new File((String) request.script), (List<String>) request.args ?: [], (List<String>) request.classpath ?: [])
             end = [type: 'done', id: id]
         } catch (Throwable failure) {
             // compile errors and failed assertions too: the IDE shows them, the runner goes on
             end = [type: 'error', id: id, message: failure.message ?: failure.class.name, trace: stackTrace(failure)]
+            recorder.failed = true
         } finally {
+            CadKernels.set(kernel)
             CadDisplay.redirect(null)
             restoreParams(previous)
         }
         displayed.findAll { it.file }.each { File gltf -> emit.accept([type: 'display', id: id, file: gltf.path]) }
         end.params = CadParams.values()
         end.millis = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - start)
+        end.features = recorder.tree()
         emit.accept(end)
     }
 

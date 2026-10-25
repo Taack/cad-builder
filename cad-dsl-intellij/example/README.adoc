@@ -1,0 +1,34 @@
+= CAD Scripts Example Project
+
+An empty Gradle project to try the IntelliJ plugin with: the CAD scripts are in `cad/`, a source set with `cad-dsl`
+and the parts of `parts/` on its classpath, which Gradle does not compile. Both come from the local Maven repository
+(`~/.m2`).
+
+* `cad/block.groovy` uses the DSL only.
+* `cad/plate.groovy` uses `Plate`, a part shared as a jar: `parts/` is a separate Gradle project, a library of parts
+published to the local Maven repository (see _Sharing Parts as Jars_ in `docs/usage.adoc`).
+
+. Publish `cad-dsl` to the local Maven repository, and build the runner and the native library, from the root of the
+repository:
++
+[source,bash]
+----
+./gradlew :cad-dsl:publishToMavenLocal
+./gradlew :cad-dsl-runner:installDist :cad-dsl-native:linkRelease -PocctHome=<OCCT install>
+----
+. Publish the parts, from this directory:
++
+[source,bash]
+----
+./gradlew -p parts publishToMavenLocal
+----
+. Install the plugin: `./gradlew :cad-dsl-intellij:buildPlugin`, then _Settings | Plugins | ⚙ | Install Plugin from Disk_
+with `cad-dsl-intellij/build/distributions/cad-dsl-intellij-0.1.zip`. Or `./gradlew :cad-dsl-intellij:runIde` for an
+IDE with the plugin.
+. In _Settings | Tools | CAD DSL_, set the runner to `<repository>/cad-dsl-runner/build/install/cad-dsl-runner` and the
+native library to `<repository>/cad-dsl-native/build/lib/main/release`: they are only found by themselves in cad-builder.
+. Open this directory as a project (_File | Open_, trust the Gradle project), then `cad/block.groovy`, and run it from the
+icon of its first line. The model shows in the _CAD Preview_ tool window. Then `cad/plate.groovy`: the runner finds
+`Plate` in the jar of the parts, which the plugin passes with the classpath of the module.
+
+After a change of the parts, publish them again: the next run takes them.

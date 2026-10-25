@@ -1,0 +1,41 @@
+<idea-plugin>
+    <id>org.taack.cad.dsl</id>
+    <name>CAD DSL</name>
+    <vendor url="https://github.com/Taack/cad-builder">Taack</vendor>
+    <description><![CDATA[
+    Writes and previews the scripts of the Groovy CAD DSL of
+    <a href="https://github.com/Taack/cad-builder">cad-builder</a>:
+    <ul>
+        <li>completion of the scripts, with the imports the DSL adds to them when it runs them;</li>
+        <li>a CAD Script run configuration, which runs them in a runner process, out of the IDE;</li>
+        <li>a 3D preview of the shapes and assemblies they display, run again when they are saved;</li>
+        <li>the tree of their features: parts, operations and sketches, each one opening the line that made it.</li>
+    </ul>
+    ]]></description>
+
+    <depends>com.intellij.modules.platform</depends>
+    <depends>com.intellij.modules.java</depends>
+    <depends>org.intellij.groovy</depends>
+    <depends>com.intellij.modules.jcef</depends>
+
+    <extensions defaultExtensionNs="org.intellij.groovy">
+        <scriptTypeDetector implementation="org.taack.cad.intellij.CadScriptTypeDetector"/>
+        <importContributor implementation="org.taack.cad.intellij.CadImportContributor"/>
+    </extensions>
+
+    <extensions defaultExtensionNs="com.intellij">
+        <configurationType implementation="org.taack.cad.intellij.CadRunConfigurationType"/>
+        <runConfigurationProducer implementation="org.taack.cad.intellij.CadRunConfigurationProducer"/>
+        <runLineMarkerContributor language="Groovy" implementationClass="org.taack.cad.intellij.CadRunLineMarkerContributor"/>
+        <toolWindow id="CAD Preview" anchor="right" icon="/icons/cadPreview.svg"
+                    factoryClass="org.taack.cad.intellij.CadPreviewToolWindowFactory"/>
+        <toolWindow id="CAD Structure" anchor="left" icon="/icons/cadScript.svg"
+                    factoryClass="org.taack.cad.intellij.CadStructureToolWindowFactory"/>
+        <applicationConfigurable parentId="tools" id="org.taack.cad.settings" displayName="CAD DSL"
+                                 instance="org.taack.cad.intellij.CadSettingsConfigurable"/>
+    </extensions>
+
+    <applicationListeners>
+        <listener class="org.taack.cad.intellij.CadRerunOnSave" topic="com.intellij.openapi.vfs.newvfs.BulkFileListener"/>
+    </applicationListeners>
+</idea-plugin>

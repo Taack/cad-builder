@@ -9,21 +9,34 @@ import org.codehaus.groovy.control.customizers.ImportCustomizer
  *
  * The DSL packages (org.taack.cad.dsl, .geom, .helper), CadDsl.cd() and java.lang.Math are imported,
  * the arguments following the script are available as args, and the classes in the directory of the script too.
+ * The runner adds the classpath of the script in the IDE: jars of shared parts, compiled classes.
  */
 @CompileStatic
 final class CadScript {
     private CadScript() {}
 
+    /**
+     * The imports listed in script-imports.properties, beside this class
+     */
     static ImportCustomizer imports() {
+        def listed = new Properties()
+        CadScript.getResourceAsStream('script-imports.properties').withCloseable { listed.load(it) }
         new ImportCustomizer()
-                .addStarImports('org.taack.cad.dsl', 'org.taack.cad.dsl.geom', 'org.taack.cad.dsl.helper')
-                .addStaticStars('org.taack.cad.dsl.CadDsl', 'java.lang.Math')
+                .addStarImports(names(listed, 'starImports'))
+                .addStaticStars(names(listed, 'staticStarImports'))
     }
 
-    static void run(File script, List<String> args) {
+    private static String[] names(Properties listed, String key) {
+        listed.getProperty(key).split(',')*.trim() as String[]
+    }
+
+    /**
+     * @param classpath Jars and directories of classes the script uses, beside those of the DSL, which come first
+     */
+    static void run(File script, List<String> args, List<String> classpath = []) {
         def config = new CompilerConfiguration().addCompilationCustomizers(imports())
         // classes beside the script (Contour.groovy for a class Contour) are found as on a classpath
-        config.classpathList = [script.absoluteFile.parent]
+        config.classpathList = [script.absoluteFile.parent] + classpath
         CadParams.clear()
         new GroovyShell(CadScript.classLoader, config).run(script, args)
     }

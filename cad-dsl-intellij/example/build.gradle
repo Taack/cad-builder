@@ -1,0 +1,31 @@
+plugins {
+    id 'groovy'
+}
+
+repositories {
+    // cad-dsl, published from cad-builder with ./gradlew :cad-dsl:publishToMavenLocal
+    mavenLocal()
+    // Groovy, which cad-dsl depends on
+    mavenCentral()
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of 25
+    }
+}
+
+// The CAD scripts, in cad/: on the classpath of cad-dsl and of the parts for the IDE, but not compiled, they are run by the runner
+sourceSets {
+    cad {
+        groovy.srcDirs = ['cad']
+    }
+}
+
+dependencies {
+    cadImplementation 'org.taack.cad:cad-dsl:0.1'
+    // parts shared as a jar, see parts/
+    cadImplementation 'org.example.cad:parts:0.1'
+}
+
+tasks.named('compileCadGroovy') { enabled = false }
