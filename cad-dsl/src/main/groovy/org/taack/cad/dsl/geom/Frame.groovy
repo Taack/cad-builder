@@ -25,6 +25,41 @@ final class Frame {
         this.x = unit(projected)
     }
 
+    /**
+     * Plane z = height, (u, v) along (X, Y), facing +Z
+     */
+    static Frame xy(double height = 0) {
+        new Frame(new Vec(0, 0, height), Vec.vZ, Vec.vX)
+    }
+
+    /**
+     * Plane y = height, (u, v) along (X, Z), facing -Y
+     */
+    static Frame xz(double height = 0) {
+        new Frame(new Vec(0, height, 0), -Vec.vY, Vec.vX)
+    }
+
+    /**
+     * Plane x = height, (u, v) along (Y, Z), facing +X
+     */
+    static Frame yz(double height = 0) {
+        new Frame(new Vec(height, 0, 0), Vec.vX, Vec.vY)
+    }
+
+    /**
+     * The y direction, z × x
+     */
+    Vec getY() {
+        z / x
+    }
+
+    /**
+     * The point of the plane of the frame at (u, v), along x and y
+     */
+    Vec at(Vec2d p) {
+        origin + x * p.x + y * p.y
+    }
+
     Trsf toTrsf() {
         Trsf.ofFrame(origin, x, z)
     }

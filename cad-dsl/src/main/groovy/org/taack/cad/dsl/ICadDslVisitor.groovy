@@ -86,6 +86,15 @@ interface ICadDslVisitor {
 
     void visitPrism(double high, boolean cut)
 
+    /**
+     * Prism whose side faces lean by draft, the section narrowing along dir (widening for a negative draft)
+     * @param dir   Normal to the face
+     * @param draft In radians
+     */
+    void visitPrism(Vec dir, boolean cut, double draft)
+
+    void visitPrism(double high, boolean cut, double draft)
+
     void visitDirection(Vec axis, Vec normal)
 
     void visitCommon()

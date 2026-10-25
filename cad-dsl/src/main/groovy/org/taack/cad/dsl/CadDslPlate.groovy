@@ -36,7 +36,7 @@ class CadDslPlate implements CadDslBase {
 
     private CadDslPlate drawCurve(Vec from, boolean boundary, @DelegatesTo(value = CadDslEdge, strategy = Closure.DELEGATE_FIRST) Closure c) {
         visitor.visitPlateCurve(from, boundary)
-        c.delegate = new CadDslEdge(visitor: visitor)
+        c.delegate = new CadDslEdge(visitor: visitor, at3d: from)
         c.call()
         visitor.visitPlateCurveEnd(from)
         this

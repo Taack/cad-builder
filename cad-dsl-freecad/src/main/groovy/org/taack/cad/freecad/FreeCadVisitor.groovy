@@ -202,6 +202,16 @@ class FreeCadVisitor implements ICadDslVisitor {
     }
 
     @Override
+    void visitPrism(Vec dir, boolean cut, double draft) {
+        call('visitPrism', dir, cut, draft)
+    }
+
+    @Override
+    void visitPrism(double high, boolean cut, double draft) {
+        call('visitPrismHeight', high, cut, draft)
+    }
+
+    @Override
     void visitDirection(Vec axis, Vec normal) {
         call('visitDirection', axis, normal)
     }

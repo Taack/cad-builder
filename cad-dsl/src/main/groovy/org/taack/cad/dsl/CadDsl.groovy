@@ -1,6 +1,10 @@
 package org.taack.cad.dsl
 
 import groovy.transform.CompileStatic
+import org.taack.cad.dsl.geom.Arc2d
+import org.taack.cad.dsl.geom.Frame
+import org.taack.cad.dsl.geom.IOpenShape2d
+import org.taack.cad.dsl.geom.Outline
 import org.taack.cad.dsl.geom.Vec
 import org.taack.cad.dsl.geom.Vec2d
 import org.taack.cad.dsl.kernel.CadKernels
@@ -33,7 +37,7 @@ class CadDsl extends CadDslSolid implements CadDslBase {
     CadDslWire wireFrom(Vec pos, @DelegatesTo(value = CadDslEdge, strategy = Closure.DELEGATE_FIRST) Closure c = null) {
         visitor.visitFrom(pos)
         if (c) {
-            c.delegate = new CadDslEdge(visitor: visitor)
+            c.delegate = new CadDslEdge(visitor: visitor, at3d: pos)
             c.call()
         }
         visitor.visitFromEnd(pos)
@@ -43,11 +47,29 @@ class CadDsl extends CadDslSolid implements CadDslBase {
     CadDslWire2d wireFrom(Vec2d pos, @DelegatesTo(value = CadDslEdge2d, strategy = Closure.DELEGATE_FIRST) Closure c = null) {
         visitor.visitFrom(pos)
         if (c) {
-            c.delegate = new CadDslEdge2d(visitor: visitor)
+            c.delegate = new CadDslEdge2d(visitor: visitor, at2d: pos)
             c.call()
         }
         visitor.visitFromEnd(pos)
         new CadDslWire2d(visitor: visitor)
+    }
+
+    /**
+     * The face of an outline, with the outlines of its holes, see {@link Outline}.
+     * @param plane The plane of the outlines, (u, v) along its x and y, e.g. {@link Frame#xz}(y)
+     */
+    CadDslFace face(Frame plane, Outline outline, Outline... holes) {
+        for (Outline o in [outline] + holes.toList()) {
+            Vec start = plane.at(o.start())
+            visitor.visitFrom(start)
+            for (IOpenShape2d s in o.path()) {
+                if (s instanceof Arc2d) visitor.visitArc(plane.at(s.to), plane.at(((Arc2d) s).via))
+                else visitor.visitEdge(plane.at(s.to))
+            }
+            visitor.visitFromEnd(start)
+        }
+        visitor.visitToFace()
+        new CadDslFace(visitor: visitor)
     }
 
     CadDsl position(Vec pos, @DelegatesTo(value = CadDsl, strategy = Closure.DELEGATE_FIRST) Closure c = null) {

@@ -17,7 +17,7 @@ class CadDslWingSection implements CadDslBase {
      */
     CadDslWing profile(Vec2d from, @DelegatesTo(value = CadDslEdge2d, strategy = Closure.DELEGATE_FIRST) Closure c) {
         visitor.visitWingSection(leadingEdge, chord, twist, from)
-        c.delegate = new CadDslEdge2d(visitor: visitor)
+        c.delegate = new CadDslEdge2d(visitor: visitor, at2d: from)
         c.call()
         visitor.visitWingSectionEnd(from)
         new CadDslWing(visitor: visitor)

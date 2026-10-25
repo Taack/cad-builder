@@ -5,18 +5,18 @@ import groovy.transform.CompileStatic
 @CompileStatic
 class Arc implements IOpenShape {
     Vec to
-    Vec center
+    Vec via
 
-    Arc(Vec to, Vec center) {
+    Arc(Vec to, Vec via) {
         this.to = to
-        this.center = center
+        this.via = via
     }
 
     @Override
     String toString() {
         return "Arc2d{" +
                 "to=" + to +
-                ", center=" + center +
+                ", via=" + via +
                 '}'
     }
 }

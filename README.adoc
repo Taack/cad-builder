@@ -136,6 +136,81 @@ void "Test mix fuse - common - fuse"() {
 .Fuse Result
 image::cad-fuse.png[]
 
+=== Drafts
+
+`prism(dir, draft: degrees)` and `hole(dir, draft: degrees)` make prisms whose side faces lean by the draft angle, as
+the walls of a molded part: the section narrows along `dir`, normal to the face (it widens for a negative draft), and
+the walls of the holes of the face lean the other way. A hole with a positive draft is a pocket narrower at its bottom.
+
+.Molded Tray
+[source,groovy]
+----
+@Test
+void "Molded tray, its walls and pockets with a draft"() {
+    // walls leaning 3° inward, a ring with a draft on its top, then a pocket beside it, narrower at its bottom
+    cd().wireFrom(new Vec(-40, -30, 0)) {
+        edge(new Vec(40, -30, 0))
+        edge(new Vec(40, 30, 0))
+        edge(new Vec(-40, 30, 0))
+        edge(new Vec(-40, -30, 0))
+    }.toFace().prism(new Vec(0, 0, 20), draft: 3)
+            .topZ().wireFrom() {
+                circle(12)
+                circle(6, true)
+            }.toFace().prism(8, draft: 5)
+            .topZ(new Vec(25, 0, 21)).wireFrom() {
+                circle(5)
+            }.toFace().hole(-10, draft: 2).display()
+}
+----
+
+=== Outlines
+
+An `Outline` is drawn as it is dimensioned on a drawing: circles (a center, a radius) and lines (a point, a direction),
+counterclockwise in (u, v), the region on their left. Their junctions are computed: the tangent line between two
+circles, the point of tangency of a line and a circle, the intersection of two lines, and `fillet(r)` rounds the corner
+between its neighbors. The radii are signed, > 0 for a convex arc, < 0 for a concave one.
+
+* `offset(d)` moves the outline inward by `d`, as a draft does over a height of `d / tan(draft)`: what is dimensioned on
+a plane of reference is found on the plane of a face. `inset(d, filletInset)` gives its fillets their radius at
+another height, at mid-height of the walls for instance.
+* `rotate(degrees)`, `mirrorV()` and `quarterTurns()` draw the symmetric parts once.
+* `face(plane, outline, holes...)` makes the face of an outline with the outlines of its holes, (u, v) along the x and
+y of a `Frame`: `Frame.xy(z)`, `Frame.xz(y)`, `Frame.yz(x)` or any frame.
+
+In a wire, `arcAround(to, center)` draws an arc by its center, the short way or the long one (`longWay`).
+
+.Molded Housing
+[source,groovy]
+----
+@Test
+void "Molded housing drawn as dimensioned, its walls leaning 2°"() {
+    double t = Math.tan(Math.toRadians(2))
+    CadDsl housing = cd()
+    // corners rounded R32, notched R7 over the feet, R8 fillets: dimensioned at mid-height, z = 15
+    Outline body = new Outline()
+            .circle(22, 22, 32).fillet(8).circle(48, 48, -7).fillet(8).circle(22, 22, 32)
+            .quarterTurns()
+    housing.face(Frame.xy(), body.inset(-15 * t)).prism(new Vec(0, 0, 30), draft: 2)
+    // a pocket in the top, dimensioned at its mouth, around an island, and a knob rounded R2 beside it
+    housing.face(Frame.xy(30), Outline.roundedRectangle(30, 16, 4), Outline.roundedRectangle(8, 4, 1))
+            .hole(new Vec(0, 0, -10), draft: 2)
+    housing.fuse {
+        wireFrom(new Vec(0, 22, 30)) {
+            edge(new Vec(6, 22, 30))
+            edge(new Vec(6, 22, 34))
+            arcAround(new Vec(4, 22, 36), new Vec(4, 22, 34))
+            edge(new Vec(0, 22, 36))
+            edge(new Vec(0, 22, 30))
+        }.toFace().revolution(new Vec(0, 22, 0), Vec.vZ)
+    }
+    housing.display()
+}
+----
+
+.Molded Housing
+image::cad-outline.png[]
+
 === Helix
 
 `helix(radius, pitch, height[, endRadius])` starts a helix around the current direction (a negative pitch makes it
@@ -755,7 +830,7 @@ video::https://github.com/user-attachments/assets/c4763c7e-746c-4a55-a299-8d4375
 `cad-dsl-freecad` runs the DSL in https://www.freecad.org[FreeCAD] 1.0 or later: each model is a FreeCAD document,
 built by a `FreeCADCmd` process the kernel starts on first use. It makes features, not plain shapes: primitives
 (`Part::Box`, `Part::Cylinder`...), sketches for the contours drawn on the faces, `Part::Extrusion` for the prisms and
-the holes, `Part::Revolution`, `Part::Cut`, `Part::MultiFuse`, fillets, lofts, sweeps along helices, fillings for the
+the holes (its taper angle for the drafts), `Part::Revolution`, `Part::Cut`, `Part::MultiFuse`, fillets, lofts, sweeps along helices, fillings for the
 plates, `Draft` shape strings for the texts. Assemblies are `App::Part` of `App::Link`.
 
 `display("x.FCStd")` saves the document, editable in FreeCAD; `display("x.step")`, `.stl`, `.brep` and `.iges` export

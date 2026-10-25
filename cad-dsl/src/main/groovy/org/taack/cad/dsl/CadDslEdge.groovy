@@ -8,6 +8,10 @@ import org.taack.cad.dsl.svg.SvgDrawing
 @CompileStatic
 class CadDslEdge extends CadDslEdge2d {
     /**
+     * The last position, where {@link #arcAround(Vec, Vec, boolean)} starts: null when it is not known
+     */
+    Vec at3d
+    /**
      * Displace new position on this face.
      * @param to    Move, starting from the old position
      */
@@ -21,6 +25,7 @@ class CadDslEdge extends CadDslEdge2d {
      */
     void to(Vec to) {
         visitor.visitTo(to)
+        at3d = to
     }
 
     /**
@@ -29,6 +34,7 @@ class CadDslEdge extends CadDslEdge2d {
      */
     void edge(Vec to) {
         visitor.visitEdge(to)
+        at3d = to
     }
 
     void adapt3d(ITrimmable2d trimmedCurve, Vec dirX, Vec dirY) {
@@ -43,6 +49,24 @@ class CadDslEdge extends CadDslEdge2d {
      */
     void arc(Vec to, Vec via) {
         visitor.visitArc(to, via)
+        at3d = to
+    }
+
+    /**
+     * Draw an arc of circle around center from the last position to the "to" position (which will become the last
+     * position), in the plane of the three points, the short way, or the long one. The last position is the start of
+     * the wire, or the one left by the last edge, arc or to.
+     * @param to      End of the arc, as far from the center as the last position: within 0.001, or 0.1% beyond a radius
+     *                of 1, the arc passing at their mean distance
+     * @param longWay The arc going more than half a turn
+     */
+    void arcAround(Vec to, Vec center, boolean longWay = false) {
+        if (at3d == null) throw new IllegalStateException("arcAround($to, $center): the last position is not known, draw an edge or an arc, or call to() first")
+        Vec u = at3d - center, w = to - center
+        double r1 = Math.sqrt(u.cord(u)), r2 = Math.sqrt(w.cord(w)), r = (r1 + r2) / 2, bisector = Math.sqrt((u + w).cord(u + w))
+        if (Math.abs(r1 - r2) > ARC_TOLERANCE * Math.max(1d, r)) throw new IllegalArgumentException("arcAround($to, $center): its ends $at3d and $to are not as far from the center, $r1 and $r2")
+        if (bisector < 1e-9 * Math.max(1d, r)) throw new IllegalArgumentException("arcAround($to, $center): half a turn, in no given plane: draw it with arc(to, via)")
+        arc(to, center + (u + w) * ((longWay ? -r : r) / bisector))
     }
 
     /**
