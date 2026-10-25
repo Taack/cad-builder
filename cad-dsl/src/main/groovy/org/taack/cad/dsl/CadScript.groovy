@@ -14,10 +14,19 @@ import org.codehaus.groovy.control.customizers.ImportCustomizer
 final class CadScript {
     private CadScript() {}
 
+    /**
+     * The imports listed in script-imports.properties, beside this class
+     */
     static ImportCustomizer imports() {
+        def listed = new Properties()
+        CadScript.getResourceAsStream('script-imports.properties').withCloseable { listed.load(it) }
         new ImportCustomizer()
-                .addStarImports('org.taack.cad.dsl', 'org.taack.cad.dsl.geom', 'org.taack.cad.dsl.helper')
-                .addStaticStars('org.taack.cad.dsl.CadDsl', 'java.lang.Math')
+                .addStarImports(names(listed, 'starImports'))
+                .addStaticStars(names(listed, 'staticStarImports'))
+    }
+
+    private static String[] names(Properties listed, String key) {
+        listed.getProperty(key).split(',')*.trim() as String[]
     }
 
     static void run(File script, List<String> args) {

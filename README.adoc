@@ -20,6 +20,8 @@ image::mj32.jpg[]
   saving them as editable FCStd files, their parameters in a spreadsheet (see xref:docs/freecad.adoc[FreeCAD Kernel]).
 * `cad-dsl-step`: `step2dsl`, converting STEP files to DSL scripts, with FreeCAD (see xref:docs/freecad.adoc#step-to-dsl[STEP to DSL]).
 * `cad-dsl-runner`: runs the scripts on request, for an IDE showing them as glTF (see xref:docs/usage.adoc#runner[Runner]).
+* `cad-dsl-intellij`: the IntelliJ IDEA plugin, completing the scripts, running them in the runner and previewing their models
+  in 3D (see xref:docs/usage.adoc#intellij-plugin[IntelliJ Plugin]).
 
 The DSL finds its kernel at runtime with `ServiceLoader` (`org.taack.cad.dsl.kernel.CadKernel`), so `cd()` works as soon as
 `cad-dsl-occt` is on the classpath and `cad-dsl-native` in `java.library.path` (see xref:docs/building.adoc#native-library[Native Library]), or
@@ -33,6 +35,6 @@ The tests of the DSL are in `cad-dsl/src/testFixtures`: they need a kernel, and 
 
 * xref:docs/dsl.adoc[DSL]: parts, booleans, drafts, outlines, helices, wings, thru sections, plates, text and SVG.
 * xref:docs/assemblies.adoc[Assemblies and Animations]: parts placed with joints, animated with laws and gears.
-* xref:docs/usage.adoc[Distribution and Usage]: Maven artifacts, scripts, the runner and code completion.
+* xref:docs/usage.adoc[Distribution and Usage]: Maven artifacts, scripts, the runner, code completion and the IntelliJ plugin.
 * xref:docs/freecad.adoc[FreeCAD Kernel]: FCStd files with their parameters, and STEP to DSL.
 * xref:docs/building.adoc[Building]: the native library on Linux, macOS and Windows, and the native bindings.

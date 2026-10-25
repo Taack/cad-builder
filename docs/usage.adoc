@@ -97,6 +97,36 @@ The runner uses the OCCT kernel.
 == Code Completion
 
 The DSL is statically typed: completion needs an IDE supporting Groovy `@DelegatesTo`, such as IntelliJ IDEA Community.
-It only needs `cad-dsl` on the classpath, neither OCCT nor native code.
+It only needs `cad-dsl` on the classpath, neither OCCT nor native code. Scripts run by `cad-dsl` or the runner get imports
+they do not write (see `CadScript`): the <<intellij-plugin,IntelliJ plugin>> declares them to the IDE.
 
 video::https://github.com/user-attachments/assets/c4763c7e-746c-4a55-a299-8d4375b2f001[]
+
+[[intellij-plugin]]
+== IntelliJ Plugin
+
+`cad-dsl-intellij` is a plugin for IntelliJ IDEA 2026.2 and later, free edition included:
+
+* *CAD scripts*: the Groovy scripts of a module with `cad-dsl` on its classpath, and the scripts named `*.cad.groovy`.
+They resolve without the imports `CadScript` adds when it runs them, read from `script-imports.properties` in `cad-dsl`.
+* *CAD Script run configuration*, from the run icon on the first line of a script: the script runs in `cad-dsl-runner`,
+out of the IDE, and its output goes to the Run tool window. Stopping the run stops the runner.
+* *CAD Preview tool window*: the models the `display()` calls of the last run wrote, shown with three.js in the IDE
+browser (JCEF). Orbit, fit, edges on or off, and a time bar for the animations. Saving the script, or a class of its
+directory, runs it again.
+
+The runner and the native library are found in the project when it is cad-builder, after:
+
+[source,bash]
+----
+./gradlew :cad-dsl-runner:installDist :cad-dsl-native:linkRelease
+----
+
+Elsewhere, set them in _Settings | Tools | CAD DSL_, with the Java 25 running the runner (the runtime of the IDE by default).
+
+[source,bash]
+----
+./gradlew :cad-dsl-intellij:runIde        # an IDE with the plugin
+./gradlew :cad-dsl-intellij:buildPlugin   # build/distributions/cad-dsl-intellij-0.1.zip, to install from disk
+./gradlew :cad-dsl-intellij:test          # with the runner: -PrunnerTests -PocctHome=<OCCT install>
+----

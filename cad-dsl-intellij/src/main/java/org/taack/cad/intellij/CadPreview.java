@@ -1,0 +1,106 @@
+package org.taack.cad.intellij;
+
+import com.intellij.openapi.Disposable;
+import com.intellij.openapi.application.ApplicationManager;
+import com.intellij.openapi.components.Service;
+import com.intellij.openapi.project.Project;
+import com.intellij.openapi.util.Disposer;
+import com.intellij.openapi.wm.ToolWindow;
+import com.intellij.openapi.wm.ToolWindowManager;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
+import java.nio.file.Path;
+import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.atomic.AtomicBoolean;
+
+/**
+ * The last run of a project, shown by the CAD Preview tool window, and run again when its scripts are saved
+ */
+@Service(Service.Level.PROJECT)
+public final class CadPreview {
+    public static final String TOOL_WINDOW_ID = "CAD Preview";
+
+    public interface Listener {
+        void running(@NotNull CadRunRequest request);
+
+        void shown(@NotNull CadRunResult result);
+    }
+
+    private final Project project;
+    private final List<Listener> listeners = new CopyOnWriteArrayList<>();
+    private final AtomicBoolean rerunPending = new AtomicBoolean();
+    private volatile @Nullable CadRunResult last;
+
+    public CadPreview(Project project) {
+        this.project = project;
+    }
+
+    public static CadPreview getInstance(@NotNull Project project) {
+        return project.getService(CadPreview.class);
+    }
+
+    public @Nullable CadRunResult last() {
+        return last;
+    }
+
+    public void addListener(@NotNull Listener listener, @NotNull Disposable parent) {
+        listeners.add(listener);
+        Disposer.register(parent, () -> listeners.remove(listener));
+    }
+
+    void running(@NotNull CadRunRequest request) {
+        listeners.forEach(it -> it.running(request));
+    }
+
+    /**
+     * Shows result, and opens the tool window the first time it has models to show
+     */
+    void show(@NotNull CadRunResult result) {
+        last = result;
+        listeners.forEach(it -> it.shown(result));
+        if (result.models().isEmpty()) return;
+        ApplicationManager.getApplication().invokeLater(() -> {
+            ToolWindow window = ToolWindowManager.getInstance(project).getToolWindow(TOOL_WINDOW_ID);
+            if (window != null && !window.isVisible()) window.show();
+        }, project.getDisposed());
+    }
+
+    /**
+     * Runs the last script again, once however many times it is asked before the run starts
+     */
+    public void rerun() {
+        CadRunResult previous = last;
+        if (previous == null || !rerunPending.compareAndSet(false, true)) return;
+        CadRunRequest request = previous.request();
+        // saving before a run asks for a rerun too: the run replaces it
+        CadRunner.getInstance(project).submitUnlessSuperseded(request, new CadRunListener() {
+            @Override
+            public void started() {
+                rerunPending.set(false);
+                running(request);
+            }
+
+            @Override
+            public void skipped() {
+                rerunPending.set(false);
+            }
+
+            @Override
+            public void finished(@NotNull CadRunResult result) {
+                show(result);
+            }
+        });
+    }
+
+    /**
+     * Whether saving file changes the last script run: the script itself, or a class of its directory
+     */
+    boolean dependsOn(@NotNull Path file) {
+        CadRunResult previous = last;
+        if (previous == null) return false;
+        Path script = Path.of(previous.request().script());
+        return file.equals(script) || file.getParent() != null && file.getParent().equals(script.getParent());
+    }
+}

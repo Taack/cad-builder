@@ -1,0 +1,120 @@
+import org.jetbrains.intellij.platform.gradle.TestFrameworkType
+
+plugins {
+    id 'java'
+    id 'org.jetbrains.intellij.platform' version '2.19.0'
+}
+
+group = 'org.taack'
+version = '0.1'
+description = 'IntelliJ IDEA plugin for the CAD DSL scripts: completion, run configuration and 3D preview'
+
+def threeVersion = '0.186.1'
+
+repositories {
+    mavenCentral()
+    intellijPlatform {
+        defaultRepositories()
+    }
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of 25
+    }
+}
+
+configurations {
+    // the cad-dsl jar the tests put on the classpath of the edited scripts
+    cadDslJar { canBeConsumed = false }
+}
+
+dependencies {
+    intellijPlatform {
+        intellijIdea '2026.2.3'
+        bundledPlugin 'com.intellij.java'
+        bundledPlugin 'org.intellij.groovy'
+        bundledPlugin 'com.intellij.modules.jcef'
+        testFramework TestFrameworkType.Platform.INSTANCE
+        testFramework TestFrameworkType.Plugin.Java.INSTANCE
+    }
+    cadDslJar(project(':cad-dsl')) { transitive = false }
+    testImplementation 'junit:junit:4.13.2'
+    testImplementation 'org.opentest4j:opentest4j:1.3.0'
+}
+
+intellijPlatform {
+    pluginConfiguration {
+        ideaVersion {
+            sinceBuild = '262'
+        }
+    }
+    buildSearchableOptions = false
+    pluginVerification {
+        ides {
+            current()
+        }
+    }
+}
+
+// three.js is taken from its npm package at build time, see the preview in src/main/resources/preview
+def threeArchive = layout.buildDirectory.file("three/three-${threeVersion}.tgz")
+def downloadThree = tasks.register('downloadThree') {
+    outputs.file threeArchive
+    doLast {
+        def archive = threeArchive.get().asFile
+        archive.parentFile.mkdirs()
+        new URI("https://registry.npmjs.org/three/-/three-${threeVersion}.tgz").toURL().withInputStream { input ->
+            archive.withOutputStream { it << input }
+        }
+    }
+}
+
+// the files of the three package the preview loads, listed in preview/three/files.txt for the plugin to serve them
+def threeFiles = [
+        'build/three.module.js',
+        'build/three.core.js',
+        'examples/jsm/controls/OrbitControls.js',
+        'examples/jsm/loaders/GLTFLoader.js',
+        'examples/jsm/utils/BufferGeometryUtils.js',
+        'examples/jsm/utils/SkeletonUtils.js',
+]
+def extractThree = tasks.register('extractThree', Sync) {
+    dependsOn downloadThree
+    inputs.property 'threeFiles', threeFiles
+    from(tarTree(threeArchive)) {
+        include 'package/LICENSE'
+        include threeFiles.collect { "package/$it" }
+        eachFile { it.path = it.path.replaceFirst('^package/', 'preview/three/') }
+        includeEmptyDirs = false
+    }
+    into layout.buildDirectory.dir('three-resources')
+    doLast {
+        new File(destinationDir, 'preview/three/files.txt').text = threeFiles.join('\n')
+    }
+}
+
+sourceSets.main.resources.srcDir(extractThree)
+
+tasks.withType(Test).configureEach {
+    def cadDslJar = configurations.cadDslJar
+    inputs.files cadDslJar
+    jvmArgumentProviders.add({ ["-Dcad.dsl.jar=${cadDslJar.singleFile.path}".toString()] } as CommandLineArgumentProvider)
+}
+
+// The tests of the plugin with cad-dsl-runner need the native library, so OCCT (see docs/building.adoc):
+// ./gradlew :cad-dsl-intellij:test -PrunnerTests -PocctHome=...
+test {
+    if (providers.gradleProperty('runnerTests').present) {
+        dependsOn ':cad-dsl-runner:installDist', ':cad-dsl-native:linkRelease'
+        systemProperty 'cad.runner.home', project(':cad-dsl-runner').layout.buildDirectory.dir('install/cad-dsl-runner').get().asFile.path
+        systemProperty 'cad.native.dir', project(':cad-dsl-native').layout.buildDirectory.dir('lib/main/release').get().asFile.path
+    } else {
+        filter { excludeTestsMatching '*IntegrationTest' }
+    }
+}
+
+// its startup activities fail in the tests without a subscription
+tasks.withType(org.jetbrains.intellij.platform.gradle.tasks.PrepareSandboxTask).configureEach {
+    disabledPlugins.add 'com.intellij.modules.ultimate'
+}

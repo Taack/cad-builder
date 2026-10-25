@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>CAD Preview</title>
+    <style>
+        :root { --background: #f7f8fa; --text: #1e1f22; --panel: rgba(255, 255, 255, 0.85); }
+        :root[data-theme="dark"] { --background: #1e1f22; --text: #dfe1e5; --panel: rgba(43, 45, 48, 0.85); }
+        html, body { margin: 0; height: 100%; overflow: hidden; background: var(--background); color: var(--text);
+            font: 12px system-ui, sans-serif; }
+        canvas { display: block; }
+        #message { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+            padding: 16px; text-align: center; white-space: pre-wrap; }
+        #animation { position: absolute; left: 8px; right: 8px; bottom: 8px; display: none; gap: 8px; align-items: center;
+            padding: 4px 8px; border-radius: 4px; background: var(--panel); }
+        #animation input { flex: 1; }
+        #animation button { width: 28px; }
+    </style>
+    <script type="importmap">
+        { "imports": { "three": "./three/build/three.module.js", "three/addons/": "./three/examples/jsm/" } }
+    </script>
+</head>
+<body>
+<div id="message">Run a CAD script to preview it</div>
+<div id="animation">
+    <button id="play" title="Play or pause">⏸</button>
+    <input id="time" type="range" min="0" max="1" step="0.001" value="0">
+</div>
+<script type="module" src="preview.js"></script>
+</body>
+</html>
