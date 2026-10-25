@@ -2,6 +2,7 @@ package org.taack.cad.dsl
 
 import groovy.transform.CompileStatic
 import org.junit.jupiter.api.Test
+import org.taack.cad.dsl.geom.Vec
 
 import static org.taack.cad.dsl.CadDsl.*
 
@@ -12,7 +13,25 @@ class TaperedPrismTest {
     void "Build Tapered Prism"() {
         cd().box(400, 250, 300).topZ().wireFrom() {
             circle(50)
-        }.toFace().prism(200).display()
+        }.toFace().prism(200, draft: 10).display()
+    }
+
+    @Test
+    void "Molded tray, its walls and pockets with a draft"() {
+        // walls leaning 3° inward, a ring with a draft on its top, then a pocket beside it, narrower at its bottom
+        cd().wireFrom(new Vec(-40, -30, 0)) {
+            edge(new Vec(40, -30, 0))
+            edge(new Vec(40, 30, 0))
+            edge(new Vec(-40, 30, 0))
+            edge(new Vec(-40, -30, 0))
+        }.toFace().prism(new Vec(0, 0, 20), draft: 3)
+                .topZ().wireFrom() {
+                    circle(12)
+                    circle(6, true)
+                }.toFace().prism(8, draft: 5)
+                .topZ(new Vec(25, 0, 21)).wireFrom() {
+                    circle(5)
+                }.toFace().hole(-10, draft: 2).display()
 
 
 //        def S = new_BRepPrimAPI_MakeBox__x_y_z(400d, 250d, 300d)

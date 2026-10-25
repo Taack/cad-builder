@@ -9,6 +9,10 @@
 #include <BRepAlgoAPI_Common.hxx>
 #include <BRepAlgoAPI_Cut.hxx>
 #include <BRepAlgoAPI_Fuse.hxx>
+#include <BRepCheck_Analyzer.hxx>
+#include <BRepOffsetAPI_MakeOffset.hxx>
+#include <BRepAdaptor_Surface.hxx>
+#include <BRepBuilderAPI_MakeFace.hxx>
 #include <BRepBuilderAPI_Transform.hxx>
 #include <BRepExtrema_DistShapeShape.hxx>
 #include <BRepFeat_MakeCylindricalHole.hxx>
@@ -27,6 +31,14 @@
 #include <BRepPrimAPI_MakeRevol.hxx>
 #include <BRepPrimAPI_MakeSphere.hxx>
 #include <BRepPrimAPI_MakeTorus.hxx>
+#include <BRepTools.hxx>
+#include <LocOpe_DPrism.hxx>
+#include <Precision.hxx>
+#include <ShapeAnalysis.hxx>
+#include <TopExp_Explorer.hxx>
+#include <TopoDS_Iterator.hxx>
+#include <BRep_Builder.hxx>
+#include <TopoDS_Compound.hxx>
 #include <GProp_GProps.hxx>
 #include <HelixBRep_BuilderHelix.hxx>
 #include <Standard_Failure.hxx>
@@ -37,6 +49,7 @@
 #include <gp_Ax1.hxx>
 #include <gp_Ax2.hxx>
 #include <gp_Ax3.hxx>
+#include <gp_Pln.hxx>
 #include <gp_Trsf.hxx>
 #include <gp_Vec.hxx>
 
@@ -91,6 +104,94 @@ extern "C" TopoDS_Shape *new_TopoDS_Shape__BRepPrimAPI_MakeTorus__gp_Ax2_r1_r2(c
 extern "C" TopoDS_Shape *new_TopoDS_Shape__BRepPrimAPI_MakePrism__TopoDS_Face_gp_Vec(const TopoDS_Face *face, const gp_Vec *normal) {
     TRACE("");
     return guard(__func__, [&] { return new TopoDS_Shape(BRepPrimAPI_MakePrism(*face, *normal).Shape()); });
+}
+
+// The face of wire in plane, wire as its outer bound
+static TopoDS_Face planar_face(const gp_Pln &plane, const TopoDS_Wire &wire) {
+    TopoDS_Face face = BRepBuilderAPI_MakeFace(plane, wire, true).Face();
+    if (!ShapeAnalysis::IsOuterBound(face)) face = BRepBuilderAPI_MakeFace(plane, TopoDS::Wire(wire.Reversed()), true).Face();
+    return face;
+}
+
+// The solid of LocOpe_DPrism for face, or a null shape when it fails
+static TopoDS_Shape dprism(const TopoDS_Face &face, double height, double angle) {
+    try {
+        // its length is along the walls
+        LocOpe_DPrism prism(face, height / std::cos(angle), angle);
+        if (prism.IsDone()) {
+            TopExp_Explorer solid(prism.Shape(), TopAbs_SOLID);
+            if (solid.More() && BRepCheck_Analyzer(solid.Current()).IsValid()) return solid.Current();
+        }
+    } catch (const Standard_Failure &) {
+    }
+    return TopoDS_Shape();
+}
+
+// The prism of the face of wire along the normal of plane, height long (backward when negative), narrowing by
+// height * tan(angle): by LocOpe_DPrism, which fails on some contours, then on the face turned a little around the
+// normal (and the solid turned back), else as a ruled loft from wire to its offset
+static TopoDS_Shape drafted_solid(const gp_Pln &plane, const TopoDS_Wire &wire, double height, double angle) {
+    TopoDS_Face face = planar_face(plane, wire);
+    TopoDS_Shape solid = dprism(face, height, angle);
+    for (double turn : {1e-5, -1e-5, 1e-4, -1e-4}) {
+        if (!solid.IsNull()) return solid;
+        gp_Trsf rotation;
+        rotation.SetRotation(plane.Axis(), turn);
+        TopoDS_Shape turned = dprism(TopoDS::Face(BRepBuilderAPI_Transform(face, rotation, true).Shape()), height, angle);
+        if (!turned.IsNull()) solid = BRepBuilderAPI_Transform(turned, rotation.Inverted(), true).Shape();
+    }
+    if (!solid.IsNull()) return solid;
+    BRepOffsetAPI_MakeOffset offset(face, GeomAbs_Intersection);
+    offset.Perform(-height * std::tan(angle));
+    if (!offset.IsDone()) throw Standard_Failure("Cannot offset the contour of a prism with a draft");
+    gp_Trsf move;
+    move.SetTranslation(gp_Vec(plane.Axis().Direction()) * height);
+    TopExp_Explorer top(BRepBuilderAPI_Transform(offset.Shape(), move).Shape(), TopAbs_WIRE);
+    BRepOffsetAPI_ThruSections loft(true, true);
+    loft.AddWire(BRepTools::OuterWire(face));
+    loft.AddWire(TopoDS::Wire(top.Current()));
+    loft.Build();
+    if (!loft.IsDone()) throw Standard_Failure("Cannot make the prism with a draft");
+    return loft.Shape();
+}
+
+// The prism with a draft of a planar face
+static TopoDS_Shape drafted_prism(const TopoDS_Face &face, const gp_Vec &dir, double draft) {
+    BRepAdaptor_Surface surface(face, false);
+    if (surface.GetType() != GeomAbs_Plane) throw Standard_Failure("A prism with a draft needs a planar face");
+    gp_Pln plane = surface.Plane();
+    gp_Vec normal(plane.Axis().Direction());
+    if (dir.Magnitude() < Precision::Confusion() || !dir.IsParallel(normal, Precision::Angular()))
+        throw Standard_Failure("A prism with a draft goes along the normal of its face");
+    // LocOpe_DPrism ignores the holes of the face: they are cut from the outside, as prisms widening
+    double height = dir.Dot(normal);
+    double angle = height > 0 ? draft : -draft;
+    // the contours drawn on a face may have only their 2D curves
+    TopoDS_Face spine = face;
+    BRepLib::BuildCurves3d(spine);
+    TopoDS_Wire outer = BRepTools::OuterWire(spine);
+    TopoDS_Shape result = drafted_solid(plane, outer, height, angle);
+    for (TopExp_Explorer wire(spine, TopAbs_WIRE); wire.More(); wire.Next()) {
+        if (wire.Current().IsSame(outer)) continue;
+        BRepAlgoAPI_Cut cut(result, drafted_solid(plane, TopoDS::Wire(wire.Current()), height, -angle));
+        if (!cut.IsDone()) throw Standard_Failure("Cannot cut a hole of the face from the prism with a draft");
+        result = cut.Shape();
+    }
+    return result;
+}
+
+extern "C" TopoDS_Shape *new_TopoDS_Shape__LocOpe_DPrism__TopoDS_Shape_gp_Vec_draft(const TopoDS_Shape *faces, const gp_Vec *dir, double draft) {
+    TRACE("");
+    return guard(__func__, [&] {
+        TopoDS_Compound prisms;
+        BRep_Builder builder;
+        builder.MakeCompound(prisms);
+        int count = 0;
+        for (TopExp_Explorer face(*faces, TopAbs_FACE); face.More(); face.Next(), count++)
+            builder.Add(prisms, drafted_prism(TopoDS::Face(face.Current()), *dir, draft));
+        if (count == 0) throw Standard_Failure("No face for the prism with a draft");
+        return new TopoDS_Shape(count == 1 ? TopoDS_Iterator(prisms).Value() : TopoDS_Shape(prisms));
+    });
 }
 
 extern "C" TopoDS_Shape *new_TopoDS_Shape__BRepPrimAPI_MakeRevol__TopoDS_Face_gp_Ax1(const TopoDS_Face *face, const gp_Ax1 *ax1) {

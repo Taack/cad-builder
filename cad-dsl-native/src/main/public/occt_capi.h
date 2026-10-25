@@ -577,6 +577,10 @@ OCCT_CAPI TopoDS_Shape *new_TopoDS_Shape__BRepPrimAPI_MakeTorus__gp_Ax2_r1_r2(co
 
 OCCT_CAPI TopoDS_Shape *new_TopoDS_Shape__BRepPrimAPI_MakePrism__TopoDS_Face_gp_Vec(const TopoDS_Face *face, const gp_Vec *normal);
 
+/* Prism of the planar faces of shape along dir, their normal, whose side faces lean by draft (radians): the section
+ * narrows along dir for a positive draft, widens for a negative one, the walls of the holes leaning the other way. */
+OCCT_CAPI TopoDS_Shape *new_TopoDS_Shape__LocOpe_DPrism__TopoDS_Shape_gp_Vec_draft(const TopoDS_Shape *faces, const gp_Vec *dir, double draft);
+
 OCCT_CAPI TopoDS_Shape *new_TopoDS_Shape__BRepPrimAPI_MakeRevol__TopoDS_Face_gp_Ax1(const TopoDS_Face *face, const gp_Ax1 *ax1);
 
 OCCT_CAPI TopoDS_Shape *new_TopoDS_Shape__BRepPrimAPI_MakeRevol__TopoDS_Face_gp_Ax1_ang(const TopoDS_Face *face, const gp_Ax1 *ax1, double angle);

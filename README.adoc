@@ -136,6 +136,34 @@ void "Test mix fuse - common - fuse"() {
 .Fuse Result
 image::cad-fuse.png[]
 
+=== Drafts
+
+`prism(dir, draft: degrees)` and `hole(dir, draft: degrees)` make prisms whose side faces lean by the draft angle, as
+the walls of a molded part: the section narrows along `dir`, normal to the face (it widens for a negative draft), and
+the walls of the holes of the face lean the other way. A hole with a positive draft is a pocket narrower at its bottom.
+
+.Molded Tray
+[source,groovy]
+----
+@Test
+void "Molded tray, its walls and pockets with a draft"() {
+    // walls leaning 3° inward, a ring with a draft on its top, then a pocket beside it, narrower at its bottom
+    cd().wireFrom(new Vec(-40, -30, 0)) {
+        edge(new Vec(40, -30, 0))
+        edge(new Vec(40, 30, 0))
+        edge(new Vec(-40, 30, 0))
+        edge(new Vec(-40, -30, 0))
+    }.toFace().prism(new Vec(0, 0, 20), draft: 3)
+            .topZ().wireFrom() {
+                circle(12)
+                circle(6, true)
+            }.toFace().prism(8, draft: 5)
+            .topZ(new Vec(25, 0, 21)).wireFrom() {
+                circle(5)
+            }.toFace().hole(-10, draft: 2).display()
+}
+----
+
 === Helix
 
 `helix(radius, pitch, height[, endRadius])` starts a helix around the current direction (a negative pitch makes it
@@ -755,7 +783,7 @@ video::https://github.com/user-attachments/assets/c4763c7e-746c-4a55-a299-8d4375
 `cad-dsl-freecad` runs the DSL in https://www.freecad.org[FreeCAD] 1.0 or later: each model is a FreeCAD document,
 built by a `FreeCADCmd` process the kernel starts on first use. It makes features, not plain shapes: primitives
 (`Part::Box`, `Part::Cylinder`...), sketches for the contours drawn on the faces, `Part::Extrusion` for the prisms and
-the holes, `Part::Revolution`, `Part::Cut`, `Part::MultiFuse`, fillets, lofts, sweeps along helices, fillings for the
+the holes (its taper angle for the drafts), `Part::Revolution`, `Part::Cut`, `Part::MultiFuse`, fillets, lofts, sweeps along helices, fillings for the
 plates, `Draft` shape strings for the texts. Assemblies are `App::Part` of `App::Link`.
 
 `display("x.FCStd")` saves the document, editable in FreeCAD; `display("x.step")`, `.stl`, `.brep` and `.iges` export

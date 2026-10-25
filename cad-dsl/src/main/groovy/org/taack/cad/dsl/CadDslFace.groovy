@@ -43,6 +43,43 @@ class CadDslFace implements CadDslBase {
         new CadDslSolid(visitor: visitor)
     }
 
+    /**
+     * Prism with a draft, as a molded part: its side faces lean by the draft angle, the section narrowing along dir
+     * (widening for a negative draft), the walls of the holes of the face leaning the other way.
+     * @param options draft: angle in degrees, from the direction of the prism
+     * @param dir     Normal to the face
+     */
+    CadDslSolid prism(Map<String, ? extends Number> options, Vec dir) {
+        visitor.visitPrism(dir, false, draft(options))
+        new CadDslSolid(visitor: visitor)
+    }
+
+    /**
+     * Hole with a draft: the solid cut is the prism with a draft along dir, so a positive draft makes a pocket narrower
+     * at its bottom.
+     * @param options draft: angle in degrees, from the direction of the hole
+     */
+    CadDslSolid hole(Map<String, ? extends Number> options, Vec dir) {
+        visitor.visitPrism(dir, true, draft(options))
+        new CadDslSolid(visitor: visitor)
+    }
+
+    CadDslSolid prism(Map<String, ? extends Number> options, Number high) {
+        visitor.visitPrism(high.toDouble(), false, draft(options))
+        new CadDslSolid(visitor: visitor)
+    }
+
+    CadDslSolid hole(Map<String, ? extends Number> options, Number depth) {
+        visitor.visitPrism(depth.toDouble(), true, draft(options))
+        new CadDslSolid(visitor: visitor)
+    }
+
+    private static double draft(Map<String, ? extends Number> options) {
+        Set<String> unknown = options.keySet() - ['draft']
+        if (unknown) throw new IllegalArgumentException("prism, hole: unknown options $unknown, expected draft")
+        Math.toRadians((options.draft ?: 0).doubleValue())
+    }
+
 //    CadDslSolid hole(Number depth) {
 //        visitor.visitHole(depth)
 //        new CadDslSolid(visitor: visitor)

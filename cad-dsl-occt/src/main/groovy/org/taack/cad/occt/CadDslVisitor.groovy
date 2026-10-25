@@ -293,7 +293,16 @@ class CadDslVisitor implements ICadDslVisitor {
             _TopExp_Explorer__Next(anEdgeExplorer)
         }
 
-        shape = own(new_TopoDS_Shape__Shape__BRepBuilderAPI_MakeShape(mkFillet), NativeLib::delete_TopoDS_Shape)
+        def filleted = own(new_TopoDS_Shape__Shape__BRepBuilderAPI_MakeShape(mkFillet), NativeLib::delete_TopoDS_Shape)
+        if (filleted == MemorySegment.NULL) throw new IllegalArgumentException("fillet($radius): ${lastError()}")
+        replaceShape(filleted)
+    }
+
+    // The solid made from the current one replaces it, as the last solid
+    private void replaceShape(MemorySegment made) {
+        boolShapes.peek().remove(shape)
+        boolShapes.peek() << made
+        shape = made
     }
 
     @Override
@@ -306,7 +315,7 @@ class CadDslVisitor implements ICadDslVisitor {
         def aSolidMaker = own(new_BRepOffsetAPI_MakeThickSolid(), NativeLib::delete_BRepOffsetAPI_MakeThickSolid)
         _BRepOffsetAPI_MakeThickSolid__MakeThickSolidByJoin__TopoDS_Shape_TopTools_ListOfShape_thickness_tol(aSolidMaker, shape, facesToRemove, thickness, 0.001d)
 
-        shape = own(new_TopoDS_Shape__Shape__BRepBuilderAPI_MakeShape(aSolidMaker), NativeLib::delete_TopoDS_Shape)
+        replaceShape(own(new_TopoDS_Shape__Shape__BRepBuilderAPI_MakeShape(aSolidMaker), NativeLib::delete_TopoDS_Shape))
     }
 
     @Override
@@ -1038,7 +1047,24 @@ class CadDslVisitor implements ICadDslVisitor {
     void visitPrism(Vec dir, boolean cut) {
         def shape = own(new_TopoDS_Shape__BRepPrimAPI_MakePrism__TopoDS_Face_gp_Vec(face, gpVec(dir)), NativeLib::delete_TopoDS_Shape)
         Tr.cur "prism($dir) from: $fromVec, direction: $direction, directionNormal: $directionNormal, shape: $shape"
+        addPrism(shape, cut)
+    }
 
+    @Override
+    void visitPrism(Vec dir, boolean cut, double draft) {
+        def shape = own(new_TopoDS_Shape__LocOpe_DPrism__TopoDS_Shape_gp_Vec_draft(face, gpVec(dir), draft), NativeLib::delete_TopoDS_Shape)
+        if (shape == MemorySegment.NULL) throw new IllegalArgumentException("prism($dir, draft: $draft): ${lastError()}")
+        Tr.cur "prism($dir, draft: $draft) from: $fromVec, shape: $shape"
+        addPrism(shape, cut)
+    }
+
+    @Override
+    void visitPrism(double high, boolean cut, double draft) {
+        visitPrism(direction * high, cut, draft)
+    }
+
+    // Fuses the prism to the current solid, or cuts it
+    private void addPrism(MemorySegment shape, boolean cut) {
         if (this.shape) {
             Tr.cur "cut: $cut"
             if (cut) {

@@ -122,6 +122,82 @@ def coplanar(pl, other):
     return abs(abs(n1.dot(n2)) - 1) < 1e-9 and abs((other.Base - pl.Base).dot(n1)) < 1e-7
 
 
+def offset_wire(wire, normal, d):
+    """The wire of lines and arcs, in a plane of normal, moved by d to the left of its edges, edge by edge: lines
+    shifted, arcs of radius changed, their ends moved along their common normal (or to the intersection of the moved
+    lines at a corner)"""
+    edges = []
+    for e in wire.OrderedEdges:
+        a, b = e.firstVertex().Point, e.lastVertex().Point
+        p0, p1 = e.FirstParameter, e.LastParameter
+        if e.Orientation == 'Reversed':
+            a, b, p0, p1 = b, a, p1, p0
+        mid = e.valueAt((e.FirstParameter + e.LastParameter) / 2)
+        ta, tb = e.tangentAt(p0), e.tangentAt(p1)
+        if e.Orientation == 'Reversed':
+            ta, tb = -ta, -tb
+        edges.append((e, a, b, mid, ta, tb))
+    def left(t):
+        return unit(normal.cross(t))
+    def moved_line(a, t):
+        return a + left(t) * d, t
+    # the ends of each edge once moved
+    ends = []
+    n = len(edges)
+    for i in range(n):
+        e, a, b, mid, ta, tb = edges[i]
+        ends.append([a + left(ta) * d, b + left(tb) * d])
+    for i in range(n):
+        e1, _, b1, _, _, tb1 = edges[i]
+        e2, a2, _, _, ta2, _ = edges[(i + 1) % n]
+        if tb1.getAngle(ta2) > 1e-6:
+            # a corner: the moved curves meet away from the moved end (lines only)
+            if isinstance(e1.Curve, Part.Line) and isinstance(e2.Curve, Part.Line):
+                q1, u1 = moved_line(b1, tb1)
+                q2, u2 = moved_line(a2, ta2)
+                k = ((q2 - q1).cross(u2)).dot(normal) / (u1.cross(u2)).dot(normal)
+                x = q1 + u1 * k
+                ends[i][1] = x
+                ends[(i + 1) % n][0] = x
+            else:
+                raise ValueError('A prism with a draft of a contour with a corner between arcs')
+    out = []
+    for (e, a, b, mid, ta, tb), (a2, b2) in zip(edges, ends):
+        if isinstance(e.Curve, Part.Circle):
+            c = e.Curve.Center
+            r = (a2 - c).Length
+            if e.isClosed():
+                out.append(Part.Circle(c, e.Curve.Axis, r).toShape())
+            else:
+                out.append(Part.Arc(a2, c + unit(mid - c) * r, b2).toShape())
+        else:
+            out.append(Part.LineSegment(a2, b2).toShape())
+    return Part.Wire(out)
+
+
+def drafted_loft(face, direction, draft):
+    """The prism with a draft of the face, as ruled lofts from its wires to their offsets, the holes cut"""
+    normal = unit(face.normalAt(0, 0))
+    height = direction.dot(normal)
+    if abs(abs(height) - direction.Length) > 1e-6:
+        raise ValueError('A prism with a draft goes along the normal of its face')
+
+    def solid(wire, narrowing):
+        # left of the wire is inside the face when it turns counterclockwise around the normal
+        ccw = Part.Face(wire).normalAt(0, 0).dot(normal) > 0
+        top = offset_wire(wire, normal, narrowing if ccw else -narrowing)
+        top.translate(direction)
+        return Part.makeLoft([wire, top], True, True)
+
+    narrowing = abs(height) * math.tan(draft)
+    result = solid(face.OuterWire, narrowing)
+    for w in face.Wires:
+        if not w.isSame(face.OuterWire):
+            result = result.cut(solid(w, -narrowing))
+    # a solid, not the compound of a cut: Part::Cut ignores a compound tool
+    return result.Solids[0] if len(result.Solids) == 1 else Part.makeCompound(result.Solids)
+
+
 def coords_projection(p, direction, p00):
     """Vec.coordsProjection, the 2D position of the center of a face"""
     sx = -1.0 if p.x - p00.x < 0 else 1.0
@@ -756,21 +832,28 @@ class Model:
         o = self.add('Part::Fillet', 'Fillet')
         o.Base = self.shape
         o.Edges = [(i + 1, radius, radius) for i, e in enumerate(shape.Edges) if any(e.isSame(f) for f in edges)]
-        self.shape = o
+        self.replace_shape(o)
+
+    def replace_shape(self, made):
+        """made, from the current solid, replaces it as the last solid"""
+        if self.shape in self.bool_shapes[-1]:
+            self.bool_shapes[-1].remove(self.shape)
+        self.bool_shapes[-1].append(made)
+        self.shape = made
 
     def visitHollowedSolid(self, thickness):
         self.current_shape()
         sub = self.face.sub_name() if self.face is not None and self.face.owner is self.shape else None
         if sub is None:
             faces = [self.face.face_shape()] if self.face is not None and self.face.face_shape() is not None else []
-            self.shape = self.static(self.shape.Shape.makeThickness(faces, thickness, 0.001), 'Thickness')
+            self.replace_shape(self.static(self.shape.Shape.makeThickness(faces, thickness, 0.001), 'Thickness'))
             return
         o = self.add('Part::Thickness', 'Thickness')
         o.Faces = (self.shape, [sub])
         self.num(o, 'Value', thickness)
         o.Mode = 'Skin'
         o.Join = 'Arc'
-        self.shape = o
+        self.replace_shape(o)
 
     def visitEllipse2d(self, direction, major, minor, rid):
         e = Ellipse2d(self.from2d, pt(direction), major, minor)
@@ -1178,20 +1261,22 @@ class Model:
         self.profile = []
         self.sketch = None
 
-    def visitPrism(self, direction, cut):
-        self.prism(vec(direction), cut)
+    def visitPrism(self, direction, cut, draft=0.0):
+        self.prism(vec(direction), cut, draft)
 
-    def visitPrismHeight(self, height, cut):
-        self.prism(self.direction * height, cut)
+    def visitPrismHeight(self, height, cut, draft=0.0):
+        self.prism(self.direction * height, cut, draft)
 
-    def prism(self, direction, cut):
-        o = self.add('Part::Extrusion', 'Hole' if cut else 'Prism')
-        o.Base = self.face_feature()
-        o.DirMode = 'Custom'
-        o.Dir = unit(direction)
-        self.num(o, 'LengthFwd', direction.Length)
-        o.Solid = True
-        o.FaceMakerClass = FACE_MAKER
+    def prism(self, direction, cut, draft=0.0):
+        """draft in radians: the section narrows along direction for a positive one, the walls of the holes leaning
+        the other way, as with the TaperAngle of an extrusion, positive when it widens"""
+        base = self.face_feature()
+        o = None
+        if draft:
+            base = self.circles_along_normal(base)
+            o = self.drafted_loft(base, direction, draft, 'Hole' if cut else 'Prism')
+        if o is None:
+            o = self.extrusion(base, direction, draft, cut)
         shape = o
         if self.shape is not None:
             shape = self.cut(self.shape, o) if cut else self.boolean('Part::MultiFuse', [self.shape, o])
@@ -1203,6 +1288,48 @@ class Model:
         self.profile = []
         self.sketch = None
         self.shape = shape
+
+    def extrusion(self, base, direction, draft, cut):
+        o = self.add('Part::Extrusion', 'Hole' if cut else 'Prism')
+        o.Base = base
+        o.DirMode = 'Custom'
+        o.Dir = unit(direction)
+        self.num(o, 'LengthFwd', direction.Length)
+        if draft:
+            self.num(o, 'TaperAngle', -math.degrees(draft))
+        o.Solid = True
+        o.FaceMakerClass = FACE_MAKER
+        return o
+
+    def drafted_loft(self, base, direction, draft, name):
+        """The prism with a draft as a loft, made edge by edge, when the face has only lines and arcs: the taper of an
+        extrusion offsets its wires, which fails on some of them (e.g. with concentric arcs), even from one recompute
+        to the next. None for other faces."""
+        self.recompute()
+        faces = base.Shape.Faces
+        if not all(isinstance(e.Curve, (Part.Line, Part.Circle)) for f in faces for e in f.Edges):
+            return None
+        solids = [drafted_loft(f, direction, draft) for f in faces]
+        return self.static(solids[0] if len(solids) == 1 else Part.makeCompound(solids), name)
+
+    def circles_along_normal(self, feature):
+        """feature, or a copy of its face whose full circles turn around its normal: the taper of an extrusion follows
+        the axis of a circle, not the orientation of its wire, and a circle drawn on a face may turn the other way"""
+        self.recompute()
+        faces, turned = [], False
+        for face in feature.Shape.Faces:
+            normal = face.normalAt(0, 0)
+            wires = []
+            for w in face.Wires:
+                c = w.Edges[0].Curve if len(w.Edges) == 1 and w.isClosed() else None
+                if isinstance(c, Part.Circle) and c.Axis.dot(normal) < 0:
+                    w = Part.Wire(Part.Circle(c.Center, normal, c.Radius).toShape())
+                    turned = True
+                wires.append(w)
+            faces.append(Part.Face(face.Surface, wires))
+        if not turned:
+            return feature
+        return self.static(faces[0] if len(faces) == 1 else Part.makeCompound(faces), 'Face')
 
     def visitDirection(self, axis, normal):
         self.direction = vec(axis)
