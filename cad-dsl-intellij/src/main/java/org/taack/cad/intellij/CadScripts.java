@@ -1,11 +1,14 @@
 package org.taack.cad.intellij;
 
+import com.intellij.openapi.application.ReadAction;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.module.ModuleUtilCore;
 import com.intellij.openapi.project.DumbService;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.roots.OrderEnumerator;
 import com.intellij.openapi.roots.ProjectRootManager;
 import com.intellij.openapi.util.text.StringUtil;
+import com.intellij.openapi.vfs.LocalFileSystem;
 import com.intellij.openapi.vfs.VfsUtilCore;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.JavaPsiFacade;
@@ -20,6 +23,7 @@ import org.jetbrains.plugins.groovy.lang.psi.GroovyFile;
 
 import java.io.IOException;
 import java.io.StringReader;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.Properties;
 
@@ -57,6 +61,27 @@ public final class CadScripts {
         if (scope == null || DumbService.isDumb(project)) return Imports.NONE;
         return CachedValuesManager.getCachedValue(file, () -> CachedValueProvider.Result.create(
                 readImports(scope), ProjectRootManager.getInstance(project), PsiModificationTracker.getInstance(project)));
+    }
+
+    /**
+     * The module of the script at path, null for a script out of the modules of project
+     */
+    public static @Nullable Module module(@NotNull Project project, @NotNull String path) {
+        return ReadAction.computeBlocking(() -> {
+            VirtualFile script = LocalFileSystem.getInstance().findFileByNioFile(Path.of(path));
+            return script == null ? null : ModuleUtilCore.findModuleForFile(script, project);
+        });
+    }
+
+    /**
+     * The jars and directories of classes the module of the script at path has at runtime, the JDK aside: the parts
+     * shared as jars, the classes of the modules it depends on. The runner adds them to its own classpath.
+     */
+    public static @NotNull List<String> classpath(@NotNull Project project, @NotNull String path) {
+        Module module = module(project, path);
+        if (module == null) return List.of();
+        return ReadAction.computeBlocking(() ->
+                OrderEnumerator.orderEntries(module).withoutSdk().recursively().runtimeOnly().classes().getPathsList().getPathList());
     }
 
     private static boolean hasCadDsl(GroovyFile file) {

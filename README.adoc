@@ -5,6 +5,31 @@ The purpose of this tool is to share 3D parts and assemblies like java class bin
 
 The DSL does not cover every way to define a body yet, and assemblies place and animate parts without a solver.
 
+== Sharing Parts as Jars
+
+A part is a Groovy class built with the DSL: compiled against `cad-dsl` alone, without OCCT nor native code, it is
+shared as an ordinary jar, published to a Maven repository like any library. A project declares it as a dependency and
+its scripts use the part as any class:
+
+[source,groovy]
+----
+dependencies {
+    cadImplementation 'org.taack.cad:cad-dsl:0.1'
+    cadImplementation 'org.example.cad:parts:0.1'   // the shared parts
+}
+----
+
+[source,groovy]
+----
+import org.example.parts.Plate
+
+Plate.drilled(80, 40, 4, 6).display()
+----
+
+The IntelliJ plugin completes the parts, and runs the scripts with the classpath of their module: the jars Gradle
+resolved, the classes of the modules they depend on. See xref:docs/usage.adoc#sharing-parts[Sharing Parts as Jars], and
+the example project in `cad-dsl-intellij/example`.
+
 .Assembly, with svg
 image::mj32.jpg[]
 

@@ -231,6 +231,9 @@ public final class CadRunner implements Disposable {
         JsonArray args = new JsonArray();
         request.args().forEach(args::add);
         run.add("args", args);
+        JsonArray classpath = new JsonArray();
+        request.classpath().forEach(classpath::add);
+        run.add("classpath", classpath);
         return run;
     }
 

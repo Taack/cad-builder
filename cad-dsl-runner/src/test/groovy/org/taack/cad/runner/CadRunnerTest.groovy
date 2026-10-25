@@ -3,9 +3,14 @@ package org.taack.cad.runner
 import groovy.json.JsonOutput
 import groovy.json.JsonSlurper
 import groovy.transform.CompileStatic
+import org.codehaus.groovy.control.CompilationUnit
+import org.codehaus.groovy.control.CompilerConfiguration
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
 import org.taack.cad.dsl.GlbFile
+
+import java.util.jar.JarEntry
+import java.util.jar.JarOutputStream
 
 import static org.junit.jupiter.api.Assertions.assertEquals
 import static org.junit.jupiter.api.Assertions.assertFalse
@@ -52,6 +57,38 @@ class CadRunnerTest {
         assertEquals('done', done.type)
         assertEquals(1, done.id)
         assertEquals([length: 20.0], done.params)
+    }
+
+    @Test
+    void "A script uses the parts of a jar on the classpath of its run"() {
+        File parts = partsJar('package parts\nclass Rail { static def din(double length) { org.taack.cad.dsl.CadDsl.cd().box(length, 35, 7.5) } }')
+        File rail = script('rail.groovy', 'parts.Rail.din(100).display()')
+
+        List<Map> events = serve([
+                [type: 'run', id: 1, script: rail.path, classpath: [parts.path]],
+                [type: 'run', id: 2, script: rail.path]])
+
+        assertEquals([type: 'done', id: 1], events[2].subMap(['type', 'id']))
+        // the classpath is the one of the run
+        assertEquals('error', events.last().type)
+    }
+
+    // A jar of the classes compiled from source
+    private File partsJar(String source) {
+        File classes = new File(dir, 'classes')
+        CompilationUnit unit = new CompilationUnit(new CompilerConfiguration(targetDirectory: classes))
+        unit.addSource('Parts.groovy', source)
+        unit.compile()
+        File jar = new File(dir, 'parts.jar')
+        new JarOutputStream(jar.newOutputStream()).withCloseable { JarOutputStream out ->
+            classes.eachFileRecurse { File file ->
+                if (!file.file) return
+                out.putNextEntry(new JarEntry(classes.toPath().relativize(file.toPath()).toString().replace('\\', '/')))
+                out << file.bytes
+                out.closeEntry()
+            }
+        }
+        jar
     }
 
     @Test

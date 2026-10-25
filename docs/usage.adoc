@@ -74,7 +74,7 @@ it on the loopback interface, reads one JSON request per line, and answers with 
 
 [source,json]
 ----
-{"type": "run", "id": 1, "script": "/models/rail.groovy", "args": [], "params": {"length": 120}}
+{"type": "run", "id": 1, "script": "/models/rail.groovy", "args": [], "params": {"length": 120}, "classpath": ["/m2/parts-0.1.jar"]}
 {"type": "display", "id": 1, "file": "/tmp/cad-dsl-runner.../run-1/1.glb"}
 {"type": "done", "id": 1, "params": {"length": 120.0}, "millis": 840}
 ----
@@ -83,7 +83,8 @@ The `display()` calls without a file name write binary glTF files instead of ope
 mesh per part, once however many times it is placed, with its faces (triangles) and their boundaries (lines); a node per
 part or assembly placed, named after it; an animation channel per moving component. The model is turned from
 millimeters and Z up to meters and Y up, as glTF expects (see `write_glb_assembly` in `occt_capi.h`).
-`params` set the `param()` values of the script. The protocol is described in `CadRunner`.
+`params` set the `param()` values of the script, and `classpath` adds jars and directories of classes to its own, for
+this run only: the shared parts it uses (see <<sharing-parts>>). The protocol is described in `CadRunner`.
 
 [source,bash]
 ----
@@ -109,8 +110,9 @@ video::https://github.com/user-attachments/assets/c4763c7e-746c-4a55-a299-8d4375
 
 * *CAD scripts*: the Groovy scripts of a module with `cad-dsl` on its classpath, and the scripts named `*.cad.groovy`.
 They resolve without the imports `CadScript` adds when it runs them, read from `script-imports.properties` in `cad-dsl`.
-* *CAD Script run configuration*, from the run icon on the first line of a script: the script runs in `cad-dsl-runner`,
-out of the IDE, and its output goes to the Run tool window. Stopping the run stops the runner.
+* *CAD Script run configuration*, from the run icon on the first line of a script: the module of the script is built,
+then the script runs in `cad-dsl-runner`, out of the IDE, with the classpath of its module (see <<sharing-parts>>). Its
+output goes to the Run tool window. Stopping the run stops the runner.
 * *CAD Preview tool window*: the models the `display()` calls of the last run wrote, shown with three.js in the IDE
 browser (JCEF). Orbit, fit, edges on or off, and a time bar for the animations. Saving the script, or a class of its
 directory, runs it again.
@@ -130,3 +132,72 @@ Elsewhere, set them in _Settings | Tools | CAD DSL_, with the Java 25 running th
 ./gradlew :cad-dsl-intellij:buildPlugin   # build/distributions/cad-dsl-intellij-0.1.zip, to install from disk
 ./gradlew :cad-dsl-intellij:test          # with the runner: -PrunnerTests -PocctHome=<OCCT install>
 ----
+
+`cad-dsl-intellij/example` is an empty Gradle project to try the plugin, with parts shared as a jar: see its README.
+
+[[sharing-parts]]
+== Sharing Parts as Jars
+
+The purpose of the DSL is to share parts and assemblies like Java class binaries. A part is a class written with the DSL,
+in an ordinary Groovy library depending on `cad-dsl`:
+
+.parts/src/main/groovy/org/example/parts/Plate.groovy
+[source,groovy]
+----
+package org.example.parts
+
+import org.taack.cad.dsl.CadDslSolid
+import org.taack.cad.dsl.geom.Vec
+
+import static org.taack.cad.dsl.CadDsl.cd
+
+class Plate {
+    static CadDslSolid drilled(double length, double width, double thickness, double holeDiameter) {
+        double inset = holeDiameter * 1.5
+        cd().box(length, width, thickness).cut {
+            [new Vec(inset, inset, 0), new Vec(length - inset, inset, 0)].each { Vec hole ->
+                position(hole) { cylinder(holeDiameter / 2, thickness) }
+            }
+        }
+    }
+}
+----
+
+.parts/build.gradle
+[source,groovy]
+----
+plugins {
+    id 'groovy'
+    id 'java-library'
+    id 'maven-publish'
+}
+
+group = 'org.example.cad'
+version = '0.1'
+
+dependencies {
+    api 'org.taack.cad:cad-dsl:0.1'
+}
+
+publishing {
+    publications {
+        maven(MavenPublication) { from components.java }
+    }
+}
+----
+
+The library compiles without OCCT nor native code: its jar holds the classes of the parts, and is published to a Maven
+repository, `./gradlew publishToMavenLocal` for the local one. Unlike the scripts, the classes write their imports:
+the DSL ones are only added to the scripts.
+
+A project uses the parts as any dependency. In the IDE, the scripts get completion on them; when it runs a script, the
+IntelliJ plugin sends the classpath of the module of the script to the runner (`classpath` of the run request, see
+<<runner>>): the jars Gradle resolved, and the classes of the modules it depends on, built before the run. The plugin
+resolves nothing itself, Gradle does.
+
+The classes of the runner come first: `cad-dsl`, Groovy and the kernel are those of the runner whatever version the
+project depends on. The parts must be compiled against the `cad-dsl` the runner runs, else a method changed in between
+fails at runtime.
+
+A part published again under the same version is taken by the next run: the runner opens the jars again for each run.
+A new version, or a new library, needs the Gradle project reloaded in the IDE.

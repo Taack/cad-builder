@@ -4,9 +4,11 @@ import com.intellij.execution.Executor;
 import com.intellij.execution.configurations.ConfigurationFactory;
 import com.intellij.execution.configurations.LocatableConfigurationBase;
 import com.intellij.execution.configurations.RunConfiguration;
+import com.intellij.execution.configurations.RunProfileWithCompileBeforeLaunchOption;
 import com.intellij.execution.configurations.RunProfileState;
 import com.intellij.execution.configurations.RuntimeConfigurationError;
 import com.intellij.execution.runners.ExecutionEnvironment;
+import com.intellij.openapi.module.Module;
 import com.intellij.openapi.options.SettingsEditor;
 import com.intellij.openapi.project.Project;
 import com.intellij.util.execution.ParametersListUtil;
@@ -16,7 +18,11 @@ import org.jetbrains.annotations.Nullable;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
-public final class CadRunConfiguration extends LocatableConfigurationBase<CadRunConfigurationOptions> {
+/**
+ * Runs a script in the runner, with the classpath of its module, built before
+ */
+public final class CadRunConfiguration extends LocatableConfigurationBase<CadRunConfigurationOptions>
+        implements RunProfileWithCompileBeforeLaunchOption {
     CadRunConfiguration(Project project, ConfigurationFactory factory, String name) {
         super(project, factory, name);
     }
@@ -43,7 +49,16 @@ public final class CadRunConfiguration extends LocatableConfigurationBase<CadRun
     }
 
     CadRunRequest request() {
-        return new CadRunRequest(getScriptPath(), ParametersListUtil.parse(getScriptArgs()));
+        String script = getScriptPath();
+        return new CadRunRequest(script, ParametersListUtil.parse(getScriptArgs()), CadScripts.classpath(getProject(), script));
+    }
+
+    // the classes of the modules the script depends on are built before it runs, as for an application
+    @Override
+    public Module @NotNull [] getModules() {
+        String script = getScriptPath();
+        Module module = script == null || script.isBlank() ? null : CadScripts.module(getProject(), script);
+        return module == null ? Module.EMPTY_ARRAY : new Module[]{module};
     }
 
     @Override

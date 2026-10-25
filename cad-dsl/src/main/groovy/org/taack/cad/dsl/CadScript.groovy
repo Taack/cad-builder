@@ -9,6 +9,7 @@ import org.codehaus.groovy.control.customizers.ImportCustomizer
  *
  * The DSL packages (org.taack.cad.dsl, .geom, .helper), CadDsl.cd() and java.lang.Math are imported,
  * the arguments following the script are available as args, and the classes in the directory of the script too.
+ * The runner adds the classpath of the script in the IDE: jars of shared parts, compiled classes.
  */
 @CompileStatic
 final class CadScript {
@@ -29,10 +30,13 @@ final class CadScript {
         listed.getProperty(key).split(',')*.trim() as String[]
     }
 
-    static void run(File script, List<String> args) {
+    /**
+     * @param classpath Jars and directories of classes the script uses, beside those of the DSL, which come first
+     */
+    static void run(File script, List<String> args, List<String> classpath = []) {
         def config = new CompilerConfiguration().addCompilationCustomizers(imports())
         // classes beside the script (Contour.groovy for a class Contour) are found as on a classpath
-        config.classpathList = [script.absoluteFile.parent]
+        config.classpathList = [script.absoluteFile.parent] + classpath
         CadParams.clear()
         new GroovyShell(CadScript.classLoader, config).run(script, args)
     }

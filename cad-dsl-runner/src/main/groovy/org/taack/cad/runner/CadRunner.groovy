@@ -22,9 +22,12 @@ import java.util.function.Consumer
  *
  * Requests:
  * <pre>
- * {"type": "run", "id": 1, "script": "/models/rail.groovy", "args": [], "params": {"length": 120}}
+ * {"type": "run", "id": 1, "script": "/models/rail.groovy", "args": [], "params": {"length": 120},
+ *  "classpath": ["/home/me/.m2/repository/com/acme/parts/1.0/parts-1.0.jar"]}
  * {"type": "stop"}
  * </pre>
+ * The classpath of a run, optional, holds the jars and directories of classes its script uses: shared parts for
+ * instance. The classes of the runner, the DSL and Groovy among them, come first.
  * Events:
  * <pre>
  * {"type": "ready", "protocol": 1}                                  once connected
@@ -78,7 +81,7 @@ final class CadRunner {
         long start = System.nanoTime()
         Map end
         try {
-            CadScript.run(new File((String) request.script), (List<String>) request.args ?: [])
+            CadScript.run(new File((String) request.script), (List<String>) request.args ?: [], (List<String>) request.classpath ?: [])
             end = [type: 'done', id: id]
         } catch (Throwable failure) {
             // compile errors and failed assertions too: the IDE shows them, the runner goes on
