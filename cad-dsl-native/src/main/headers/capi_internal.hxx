@@ -108,4 +108,7 @@ void capi_move_assembly(const occ::handle<AIS_InteractiveContext> &context, cons
 // Bounding box of the assembly over the frameCount frames of its animation (the static locations when 0).
 Bnd_Box capi_assembly_box(const CadNode &assembly, int frameCount);
 
+// Triangulates the faces and discretizes the edges of shape, with a deflection relative to its size (capi_gltf.cpp).
+void capi_mesh_shape(const TopoDS_Shape &shape);
+
 #endif // CAPI_INTERNAL_HXX

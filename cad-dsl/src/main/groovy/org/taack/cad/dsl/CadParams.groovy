@@ -11,6 +11,11 @@ import groovy.transform.CompileStatic
  */
 @CompileStatic
 final class CadParams {
+    /**
+     * Prefix of the system properties setting the parameters, followed by their name
+     */
+    static final String PROPERTY_PREFIX = 'cad.param.'
+
     private static final Map<String, Double> VALUES = Collections.synchronizedMap(new LinkedHashMap<String, Double>())
 
     private CadParams() {}
@@ -20,7 +25,7 @@ final class CadParams {
      * @return Its value: the cad.param.&lt;name&gt; system property when it is set, else value
      */
     static double param(String name, Number value) {
-        String override = System.getProperty("cad.param.$name")
+        String override = System.getProperty(PROPERTY_PREFIX + name)
         double v = override ? Double.parseDouble(override) : value.toDouble()
         VALUES.put(name, v)
         v

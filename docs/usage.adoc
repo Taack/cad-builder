@@ -1,0 +1,102 @@
+= Distribution and Usage
+:icons: font
+:toc:
+:toclevels: 2
+
+xref:../README.adoc[Back to the README]
+
+`cad-dsl` does not depend on native code: parts and assemblies compiled against it can be shared as plain jars.
+Running them needs a kernel: `cad-dsl-occt`, and `cad-dsl-native` built for the platform (see xref:building.adoc#native-library[Native Library]).
+
+== Maven
+
+Artifact coordinates:
+
+.Maven
+[source,groovy]
+----
+implementation 'org.taack.cad:cad-dsl:0.1'      // to write models
+runtimeOnly 'org.taack.cad:cad-dsl-occt:0.1'    // to build them
+----
+
+NOTE: See https://github.com/Taack/cad-dsl-app/blob/main/cad-dsl-linux-app-x86-64/build.gradle[sample-build.gradle] to deal with JMOD files
+
+Build `cad-dsl-native` for your platform (see xref:building.adoc[Building]), and put its directory in `java.library.path`.
+
+== Sample App Using the Artifacts
+
+You can download a sample app: https://github.com/Taack/cad-dsl-app/tree/main/cad-dsl-linux-app-x86-64[cad-dsl-linux-app-x86-64].
+
+== Scripts
+
+`cad-dsl` runs a model written as a Groovy script, without any project or test around it:
+
+[source,bash]
+----
+./gradlew :cad-dsl-occt:installDist   # or distZip, to share it
+cad-dsl-occt/build/install/cad-dsl/bin/cad-dsl samples/pillow-block.groovy             # <1>
+cad-dsl-occt/build/install/cad-dsl/bin/cad-dsl samples/pillow-block.groovy block.step  # <2>
+----
+
+<1> Opens the shape in the viewer.
+<2> The arguments following the script are available as `args`; this sample exports to the file given.
+
+`cad-dsl` passes `CAD_DSL_OPTS` and `JAVA_OPTS` to the JVM: set `java.library.path` there (see xref:building.adoc#native-library[Native Library]).
+
+[source,bash]
+----
+export CAD_DSL_OPTS="-Djava.library.path=$PWD/cad-dsl-native/build/lib/main/release"
+----
+
+From Gradle, `./gradlew :cad-dsl-occt:run --args="$PWD/samples/pillow-block.groovy"` sets it to the library just built.
+
+The DSL packages (`org.taack.cad.dsl`, `.geom`, `.helper`), `CadDsl.cd()` and `java.lang.Math` are imported for the script:
+
+.sphere.groovy
+[source,groovy]
+----
+cd().position(new Vec(0, 0, 1)) {
+    sphere(sqrt(4))
+}.display(args ? args[0] : null)
+----
+
+Classes in the directory of the script are found too (`Contour.groovy` for a class `Contour`), to share parts
+between scripts.
+
+To get code completion, write the imports anyway (see `samples/pillow-block.groovy`) and open the scripts
+in a project depending on `org.taack.cad:cad-dsl` only.
+
+[[runner]]
+== Runner
+
+`cad-dsl-runner` runs scripts for an IDE, in a JVM that stays up between the runs. Started with a port, it connects to
+it on the loopback interface, reads one JSON request per line, and answers with one JSON event per line:
+
+[source,json]
+----
+{"type": "run", "id": 1, "script": "/models/rail.groovy", "args": [], "params": {"length": 120}}
+{"type": "display", "id": 1, "file": "/tmp/cad-dsl-runner.../run-1/1.glb"}
+{"type": "done", "id": 1, "params": {"length": 120.0}, "millis": 840}
+----
+
+The `display()` calls without a file name write binary glTF files instead of opening the viewer (see `CadDisplay`): a
+mesh per part, once however many times it is placed, with its faces (triangles) and their boundaries (lines); a node per
+part or assembly placed, named after it; an animation channel per moving component. The model is turned from
+millimeters and Z up to meters and Y up, as glTF expects (see `write_glb_assembly` in `occt_capi.h`).
+`params` set the `param()` values of the script. The protocol is described in `CadRunner`.
+
+[source,bash]
+----
+./gradlew :cad-dsl-runner:installDist
+JAVA_OPTS="-Djava.library.path=$PWD/cad-dsl-native/build/lib/main/release" \
+  cad-dsl-runner/build/install/cad-dsl-runner/bin/cad-dsl-runner <port>
+----
+
+The runner uses the OCCT kernel.
+
+== Code Completion
+
+The DSL is statically typed: completion needs an IDE supporting Groovy `@DelegatesTo`, such as IntelliJ IDEA Community.
+It only needs `cad-dsl` on the classpath, neither OCCT nor native code.
+
+video::https://github.com/user-attachments/assets/c4763c7e-746c-4a55-a299-8d4375b2f001[]

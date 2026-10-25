@@ -708,4 +708,23 @@ OCCT_CAPI int dumpAssemblyFrames(const OCCT_HANDLE(CadNode) *assembly, int frame
 /* Same as visualize_assembly, playing the frameCount frames of the animation in a loop, fps frames per second. */
 OCCT_CAPI int visualize_animation(const OCCT_HANDLE(CadNode) *assembly, int frameCount, double fps);
 
+/***********************************************************************************************************************
+
+    glTF: the faces and boundaries of the shapes as the viewer draws them, without a viewer (capi_gltf.cpp)
+
+***********************************************************************************************************************/
+
+/* Writes shape to a binary glTF 2.0 file (.glb), as a single part (see write_glb_assembly). A shape without faces is
+   written as its edges. Returns non-zero on success. */
+OCCT_CAPI int write_glb(const TopoDS_Shape *shape, const char *fileName);
+
+/* Writes the assembly tree to a binary glTF 2.0 file (.glb), with its animation of frameCount frames at fps (none when
+   frameCount or fps is 0). Returns non-zero on success.
+   - Each part is a mesh, written once however many times it is placed: its shaded faces (TRIANGLES, with normals) and
+     its face boundaries (LINES), as the viewer draws them.
+   - Each part or assembly is a node, named after it, for each place it occupies in the tree; the root node turns the
+     model from millimeters and Z up to meters and Y up.
+   - Each component moving in the animation has a translation and a rotation channel, a key per frame. */
+OCCT_CAPI int write_glb_assembly(const OCCT_HANDLE(CadNode) *assembly, int frameCount, double fps, const char *fileName);
+
 #endif /* OCCT_CAPI_H */
