@@ -83,6 +83,16 @@ final class Vec extends Vec2d {
         axe.x * x + axe.y * y + axe.z * z
     }
 
+    /**
+     * Distance in 3D: the one inherited from Vec2d, for a Vec2d argument, ignores z
+     */
+    double distance(Vec other) {
+        double dx = x - other.x
+        double dy = y - other.y
+        double dz = z - other.z
+        sqrt(dx * dx + dy * dy + dz * dz)
+    }
+
     static Vec vAbs(Vec toAbs) {
         new Vec(abs(toAbs.x), abs(toAbs.y), abs(toAbs.z))
     }

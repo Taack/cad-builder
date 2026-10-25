@@ -63,7 +63,7 @@ class CadDslEdge extends CadDslEdge2d {
     void arcAround(Vec to, Vec center, boolean longWay = false) {
         if (at3d == null) throw new IllegalStateException("arcAround($to, $center): the last position is not known, draw an edge or an arc, or call to() first")
         Vec u = at3d - center, w = to - center
-        double r1 = Math.sqrt(u.cord(u)), r2 = Math.sqrt(w.cord(w)), r = (r1 + r2) / 2, bisector = Math.sqrt((u + w).cord(u + w))
+        double r1 = at3d.distance(center), r2 = to.distance(center), r = (r1 + r2) / 2, bisector = (u + w).distance(new Vec())
         if (Math.abs(r1 - r2) > ARC_TOLERANCE * Math.max(1d, r)) throw new IllegalArgumentException("arcAround($to, $center): its ends $at3d and $to are not as far from the center, $r1 and $r2")
         if (bisector < 1e-9 * Math.max(1d, r)) throw new IllegalArgumentException("arcAround($to, $center): half a turn, in no given plane: draw it with arc(to, via)")
         arc(to, center + (u + w) * ((longWay ? -r : r) / bisector))
