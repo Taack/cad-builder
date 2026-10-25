@@ -38,7 +38,7 @@ class CadDslSolid implements CadDslBase {
     }
 
     CadDslSolid display(String fileName = null) {
-        visitor.display(fileName)
+        visitor.display(CadDisplay.target(fileName))
         this
     }
 

@@ -9,6 +9,7 @@ import java.lang.ref.WeakReference
 import java.util.function.Consumer
 
 import static org.taack.occt.NativeLib.occt_free_doubles
+import static org.taack.occt.NativeLib.occt_last_error
 
 /**
  * Ownership of the objects returned by the OCCT C API (new_*, handle_*, ...).
@@ -55,6 +56,14 @@ final class Natives {
     static MemorySegment own(MemorySegment ptr, Consumer<MemorySegment> deleter) {
         if (ptr == null || ptr.address() == 0L) return ptr
         ptr.reinterpret(currentScope() ?: Arena.ofAuto(), deleter)
+    }
+
+    /**
+     * @return Message of the last failure of the C API on this thread
+     */
+    static String lastError() {
+        MemorySegment message = occt_last_error()
+        message == MemorySegment.NULL ? 'unknown OCCT error' : message.reinterpret(Long.MAX_VALUE).getString(0)
     }
 
     /**

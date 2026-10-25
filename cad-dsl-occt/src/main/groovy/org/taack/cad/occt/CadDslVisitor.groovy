@@ -2,6 +2,7 @@ package org.taack.cad.occt
 
 import groovy.transform.CompileStatic
 import org.taack.cad.builder.*
+import org.taack.cad.dsl.CadDisplay
 import org.taack.cad.dsl.ICadDslVisitor
 import org.taack.cad.dsl.PlateOptions
 import org.taack.cad.dsl.SvgOptions
@@ -16,6 +17,7 @@ import java.lang.foreign.ValueLayout
 import static org.taack.occt.NativeLib.*
 import static org.taack.cad.occt.Occt.*
 import org.taack.occt.NativeLib
+import static org.taack.cad.occt.Natives.lastError
 import static org.taack.cad.occt.Natives.own
 
 @CompileStatic
@@ -711,11 +713,6 @@ class CadDslVisitor implements ICadDslVisitor {
         v * (1 / Math.sqrt(v.x * v.x + v.y * v.y + v.z * v.z))
     }
 
-    private static String lastError() {
-        MemorySegment message = occt_last_error()
-        message == MemorySegment.NULL ? 'unknown OCCT error' : message.reinterpret(Long.MAX_VALUE).getString(0)
-    }
-
     @Override
     void visitThruSection() {
         Tr.ind("visitThruSection")
@@ -835,6 +832,8 @@ class CadDslVisitor implements ICadDslVisitor {
                     write_step(s, t)
                 } else if (fileName.endsWith(".stl")) {
                     write_stl(s, t)
+                } else if (fileName.endsWith(CadDisplay.GLTF_EXTENSION)) {
+                    if (!write_glb(s, t)) throw new IllegalStateException("display($fileName): ${lastError()}")
                 } else
                     dumpShape(s, 1920, 1080, t)
             }

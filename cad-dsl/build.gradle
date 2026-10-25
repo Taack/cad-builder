@@ -26,6 +26,8 @@ dependencies {
     // The DSL tests (src/testFixtures), run by each kernel module with its kernel, see gradle/kernel-tests.gradle
     testFixturesImplementation platform('org.junit:junit-bom:6.0.3')
     testFixturesImplementation 'org.junit.jupiter:junit-jupiter'
+    // to read back the glTF files
+    testFixturesImplementation 'org.apache.groovy:groovy-json:6.0.0'
     testImplementation platform('org.junit:junit-bom:6.0.3')
     testImplementation 'org.junit.jupiter:junit-jupiter'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'

@@ -135,14 +135,14 @@ class CadDslAssembly extends CadDslPart {
     }
 
     /**
-     * @param fileName null to open the viewer, a .step, .stl or image file, or with an animation, an image file name
-     * pattern for String.format (e.g. 'frames/%03d.png') to render each frame
+     * @param fileName null to open the viewer (see {@link CadDisplay}), a .step, .stl, .glb or image file, or with
+     * an animation, an image file name pattern for String.format (e.g. 'frames/%03d.png') to render each frame
      */
     CadDslAssembly display(String fileName = null) {
         int frameCount = duration > 0 ? Math.max(1, Math.round(duration * fps) as int) : 0
         moveAll(frameCount, Collections.newSetFromMap(new IdentityHashMap<CadDslAssembly, Boolean>()))
         visitor.visitAnimation(frameCount, fps)
-        visitor.display(fileName)
+        visitor.display(CadDisplay.target(fileName))
         this
     }
 

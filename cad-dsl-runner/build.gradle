@@ -1,0 +1,49 @@
+plugins {
+    id 'groovy'
+    id 'application'
+}
+
+group = 'org.taack'
+version = '0.1'
+description = 'Runs CAD DSL scripts on request, for an IDE'
+
+// cad-dsl-native is loaded from java.library.path; it finds OCCT through its rpath (see docs/building.adoc, Native Library)
+def nativeLibDir = file("$rootDir/cad-dsl-native/build/lib/main/release").absolutePath
+
+repositories {
+    mavenCentral()
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of 25
+    }
+}
+
+dependencies {
+    implementation project(':cad-dsl')
+    implementation 'org.apache.groovy:groovy-json:6.0.0'
+    runtimeOnly project(':cad-dsl-occt')
+    testImplementation testFixtures(project(':cad-dsl'))
+    testImplementation platform('org.junit:junit-bom:6.0.3')
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+// cad-dsl-runner <port>: ./gradlew :cad-dsl-runner:installDist, then build/install/cad-dsl-runner/bin/cad-dsl-runner
+application {
+    mainClass = 'org.taack.cad.runner.CadRunner'
+    applicationDefaultJvmArgs = ['--enable-native-access=ALL-UNNAMED']
+}
+
+tasks.named('run', JavaExec) {
+    dependsOn ':cad-dsl-native:linkRelease'
+    systemProperty 'java.library.path', nativeLibDir
+}
+
+test {
+    dependsOn ':cad-dsl-native:linkRelease'
+    systemProperty 'java.library.path', nativeLibDir
+    jvmArgs '--enable-native-access=ALL-UNNAMED'
+    useJUnitPlatform()
+}

@@ -1,6 +1,7 @@
 package org.taack.cad.occt
 
 import groovy.transform.CompileStatic
+import org.taack.cad.dsl.CadDisplay
 import org.taack.cad.dsl.Color
 import org.taack.cad.dsl.ICadDslAssemblyVisitor
 import org.taack.cad.dsl.ICadDslNode
@@ -15,6 +16,7 @@ import java.lang.foreign.ValueLayout
 
 import static org.taack.occt.NativeLib.*
 import org.taack.occt.NativeLib
+import static org.taack.cad.occt.Natives.lastError
 import static org.taack.cad.occt.Natives.own
 
 /**
@@ -111,6 +113,8 @@ class OcctAssemblyVisitor implements ICadDslAssemblyVisitor {
                     write_step_assembly(node, t)
                 } else if (fileName.endsWith(".stl")) {
                     write_stl_assembly(node, t)
+                } else if (fileName.endsWith(CadDisplay.GLTF_EXTENSION)) {
+                    if (!write_glb_assembly(node, frameCount, fps, t)) throw new IllegalStateException("display($fileName): ${lastError()}")
                 } else
                     dumpAssembly(node, 1920, 1080, t)
             }

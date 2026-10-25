@@ -11,7 +11,6 @@
 #include <BRepBndLib.hxx>
 #include <BRepCheck_Analyzer.hxx>
 #include <BRepCheck_Result.hxx>
-#include <BRepMesh_IncrementalMesh.hxx>
 #include <Bnd_Box.hxx>
 #include <Image_AlienPixMap.hxx>
 #include <OpenGl_GraphicDriver.hxx>
@@ -154,13 +153,9 @@ extern "C" void write_step(const TopoDS_Shape *shape, const char *fileName) {
     });
 }
 
-// StlAPI_Writer only writes the existing triangulation: mesh the shape first,
-// with a deflection relative to its size.
+// StlAPI_Writer only writes the existing triangulation: mesh the shape first.
 static void write_meshed_stl(const TopoDS_Shape &shape, const char *fileName) {
-    Bnd_Box box;
-    BRepBndLib::Add(shape, box);
-    double deflection = box.IsVoid() ? 0.01 : 0.001 * std::sqrt(box.SquareExtent());
-    BRepMesh_IncrementalMesh mesh(shape, deflection, false, 0.5, true);
+    capi_mesh_shape(shape);
     StlAPI_Writer stl_writer;
     if (!stl_writer.Write(shape, fileName)) throw std::runtime_error("cannot write STL file");
 }
