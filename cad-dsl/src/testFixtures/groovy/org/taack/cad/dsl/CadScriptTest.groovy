@@ -1,6 +1,7 @@
 package org.taack.cad.dsl
 
 import groovy.transform.CompileStatic
+import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
 
@@ -13,10 +14,16 @@ class CadScriptTest {
     @TempDir
     Path dir
 
+    @AfterEach
+    void openTheViewerAgain() {
+        CadDisplay.redirect(null)
+    }
+
     @Test
-    void "Sample script exports its shape"() {
+    void "Example script exports its shape"() {
         File step = dir.resolve('block.step').toFile()
-        CadScript.run(new File('../samples/pillow-block.groovy'), [step.path])
+        CadDisplay.redirect { step.path }
+        CadScript.run(new File('../cad-dsl-intellij/example/cad/block.groovy'), [])
         assertTrue(step.length() > 0)
     }
 

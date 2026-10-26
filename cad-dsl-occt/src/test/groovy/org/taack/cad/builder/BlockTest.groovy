@@ -2,6 +2,7 @@ package org.taack.cad.builder
 
 import groovy.transform.CompileStatic
 import org.junit.jupiter.api.Test
+import static org.taack.cad.dsl.TestImages.image
 import static org.taack.cad.builder.CadBuilder.cb
 
 @CompileStatic
@@ -16,14 +17,14 @@ class BlockTest {
 
     @Test
     void "Basic Box on XY"() {
-        cb().box(length, height, thickness).display()
+        cb().box(length, height, thickness).display(image())
     }
 
     @Test
     void "Block With Bored Center Hole"() {
         cb().box(length, height, thickness).topZ().center {
             hole(centerHoleDia)
-        }.display()
+        }.display(image())
     }
 
     @Test
@@ -32,6 +33,6 @@ class BlockTest {
             hole(cboreHoleDiameter)
         }.center {
             hole(centerHoleDia)
-        }.display()
+        }.display(image())
     }
 }

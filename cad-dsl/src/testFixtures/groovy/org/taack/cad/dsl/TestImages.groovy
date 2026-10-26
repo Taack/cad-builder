@@ -10,7 +10,7 @@ import java.awt.image.BufferedImage
 
 /**
  * The images of the DSL tests: display(image()) renders the shape of a test to
- * {@code <cad.test.images>/<test class>/<test method>.png}, when the kernel renders images off screen (its test task
+ * {@code <cad.test.images>/<qualified test class>/<test method>.png}, when the kernel renders images off screen (its test task
  * sets the system property cad.test.images); else image() is null, and display(null) only checks the shape.
  * <p>
  * Registered for every test by autodetection (META-INF/services), it names the images after the running test, then
@@ -41,7 +41,7 @@ class TestImages implements BeforeEachCallback, AfterEachCallback {
             testDir.remove()
             return
         }
-        testDir.set(new File(root, context.requiredTestClass.simpleName))
+        testDir.set(new File(root, context.requiredTestClass.name))
         testName.set(context.requiredTestMethod.name.replaceAll(/[^A-Za-z0-9._-]+/, '-').replaceAll(/^-|-$/, ''))
     }
 

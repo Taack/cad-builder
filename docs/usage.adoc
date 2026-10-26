@@ -29,27 +29,7 @@ You can download a sample app: https://github.com/Taack/cad-dsl-app/tree/main/ca
 
 == Scripts
 
-`cad-dsl` runs a model written as a Groovy script, without any project or test around it:
-
-[source,bash]
-----
-./gradlew :cad-dsl-occt:installDist   # or distZip, to share it
-cad-dsl-occt/build/install/cad-dsl/bin/cad-dsl samples/pillow-block.groovy             # <1>
-cad-dsl-occt/build/install/cad-dsl/bin/cad-dsl samples/pillow-block.groovy block.step  # <2>
-----
-
-<1> Opens the shape in the viewer.
-<2> The arguments following the script are available as `args`; this sample exports to the file given.
-
-`cad-dsl` passes `CAD_DSL_OPTS` and `JAVA_OPTS` to the JVM: set `java.library.path` there (see xref:building.adoc#native-library[Native Library]).
-
-[source,bash]
-----
-export CAD_DSL_OPTS="-Djava.library.path=$PWD/cad-dsl-native/build/lib/main/release"
-----
-
-From Gradle, `./gradlew :cad-dsl-occt:run --args="$PWD/samples/pillow-block.groovy"` sets it to the library just built.
-
+`cad-dsl` runs a model written as a Groovy script, without any project or test around it.
 The DSL packages (`org.taack.cad.dsl`, `.geom`, `.helper`), `CadDsl.cd()` and `java.lang.Math` are imported for the script:
 
 .sphere.groovy
@@ -59,6 +39,25 @@ cd().position(new Vec(0, 0, 1)) {
     sphere(sqrt(4))
 }.display(args ? args[0] : null)
 ----
+
+[source,bash]
+----
+./gradlew :cad-dsl-occt:installDist   # or distZip, to share it
+cad-dsl-occt/build/install/cad-dsl/bin/cad-dsl sphere.groovy              # <1>
+cad-dsl-occt/build/install/cad-dsl/bin/cad-dsl sphere.groovy sphere.step  # <2>
+----
+
+<1> Opens the shape in the viewer.
+<2> The arguments following the script are available as `args`; this script exports to the file given.
+
+`cad-dsl` passes `CAD_DSL_OPTS` and `JAVA_OPTS` to the JVM: set `java.library.path` there (see xref:building.adoc#native-library[Native Library]).
+
+[source,bash]
+----
+export CAD_DSL_OPTS="-Djava.library.path=$PWD/cad-dsl-native/build/lib/main/release"
+----
+
+From Gradle, `./gradlew :cad-dsl-occt:run --args="$PWD/sphere.groovy"` sets it to the library just built.
 
 Classes in the directory of the script are found too (`Contour.groovy` for a class `Contour`), to share parts
 between scripts.
@@ -87,7 +86,7 @@ The type the checker gives to `cond ? a : b` (or `a ?: b`) is the common superty
 one side and a `BigDecimal` on the other, it is `Number & Comparable`, which no `double` parameter accepts. A `d` suffix
 on the literals of the conditional, or `as double` around it, gives it a `double`.
 
-To get code completion, write the imports anyway (see `samples/pillow-block.groovy`) and open the scripts
+To get code completion, write the imports anyway (`import org.taack.cad.dsl.geom.Vec`, `import static org.taack.cad.dsl.CadDsl.cd`…) and open the scripts
 in a project depending on `org.taack.cad:cad-dsl` only.
 
 [[runner]]

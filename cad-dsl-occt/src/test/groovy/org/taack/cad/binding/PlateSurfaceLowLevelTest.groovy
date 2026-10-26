@@ -67,7 +67,7 @@ class PlateSurfaceLowLevelTest {
 
         def MF = new_BRepBuilderAPI_MakeFace__s_um_uM_vm_vM_Tol(Surf, s.u1, s.u2, s.v1, s.v2, 0.01d)
 
-        visualize(new_TopoDS_Face__BRepBuilderAPI_MakeFace MF)
+        LowLevelImages.image(new_TopoDS_Face__BRepBuilderAPI_MakeFace(MF))
 
     }
 }

@@ -53,7 +53,6 @@ class PipeLowLevelTest {
         def MKPipe = new_BRepFeat_MakePipe__Sbase_Pbase_Skface_Spine_Fuse_Modify(S,FP,F1,W,0,1)
         _BRepFeat_MakePipe__Perform(MKPipe)
         def res1 = new_TopoDS_Shape__Shape__BRepBuilderAPI_MakeShape MKPipe
-
-        visualize(res1)
+        LowLevelImages.image(res1)
     }
 }

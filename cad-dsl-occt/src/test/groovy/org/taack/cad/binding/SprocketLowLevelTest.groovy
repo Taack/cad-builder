@@ -366,6 +366,6 @@ class SprocketLowLevelTest {
         def roundTooth = roundTooth(tooth)
         def manyTooth = cloneTooth(roundTooth)
         def manyToothWithCenterHole = centerHole(manyTooth)
-        visualize mountingHoles(manyToothWithCenterHole)
+        LowLevelImages.image(mountingHoles(manyToothWithCenterHole))
     }
 }

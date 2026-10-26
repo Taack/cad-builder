@@ -5,7 +5,7 @@
 
 xref:../README.adoc[Back to the README]
 
-`./gradlew cad-dsl:build` only needs a JDK, `cad-dsl-freecad` and `cad-dsl-step` FreeCAD 1.0 or later. The native part requires https://github.com/Open-Cascade-SAS/OCCT[Open CASCADE Technology] 8.0 (C++17).
+`./gradlew cad-dsl:build` only needs JDK 25, `cad-dsl-freecad` and `cad-dsl-step` FreeCAD 1.0 or later. The native part requires https://github.com/Open-Cascade-SAS/OCCT[Open CASCADE Technology] 8.0 (C++17).
 Use your distribution package if it ships 8.0, otherwise build it from source:
 
 .Build OCCT 8.0.1 into a local prefix
@@ -35,11 +35,15 @@ To avoid passing it each time, add `occtHome=/home/<you>/.local/occt-8.0.1` to `
 == Building on Windows
 
 The native part builds with Visual C++ (Visual Studio 2022 or later, with the _Desktop development with C++_ workload),
-which Gradle finds by itself. Build OCCT from a _Developer PowerShell for VS_, which provides CMake and Ninja:
+which Gradle finds by itself. Build OCCT in a PowerShell with the x64 Visual Studio environment, which provides CMake and Ninja.
+The _Developer PowerShell for VS_ shortcut of the Start menu targets 32-bit x86: neither Gradle, which builds `cad-dsl-native` for x64, nor the JVM could use the result.
 
 .Build OCCT 8.0.1 on Windows
 [source,powershell]
 ----
+$vs = & "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe" -latest -property installationPath
+Import-Module "$vs\Common7\Tools\Microsoft.VisualStudio.DevShell.dll"
+Enter-VsDevShell -VsInstallPath $vs -SkipAutomaticLocation -DevCmdArguments "-arch=x64 -host_arch=x64"
 git clone --depth 1 --branch V8_0_1 https://github.com/Open-Cascade-SAS/OCCT.git occt
 cmake -S occt -B occt/build -G Ninja -DCMAKE_BUILD_TYPE=Release `
       -DCMAKE_INSTALL_PREFIX=C:/occt-8.0.1 -DINSTALL_DIR_LAYOUT=Unix `
@@ -47,6 +51,8 @@ cmake -S occt -B occt/build -G Ninja -DCMAKE_BUILD_TYPE=Release `
 cmake --build occt/build; cmake --install occt/build
 ----
 
+* The Visual Studio environment is loaded through its module rather than `Launch-VsDevShell.ps1`,
+which the default PowerShell execution policy (`Restricted`) refuses to run.
 * `INSTALL_DIR_LAYOUT=Unix` installs the headers in `include/opencascade`, the import libraries (`TK*.lib`) in `lib`
 and the DLLs in `bin`, the layout Gradle expects. The default Windows layout (`inc`, `win64/vc14/lib`) is not supported.
 * Turning off the Draw test harness and FreeType avoids the third party libraries (Tcl/Tk, FreeType) that OCCT does not ship:

@@ -20,7 +20,7 @@ and every number given to a feature equal to a parameter (or to its opposite) is
 the primitives, the lengths of the prisms, the radii of the circles and arcs of the sketches (as constraints), the
 positions of the primitives and sketches. Change a cell in FreeCAD, and the model follows.
 
-.samples/pillow-block-params.groovy
+.pillow-block-params.groovy
 [source,groovy]
 ----
 double length = param('length', 80)
@@ -35,7 +35,7 @@ cd().box(length, 60, thickness).topZ().wireFrom() {
 [source,bash]
 ----
 ./gradlew :cad-dsl-freecad:installDist
-cad-dsl-freecad/build/install/cad-dsl-freecad/bin/cad-dsl-freecad samples/pillow-block-params.groovy block.FCStd
+cad-dsl-freecad/build/install/cad-dsl-freecad/bin/cad-dsl-freecad pillow-block-params.groovy block.FCStd
 ----
 
 NOTE: The binding goes by value: give the parameters distinct values, different from the other numbers of the model.

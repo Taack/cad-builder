@@ -7,6 +7,7 @@ import org.taack.cad.dsl.geom.Vec2d
 
 import java.lang.foreign.MemorySegment
 
+import static org.taack.cad.dsl.TestImages.image
 import static org.taack.cad.builder.CadBuilder.*
 
 @CompileStatic
@@ -54,7 +55,7 @@ class BottleTest {
         mb
                 .threadingWireFrom(edgeFrom(arc1, innerCyl), edgeFrom(seg, innerCyl))
                 .threadingWireFrom(edgeFrom(arc2, outerCyl), edgeFrom(seg, outerCyl))
-                .applyThreading().display()
+                .applyThreading().display(image())
     }
 
     static void otherThreading(CadBuilder mb) {
@@ -77,7 +78,7 @@ class BottleTest {
         mb
                 .threadingWireFrom(edgeFrom(arc1, innerCyl), edgeFrom(seg, innerCyl))
                 .threadingWireFrom(edgeFrom(arc2, outerCyl), edgeFrom(seg, outerCyl))
-                .applyThreading().display()
+                .applyThreading().display(image())
     }
 
     @Test

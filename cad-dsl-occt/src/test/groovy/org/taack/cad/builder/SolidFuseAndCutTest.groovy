@@ -4,6 +4,7 @@ import groovy.transform.CompileStatic
 import org.junit.jupiter.api.Test
 import org.taack.cad.dsl.geom.Vec
 
+import static org.taack.cad.dsl.TestImages.image
 import static org.taack.cad.builder.CadBuilder.cb
 
 @CompileStatic
@@ -78,18 +79,18 @@ class SolidFuseAndCutTest {
 
     @Test
     void "Build Basic Shape Cut"() {
-        cylindersCut2(generateSphere()).display()
+        cylindersCut2(generateSphere()).display(image())
     }
 
 
     @Test
     void "Build Basic Shape Cut2"() {
-        cylindersCut(generateSphere()).display()
+        cylindersCut(generateSphere()).display(image())
     }
 
     @Test
     void "Build Basic Shape Fuse"() {
-        fuseTorus(cylindersCut2(generateSphere())).display()
+        fuseTorus(cylindersCut2(generateSphere())).display(image())
     }
 
     @Test
@@ -99,6 +100,6 @@ class SolidFuseAndCutTest {
 
     @Test
     void "Build Basic Shape Revolution"() {
-        revolvedCut(fuseTorus(cylindersCut2(generateSphere()))).display()
+        revolvedCut(fuseTorus(cylindersCut2(generateSphere()))).display(image())
     }
 }

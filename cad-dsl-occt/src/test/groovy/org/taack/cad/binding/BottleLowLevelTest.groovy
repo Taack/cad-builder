@@ -4,9 +4,6 @@ import groovy.transform.CompileStatic
 import org.junit.jupiter.api.Test
 import org.taack.cad.builder.ShapeEnum
 
-import java.lang.foreign.Arena
-import java.lang.foreign.MemorySegment
-
 import static org.taack.occt.NativeLib.*
 
 @CompileStatic
@@ -152,12 +149,7 @@ class BottleLowLevelTest {
         _TopoDS_Builder__Add__resTopoDS_Shape_toAddTopoDS_Shape(aBuilder, aRes, myBody)
         _TopoDS_Builder__Add__resTopoDS_Shape_toAddTopoDS_Shape(aBuilder, aRes, myThreading)
 
-        try (Arena arena = Arena.ofConfined()) {
-            MemorySegment t = arena.allocateFrom('Test.png')
-            dumpShape(myBody, 512, 512, t)
-        }
-
-        visualize(aRes)
+        LowLevelImages.image(aRes)
     }
 
     @Test

@@ -2,6 +2,11 @@
 // C API: off-screen rendering, STEP / STL export and shape diagnostics.
 //
 
+#ifdef _WIN32
+// Before any OCCT header: Standard_Macro.hxx defines NOUSER and NOGDI, which hide the window API used below.
+#include <windows.h>
+#endif
+
 #include "capi_internal.hxx"
 
 #include <AIS_InteractiveContext.hxx>

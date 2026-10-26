@@ -36,7 +36,6 @@ class TaperedPrismLowLevelTest {
         def MKDP = new_BRepFeat_MakeDPrism__Sbase_Pbase_Skface_Angle_Fuse_Modify(S, FP, F, 10 * PI / 180, 1, 1)
         _BRepFeat_MakeDPrism__Perform__Height(MKDP, 200)
         def res1 = new_TopoDS_Shape__Shape__BRepBuilderAPI_MakeShape MKDP
-
-        visualize(res1)
+        LowLevelImages.image(res1)
     }
 }

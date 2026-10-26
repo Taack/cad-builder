@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test
 import org.taack.cad.dsl.geom.Vec
 import org.taack.cad.dsl.geom.Vec2d
 
+import static org.taack.cad.dsl.TestImages.image
 import static org.taack.cad.builder.CadBuilder.cb
 
 @CompileStatic
@@ -21,7 +22,7 @@ class SketchTest {
                 .edge(new Vec(face_inner_radius + 0.10, 0.0, -0.025))
                 .edge(new Vec(face_inner_radius + 0.05, 0.0, -0.05))
                 .edge(new Vec(face_inner_radius - 0.05, 0.0, -0.05))
-                .toWire().toFace().from(new Vec(0.0)).revolution(new Vec(1.0)).display()
+                .toWire().toFace().from(new Vec(0.0)).revolution(new Vec(1.0)).display(image())
     }
 
     @Test
@@ -48,7 +49,7 @@ class SketchTest {
                 .arc(p5, new Vec2d(innerRadius + 0.15, -0.029))
                 .edge(p6)
                 .edge(p7)
-                .toWire().toFace().from(new Vec(0.0)).revolution().display()
+                .toWire().toFace().from(new Vec(0.0)).revolution().display(image())
     }
 
     @Test
@@ -74,7 +75,7 @@ class SketchTest {
                 .arc(p5, new Vec2d( 0.15, -0.029))
                 .edge(p6)
                 .edge(p7)
-                .toWire().toFace().from(new Vec(-1, 0, 0)).revolution(new Vec(0, 1, 0)).display()
+                .toWire().toFace().from(new Vec(-1, 0, 0)).revolution(new Vec(0, 1, 0)).display(image())
     }
 
     @Test
@@ -100,7 +101,7 @@ class SketchTest {
                 .arc(p5, new Vec(xValue2 + 0.05, 0.0, -zValue1 - 0.004))
                 .edge(p6)
                 .edge(p7)
-                .toWire().toFace().prism(new Vec(0.0, 1.0, 0.0)).display()
+                .toWire().toFace().prism(new Vec(0.0, 1.0, 0.0)).display(image())
     }
     
     @Test
@@ -124,7 +125,7 @@ class SketchTest {
                 .arc(p3, new Vec2d(-xValue2 + 0.05, yValue1 - 0.004))
                 .edge(p2)
                 .edge(p1)
-                .toWire().toFace().prism().display()
+                .toWire().toFace().prism().display(image())
     }
 
     @Test
@@ -150,7 +151,7 @@ class SketchTest {
             .from(c1)
                 .arc(c3, c4)
                 .arc(c1, c2)
-                .toWire().toFace().prism(new Vec(0, 1, 0)).display()
+                .toWire().toFace().prism(new Vec(0, 1, 0)).display(image())
     }
     
     @Test
@@ -176,7 +177,7 @@ class SketchTest {
             .from(c1)
                 .arc(c3, c2)
                 .arc(c1, c4)
-                .toWire().toFace().prism().display()
+                .toWire().toFace().prism().display(image())
     }
 
     @Test
@@ -188,7 +189,7 @@ class SketchTest {
                 .edge(new Vec(face_inner_radius - 0.10, 0.0, -0.025))
                 .edge(new Vec(face_inner_radius - 0.10, 0.0, 0.025))
                 .edge(new Vec(face_inner_radius, 0.0, 0.025))
-                .toWire().mirror(new Vec(face_inner_radius, 0 , 0), new Vec(1)).toFace().from(new Vec(0.0)).revolution(new Vec(1.0)).display()
+                .toWire().mirror(new Vec(face_inner_radius, 0 , 0), new Vec(1)).toFace().from(new Vec(0.0)).revolution(new Vec(1.0)).display(image())
     }
 
     @Test
@@ -203,7 +204,7 @@ class SketchTest {
         cb()
             .from(p1)
                 .edge(p4)
-                .edge(p3).toWire().mirror(p1, p3 - p1).toFace().prism().display()
+                .edge(p3).toWire().mirror(p1, p3 - p1).toFace().prism().display(image())
     }
 
 }
