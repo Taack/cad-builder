@@ -27,24 +27,29 @@ import java.util.function.Consumer
  * Requests:
  * <pre>
  * {"type": "run", "id": 1, "script": "/models/rail.groovy", "args": [], "params": {"length": 120},
- *  "classpath": ["/home/me/.m2/repository/com/acme/parts/1.0/parts-1.0.jar"]}
+ *  "classpath": ["/home/me/.m2/repository/com/acme/parts/1.0/parts-1.0.jar"], "stopAt": "assembly:rail/part:body/cut0"}
  * {"type": "shape", "id": 2, "feature": "assembly:rail/part:body/cut0"}
  * {"type": "stop"}
  * </pre>
  * The classpath of a run, optional, holds the jars and directories of classes its script uses: shared parts for
  * instance. The classes of the runner, the DSL and Groovy among them, come first.
+ * The stopAt of a run, optional, rolls the script back to a feature of the last run of the same script: the operations
+ * after it, and after the features under it, are not done. Within a solid, only the operations of that solid are
+ * stopped; at a part, a placement or a solid, all of them.
  * Events:
  * <pre>
  * {"type": "ready", "protocol": 1}                                  once connected
  * {"type": "display", "id": 1, "file": "/tmp/.../run-1/1.glb", "feature": "assembly:rail"}
  *                                                                   for each display() given no file name
- * {"type": "done", "id": 1, "params": {"length": 120.0}, "millis": 840, "features": [...]}
+ * {"type": "done", "id": 1, "params": {"length": 120.0}, "millis": 840, "features": [...], "stopAt": "..."}
  * {"type": "error", "id": 1, "message": "...", "trace": "...", "params": {}, "millis": 12, "features": [...]}
  * </pre>
  * {"type": "shape", "id": 2, "file": "/tmp/.../run-1/shape-2.glb"}   no file when the feature has no shape
  * </pre>
  * The features are the tree of the operations of the script, see CadFeatureRecorder.tree() in cad-dsl: up to the
- * failing one, marked with "error": true, when the run fails. The feature of a display event is the one displayed.
+ * failing one, marked with "error": true, when the run fails; those after the stop of the run, not done, are marked
+ * with "suppressed": true. The stopAt of an end event is the one of its request, when the last run had that feature.
+ * The feature of a display event is the one displayed.
  * A shape request writes the shapes of a feature of the last run (a primitive, a prism, the tools of a cut...) to a
  * glTF file, in the coordinates of its part.
  * The glTF files of a run are deleted when the next run starts, and all of them when the runner stops.
@@ -56,8 +61,9 @@ final class CadRunner {
     private final File workDir
     private int runCount = 0
     private File runDir
-    // Features of the last run, with their shapes
+    // Features of the last run, with their shapes, and its script
     private CadFeatureRecorder recorder
+    private String lastScript
 
     CadRunner(File workDir) {
         this.workDir = workDir
@@ -94,7 +100,11 @@ final class CadRunner {
         }
         Map<String, String> previous = setParams((Map) request.params ?: [:])
         CadKernel kernel = CadKernels.get()
+        String stopAt = (String) request.stopAt
+        CadFeatureRecorder last = request.script == lastScript ? recorder : null
         recorder = new CadFeatureRecorder()
+        boolean stopped = stopAt && last && recorder.stopAt(last, stopAt)
+        lastScript = (String) request.script
         CadKernels.set(new RecordingKernel(kernel, recorder))
         long start = System.nanoTime()
         Map end
@@ -118,6 +128,7 @@ final class CadRunner {
         end.params = CadParams.values()
         end.millis = millis
         end.features = features
+        if (stopped) end.stopAt = stopAt
         emit.accept(end)
     }
 

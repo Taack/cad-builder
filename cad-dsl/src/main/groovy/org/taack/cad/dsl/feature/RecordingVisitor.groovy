@@ -11,6 +11,8 @@ import org.taack.cad.dsl.geom.Ellipse2d
 import org.taack.cad.dsl.geom.IClosedShape2d
 import org.taack.cad.dsl.geom.IConstruction
 import org.taack.cad.dsl.geom.ITrimmable2d
+import org.taack.cad.dsl.geom.Mirrored2d
+import org.taack.cad.dsl.geom.TrimmedCurve2d
 import org.taack.cad.dsl.geom.Vec
 import org.taack.cad.dsl.geom.Vec2d
 import org.taack.cad.dsl.svg.SvgContour
@@ -31,6 +33,12 @@ final class RecordingVisitor implements ICadDslVisitor {
     final CadFeature root
     private final CadFeatureRecorder recorder
     private final Deque<CadFeature> open = new ArrayDeque<>()
+    // operations starting a sketch or a wire, before the shape made of it
+    private static final Set<String> SKETCHING = ['from', 'wire', 'profile', 'section', 'curve'] as Set
+    /**
+     * Whether the kernel did an operation making a shape, before the stop of the run: a sketch alone is not shown
+     */
+    boolean forwarded
 
     RecordingVisitor(CadFeatureRecorder recorder, ICadDslVisitor kernel) {
         this.recorder = recorder
@@ -40,9 +48,10 @@ final class RecordingVisitor implements ICadDslVisitor {
     }
 
     private CadFeature add(String kind, String label, boolean detail = false) {
-        def f = new CadFeature(kind, label, CadFeatureFrame.current(), detail)
+        def f = recorder.record(new CadFeature(kind, label, CadFeatureFrame.current(), detail), root)
         open.peek().children << f
         recorder.last = f
+        if (!f.suppressed && !detail && !(kind in SKETCHING)) forwarded = true
         f
     }
 
@@ -58,7 +67,7 @@ final class RecordingVisitor implements ICadDslVisitor {
 
     // The shape f made, once the kernel made it
     private void shape(CadFeature f) {
-        if (!(kernel instanceof ICadDslFeatureShapes)) return
+        if (f.suppressed || !(kernel instanceof ICadDslFeatureShapes)) return
         ICadDslFeatureShapes shapes = (ICadDslFeatureShapes) kernel
         f.shape = shapes.featureShape(f.kind)
         f.shapes = shapes
@@ -81,19 +90,18 @@ final class RecordingVisitor implements ICadDslVisitor {
 
     @Override
     void visitFrom(Vec pos) {
-        begin('from', v(pos))
-        kernel.visitFrom(pos)
+        if (!begin('from', v(pos)).suppressed) kernel.visitFrom(pos)
     }
 
     @Override
     void visitFrom(Vec2d pos) {
-        begin('from', v(pos))
-        kernel.visitFrom(pos)
+        if (!begin('from', v(pos)).suppressed) kernel.visitFrom(pos)
     }
 
-    private void fromEnd() {
+    // Whether the kernel did the from
+    private boolean fromEnd() {
         CadFeature f = end()
-        if (f.is(root)) return
+        if (f.is(root)) return !f.suppressed
         if (f.children.every { it.detail || it.kind in ['text3d', 'svg3d'] }) {
             f.kind = 'sketch'
             f.label = "sketch at $f.label"
@@ -107,174 +115,147 @@ final class RecordingVisitor implements ICadDslVisitor {
             f.kind = 'position'
             f.label = "at $f.label"
         }
+        !f.suppressed
     }
 
     @Override
     void visitFromEnd(Vec pos) {
-        fromEnd()
-        kernel.visitFromEnd(pos)
+        if (fromEnd()) kernel.visitFromEnd(pos)
     }
 
     @Override
     void visitFromEnd(Vec2d pos) {
-        fromEnd()
-        kernel.visitFromEnd(pos)
+        if (fromEnd()) kernel.visitFromEnd(pos)
     }
 
     @Override
     void visitMove(Vec2d to) {
-        add('move', "move ${v(to)}", true)
-        kernel.visitMove(to)
+        if (!add('move', "move ${v(to)}", true).suppressed) kernel.visitMove(to)
     }
 
     @Override
     void visitMove(Vec to) {
-        add('move', "move ${v(to)}", true)
-        kernel.visitMove(to)
+        if (!add('move', "move ${v(to)}", true).suppressed) kernel.visitMove(to)
     }
 
     @Override
     void visitTo(Vec2d to) {
-        add('to', "to ${v(to)}", true)
-        kernel.visitTo(to)
+        if (!add('to', "to ${v(to)}", true).suppressed) kernel.visitTo(to)
     }
 
     @Override
     void visitTo(Vec to) {
-        add('to', "to ${v(to)}", true)
-        kernel.visitTo(to)
+        if (!add('to', "to ${v(to)}", true).suppressed) kernel.visitTo(to)
     }
 
     @Override
     void visitEdge(Vec2d to) {
-        add('edge', "edge to ${v(to)}", true)
-        kernel.visitEdge(to)
+        if (!add('edge', "edge to ${v(to)}", true).suppressed) kernel.visitEdge(to)
     }
 
     @Override
     void visitEdge(Vec to) {
-        add('edge', "edge to ${v(to)}", true)
-        kernel.visitEdge(to)
+        if (!add('edge', "edge to ${v(to)}", true).suppressed) kernel.visitEdge(to)
     }
 
     @Override
     void visitArc(Vec2d to, Vec2d via) {
-        add('arc', "arc to ${v(to)}", true)
-        kernel.visitArc(to, via)
+        if (!add('arc', "arc to ${v(to)}", true).suppressed) kernel.visitArc(to, via)
     }
 
     @Override
     void visitArc(Vec to, Vec via) {
-        add('arc', "arc to ${v(to)}", true)
-        kernel.visitArc(to, via)
+        if (!add('arc', "arc to ${v(to)}", true).suppressed) kernel.visitArc(to, via)
     }
 
     @Override
     Circle2d visitCircle2d(double diameter, boolean reverse) {
-        add('circle', "circle ⌀${n(diameter)}", true)
-        kernel.visitCircle2d(diameter, reverse)
+        add('circle', "circle ⌀${n(diameter)}", true).suppressed ? new Circle2d(new Vec2d(0, 0), diameter, reverse) : kernel.visitCircle2d(diameter, reverse)
     }
 
     @Override
     Ellipse2d visitEllipse2d(Vec2d dir, double majDia, double minDia) {
-        add('ellipse', "ellipse ${n(majDia)} × ${n(minDia)}", true)
-        kernel.visitEllipse2d(dir, majDia, minDia)
+        add('ellipse', "ellipse ${n(majDia)} × ${n(minDia)}", true).suppressed ? new Ellipse2d(new Vec2d(0, 0), dir, majDia, minDia) : kernel.visitEllipse2d(dir, majDia, minDia)
     }
 
     @Override
     void visitSpline(List<Vec2d> through) {
-        add('spline', "spline through ${through.size()} points", true)
-        kernel.visitSpline(through)
+        if (!add('spline', "spline through ${through.size()} points", true).suppressed) kernel.visitSpline(through)
     }
 
     @Override
     void visitText(String content, double size, TextOptions options) {
-        add('text', "text '$content' ${n(size)}", true)
-        kernel.visitText(content, size, options)
+        if (!add('text', "text '$content' ${n(size)}", true).suppressed) kernel.visitText(content, size, options)
     }
 
     @Override
     void visitSvg(List<SvgContour> contours, SvgOptions options) {
-        add('svg', "svg, ${contours.size()} contours", true)
-        kernel.visitSvg(contours, options)
+        if (!add('svg', "svg, ${contours.size()} contours", true).suppressed) kernel.visitSvg(contours, options)
     }
 
     @Override
     ITrimmable2d visitTrimmed(IClosedShape2d curve, double from, double to, boolean reverse) {
-        add('trim', 'trimmed curve', true)
-        kernel.visitTrimmed(curve, from, to, reverse)
+        add('trim', 'trimmed curve', true).suppressed ? new TrimmedCurve2d(curve, from, to, reverse) : kernel.visitTrimmed(curve, from, to, reverse)
     }
 
     @Override
     ArcOfCircle2d visitTrimmed(Circle2d circle2d, double from, double to, boolean reverse) {
-        add('trim', 'trimmed circle', true)
-        kernel.visitTrimmed(circle2d, from, to, reverse)
+        add('trim', 'trimmed circle', true).suppressed ? new ArcOfCircle2d(circle2d, from, to, reverse) : kernel.visitTrimmed(circle2d, from, to, reverse)
     }
 
     @Override
     ArcOfCircle2d visitTrimmed(Circle2d circle2d, Vec2d from, double to, boolean reverse) {
-        add('trim', 'trimmed circle', true)
-        kernel.visitTrimmed(circle2d, from, to, reverse)
+        add('trim', 'trimmed circle', true).suppressed ? new ArcOfCircle2d(circle2d, from, to, reverse) : kernel.visitTrimmed(circle2d, from, to, reverse)
     }
 
     @Override
     ArcOfCircle2d visitTrimmed(Circle2d circle2d, Vec2d from, Vec2d to, boolean reverse) {
-        add('trim', 'trimmed circle', true)
-        kernel.visitTrimmed(circle2d, from, to, reverse)
+        add('trim', 'trimmed circle', true).suppressed ? new ArcOfCircle2d(circle2d, from, to, reverse) : kernel.visitTrimmed(circle2d, from, to, reverse)
     }
 
     @Override
     ITrimmable2d visitMirror(ITrimmable2d curve, Vec2d pos, Vec2d dir) {
-        add('mirror', 'mirrored curve', true)
-        kernel.visitMirror(curve, pos, dir)
+        add('mirror', 'mirrored curve', true).suppressed ? new Mirrored2d(curve, pos, dir) : kernel.visitMirror(curve, pos, dir)
     }
 
     @Override
     void visitAddToConstruction(IConstruction... toAdd) {
-        add('construction', "construction + ${toAdd.length}", true)
-        kernel.visitAddToConstruction(toAdd)
+        if (!add('construction', "construction + ${toAdd.length}", true).suppressed) kernel.visitAddToConstruction(toAdd)
     }
 
     @Override
     void visitRemoveFromConstruction(IConstruction... toRemove) {
-        add('construction', "construction - ${toRemove.length}", true)
-        kernel.visitRemoveFromConstruction(toRemove)
+        if (!add('construction', "construction - ${toRemove.length}", true).suppressed) kernel.visitRemoveFromConstruction(toRemove)
     }
 
     @Override
     void visitAdapt3d(ITrimmable2d trimmed2dCurve, Vec dirX, Vec dirY) {
-        add('curve3d', 'curve to 3D', true)
-        kernel.visitAdapt3d(trimmed2dCurve, dirX, dirY)
+        if (!add('curve3d', 'curve to 3D', true).suppressed) kernel.visitAdapt3d(trimmed2dCurve, dirX, dirY)
     }
 
     @Override
     void visitDirection(Vec axis, Vec normal) {
-        add('direction', "direction ${v(axis)}", true)
-        kernel.visitDirection(axis, normal)
+        if (!add('direction', "direction ${v(axis)}", true).suppressed) kernel.visitDirection(axis, normal)
     }
 
     @Override
     void visitClosedWire() {
-        begin('wire', 'closed wire')
-        kernel.visitClosedWire()
+        if (!begin('wire', 'closed wire').suppressed) kernel.visitClosedWire()
     }
 
     @Override
     void visitClosedWireEnd() {
-        end()
-        kernel.visitClosedWireEnd()
+        if (!end().suppressed) kernel.visitClosedWireEnd()
     }
 
     @Override
     void visitWireFromSurface() {
-        begin('wire', 'wire on surface')
-        kernel.visitWireFromSurface()
+        if (!begin('wire', 'wire on surface').suppressed) kernel.visitWireFromSurface()
     }
 
     @Override
     void visitWireFromSurfaceEnd() {
-        end()
-        kernel.visitWireFromSurfaceEnd()
+        if (!end().suppressed) kernel.visitWireFromSurfaceEnd()
     }
 
     // Faces and solids from sketches
@@ -283,7 +264,7 @@ final class RecordingVisitor implements ICadDslVisitor {
     void visitToFace() {
         CadFeature f = add('face', 'face')
         adopt(f, ['sketch'], true)
-        kernel.visitToFace()
+        if (!f.suppressed) kernel.visitToFace()
         shape(f)
     }
 
@@ -291,7 +272,7 @@ final class RecordingVisitor implements ICadDslVisitor {
     void visitToFaceFrom2d() {
         CadFeature f = add('face', 'face')
         adopt(f, ['sketch'], true)
-        kernel.visitToFaceFrom2d()
+        if (!f.suppressed) kernel.visitToFaceFrom2d()
         shape(f)
     }
 
@@ -305,28 +286,28 @@ final class RecordingVisitor implements ICadDslVisitor {
     @Override
     void visitPrism(Vec dir, boolean cut) {
         CadFeature f = prism(v(dir), cut, null)
-        kernel.visitPrism(dir, cut)
+        if (!f.suppressed) kernel.visitPrism(dir, cut)
         shape(f)
     }
 
     @Override
     void visitPrism(double high, boolean cut) {
         CadFeature f = prism(n(high), cut, null)
-        kernel.visitPrism(high, cut)
+        if (!f.suppressed) kernel.visitPrism(high, cut)
         shape(f)
     }
 
     @Override
     void visitPrism(Vec dir, boolean cut, double draft) {
         CadFeature f = prism(v(dir), cut, draft)
-        kernel.visitPrism(dir, cut, draft)
+        if (!f.suppressed) kernel.visitPrism(dir, cut, draft)
         shape(f)
     }
 
     @Override
     void visitPrism(double high, boolean cut, double draft) {
         CadFeature f = prism(n(high), cut, draft)
-        kernel.visitPrism(high, cut, draft)
+        if (!f.suppressed) kernel.visitPrism(high, cut, draft)
         shape(f)
     }
 
@@ -335,27 +316,26 @@ final class RecordingVisitor implements ICadDslVisitor {
         String turn = angle == 0d ? 'full turn' : "${n(Math.toDegrees(angle))}°"
         CadFeature f = add('revolution', "revolution about ${v(dir)}, $turn")
         adopt(f, ['face', 'sketch'], false)
-        kernel.visitRevolution(from, dir, angle)
+        if (!f.suppressed) kernel.visitRevolution(from, dir, angle)
         shape(f)
     }
 
     @Override
     void visitCylindricalSurface(double number) {
-        add('surface', "cylindrical surface ${n(number)}")
-        kernel.visitCylindricalSurface(number)
+        if (!add('surface', "cylindrical surface ${n(number)}").suppressed) kernel.visitCylindricalSurface(number)
     }
 
     @Override
     void visitText3d(String content, double size, TextOptions options) {
         CadFeature f = add('text3d', "text '$content' ${n(size)}")
-        kernel.visitText3d(content, size, options)
+        if (!f.suppressed) kernel.visitText3d(content, size, options)
         shape(f)
     }
 
     @Override
     void visitSvg3d(List<SvgContour> contours, SvgOptions options) {
         CadFeature f = add('svg3d', "svg, ${contours.size()} contours")
-        kernel.visitSvg3d(contours, options)
+        if (!f.suppressed) kernel.visitSvg3d(contours, options)
         shape(f)
     }
 
@@ -364,223 +344,195 @@ final class RecordingVisitor implements ICadDslVisitor {
     @Override
     void visitBox(double length, double height, double thickness) {
         CadFeature f = add('box', "box ${n(length)} × ${n(height)} × ${n(thickness)}")
-        kernel.visitBox(length, height, thickness)
+        if (!f.suppressed) kernel.visitBox(length, height, thickness)
         shape(f)
     }
 
     @Override
     void visitSphere(double radius, double radian1, double radian2) {
         CadFeature f = add('sphere', "sphere r${n(radius)}")
-        kernel.visitSphere(radius, radian1, radian2)
+        if (!f.suppressed) kernel.visitSphere(radius, radian1, radian2)
         shape(f)
     }
 
     @Override
     void visitCylinder(double radius, double height) {
         CadFeature f = add('cylinder', "cylinder r${n(radius)} × ${n(height)}")
-        kernel.visitCylinder(radius, height)
+        if (!f.suppressed) kernel.visitCylinder(radius, height)
         shape(f)
     }
 
     @Override
     void visitTorus(double torusRadius, double ringRadius) {
         CadFeature f = add('torus', "torus r${n(torusRadius)}, ring r${n(ringRadius)}")
-        kernel.visitTorus(torusRadius, ringRadius)
+        if (!f.suppressed) kernel.visitTorus(torusRadius, ringRadius)
         shape(f)
     }
 
     @Override
     void visitCone(double r1, double r2, double height) {
         CadFeature f = add('cone', "cone r${n(r1)} to r${n(r2)} × ${n(height)}")
-        kernel.visitCone(r1, r2, height)
+        if (!f.suppressed) kernel.visitCone(r1, r2, height)
         shape(f)
     }
 
     @Override
     void visitHelix(double radius, double pitch, double height, double endRadius) {
-        add('helix', "helix r${n(radius)}, pitch ${n(pitch)} × ${n(height)}")
-        kernel.visitHelix(radius, pitch, height, endRadius)
+        if (!add('helix', "helix r${n(radius)}, pitch ${n(pitch)} × ${n(height)}").suppressed) kernel.visitHelix(radius, pitch, height, endRadius)
     }
 
     @Override
     void visitHelixProfile(Vec2d from) {
-        begin('profile', "profile at ${v(from)}")
-        kernel.visitHelixProfile(from)
+        if (!begin('profile', "profile at ${v(from)}").suppressed) kernel.visitHelixProfile(from)
     }
 
     @Override
     void visitHelixProfileEnd(Vec2d from) {
-        end()
-        kernel.visitHelixProfileEnd(from)
+        if (!end().suppressed) kernel.visitHelixProfileEnd(from)
     }
 
     // Operations
 
     @Override
     void visitCut() {
-        begin('cut', 'cut')
-        kernel.visitCut()
+        if (!begin('cut', 'cut').suppressed) kernel.visitCut()
     }
 
     @Override
     void visitCutEnd() {
-        end()
-        kernel.visitCutEnd()
+        if (!end().suppressed) kernel.visitCutEnd()
     }
 
     @Override
     void visitFuse() {
-        begin('fuse', 'fuse')
-        kernel.visitFuse()
+        if (!begin('fuse', 'fuse').suppressed) kernel.visitFuse()
     }
 
     @Override
     void visitFuseEnd() {
-        end()
-        kernel.visitFuseEnd()
+        if (!end().suppressed) kernel.visitFuseEnd()
     }
 
     @Override
     void visitCommon() {
-        begin('common', 'common')
-        kernel.visitCommon()
+        if (!begin('common', 'common').suppressed) kernel.visitCommon()
     }
 
     @Override
     void visitCommonEnd() {
-        end()
-        kernel.visitCommonEnd()
+        if (!end().suppressed) kernel.visitCommonEnd()
     }
 
     @Override
     void visitCenter() {
-        begin('center', 'centered')
-        kernel.visitCenter()
+        if (!begin('center', 'centered').suppressed) kernel.visitCenter()
     }
 
     @Override
     void visitCenterEnd() {
-        end()
-        kernel.visitCenterEnd()
+        if (!end().suppressed) kernel.visitCenterEnd()
     }
 
     @Override
     void visitCircularPattern() {
-        begin('pattern', 'circular pattern')
-        kernel.visitCircularPattern()
+        if (!begin('pattern', 'circular pattern').suppressed) kernel.visitCircularPattern()
     }
 
     @Override
     void visitCircularPatternEnd(int count, Vec axis) {
-        end().label = "circular pattern × $count about ${v(axis)}"
-        kernel.visitCircularPatternEnd(count, axis)
+        CadFeature f = end()
+        f.label = "circular pattern × $count about ${v(axis)}"
+        if (!f.suppressed) kernel.visitCircularPatternEnd(count, axis)
     }
 
     @Override
     void visitThruSection() {
-        begin('loft', 'thru section')
-        kernel.visitThruSection()
+        if (!begin('loft', 'thru section').suppressed) kernel.visitThruSection()
     }
 
     @Override
     void visitThruSectionEnd() {
-        end()
-        kernel.visitThruSectionEnd()
+        if (!end().suppressed) kernel.visitThruSectionEnd()
     }
 
     @Override
     void visitWing() {
-        begin('wing', 'wing')
-        kernel.visitWing()
+        if (!begin('wing', 'wing').suppressed) kernel.visitWing()
     }
 
     @Override
     void visitWingSection(Vec leadingEdge, double chord, double twist, Vec2d from) {
-        begin('section', "section at ${v(leadingEdge)}, chord ${n(chord)}")
-        kernel.visitWingSection(leadingEdge, chord, twist, from)
+        if (!begin('section', "section at ${v(leadingEdge)}, chord ${n(chord)}").suppressed) kernel.visitWingSection(leadingEdge, chord, twist, from)
     }
 
     @Override
     void visitWingSectionEnd(Vec2d from) {
-        end()
-        kernel.visitWingSectionEnd(from)
+        if (!end().suppressed) kernel.visitWingSectionEnd(from)
     }
 
     @Override
     void visitWingEnd() {
-        end()
-        kernel.visitWingEnd()
+        if (!end().suppressed) kernel.visitWingEnd()
     }
 
     @Override
     void visitPlate(PlateOptions options) {
-        begin('plate', 'plate')
-        kernel.visitPlate(options)
+        if (!begin('plate', 'plate').suppressed) kernel.visitPlate(options)
     }
 
     @Override
     void visitPlateCurve(Vec from, boolean boundary) {
-        begin('curve', (boundary ? 'boundary at ' : 'curve at ') + v(from))
-        kernel.visitPlateCurve(from, boundary)
+        if (!begin('curve', (boundary ? 'boundary at ' : 'curve at ') + v(from)).suppressed) kernel.visitPlateCurve(from, boundary)
     }
 
     @Override
     void visitPlateCurveEnd(Vec from) {
-        end()
-        kernel.visitPlateCurveEnd(from)
+        if (!end().suppressed) kernel.visitPlateCurveEnd(from)
     }
 
     @Override
     void visitPlateThrough(Vec point) {
-        add('point', "through ${v(point)}", true)
-        kernel.visitPlateThrough(point)
+        if (!add('point', "through ${v(point)}", true).suppressed) kernel.visitPlateThrough(point)
     }
 
     @Override
     void visitPlateEnd() {
-        end()
-        kernel.visitPlateEnd()
+        if (!end().suppressed) kernel.visitPlateEnd()
     }
 
     @Override
     void display(String fileName) {
         recorder.displayed(fileName, root)
-        kernel.display(fileName)
+        if (forwarded || !recorder.stopping) kernel.display(fileName)
     }
 
     @Override
     void visitFace(Vec direction, Vec position) {
-        add('select', "on face ${v(direction)}" + (position != null ? " near ${v(position)}" : ''))
-        kernel.visitFace(direction, position)
+        if (!add('select', "on face ${v(direction)}" + (position != null ? " near ${v(position)}" : '')).suppressed) kernel.visitFace(direction, position)
     }
 
     @Override
     void visitFillet(double length) {
-        add('fillet', "fillet r${n(length)}")
-        kernel.visitFillet(length)
+        if (!add('fillet', "fillet r${n(length)}").suppressed) kernel.visitFillet(length)
     }
 
     @Override
     void visitHollowedSolid(double thickness) {
-        add('shell', "shell ${n(thickness)}")
-        kernel.visitHollowedSolid(thickness)
+        if (!add('shell', "shell ${n(thickness)}").suppressed) kernel.visitHollowedSolid(thickness)
     }
 
     @Override
     void visitSolidMirror(Vec pos, Vec dir) {
-        add('mirror', "mirror about ${v(dir)}")
-        kernel.visitSolidMirror(pos, dir)
+        if (!add('mirror', "mirror about ${v(dir)}").suppressed) kernel.visitSolidMirror(pos, dir)
     }
 
     @Override
     void visitSolidTranslate(Vec distance) {
-        add('translate', "translate ${v(distance)}")
-        kernel.visitSolidTranslate(distance)
+        if (!add('translate', "translate ${v(distance)}").suppressed) kernel.visitSolidTranslate(distance)
     }
 
     @Override
     void visitSolidRotate(Vec pos, Vec dir, double angle, boolean clone) {
-        add('rotate', "rotate ${n(Math.toDegrees(angle))}° about ${v(dir)}" + (clone ? ', copy' : ''))
-        kernel.visitSolidRotate(pos, dir, angle, clone)
+        if (!add('rotate', "rotate ${n(Math.toDegrees(angle))}° about ${v(dir)}" + (clone ? ', copy' : '')).suppressed) kernel.visitSolidRotate(pos, dir, angle, clone)
     }
 }

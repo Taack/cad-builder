@@ -6,8 +6,8 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * How a run ended: the models displayed, the param() values, the tree of the features of the script, and the error when
- * it failed
+ * How a run ended: the models displayed, the param() values, the tree of the features of the script, the error when
+ * it failed, and the feature it stopped at when it was rolled back to one
  */
 public record CadRunResult(CadRunRequest request,
                            List<CadModel> models,
@@ -15,10 +15,11 @@ public record CadRunResult(CadRunRequest request,
                            List<CadFeature> features,
                            long millis,
                            @Nullable String error,
-                           @Nullable String trace) {
+                           @Nullable String trace,
+                           @Nullable String stopAt) {
 
     static CadRunResult failed(CadRunRequest request, String error, long millis) {
-        return new CadRunResult(request, List.of(), Map.of(), List.of(), millis, error, null);
+        return new CadRunResult(request, List.of(), Map.of(), List.of(), millis, error, null, null);
     }
 
     public boolean succeeded() {

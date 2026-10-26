@@ -36,6 +36,9 @@ public final class CadPreview {
     private final AtomicBoolean rerunPending = new AtomicBoolean();
     private volatile @Nullable CadRunResult last;
     private volatile @Nullable String selectedFeature;
+    // the feature the runs of a script stop at, see rollBack
+    private volatile @Nullable String stopScript;
+    private volatile @Nullable String stopAt;
 
     public CadPreview(Project project) {
         this.project = project;
@@ -61,6 +64,26 @@ public final class CadPreview {
         listeners.forEach(it -> it.featureSelected(feature));
     }
 
+    /**
+     * @return The feature the runs of script stop at, null when they run to the end
+     */
+    public @Nullable String stopAt(@NotNull String script) {
+        return script.equals(stopScript) ? stopAt : null;
+    }
+
+    /**
+     * Runs the last script again up to feature, and the following runs of that script, until it is rolled forward
+     *
+     * @param feature A feature of the last run, null to run to the end again
+     */
+    public void rollBack(@Nullable String feature) {
+        CadRunResult previous = last;
+        if (previous == null) return;
+        stopScript = feature == null ? null : previous.request().script();
+        stopAt = feature;
+        rerun();
+    }
+
     public void addListener(@NotNull Listener listener, @NotNull Disposable parent) {
         listeners.add(listener);
         Disposer.register(parent, () -> listeners.remove(listener));
@@ -75,6 +98,11 @@ public final class CadPreview {
      */
     void show(@NotNull CadRunResult result) {
         last = result;
+        // the runner no longer has that feature: the script changed
+        if (result.stopAt() == null && !result.features().isEmpty() && stopAt(result.request().script()) != null) {
+            stopScript = null;
+            stopAt = null;
+        }
         listeners.forEach(it -> it.shown(result));
         if (!result.models().isEmpty()) showToolWindow(TOOL_WINDOW_ID);
         if (!result.features().isEmpty()) showToolWindow(CadStructurePanel.TOOL_WINDOW_ID);

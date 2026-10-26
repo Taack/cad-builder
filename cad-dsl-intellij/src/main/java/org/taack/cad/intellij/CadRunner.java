@@ -120,7 +120,7 @@ public final class CadRunner implements Disposable {
         try {
             ensureStarted();
             int id = ++lastId;
-            send(runRequest(request, id));
+            send(runRequest(request, id, CadPreview.getInstance(project).stopAt(request.script())));
             listener.finished(awaitEnd(request, id, start));
         } catch (IOException | ExecutionException | RuntimeException e) {
             String message = stopping ? "Stopped" : e.getMessage();
@@ -142,11 +142,11 @@ public final class CadRunner implements Disposable {
                             feature == null || feature.isJsonNull() ? null : feature.getAsString()));
                 }
                 case "done" -> {
-                    return new CadRunResult(request, models, params(event), features(event), millis(event, start), null, null);
+                    return new CadRunResult(request, models, params(event), features(event), millis(event, start), null, null, stopAt(event));
                 }
                 case "error" -> {
                     return new CadRunResult(request, models, params(event), features(event), millis(event, start),
-                            event.get("message").getAsString(), event.has("trace") ? event.get("trace").getAsString() : null);
+                            event.get("message").getAsString(), event.has("trace") ? event.get("trace").getAsString() : null, stopAt(event));
                 }
                 default -> LOG.warn("Unknown runner event: " + line);
             }
@@ -266,7 +266,7 @@ public final class CadRunner implements Disposable {
         requests.flush();
     }
 
-    private static JsonObject runRequest(CadRunRequest request, int id) {
+    private static JsonObject runRequest(CadRunRequest request, int id, @Nullable String stopAt) {
         JsonObject run = new JsonObject();
         run.addProperty("type", "run");
         run.addProperty("id", id);
@@ -277,6 +277,7 @@ public final class CadRunner implements Disposable {
         JsonArray classpath = new JsonArray();
         request.classpath().forEach(classpath::add);
         run.add("classpath", classpath);
+        if (stopAt != null) run.addProperty("stopAt", stopAt);
         return run;
     }
 
@@ -293,6 +294,11 @@ public final class CadRunner implements Disposable {
 
     private static List<CadFeature> features(JsonObject event) {
         return CadFeature.read(event.has("features") ? event.getAsJsonArray("features") : null);
+    }
+
+    private static @Nullable String stopAt(JsonObject event) {
+        JsonElement stopAt = event.get("stopAt");
+        return stopAt == null || stopAt.isJsonNull() ? null : stopAt.getAsString();
     }
 
     private static long millis(JsonObject event, long start) {

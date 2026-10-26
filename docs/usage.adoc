@@ -74,9 +74,9 @@ it on the loopback interface, reads one JSON request per line, and answers with 
 
 [source,json]
 ----
-{"type": "run", "id": 1, "script": "/models/rail.groovy", "args": [], "params": {"length": 120}, "classpath": ["/m2/parts-0.1.jar"]}
+{"type": "run", "id": 1, "script": "/models/rail.groovy", "args": [], "params": {"length": 120}, "classpath": ["/m2/parts-0.1.jar"], "stopAt": "assembly:rail/part:body/cut0"}
 {"type": "display", "id": 1, "file": "/tmp/cad-dsl-runner.../run-1/1.glb", "feature": "assembly:rail"}
-{"type": "done", "id": 1, "params": {"length": 120.0}, "millis": 840, "features": [...]}
+{"type": "done", "id": 1, "params": {"length": 120.0}, "millis": 840, "features": [...], "stopAt": "assembly:rail/part:body/cut0"}
 {"type": "shape", "id": 2, "feature": "assembly:rail/part:body/cut0"}
 {"type": "shape", "id": 2, "file": "/tmp/cad-dsl-runner.../run-1/shape-2.glb"}
 ----
@@ -91,6 +91,10 @@ recorded while it runs (see `CadFeatureRecorder`): assemblies, parts, booleans, 
 line that made it, those built by a method of the user grouped under it; up to the failing one, marked with `"error":
 true`, when the run fails. A display event names the feature it shows, and a `shape` request writes the shapes of a
 feature of the last run (a primitive, a prism, the tools of a cut...) to a glTF file, in the coordinates of its part.
+`stopAt`, optional, rolls the script back to a feature of the last run of the same script: the operations after it are
+recorded, marked with `"suppressed": true`, but not done. Within a solid, only the operations of that solid stop, and the
+solid is shown in its assembly as it was at that feature; at a part, a placement or a solid, all the following ones stop.
+The end event repeats `stopAt` when the last run had that feature, the run goes to its end otherwise.
 The protocol is described in `CadRunner`.
 
 [source,bash]
@@ -128,7 +132,10 @@ line that made it, in the script, a class beside it or a class of a jar of parts
 selects the feature it made, unless _Follow Editor_ is off. The edges, arcs and texts of the
 sketches are hidden unless asked for; the failing feature of a failed run is selected, in red. Selecting a feature
 highlights its part in the preview, in every place the part occupies, fades the others, and draws the shapes of the
-feature over it, through the solid: the primitive, the prism or the tools of a cut, with the OCCT kernel.
+feature over it, through the solid: the primitive, the prism or the tools of a cut, with the OCCT kernel. _Roll Back
+Here_, in the toolbar or the context menu, runs the script up to the selected feature, as SolidWorks does: a bar goes
+under it, the features after it are grayed, and the preview shows the model as it was. The following runs of the script
+stop there too, until _Roll Forward_, or until the script no longer has that feature.
 
 The runner and the native library are found in the project when it is cad-builder, after:
 

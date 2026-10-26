@@ -31,10 +31,46 @@ final class CadFeatureRecorder {
 
     // Feature each display() of the run showed, by the file it wrote
     private final Map<String, CadFeature> displays = [:]
+    private int count
+    // The operations after the one of rank stopAfter are not done: those of the solid of rank stopSolid, or all of them
+    private int stopAfter = Integer.MAX_VALUE
+    private int stopSolid = -1
 
     CadFeature root(CadFeature f) {
-        roots << f
+        roots << record(f, null)
         f
+    }
+
+    /**
+     * Ranks f in the run, part of solid, and tells whether it is suppressed
+     */
+    CadFeature record(CadFeature f, CadFeature solid) {
+        f.seq = ++count
+        f.solid = solid
+        f.suppressed = f.seq > stopAfter && (stopSolid < 0 || solid?.seq == stopSolid)
+        f
+    }
+
+    /**
+     * Whether the run stops at a feature: the solids, parts and assemblies left with no operation done are not shown
+     */
+    boolean isStopping() {
+        stopAfter != Integer.MAX_VALUE
+    }
+
+    /**
+     * Stops this run, of the script last ran, after the feature of id in the tree of last, and after the features under
+     * it: the operations after it are recorded but not done. When that feature is in a solid, only the operations of that
+     * solid are stopped, the solid is shown in its assembly as it was at that feature.
+     * @return Whether last has a feature of id
+     */
+    boolean stopAt(CadFeatureRecorder last, String id) {
+        List<CadFeature> under = last.ids.findAll { it.value == id || it.value.startsWith(id + '/') }*.key
+        if (!under) return false
+        stopAfter = under*.seq.max()
+        Set<CadFeature> solids = under.collect { it.solid } as Set
+        stopSolid = solids.size() == 1 && solids.first() != null ? solids.first().seq : -1
+        true
     }
 
     void displayed(String fileName, CadFeature f) {
@@ -72,7 +108,8 @@ final class CadFeatureRecorder {
 
     /**
      * @return The tree of the features: maps of id, kind, label, children, plus class, file and line of the call, detail,
-     * placed (the id of the feature placed) and error (on the last feature of a failed run) when they apply
+     * placed (the id of the feature placed), error (on the last feature of a failed run) and suppressed (after the stop
+     * of the run) when they apply
      */
     List<Map<String, Object>> tree() {
         ids.clear()
@@ -102,7 +139,7 @@ final class CadFeatureRecorder {
 
     private List<Map<String, Object>> children(CadFeature parent, List<CadFeature> features, String parentId) {
         List<Map<String, Object>> top = []
-        List<Group> open = []
+        List<Group> open = [], groups = []
         for (CadFeature f in features) {
             List<CadFeatureFrame> stack = f.stack
             int k = 0
@@ -123,10 +160,13 @@ final class CadFeatureRecorder {
                                             class   : method.className, file: callSite.fileName, line: callSite.line] as Map<String, Object>
                 container << node
                 open << new Group(method, callSite, node)
+                groups << open.last()
             }
             List<Map<String, Object>> container = open ? open.last().children : top
             container << node(f, open ? (String) open.last().node.id : parentId, container)
         }
+        // a group of suppressed features is, the inner groups first
+        groups.reverseEach { Group g -> if (g.children.every { it.suppressed }) g.node.suppressed = true }
         top
     }
 
@@ -143,6 +183,7 @@ final class CadFeatureRecorder {
         if (f.detail) node.detail = true
         if (f.placed) node.placed = ids.get(f.placed)
         if (failed && f.is(last)) node.error = true
+        if (f.suppressed) node.suppressed = true
         node.children = children(f, f.children, id)
         node
     }

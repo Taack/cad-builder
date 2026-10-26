@@ -1,5 +1,6 @@
 package org.taack.cad.intellij;
 
+import org.jetbrains.annotations.Nullable;
 import org.junit.Test;
 
 import java.util.List;
@@ -10,11 +11,15 @@ import static org.junit.Assert.assertTrue;
 
 public class CadHighlightTest {
     private static CadFeature feature(String id, String kind, CadFeature... children) {
-        return new CadFeature(id, kind, id, null, null, 0, false, false, null, List.of(children));
+        return new CadFeature(id, kind, id, null, null, 0, false, false, false, null, List.of(children));
     }
 
     private static CadFeature place(String id, String placed) {
-        return new CadFeature(id, "place", id, null, null, 0, false, false, placed, List.of());
+        return new CadFeature(id, "place", id, null, null, 0, false, false, false, placed, List.of());
+    }
+
+    private static CadFeature suppressed(String id, String kind, @Nullable String placed) {
+        return new CadFeature(id, kind, id, null, null, 0, false, false, true, placed, List.of());
     }
 
     // rail: a part screw declared and placed by a method, a sub-assembly jack, the screw again
@@ -59,6 +64,23 @@ public class CadHighlightTest {
         assertEquals(List.of(), new CadHighlight(RAIL, "rail").nodes("solid0/box0"));
         assertEquals(List.of(0), new CadHighlight(RAIL, "solid0").nodes("solid0/box0"));
         assertEquals(List.of(), new CadHighlight(RAIL, null).nodes("rail"));
+    }
+
+    @Test
+    public void thePlacementsAfterTheStopOfTheRunHaveNoNodes() {
+        CadHighlight stopped = new CadHighlight(List.of(feature("rail", "assembly",
+                feature("rail/part:screw", "part", feature("rail/part:screw/cylinder0", "cylinder")),
+                place("rail/place0", "rail/part:screw"),
+                suppressed("rail/place1", "place", "rail/part:screw"),
+                place("rail/place2", "rail/part:screw"))), "rail");
+        assertEquals(List.of(1, 2), stopped.nodes("rail/part:screw"));
+        assertEquals(List.of(), stopped.nodes("rail/place1"));
+        assertEquals(List.of(2), stopped.nodes("rail/place2"));
+    }
+
+    @Test
+    public void onlyTheOperationsDoneHaveShapes() {
+        assertFalse(new CadHighlight(List.of(feature("solid0", "solid", suppressed("solid0/box0", "box", null))), "solid0").hasShape("solid0/box0"));
     }
 
     @Test
