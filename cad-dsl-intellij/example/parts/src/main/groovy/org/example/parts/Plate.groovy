@@ -1,5 +1,6 @@
 package org.example.parts
 
+import groovy.transform.CompileStatic
 import org.taack.cad.dsl.CadDslSolid
 import org.taack.cad.dsl.geom.Vec
 
@@ -8,6 +9,7 @@ import static org.taack.cad.dsl.CadDsl.cd
 /**
  * A plate drilled in its corners, from (0, 0, 0) to (length, width, thickness)
  */
+@CompileStatic
 class Plate {
     static CadDslSolid drilled(double length, double width, double thickness, double holeDiameter) {
         double inset = holeDiameter * 1.5
