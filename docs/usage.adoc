@@ -178,6 +178,9 @@ Elsewhere, set them in _Settings | Tools | CAD DSL_, with the Java 25 running th
 
 `cad-dsl-intellij/example` is an empty Gradle project to try the plugin, with parts shared as a jar: see its README.
 
+video::https://github.com/user-attachments/assets/cdb4e711-4d15-4e93-8f2a-2305be25d20f[]
+
+
 [[sharing-parts]]
 == Sharing Parts as Jars
 
