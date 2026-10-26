@@ -63,6 +63,30 @@ cd().position(new Vec(0, 0, 1)) {
 Classes in the directory of the script are found too (`Contour.groovy` for a class `Contour`), to share parts
 between scripts.
 
+=== Classes in `@CompileStatic`
+
+A class of parts compiled with `@CompileStatic` is checked when the script starts, and reads like Java. In the closures
+of the DSL, `delegate` is typed by their `@DelegatesTo`: `part(name) { bay(delegate, z) }` passes the `CadDsl` of the
+part to a method `bay(CadDsl dsl, double z)`.
+
+The DSL takes `double`, and a decimal literal is a `BigDecimal` in Groovy: it is converted where a `double` is
+expected, as an argument (`box(1.5, 2, 0.8)`, `new Vec(z - 7.5, 0, 0)`) or in an assignment (`double h = 1.5`).
+A conditional mixing both is not:
+
+[source,groovy]
+----
+double ribFrom = first ? zMin : z - 8.792    // rejected: Number & Comparable, neither double nor BigDecimal
+
+double ribFrom = first ? zMin : z - 8.792d   // accepted: a double literal
+
+double ribFrom = z - 8.792                   // accepted: an if
+if (first) ribFrom = zMin
+----
+
+The type the checker gives to `cond ? a : b` (or `a ?: b`) is the common supertype of both branches; with a `double` on
+one side and a `BigDecimal` on the other, it is `Number & Comparable`, which no `double` parameter accepts. A `d` suffix
+on the literals of the conditional, or `as double` around it, gives it a `double`.
+
 To get code completion, write the imports anyway (see `samples/pillow-block.groovy`) and open the scripts
 in a project depending on `org.taack.cad:cad-dsl` only.
 
