@@ -8,6 +8,7 @@ import org.taack.cad.dsl.geom.Vec2d
 
 import static java.lang.Math.PI
 import static org.taack.cad.dsl.CadDsl.cd
+import static org.taack.cad.dsl.TestImages.image
 
 @CompileStatic
 class BottleTest {
@@ -116,20 +117,20 @@ class BottleTest {
 //        mb
 //                .threadingWireFrom(edgeFrom(arc1, innerCyl), edgeFrom(seg, innerCyl))
 //                .threadingWireFrom(edgeFrom(arc2, outerCyl), edgeFrom(seg, outerCyl))
-//                .applyThreading().display()
+//                .applyThreading().display(image())
 //    }
 
 
     @Test
     void "Make Bottle Using Builder API"() {
         CadDsl cd = mainBottleBody()
-        helixThreading(cd).display()
+        helixThreading(cd).display(image())
     }
 
     @Test
     void "Make Bottle with ThruSection Threading"() {
         CadDsl cd = mainBottleBody()
-        simpleThreading(cd).display()
+        simpleThreading(cd).display(image())
     }
 
 }

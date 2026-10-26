@@ -6,6 +6,7 @@ import org.taack.cad.dsl.geom.Vec
 import org.taack.cad.dsl.geom.Vec2d
 
 import static org.taack.cad.dsl.CadDsl.cd
+import static org.taack.cad.dsl.TestImages.image
 
 @CompileStatic
 class SketchTest {
@@ -33,7 +34,7 @@ class SketchTest {
             arc(p5, new Vec2d(innerRadius + 0.15, -0.029))
             edge(p6)
             edge(p7)
-        }.toFace().revolution(new Vec(2, 0, 0), new Vec(0, 1, 0)).display()
+        }.toFace().revolution(new Vec(2, 0, 0), new Vec(0, 1, 0)).display(image())
     }
 
     @Test
@@ -63,7 +64,7 @@ class SketchTest {
                 arc(c3, c2)
                 arc(c1, c4)
             }
-        }.toFace().prism(-1).display()
+        }.toFace().prism(-1).display(image())
     }
 
     @Test
@@ -97,6 +98,6 @@ class SketchTest {
         }.toFace().prism().topX().wireFrom() {
             println "Circle topY 0.1,-0.5"
             circle(0.02)
-        }.toFace().prism(0.02).display()
+        }.toFace().prism(0.02).display(image())
     }
 }

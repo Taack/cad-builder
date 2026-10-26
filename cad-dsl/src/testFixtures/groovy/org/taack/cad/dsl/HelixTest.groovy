@@ -6,23 +6,24 @@ import org.taack.cad.dsl.geom.Vec
 import org.taack.cad.dsl.geom.Vec2d
 
 import static org.taack.cad.dsl.CadDsl.cd
+import static org.taack.cad.dsl.TestImages.image
 
 @CompileStatic
 class HelixTest {
 
     @Test
     void "Spring"() {
-        cd().helix(10, 4, 40).wire(1).display()
+        cd().helix(10, 4, 40).wire(1).display(image())
     }
 
     @Test
     void "Conical Spring"() {
-        cd().helix(10, 5, 30, 4).wire(1).display()
+        cd().helix(10, 5, 30, 4).wire(1).display(image())
     }
 
     @Test
     void "Left-handed Spring along X"() {
-        cd().direction(new Vec(1, 0, 0)).helix(10, -4, 40).wire(1).display()
+        cd().direction(new Vec(1, 0, 0)).helix(10, -4, 40).wire(1).display(image())
     }
 
     @Test
@@ -44,7 +45,7 @@ class HelixTest {
                     edge(pOri)
                 }
             }
-        }.display()
+        }.display(image())
     }
 
     @Test
@@ -59,6 +60,6 @@ class HelixTest {
             arc(p3, new Vec2d(1.6, 0))
             edge(p4)
             edge(pOri)
-        }.display()
+        }.display(image())
     }
 }

@@ -61,6 +61,8 @@ test {
     dependsOn ':cad-dsl-native:linkRelease'
     systemProperty 'java.library.path', nativeLibDir
     jvmArgs '--enable-native-access=ALL-UNNAMED'
+    // display(image()) in the DSL tests renders build/test-images/<test class>/<test method>.png
+    systemProperty 'cad.test.images', layout.buildDirectory.dir('test-images').get().asFile.path
     useJUnitPlatform()
 }
 

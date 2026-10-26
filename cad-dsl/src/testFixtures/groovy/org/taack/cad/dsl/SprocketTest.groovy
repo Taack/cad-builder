@@ -8,6 +8,7 @@ import org.taack.cad.dsl.helper.CurveIntersection2d
 
 import static java.lang.Math.*
 import static org.taack.cad.dsl.CadDsl.cd
+import static org.taack.cad.dsl.TestImages.image
 
 @CompileStatic
 class SprocketTest {
@@ -287,7 +288,7 @@ class SprocketTest {
         CadDsl roundTooth = roundTooth(tooth)
         CadDsl manyTooth = cloneTooth(roundTooth)
         CadDsl manyToothWithCenterHole = centerHole(manyTooth)
-        mountingHoles(manyToothWithCenterHole).display()
+        mountingHoles(manyToothWithCenterHole).display(image())
     }
 
     @Test
@@ -296,6 +297,6 @@ class SprocketTest {
         CadDsl roundTooth = roundTooth2d(tooth)
         CadDsl manyTooth = cloneTooth(roundTooth)
         CadDsl manyToothWithCenterHole = centerHole(manyTooth)
-        mountingHoles(manyToothWithCenterHole).display()
+        mountingHoles(manyToothWithCenterHole).display(image())
     }
 }

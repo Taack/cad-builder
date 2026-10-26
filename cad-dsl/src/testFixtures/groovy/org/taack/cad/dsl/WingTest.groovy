@@ -6,6 +6,7 @@ import org.taack.cad.dsl.geom.Vec
 import org.taack.cad.dsl.geom.Vec2d
 
 import static org.taack.cad.dsl.CadDsl.cd
+import static org.taack.cad.dsl.TestImages.image
 
 @CompileStatic
 class WingTest {
@@ -15,7 +16,7 @@ class WingTest {
         cd().wing {
             section(new Vec(), 2).naca('2412')
             section(new Vec(0.6, 8, 0.4), 1, -3).naca('0012')
-        }.display()
+        }.display(image())
     }
 
     @Test
@@ -36,7 +37,7 @@ class WingTest {
                 spline(new Vec2d(0.5, 0.06), new Vec2d(0.15, 0.05), le)
                 spline(new Vec2d(0.15, -0.03), new Vec2d(0.5, -0.02), te)
             }
-        }.display()
+        }.display(image())
     }
 
     @Test
@@ -53,7 +54,7 @@ class WingTest {
                 spline(new Vec2d(0.4, 0.1), new Vec2d(0.1, 0.07), le)
                 edge(te)
             }
-        }.display()
+        }.display(image())
     }
 
     @Test
@@ -76,6 +77,6 @@ class WingTest {
                     }
                 }
             }
-        }.display()
+        }.display(image())
     }
 }

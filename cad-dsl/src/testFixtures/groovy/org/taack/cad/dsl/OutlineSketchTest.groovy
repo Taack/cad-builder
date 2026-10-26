@@ -7,6 +7,7 @@ import org.taack.cad.dsl.geom.Outline
 import org.taack.cad.dsl.geom.Vec
 
 import static org.taack.cad.dsl.CadDsl.cd
+import static org.taack.cad.dsl.TestImages.image
 
 @CompileStatic
 class OutlineSketchTest {
@@ -32,6 +33,6 @@ class OutlineSketchTest {
                 edge(new Vec(0, 22, 30))
             }.toFace().revolution(new Vec(0, 22, 0), Vec.vZ)
         }
-        housing.display()
+        housing.display(image())
     }
 }

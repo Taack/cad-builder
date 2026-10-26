@@ -6,6 +6,7 @@ import org.taack.cad.dsl.geom.Vec
 import org.taack.cad.dsl.geom.Vec2d
 
 import static org.taack.cad.dsl.CadDsl.cd
+import static org.taack.cad.dsl.TestImages.image
 
 @CompileStatic
 class BlockTest {
@@ -19,14 +20,14 @@ class BlockTest {
 
     @Test
     void "Basic Box on XY"() {
-        cd().box(length, height, thickness).display()
+        cd().box(length, height, thickness).display(image())
     }
 
     @Test
     void "Block With Bored Center Hole"() {
         cd().box(length, height, thickness).topZ().wireFrom() {
             circle(centerHoleDia)
-        }.toFace().hole(-cboreHoleDiameter).display()
+        }.toFace().hole(-cboreHoleDiameter).display(image())
     }
 
     @Test
@@ -36,7 +37,7 @@ class BlockTest {
         }.toFace().hole(new Vec(-cboreHoleDiameter)).topZ().wireFrom() {
             to new Vec2d(thickness, thickness)
             circle(centerHoleDia / 2)
-        }.toFace().prism(new Vec(cboreHoleDiameter)).display()
+        }.toFace().prism(new Vec(cboreHoleDiameter)).display(image())
     }
 
     @Test
@@ -50,14 +51,14 @@ class BlockTest {
             }
         }.toFace().hole(-cboreHoleDiameter).topZ().wireFrom() {
             circle(centerHoleDia)
-        }.toFace().prism(cboreHoleDiameter).display()
+        }.toFace().prism(cboreHoleDiameter).display(image())
     }
 
     @Test
     void "Pillow Block With Counterbored Holes TopY"() {
         cd().box(length, length, length).topY().wireFrom() {
             circle(centerHoleDia)
-        }.toFace().hole(-10).display()
+        }.toFace().hole(-10).display(image())
     }
 
     @Test
@@ -76,7 +77,7 @@ class BlockTest {
             edge(p1)
         }.toFace().hole(new Vec(10)).butZ().wireFrom() {
             circle(length / 30)
-        }.toFace().hole(new Vec(10)).display()//.hole(cboreHoleDiameter).display()
+        }.toFace().hole(new Vec(10)).display(image())//.hole(cboreHoleDiameter).display(image())
     }
 
     @Test
@@ -95,7 +96,7 @@ class BlockTest {
             edge(p1)
         }.toFace().hole(-10).butZ().wireFrom() {
             circle(length / 30)
-        }.toFace().hole(-10).display()//.hole(cboreHoleDiameter).display()
+        }.toFace().hole(-10).display(image())//.hole(cboreHoleDiameter).display(image())
     }
 
     @Test
@@ -159,7 +160,7 @@ class BlockTest {
                     }
                 }
             }
-        }.toFace().hole(-3).display()
+        }.toFace().hole(-3).display(image())
     }
 
     @Test
@@ -169,7 +170,7 @@ class BlockTest {
                 direction(new Vec(1))
                 box(500, 500, 500)
             }
-        }.display()
+        }.display(image())
     }
 
     @Test
@@ -181,7 +182,7 @@ class BlockTest {
             }
         }.butZ().wireFrom() {
             circle(3)
-        }.toFace().hole(-cboreHoleDiameter).display()
+        }.toFace().hole(-cboreHoleDiameter).display(image())
     }
 
 }

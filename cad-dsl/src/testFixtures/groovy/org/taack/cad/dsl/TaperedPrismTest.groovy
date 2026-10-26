@@ -6,6 +6,7 @@ import org.taack.cad.dsl.geom.Vec
 import org.taack.cad.dsl.geom.Vec2d
 
 import static org.taack.cad.dsl.CadDsl.*
+import static org.taack.cad.dsl.TestImages.image
 
 
 @CompileStatic
@@ -14,7 +15,7 @@ class TaperedPrismTest {
     void "Build Tapered Prism"() {
         cd().box(400, 250, 300).topZ().wireFrom() {
             circle(50)
-        }.toFace().prism(200, draft: 10).display()
+        }.toFace().prism(200, draft: 10).display(image())
     }
 
     @Test
@@ -33,7 +34,7 @@ class TaperedPrismTest {
                 }.toFace().prism(8, draft: 5)
                 .topZ(new Vec(25, 0, 21)).wireFrom(new Vec2d(25, 0)) {
                     circle(5)
-                }.toFace().hole(-10, draft: 2).display()
+                }.toFace().hole(-10, draft: 2).display(image())
 
 
 //        def S = new_BRepPrimAPI_MakeBox__x_y_z(400d, 250d, 300d)

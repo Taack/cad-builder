@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test
 import org.taack.cad.dsl.geom.Vec
 
 import static org.taack.cad.dsl.CadDsl.cd
+import static org.taack.cad.dsl.TestImages.image
 
 @CompileStatic
 class SketchTest3d {
@@ -21,7 +22,7 @@ class SketchTest3d {
             edge(new Vec(face_inner_radius + 0.05, 0.0, -0.05))
             edge(new Vec(face_inner_radius - 0.05, 0.0, -0.05))
 
-        }.toFace().revolution(new Vec(1.0)).display()
+        }.toFace().revolution(new Vec(1.0)).display(image())
     }
 
 }

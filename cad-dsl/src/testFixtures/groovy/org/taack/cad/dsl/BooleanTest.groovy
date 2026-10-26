@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test
 import org.taack.cad.dsl.geom.Vec
 
 import static org.taack.cad.dsl.CadDsl.cd
+import static org.taack.cad.dsl.TestImages.image
 
 @CompileStatic
 class BooleanTest {
@@ -16,7 +17,7 @@ class BooleanTest {
             position(new Vec(1, 1, 1) * 0.5) {
                 box(1, 1, 1)
             }
-        }.display()
+        }.display(image())
     }
 
     @Test
@@ -28,7 +29,7 @@ class BooleanTest {
             position(new Vec(1, 1, 1) * -0.6) {
                 box(1, 1, 1)
             }
-        }.display()
+        }.display(image())
     }
 
     @Test
@@ -40,7 +41,7 @@ class BooleanTest {
             position(new Vec(1, 1, 1) * -0.6) {
                 box(1, 1, 1)
             }
-        }.display()
+        }.display(image())
     }
 
     @Test
@@ -53,7 +54,7 @@ class BooleanTest {
             position(new Vec(1, 1, 1) * 0.2) {
                 box(1, 1, 1)
             }
-        }.display()
+        }.display(image())
     }
 
     @Test
@@ -66,7 +67,7 @@ class BooleanTest {
             position(new Vec(1, 1, 1) * -0.1) {
                 box(1, 1, 1)
             }
-        }.display()
+        }.display(image())
     }
 
     @Test
@@ -83,7 +84,7 @@ class BooleanTest {
             position(diagonal * 0.6) {
                 box(1, 1, 1)
             }
-        }.display()
+        }.display(image())
     }
 
     @Test
@@ -96,7 +97,7 @@ class BooleanTest {
             }
             direction(new Vec(0.1, 2, 1))
             box(1, 1, 1)
-        }.display()
+        }.display(image())
     }
 
     @Test
@@ -112,7 +113,7 @@ class BooleanTest {
             position(new Vec(1, 1, 1) * 0.6) {
                 box(1, 1, 1)
             }
-        }.display()
+        }.display(image())
     }
 
     @Test
@@ -121,7 +122,7 @@ class BooleanTest {
             position(new Vec(1, 1, 1) * 0.3) {
                 cylinder(1 / 3, 3)
             }
-        }.display()
+        }.display(image())
     }
 
     @Test
@@ -130,7 +131,7 @@ class BooleanTest {
             position(new Vec(1, 1, 1) * 0.3) {
                 box(1, 1, 1)
             }
-        }.display()
+        }.display(image())
     }
 
 

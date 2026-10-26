@@ -6,6 +6,7 @@ import org.taack.cad.dsl.geom.Vec
 
 import static org.taack.cad.dsl.CadDsl.cd
 import static java.lang.Math.*
+import static org.taack.cad.dsl.TestImages.image
 
 @CompileStatic
 class SelectorTest {
@@ -38,7 +39,7 @@ class SelectorTest {
                 .wireFrom() {
                     circle(stud_diameter + wall_thickness)
                     circle(stud_diameter, true)
-                }.toFace().prism(block_height - wall_thickness).display()
+                }.toFace().prism(block_height - wall_thickness).display(image())
 
     }
 
@@ -71,6 +72,6 @@ class SelectorTest {
                     to(6 * stud_spacing, 2 * stud_spacing)
                     circle(stud_diameter + wall_thickness)
                     circle(stud_diameter, true)
-                }.toFace().prism(block_height - wall_thickness).display()
+                }.toFace().prism(block_height - wall_thickness).display(image())
     }
 }
