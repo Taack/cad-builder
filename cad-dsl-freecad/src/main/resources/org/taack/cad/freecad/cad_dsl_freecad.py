@@ -561,6 +561,8 @@ class Model:
         self.shape = None
         self.shape_cut_base = None
         self.face = None
+        # Face picked by visitFace
+        self.selected = None
         # Features of the contours drawn since the last prism (makeWires), and the sketch drawn on
         self.profile = []
         self.sketch = None
@@ -731,8 +733,29 @@ class Model:
             self.from_stack.pop()
 
     def visitFrom2d(self, pos):
+        if pos is not None and self.face is not None and self.face is self.selected \
+                and isinstance(self.face.surface(), Part.Plane):
+            pos = self.selected_face_params(pt(pos))
+        self.start_from2d(pos)
+
+    def start_from2d(self, pos):
+        """Starts a 2D wire at pos, in the parameters of the surface"""
         if pos is not None:
             self.from2d = pt(pos)
+
+    def selected_face_params(self, pos):
+        """The parameters of the plane of the selected face at pos, (u, v) in the frame of the plane (Frame.ofPlane in
+        the DSL): its origin the global origin projected on it, its x the global X projected (Y when its normal is close
+        to X), its normal facing the direction of the selection"""
+        surface = self.face.surface()
+        normal = unit(surface.Axis)
+        if normal.dot(self.direction) < 0:
+            normal = normal * -1
+        ref = V(1, 0, 0) if abs(normal.x) < 0.9 else V(0, 1, 0)
+        x = unit(ref - normal * ref.dot(normal))
+        y = normal.cross(x)
+        origin = normal * surface.Position.dot(normal)
+        return tuple(surface.parameter(origin + x * pos[0] + y * pos[1]))
 
     def visitFromEnd2d(self, pos):
         self.default_face()
@@ -889,7 +912,7 @@ class Model:
         self.section_surface = Part.Cylinder(Part.Circle(self.from_vec, self.direction, radius))
 
     def visitClosedWire(self):
-        self.visitFrom2d(list(self.from2d))
+        self.start_from2d(list(self.from2d))
 
     def visitClosedWireEnd(self):
         self.visitFromEnd2d(list(self.from2d))
@@ -959,7 +982,7 @@ class Model:
         self.profile = []
         self.sketch = None
         self.face = FaceRef(surface=plane_frame(origin, dir_x, dir_y))
-        self.visitFrom2d(start)
+        self.start_from2d(start)
 
     def end_profile(self, what, start):
         """End the profile started by begin_profile, restore the drawing state and return the profile feature"""
@@ -1121,6 +1144,7 @@ class Model:
                 best = z
                 self.pt00 = surface.value(0, 0)
                 self.face = FaceRef(shape=f, owner=self.shape)
+                self.selected = self.face
                 if self.from_stack:
                     self.from_stack.pop()
                 self.from_stack.append(origin)

@@ -47,6 +47,15 @@ final class Frame {
     }
 
     /**
+     * Frame of the plane through point, of normal z: its origin the global origin projected on the plane, its x the
+     * default one (the global X projected, or Y when z is close to X), as on a face selected by topZ(), butX() ...
+     */
+    static Frame ofPlane(Vec point, Vec z) {
+        Vec n = unit(z)
+        new Frame(n * point.cord(n), n)
+    }
+
+    /**
      * The y direction, z × x
      */
     Vec getY() {

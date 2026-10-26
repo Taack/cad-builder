@@ -66,6 +66,9 @@ class CadDslVisitor implements ICadDslVisitor, ICadDslFeatureShapes {
     SurfaceBounds bounds
     Vec ptParam11
     Vec ptParam00
+    // Face picked by visitFace, and the points of its surface at (1, 0) and (0, 1): the axes of its parameters
+    MemorySegment selectedFace
+    Vec ptParam10, ptParam01
     List<IOpenShape2d> openShape2dList = []
     List<IOpenShape> openShapeList = []
     List<IClosedShape2d> closedShape2dList = []
@@ -115,8 +118,23 @@ class CadDslVisitor implements ICadDslVisitor, ICadDslFeatureShapes {
 
     @Override
     void visitFrom(Vec2d pos) {
+        startFrom(pos && face != null && face.is(selectedFace) ? selectedFaceParams(pos) : pos)
+    }
+
+    // Starts a 2D wire at pos, in the parameters of the surface
+    private void startFrom(Vec2d pos) {
         Tr.ind("visitFrom 2D $pos")
         if (pos) fromVec2d = pos
+    }
+
+    // The parameters of the surface of the selected face at pos, (u, v) in the frame of its plane (Frame.ofPlane),
+    // its normal facing the direction of the selection
+    private Vec2d selectedFaceParams(Vec2d pos) {
+        Vec du = ptParam10 - ptParam00, dv = ptParam01 - ptParam00
+        Vec normal = du / dv
+        if (normal.cord(direction) < 0) normal = -normal
+        Vec p = Frame.ofPlane(ptParam00, normal).at(pos) - ptParam00
+        new Vec2d(p.cord(du), p.cord(dv))
     }
 
     @Override
@@ -380,7 +398,7 @@ class CadDslVisitor implements ICadDslVisitor, ICadDslFeatureShapes {
     @Override
     void visitClosedWire() {
         Tr.ind "visitClosedWire dir: $direction, fromVec2d: $fromVec2d"
-        visitFrom(fromVec2d)
+        startFrom(fromVec2d)
     }
 
     @Override
@@ -511,7 +529,7 @@ class CadDslVisitor implements ICadDslVisitor, ICadDslFeatureShapes {
         def ax3 = own(new_gp_Ax3__p_dN_dX(gpPnt(origin), gpDir(dirX / dirY), gpDir(dirX)), NativeLib::delete_gp_Ax3)
         def pln = own(new_gp_Pln__gp_Ax3(ax3), NativeLib::delete_gp_Pln)
         face = own(new_TopoDS_Face__BRepBuilderAPI_MakeFace__gp_Pln(pln), NativeLib::delete_TopoDS_Face)
-        visitFrom(from)
+        startFrom(from)
     }
 
     /**
@@ -812,7 +830,10 @@ class CadDslVisitor implements ICadDslVisitor, ICadDslFeatureShapes {
                     ptParam11 = vec(pt)
                     pt = own(gp_Pnt__Geom_Surface__Value(aSurface, 0d, 0d), NativeLib::delete_gp_Pnt)
                     ptParam00 = vec(pt)
+                    ptParam10 = vec(own(gp_Pnt__Geom_Surface__Value(aSurface, 1d, 0d), NativeLib::delete_gp_Pnt))
+                    ptParam01 = vec(own(gp_Pnt__Geom_Surface__Value(aSurface, 0d, 1d), NativeLib::delete_gp_Pnt))
                     face = aFace
+                    selectedFace = aFace
                     if (fromVecStack.size() > 0) fromVecStack.pop()
                     if (fromVecToPush) fromVecStack.push(fromVecToPush)
                 }
