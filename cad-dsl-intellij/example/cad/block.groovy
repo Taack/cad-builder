@@ -1,4 +1,8 @@
 // Run it from the icon of the first line: the model shows in the CAD Preview, and saving the file runs it again
+
+import static org.taack.cad.dsl.CadDsl.param
+import static org.taack.cad.dsl.CadDsl.cd
+
 double side = param('side', 20)
 
 cd().box(side, side, side / 2).cut {
