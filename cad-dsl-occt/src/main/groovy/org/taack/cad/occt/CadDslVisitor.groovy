@@ -567,6 +567,34 @@ class CadDslVisitor implements ICadDslVisitor, ICadDslFeatureShapes {
         if (!this.shape) this.shape = shape
     }
 
+    // Spine of the path being swept, and its builder, which owns it
+    private MemorySegment pathSpine
+    private MemorySegment pathMakeWire
+
+    @Override
+    void visitPath(Vec from) {
+        Tr.ind "visitPath from: $from"
+        fromVecStack << from
+    }
+
+    @Override
+    void visitPathEnd(Vec from) {
+        if (openShapeList.empty) throw new IllegalStateException("path from $from: nothing drawn")
+        pathMakeWire = makeWire3d()
+        pathSpine = ref_TopoDS_Wire__BRepBuilderAPI_MakeWire__Wire(pathMakeWire)
+        fromVecStack.pop()
+        Tr.dec "visitPathEnd"
+    }
+
+    @Override
+    void visitPathWire(double radius) {
+        def shape = own(new_TopoDS_Shape__BRepOffsetAPI_MakePipeShell__spine_radius(pathSpine, radius), NativeLib::delete_TopoDS_Shape)
+        if (shape == MemorySegment.NULL) throw new IllegalArgumentException("path wire($radius): ${lastError()}")
+        Tr.cur "visitPathWire($radius) shape: $shape"
+        boolShapes.peek() << shape
+        if (!this.shape) this.shape = shape
+    }
+
     @Override
     void visitSpline(List<Vec2d> through) {
         openShape2dList << new Spline2d(through)

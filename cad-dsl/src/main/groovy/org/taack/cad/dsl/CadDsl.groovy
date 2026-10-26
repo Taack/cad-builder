@@ -143,6 +143,27 @@ class CadDsl extends CadDslSolid implements CadDslBase {
     }
 
     /**
+     * Start a path from pos, drawn with edge, arc, arcAround... in absolute coordinates, as a wire.
+     * Sweep a section along it with {@link CadDslPath#wire}.
+     */
+    CadDslPath path(Vec from, @DelegatesTo(value = CadDslEdge, strategy = Closure.DELEGATE_FIRST) Closure c) {
+        visitor.visitPath(from)
+        c.delegate = new CadDslEdge(visitor: visitor, at3d: from)
+        c.call()
+        visitor.visitPathEnd(from)
+        new CadDslPath(visitor: visitor)
+    }
+
+    /**
+     * Start a path of straight edges through the points, see {@link #path(Vec, Closure)}.
+     */
+    CadDslPath path(List<Vec> points) {
+        path(points.first()) {
+            for (Vec p : points.tail()) edge(p)
+        }
+    }
+
+    /**
      * Make a wing (or a blade) by lofting through sections declared with {@link CadDslWing#section}.
      * From the current position, the chord goes along X, the span along Y and the thickness along Z.
      * @return

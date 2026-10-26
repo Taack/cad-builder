@@ -391,6 +391,23 @@ final class RecordingVisitor implements ICadDslVisitor {
         if (!end().suppressed) kernel.visitHelixProfileEnd(from)
     }
 
+    @Override
+    void visitPath(Vec from) {
+        if (!begin('path', "path from ${v(from)}").suppressed) kernel.visitPath(from)
+    }
+
+    @Override
+    void visitPathEnd(Vec from) {
+        if (!end().suppressed) kernel.visitPathEnd(from)
+    }
+
+    @Override
+    void visitPathWire(double radius) {
+        CadFeature f = add('wire', "wire r${n(radius)}")
+        if (!f.suppressed) kernel.visitPathWire(radius)
+        shape(f)
+    }
+
     // Operations
 
     @Override

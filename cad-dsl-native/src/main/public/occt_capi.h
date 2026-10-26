@@ -614,6 +614,10 @@ OCCT_CAPI TopoDS_Wire *new_TopoDS_Wire__HelixBRep_BuilderHelix__ax2_diam1_diam2_
 OCCT_CAPI TopoDS_Shape *new_TopoDS_Shape__BRepOffsetAPI_MakePipeShell__spine_profile_binormal(
     const TopoDS_Wire *spine, const TopoDS_Wire *profile, const gp_Dir *binormal);
 
+/* Solid swept (BRepOffsetAPI_MakePipeShell) by a circle of radius along spine, square to it at its start: a tube,
+ * mitred on the bends between edges that are not tangent. */
+OCCT_CAPI TopoDS_Shape *new_TopoDS_Shape__BRepOffsetAPI_MakePipeShell__spine_radius(const TopoDS_Wire *spine, double radius);
+
 OCCT_CAPI BRepFeat_MakePipe *new_BRepFeat_MakePipe__Sbase_Pbase_Skface_Spine_Fuse_Modify(
     const TopoDS_Shape *Sbase, const TopoDS_Shape *Pbase, const TopoDS_Face *Skface, const TopoDS_Wire *Spine,
     int Fuse, int Modify);

@@ -1007,6 +1007,24 @@ class Model:
         o.Frenet = True
         self.primitive(o)
 
+    def visitPath(self, start):
+        self.from_stack.append(vec(start))
+
+    def visitPathEnd(self, start):
+        if not self.open3d:
+            raise ValueError('path from %s: nothing drawn' % start)
+        self.path = make_wire(self.edges3d())
+        self.from_stack.pop()
+
+    def visitPathWire(self, radius):
+        # A circle square to the path at its start, swept with mitred bends
+        edge = self.path.OrderedEdges[0]
+        start = self.path.OrderedVertexes[0].Point
+        forward = (edge.Vertexes[0].Point - start).Length < 1e-7
+        tangent = edge.tangentAt(edge.FirstParameter) if forward else -edge.tangentAt(edge.LastParameter)
+        circle = Part.Wire([Part.Circle(start, tangent, radius).toShape()])
+        self.primitive(self.static(self.path.makePipeShell([circle], True, False, 1), 'PathWire'))
+
     def visitSpline(self, through):
         self.open2d.append(Spline2d([pt(p) for p in through]))
 

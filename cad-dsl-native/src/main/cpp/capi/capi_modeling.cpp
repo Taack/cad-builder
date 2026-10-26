@@ -11,7 +11,10 @@
 #include <BRepAlgoAPI_Fuse.hxx>
 #include <BRepCheck_Analyzer.hxx>
 #include <BRepOffsetAPI_MakeOffset.hxx>
+#include <BRepAdaptor_CompCurve.hxx>
 #include <BRepAdaptor_Surface.hxx>
+#include <BRepBuilderAPI_MakeEdge.hxx>
+#include <BRepBuilderAPI_MakeWire.hxx>
 #include <BRepBuilderAPI_MakeFace.hxx>
 #include <BRepBuilderAPI_Transform.hxx>
 #include <BRepExtrema_DistShapeShape.hxx>
@@ -49,6 +52,7 @@
 #include <gp_Ax1.hxx>
 #include <gp_Ax2.hxx>
 #include <gp_Ax3.hxx>
+#include <gp_Circ.hxx>
 #include <gp_Pln.hxx>
 #include <gp_Trsf.hxx>
 #include <gp_Vec.hxx>
@@ -288,6 +292,31 @@ extern "C" TopoDS_Shape *new_TopoDS_Shape__BRepOffsetAPI_MakePipeShell__spine_pr
         BRepOffsetAPI_MakePipeShell pipe(*spine);
         pipe.SetMode(*binormal);
         pipe.Add(*profile);
+        pipe.Build();
+        if (!pipe.IsDone() || !pipe.MakeSolid())
+            throw Standard_Failure("BRepOffsetAPI_MakePipeShell failed");
+        return new TopoDS_Shape(pipe.Shape());
+    });
+}
+
+extern "C" TopoDS_Shape *new_TopoDS_Shape__BRepOffsetAPI_MakePipeShell__spine_radius(
+    const TopoDS_Wire *spine, double radius) {
+    TRACE("");
+    return guard(__func__, [&] {
+        // A circle square to the spine at its start
+        BRepAdaptor_CompCurve curve(*spine);
+        gp_Pnt start;
+        gp_Vec tangent;
+        curve.D1(curve.FirstParameter(), start, tangent);
+        gp_Circ circle(gp_Ax2(start, gp_Dir(tangent)), radius);
+        TopoDS_Wire profile = BRepBuilderAPI_MakeWire(BRepBuilderAPI_MakeEdge(circle).Edge()).Wire();
+
+        // The section keeps square to the spine (corrected Frenet), mitred on the bends between edges that are not
+        // tangent: round corners fail on a polyline sampling a curve (NCollection_Array1 out of range)
+        BRepOffsetAPI_MakePipeShell pipe(*spine);
+        pipe.SetMode(false);
+        pipe.SetTransitionMode(BRepBuilderAPI_RightCorner);
+        pipe.Add(profile);
         pipe.Build();
         if (!pipe.IsDone() || !pipe.MakeSolid())
             throw Standard_Failure("BRepOffsetAPI_MakePipeShell failed");

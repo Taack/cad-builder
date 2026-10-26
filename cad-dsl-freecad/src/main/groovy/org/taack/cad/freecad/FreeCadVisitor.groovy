@@ -351,6 +351,21 @@ class FreeCadVisitor implements ICadDslVisitor {
     }
 
     @Override
+    void visitPath(Vec from) {
+        call('visitPath', from)
+    }
+
+    @Override
+    void visitPathEnd(Vec from) {
+        call('visitPathEnd', from)
+    }
+
+    @Override
+    void visitPathWire(double radius) {
+        call('visitPathWire', radius)
+    }
+
+    @Override
     void visitSpline(List<Vec2d> through) {
         call('visitSpline', through)
     }
