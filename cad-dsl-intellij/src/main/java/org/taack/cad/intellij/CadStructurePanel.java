@@ -10,8 +10,14 @@ import com.intellij.openapi.actionSystem.ActionUpdateThread;
 import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.actionSystem.DefaultActionGroup;
 import com.intellij.openapi.application.ApplicationManager;
+import com.intellij.openapi.editor.Editor;
+import com.intellij.openapi.editor.EditorFactory;
+import com.intellij.openapi.editor.event.CaretEvent;
+import com.intellij.openapi.editor.event.CaretListener;
+import com.intellij.openapi.fileEditor.FileDocumentManager;
 import com.intellij.openapi.fileEditor.OpenFileDescriptor;
 import com.intellij.openapi.project.DumbAwareToggleAction;
+import com.intellij.openapi.project.DumbService;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.SimpleToolWindowPanel;
 import com.intellij.openapi.vfs.LocalFileSystem;
@@ -40,6 +46,7 @@ import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.HashSet;
@@ -48,7 +55,7 @@ import java.util.Set;
 
 /**
  * The tree of the features of the last run: its parts, operations and sketches, each one opening the line of the script
- * that made it
+ * that made it, and selected when the caret of an editor moves to that line
  */
 final class CadStructurePanel implements CadPreview.Listener, Disposable {
     static final String TOOL_WINDOW_ID = "CAD Structure";
@@ -60,6 +67,7 @@ final class CadStructurePanel implements CadPreview.Listener, Disposable {
     private final DefaultTreeModel model = new DefaultTreeModel(new DefaultMutableTreeNode());
     private final Tree tree = new Tree(model);
     private boolean details;
+    private boolean followEditor = true;
     private List<CadFeature> features = List.of();
     private @Nullable String shownScript;
 
@@ -86,6 +94,14 @@ final class CadStructurePanel implements CadPreview.Listener, Disposable {
                 if (event.getKeyCode() == KeyEvent.VK_ENTER && navigate()) event.consume();
             }
         });
+        EditorFactory.getInstance().getEventMulticaster().addCaretListener(new CaretListener() {
+            @Override
+            public void caretPositionChanged(@NotNull CaretEvent event) {
+                Editor editor = event.getEditor();
+                VirtualFile file = FileDocumentManager.getInstance().getFile(editor.getDocument());
+                if (followEditor && editor.getProject() == project && file != null) select(file, event.getNewPosition().line + 1);
+            }
+        }, this);
         panel.setToolbar(toolbar().getComponent());
         panel.setContent(ScrollPaneFactory.createScrollPane(tree, true));
         CadPreview preview = CadPreview.getInstance(project);
@@ -104,6 +120,23 @@ final class CadStructurePanel implements CadPreview.Listener, Disposable {
         actions.add(CommonActionsManager.getInstance().createExpandAllAction(expander, tree));
         actions.add(CommonActionsManager.getInstance().createCollapseAllAction(expander, tree));
         actions.addSeparator();
+        actions.add(new DumbAwareToggleAction("Follow Editor", "Select the feature made at the line of the caret",
+                AllIcons.General.AutoscrollFromSource) {
+            @Override
+            public boolean isSelected(@NotNull AnActionEvent e) {
+                return followEditor;
+            }
+
+            @Override
+            public void setSelected(@NotNull AnActionEvent e, boolean state) {
+                followEditor = state;
+            }
+
+            @Override
+            public @NotNull ActionUpdateThread getActionUpdateThread() {
+                return ActionUpdateThread.EDT;
+            }
+        });
         actions.add(new DumbAwareToggleAction("Sketch Elements", "Show the edges, arcs and texts of the sketches", AllIcons.Nodes.Variable) {
             @Override
             public boolean isSelected(@NotNull AnActionEvent e) {
@@ -195,6 +228,33 @@ final class CadStructurePanel implements CadPreview.Listener, Disposable {
         return node instanceof DefaultMutableTreeNode n ? n.getUserObject() : null;
     }
 
+    /**
+     * Selects a feature made at line of file, unless the selected one is. When several are, the deepest is, the box
+     * rather than its solid on cd().box(...), and the first of them, the first of the cuts repeated by a loop
+     */
+    void select(VirtualFile file, int line) {
+        List<TreePath> made = new ArrayList<>();
+        collectMadeAt((DefaultMutableTreeNode) model.getRoot(), file, line, made);
+        if (made.isEmpty() || made.contains(tree.getSelectionPath())) return;
+        TreePath deepest = made.getFirst();
+        for (TreePath path : made) if (path.getPathCount() > deepest.getPathCount()) deepest = path;
+        tree.setSelectionPath(deepest);
+        tree.scrollPathToVisible(deepest);
+    }
+
+    private void collectMadeAt(DefaultMutableTreeNode node, VirtualFile file, int line, List<TreePath> made) {
+        for (int i = 0; i < node.getChildCount(); i++) {
+            DefaultMutableTreeNode child = (DefaultMutableTreeNode) node.getChildAt(i);
+            CadFeature feature = (CadFeature) child.getUserObject();
+            if (feature.line() == line && file.getName().equals(feature.file())) {
+                // another file of that name, in a jar of parts for instance, does not count
+                VirtualFile source = source(feature);
+                if (source == null || source.equals(file)) made.add(new TreePath(child.getPath()));
+            }
+            collectMadeAt(child, file, line, made);
+        }
+    }
+
     // Opens the line of the selected feature
     private boolean navigate() {
         TreePath path = tree.getSelectionPath();
@@ -211,7 +271,7 @@ final class CadStructurePanel implements CadPreview.Listener, Disposable {
             Path beside = Path.of(shownScript).resolveSibling(feature.file());
             if (Files.isRegularFile(beside)) return LocalFileSystem.getInstance().findFileByNioFile(beside);
         }
-        if (feature.className() == null) return null;
+        if (feature.className() == null || DumbService.isDumb(project)) return null;
         // closures are inner classes: MjParts$_body_closure1 is in MjParts
         String outer = feature.className().replaceFirst("\\$.*", "");
         PsiClass found = JavaPsiFacade.getInstance(project).findClass(outer, GlobalSearchScope.allScope(project));
