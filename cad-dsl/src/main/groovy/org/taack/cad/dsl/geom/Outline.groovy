@@ -88,13 +88,20 @@ final class Outline {
         map { Element e -> new Element(kind: e.kind, c: e.c?.rotate(a), p: e.p?.rotate(a), d: e.d?.rotate(a), r: e.r) }
     }
 
-    /** The outline mirrored by v -&gt; -v, still counterclockwise */
-    Outline mirrorV() {
-        Outline o = new Outline()
-        elements.reverseEach { Element e ->
-            o.elements << new Element(kind: e.kind, c: flipV(e.c), p: flipV(e.p), d: e.d == null ? null : -flipV(e.d), r: e.r)
-        }
-        o
+    /**
+     * The outline mirrored across the line v = axis (v -&gt; 2 axis - v), still counterclockwise: its elements are
+     * taken in the reverse order, a mirror reversing the way it runs
+     */
+    Outline mirrorV(double axis = 0) {
+        mirror { Vec2d q -> new Vec2d(q.x, 2 * axis - q.y) }
+    }
+
+    /**
+     * The outline mirrored across the line u = axis (u -&gt; 2 axis - u), still counterclockwise: its elements are
+     * taken in the reverse order, a mirror reversing the way it runs
+     */
+    Outline mirrorU(double axis = 0) {
+        mirror { Vec2d q -> new Vec2d(2 * axis - q.x, q.y) }
     }
 
     /** The whole outline, from a quarter going from the +u axis to the +v axis, turned 3 times by 90° */
@@ -281,7 +288,17 @@ final class Outline {
         o
     }
 
-    private static Vec2d flipV(Vec2d q) { q == null ? null : new Vec2d(q.x, -q.y) }
+    // The outline mirrored by the point map f: reversed, its directions mirrored and turned back
+    private Outline mirror(Closure<Vec2d> f) {
+        Vec2d origin = f.call(new Vec2d())
+        Outline o = new Outline()
+        for (int i = elements.size() - 1; i >= 0; i--) {
+            Element e = elements[i]
+            o.elements << new Element(kind: e.kind, c: e.c == null ? null : f.call(e.c), p: e.p == null ? null : f.call(e.p),
+                    d: e.d == null ? null : origin - f.call(e.d), r: e.r)
+        }
+        o
+    }
 
     private static Vec2d left(Vec2d v) { new Vec2d(-v.y, v.x) }
 

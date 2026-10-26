@@ -102,6 +102,16 @@ class OutlineTest {
         assertEdge(0, -1, mirrored[0])
         assertEdge(1, 0, mirrored[1])
         assertEdge(0, 0, mirrored[2])
+        // across the lines v = 2 and u = 2: the axis itself is given, not twice its value
+        Outline triangle = new Outline().line(0, 0, 1, 0).line(1, 0, -1, 1).line(0, 0, 0, -1)
+        List<IOpenShape2d> acrossV = triangle.mirrorV(2).path()
+        assertEdge(0, 3, acrossV[0])
+        assertEdge(1, 4, acrossV[1])
+        assertEdge(0, 4, acrossV[2])
+        List<IOpenShape2d> acrossU = triangle.mirrorU(2).path()
+        assertEdge(4, 1, acrossU[0])
+        assertEdge(3, 0, acrossU[1])
+        assertEdge(4, 0, acrossU[2])
         List<IOpenShape2d> quarters = new Outline().circle(3, 3, 1).quarterTurns().path()
         assertEquals(8, quarters.size())
     }

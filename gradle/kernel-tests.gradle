@@ -9,4 +9,6 @@ dependencies {
 
 tasks.named('test', Test) {
     testClassesDirs += project(':cad-dsl').sourceSets.testFixtures.output.classesDirs
+    // TestImages names the images of display(image()) after the running test
+    systemProperty 'junit.jupiter.extensions.autodetection.enabled', 'true'
 }

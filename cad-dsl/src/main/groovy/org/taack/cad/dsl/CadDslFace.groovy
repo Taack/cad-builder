@@ -95,6 +95,14 @@ class CadDslFace implements CadDslBase {
 //        new CadDslWire2d(visitor: visitor)
 //    }
 
+    /**
+     * The wires of a sketch on the selected face.
+     * @param pos null to start at the center of mass of the face, whatever the position given to the selector (topZ(pos)
+     * chooses the face only), else the (u, v) to start at. On a face selected by topZ(), butX() ..., (u, v) are in the
+     * frame of its plane, {@link org.taack.cad.dsl.geom.Frame#ofPlane}: from the global origin projected on it, along
+     * the global X projected (Y when its normal is close to X) and its normal × that, (x, y) on top, (y, z) on topX().
+     * The edges drawn after it go along the parameters of the surface of the face.
+     */
     CadDslWire2d wireFrom(Vec2d pos = null, @DelegatesTo(value = CadDslEdge2d, strategy = Closure.DELEGATE_FIRST) Closure c) {
         visitor.visitFrom(pos)
         if (pos == null) visitor.visitCenter()

@@ -8,6 +8,7 @@ import org.taack.cad.dsl.geom.Vec
 import static org.junit.jupiter.api.Assertions.assertEquals
 import static org.taack.cad.dsl.CadDsl.cd
 import static java.lang.Math.*
+import static org.taack.cad.dsl.TestImages.image
 
 @CompileStatic
 class SolidFuseAndCutTest {
@@ -79,12 +80,12 @@ class SolidFuseAndCutTest {
 
     @Test
     void "Build Basic Shape Cut"() {
-        cylindersCut(generateSphere()).display()
+        cylindersCut(generateSphere()).display(image())
     }
 
     @Test
     void "Build Basic Shape Fuse"() {
-        fuseTorus(cylindersCut(generateSphere())).display()
+        fuseTorus(cylindersCut(generateSphere())).display(image())
     }
 
     @Test
@@ -94,7 +95,7 @@ class SolidFuseAndCutTest {
 
     @Test
     void "Build Basic Shape Revolution"() {
-        revolvedCut(fuseTorus(cylindersCut(generateSphere()))).display()
+        revolvedCut(fuseTorus(cylindersCut(generateSphere()))).display(image())
     }
 
     @Test

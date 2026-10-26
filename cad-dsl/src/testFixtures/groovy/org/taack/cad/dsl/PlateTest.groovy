@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test
 import org.taack.cad.dsl.geom.Vec
 
 import static org.taack.cad.dsl.CadDsl.cd
+import static org.taack.cad.dsl.TestImages.image
 
 @CompileStatic
 class PlateTest {
@@ -65,21 +66,21 @@ class PlateTest {
 
     @Test
     void "Plate Surface Through a Point"() {
-        plateThroughAPoint().display()
+        plateThroughAPoint().display(image())
     }
 
     @Test
     void "Plate Surface with an Inner Curve"() {
-        plateWithInnerCurve().display()
+        plateWithInnerCurve().display(image())
     }
 
     @Test
     void "Solid Under a Plate Surface"() {
-        solidUnderPlate().display()
+        solidUnderPlate().display(image())
     }
 
     @Test
     void "Dome over a Circle"() {
-        domeOverACircle().display()
+        domeOverACircle().display(image())
     }
 }
