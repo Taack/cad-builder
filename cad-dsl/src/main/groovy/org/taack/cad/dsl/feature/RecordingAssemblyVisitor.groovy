@@ -12,7 +12,8 @@ import org.taack.cad.dsl.geom.Vec
 /**
  * Records the parts, sub-assemblies and placements of an assembly as {@link CadFeature}s.
  *
- * The kernel gets its own visitors and nodes: the recording ones are unwrapped before they reach it.
+ * The kernel gets its own visitors and nodes: the recording ones are unwrapped before they reach it. After the stop of the
+ * run, the parts and placements are recorded but not given to the kernel, nor those of what the kernel did not get.
  */
 @CompileStatic
 final class RecordingAssemblyVisitor implements ICadDslAssemblyVisitor {
@@ -20,6 +21,16 @@ final class RecordingAssemblyVisitor implements ICadDslAssemblyVisitor {
     final ICadDslAssemblyVisitor kernel
     final CadFeature feature
     private final CadFeatureRecorder recorder
+    /**
+     * Whether the kernel got a part or a placement
+     */
+    boolean forwarded
+    // Index for the kernel of each component, -1 for the suppressed ones
+    private final List<Integer> components = []
+    private int kernelComponents
+
+    // A part not given to the kernel
+    private static final class Suppressed implements ICadDslNode {}
 
     RecordingAssemblyVisitor(CadFeatureRecorder recorder, ICadDslAssemblyVisitor kernel, String name) {
         this.recorder = recorder
@@ -32,18 +43,25 @@ final class RecordingAssemblyVisitor implements ICadDslAssemblyVisitor {
         node instanceof RecordingAssemblyVisitor ? ((RecordingAssemblyVisitor) node).kernel : node
     }
 
+    // Whether the kernel did not get node, or got nothing of it
+    private boolean suppressed(ICadDslNode node) {
+        node instanceof Suppressed || node instanceof RecordingAssemblyVisitor && recorder.stopping && !((RecordingAssemblyVisitor) node).forwarded
+    }
+
     @Override
     ICadDslNode visitPart(String name, Color color, ICadDslVisitor solid) {
-        def part = new CadFeature('part', name ?: 'part', CadFeatureFrame.current())
+        def part = recorder.record(new CadFeature('part', name ?: 'part', CadFeatureFrame.current()), null)
         if (solid instanceof RecordingVisitor) {
-            CadFeature built = ((RecordingVisitor) solid).root
-            part.children.addAll(built.children)
-            recorder.roots.remove(built)
-            solid = ((RecordingVisitor) solid).kernel
+            RecordingVisitor rv = (RecordingVisitor) solid
+            part.children.addAll(rv.root.children)
+            recorder.roots.remove(rv.root)
+            if (recorder.stopping && !rv.forwarded) part.suppressed = true
+            solid = rv.kernel
         }
         feature.children << part
         recorder.last = part
-        ICadDslNode node = kernel.visitPart(name, color, solid)
+        ICadDslNode node = part.suppressed ? new Suppressed() : kernel.visitPart(name, color, solid)
+        if (!part.suppressed) forwarded = true
         recorder.nodes.put(node, part)
         node
     }
@@ -53,26 +71,37 @@ final class RecordingAssemblyVisitor implements ICadDslAssemblyVisitor {
         CadFeature placed = recorder.nodes.get(node)
         // a sub-assembly goes under the assembly it is first placed in
         if (placed != null && recorder.roots.remove(placed)) feature.children << placed
-        def place = new CadFeature('place', "place ${placed?.label ?: 'node'}", CadFeatureFrame.current())
+        def place = recorder.record(new CadFeature('place', "place ${placed?.label ?: 'node'}", CadFeatureFrame.current()), null)
         place.placed = placed
+        if (suppressed(node)) place.suppressed = true
         feature.children << place
         recorder.last = place
+        components << (place.suppressed ? -1 : kernelComponents++)
+        if (place.suppressed) return
+        forwarded = true
         kernel.visitPlace(unwrap(node), location)
+    }
+
+    @Override
+    void visitMove(int component, Trsf location, List<Trsf> frames) {
+        int index = component < components.size() ? components[component] : component
+        if (index >= 0) kernel.visitMove(index, location, frames)
     }
 
     @Override
     void display(String fileName) {
         recorder.displayed(fileName, feature)
-        kernel.display(fileName)
+        if (forwarded || !recorder.stopping) kernel.display(fileName)
     }
 
     @Override
     Frame visitFaceFrame(ICadDslNode part, Vec direction, Vec position) {
-        kernel.visitFaceFrame(unwrap(part), direction, position)
+        // a frame for the placements of a suppressed part, suppressed as well
+        part instanceof Suppressed ? new Frame(position ?: new Vec(0, 0, 0), direction) : kernel.visitFaceFrame(unwrap(part), direction, position)
     }
 
     @Override
     Frame visitAxisFrame(ICadDslNode part, Vec position) {
-        kernel.visitAxisFrame(unwrap(part), position)
+        part instanceof Suppressed ? new Frame(position ?: new Vec(0, 0, 0), Vec.vZ) : kernel.visitAxisFrame(unwrap(part), position)
     }
 }

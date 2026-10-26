@@ -1,5 +1,7 @@
 package org.taack.cad.intellij;
 
+import com.intellij.openapi.Disposable;
+import com.intellij.openapi.util.Disposer;
 import com.intellij.openapi.util.Key;
 import com.intellij.testFramework.fixtures.BasePlatformTestCase;
 import org.jetbrains.annotations.NotNull;
@@ -60,6 +62,44 @@ public class CadRunnerIntegrationTest extends BasePlatformTestCase {
         assertEquals("cut", cut.label());
         CadFeature cylinder = cut.children().getFirst();
         assertEquals(List.of("cylinder r2 × 10", "cut.groovy", 2), List.of(cylinder.label(), cylinder.file(), cylinder.line()));
+    }
+
+    public void testARollBackRunsTheScriptUpToAFeatureUntilRolledForward() throws Exception {
+        CadPreview preview = CadPreview.getInstance(getProject());
+        CadRunRequest request = new CadRunRequest(script("cut.groovy", "cd().box(10, 10, 5).cut {\n    cylinder(2, 10)\n}.display()").toString(), List.of());
+        preview.show(run(request));
+
+        CadRunResult stopped = shownAfter(() -> preview.rollBack("solid0/box0"));
+        assertEquals("solid0/box0", stopped.stopAt());
+        List<CadFeature> features = stopped.features().getFirst().children();
+        assertEquals(List.of(false, true), List.of(features.get(0).suppressed(), features.get(1).suppressed()));
+        // the next runs of the script stop there too
+        assertEquals("solid0/box0", run(request).stopAt());
+
+        CadRunResult forward = shownAfter(() -> preview.rollBack(null));
+        assertNull(forward.stopAt());
+        assertNull(preview.stopAt(request.script()));
+    }
+
+    // The result CadPreview shows after action
+    private CadRunResult shownAfter(Runnable action) throws Exception {
+        CompletableFuture<CadRunResult> shown = new CompletableFuture<>();
+        Disposable listening = Disposer.newDisposable();
+        try {
+            CadPreview.getInstance(getProject()).addListener(new CadPreview.Listener() {
+                @Override
+                public void running(@NotNull CadRunRequest request) {}
+
+                @Override
+                public void shown(@NotNull CadRunResult result) {
+                    shown.complete(result);
+                }
+            }, listening);
+            action.run();
+            return shown.get(RUN_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+        } finally {
+            Disposer.dispose(listening);
+        }
     }
 
     public void testTheArgumentsReachTheScript() throws Exception {

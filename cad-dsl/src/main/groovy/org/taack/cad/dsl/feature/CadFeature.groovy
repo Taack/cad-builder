@@ -27,6 +27,18 @@ final class CadFeature {
      */
     Object shape
     ICadDslFeatureShapes shapes
+    /**
+     * Rank of the operation in the run, from 1, given by {@link CadFeatureRecorder#record}
+     */
+    int seq
+    /**
+     * Solid the operation is part of, null for a solid, a part, an assembly or a placement
+     */
+    CadFeature solid
+    /**
+     * Operation after the stop of the run, recorded but not done, see {@link CadFeatureRecorder#stopAt}
+     */
+    boolean suppressed
 
     CadFeature(String kind, String label, List<CadFeatureFrame> stack, boolean detail = false) {
         this.kind = kind

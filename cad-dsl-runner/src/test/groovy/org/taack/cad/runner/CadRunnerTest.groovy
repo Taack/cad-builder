@@ -21,12 +21,37 @@ class CadRunnerTest {
     @TempDir
     File dir
 
-    // The events answering requests, the ready one first
+    // The events answering requests, the ready one first; the file of a display is copied to its kept one as it comes,
+    // the next run deletes it
     private List<Map> serve(List<Map> requests) {
-        StringWriter output = new StringWriter()
+        List<Map> events = []
+        StringBuilder written = new StringBuilder()
+        Writer output = new Writer() {
+            @Override
+            void write(char[] chars, int offset, int length) {
+                written.append(chars, offset, length)
+            }
+
+            @Override
+            void flush() {
+                written.toString().readLines().each { String line -> events << keep((Map) new JsonSlurper().parseText(line)) }
+                written.length = 0
+            }
+
+            @Override
+            void close() {}
+        }
         String input = requests.collect { JsonOutput.toJson(it) }.join('\n')
         new CadRunner(new File(dir, 'work')).serve(new BufferedReader(new StringReader(input)), output)
-        output.toString().readLines().collect { (Map) new JsonSlurper().parseText(it) }
+        events
+    }
+
+    private Map keep(Map event) {
+        if (event.type != 'display') return event
+        File kept = new File(dir, "kept-${event.id}-${event.file.toString().md5()}.glb")
+        kept.bytes = new File((String) event.file).bytes
+        event.kept = kept.path
+        event
     }
 
     private File script(String name, String text) {
@@ -156,6 +181,87 @@ class CadRunnerTest {
         List<Map> features = ((List<Map>) error.features).collectMany { (List<Map>) it.children }
         assertEquals(['box 1 × 2 × 3', 'cylinder r1 × 2'], features*.label)
         assertEquals([null, true], features*.error)
+    }
+
+    // Width along x of the first mesh of the glTF file of a display event
+    private static double width(Map display) {
+        GlbFile glb = GlbFile.read(new File((String) display.kept))
+        Map position = glb.list('accessors')[((Map) glb.primitive(0, GlbFile.MODE_TRIANGLES).attributes).POSITION as int]
+        ((List<Number>) position.max)[0].doubleValue() - ((List<Number>) position.min)[0].doubleValue()
+    }
+
+    // Features of a tree by id
+    private static Map<String, Map> byId(List<Map> features) {
+        Map<String, Map> all = [:]
+        features.each { Map f -> all[(String) f.id] = f; all.putAll(byId((List<Map>) f.children)) }
+        all
+    }
+
+    @Test
+    void "A run stops at a feature of the last run: the operations after it are recorded, not done"() {
+        File block = script('block.groovy', '''\
+            cd().box(10, 10, 5).fuse {
+                position(new Vec(20, 0, 0)) { cylinder(2, 5) }
+                position(new Vec(-20, 0, 0)) { cylinder(2, 5) }
+            }.display()'''.stripIndent())
+
+        List<Map> events = serve([
+                [type: 'run', id: 1, script: block.path],
+                [type: 'run', id: 2, script: block.path, stopAt: 'solid0/fuse0/cylinder0'],
+                [type: 'run', id: 3, script: block.path, stopAt: 'solid0/box0']])
+
+        assertEquals([44d, 22d, 10d], events.findAll { it.type == 'display' }.collect { Math.rint(width(it)) })
+        List<Map> ends = events.findAll { it.type == 'done' }
+        assertEquals([null, 'solid0/fuse0/cylinder0', 'solid0/box0'], ends*.stopAt)
+        Map<String, Map> stopped = byId((List<Map>) ends[1].features)
+        assertEquals([null, null, null, true], ['solid0/box0', 'solid0/fuse0', 'solid0/fuse0/cylinder0', 'solid0/fuse0/cylinder1'].collect { stopped[it].suppressed })
+        assertEquals(true, byId((List<Map>) ends[2].features)['solid0/fuse0'].suppressed)
+    }
+
+    @Test
+    void "A stop in a solid leaves the other solids, a stop at a solid stops the ones after it"() {
+        File blocks = script('blocks.groovy', 'cd().box(1, 2, 3).display()\ncd().cylinder(1, 2).display()')
+
+        List<Map> events = serve([
+                [type: 'run', id: 1, script: blocks.path],
+                [type: 'run', id: 2, script: blocks.path, stopAt: 'solid0/box0'],
+                [type: 'run', id: 3, script: blocks.path, stopAt: 'solid0']])
+
+        assertEquals([1, 1, 2, 2, 3], events.findAll { it.type == 'display' }*.id)
+        Map<String, Map> stopped = byId((List<Map>) events.last().features)
+        assertEquals([null, true, true], ['solid0', 'solid1', 'solid1/cylinder0'].collect { stopped[it].suppressed })
+    }
+
+    @Test
+    void "A stop at a placement stops the placements after it"() {
+        File rail = script('rail.groovy', '''\
+            assembly('rail') {
+                def block = part('block') { box(1, 1, 1) }
+                place(block)
+                place(block) { translate(5, 0, 0) }
+            }.display()'''.stripIndent())
+
+        List<Map> events = serve([
+                [type: 'run', id: 1, script: rail.path],
+                [type: 'run', id: 2, script: rail.path, stopAt: 'assembly:rail/place0']])
+
+        List<Integer> nodes = events.findAll { it.type == 'display' }.collect { GlbFile.read(new File((String) it.kept)).list('nodes').size() }
+        assertEquals(nodes[0] - 1, nodes[1])
+        Map<String, Map> stopped = byId((List<Map>) events.last().features)
+        assertEquals([null, null, true], ['assembly:rail/part:block', 'assembly:rail/place0', 'assembly:rail/place1'].collect { stopped[it].suppressed })
+    }
+
+    @Test
+    void "A stop at a feature unknown to the last run of the script is ignored"() {
+        File block = script('block.groovy', 'cd().box(1, 2, 3).display()')
+        File other = script('other.groovy', 'cd().box(1, 2, 3).display()')
+
+        List<Map> events = serve([
+                [type: 'run', id: 1, script: block.path, stopAt: 'solid0'],
+                [type: 'run', id: 2, script: other.path, stopAt: 'solid0'],
+                [type: 'run', id: 3, script: other.path, stopAt: 'solid9']])
+
+        assertEquals([null, null, null], events.findAll { it.type == 'done' }*.stopAt)
     }
 
     @Test

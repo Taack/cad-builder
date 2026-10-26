@@ -7,6 +7,7 @@ import com.intellij.openapi.Disposable;
 import com.intellij.openapi.actionSystem.ActionManager;
 import com.intellij.openapi.actionSystem.ActionToolbar;
 import com.intellij.openapi.actionSystem.ActionUpdateThread;
+import com.intellij.openapi.actionSystem.AnAction;
 import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.actionSystem.DefaultActionGroup;
 import com.intellij.openapi.application.ApplicationManager;
@@ -16,10 +17,12 @@ import com.intellij.openapi.editor.event.CaretEvent;
 import com.intellij.openapi.editor.event.CaretListener;
 import com.intellij.openapi.fileEditor.FileDocumentManager;
 import com.intellij.openapi.fileEditor.OpenFileDescriptor;
+import com.intellij.openapi.project.DumbAwareAction;
 import com.intellij.openapi.project.DumbAwareToggleAction;
 import com.intellij.openapi.project.DumbService;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.SimpleToolWindowPanel;
+import com.intellij.openapi.util.IconLoader;
 import com.intellij.openapi.vfs.LocalFileSystem;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.JavaPsiFacade;
@@ -28,10 +31,12 @@ import com.intellij.psi.PsiFile;
 import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.ui.ColoredTreeCellRenderer;
 import com.intellij.ui.DoubleClickListener;
+import com.intellij.ui.PopupHandler;
 import com.intellij.ui.ScrollPaneFactory;
 import com.intellij.ui.SimpleTextAttributes;
 import com.intellij.ui.TreeSpeedSearch;
 import com.intellij.ui.treeStructure.Tree;
+import com.intellij.util.ui.JBUI;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -55,7 +60,8 @@ import java.util.Set;
 
 /**
  * The tree of the features of the last run: its parts, operations and sketches, each one opening the line of the script
- * that made it, and selected when the caret of an editor moves to that line
+ * that made it, and selected when the caret of an editor moves to that line. The script can be rolled back to a feature:
+ * a bar goes under it, and the features after it, not done, are grayed.
  */
 final class CadStructurePanel implements CadPreview.Listener, Disposable {
     static final String TOOL_WINDOW_ID = "CAD Structure";
@@ -70,6 +76,41 @@ final class CadStructurePanel implements CadPreview.Listener, Disposable {
     private boolean followEditor = true;
     private List<CadFeature> features = List.of();
     private @Nullable String shownScript;
+    private @Nullable String stopAt;
+    private final AnAction rollBack = new DumbAwareAction("Roll Back Here",
+            "Run the script up to the selected feature: the ones after it are not done", AllIcons.Actions.Rollback) {
+        @Override
+        public void actionPerformed(@NotNull AnActionEvent e) {
+            CadPreview.getInstance(project).rollBack(selectedId());
+        }
+
+        @Override
+        public void update(@NotNull AnActionEvent e) {
+            e.getPresentation().setEnabled(selectedId() != null);
+        }
+
+        @Override
+        public @NotNull ActionUpdateThread getActionUpdateThread() {
+            return ActionUpdateThread.EDT;
+        }
+    };
+    private final AnAction rollForward = new DumbAwareAction("Roll Forward", "Run the script to its end again",
+            AllIcons.Actions.Forward) {
+        @Override
+        public void actionPerformed(@NotNull AnActionEvent e) {
+            CadPreview.getInstance(project).rollBack(null);
+        }
+
+        @Override
+        public void update(@NotNull AnActionEvent e) {
+            e.getPresentation().setEnabled(stopAt != null);
+        }
+
+        @Override
+        public @NotNull ActionUpdateThread getActionUpdateThread() {
+            return ActionUpdateThread.EDT;
+        }
+    };
 
     CadStructurePanel(Project project) {
         this.project = project;
@@ -84,10 +125,7 @@ final class CadStructurePanel implements CadPreview.Listener, Disposable {
                 return navigate();
             }
         }.installOn(tree);
-        tree.addTreeSelectionListener(event -> {
-            TreePath path = tree.getSelectionPath();
-            CadPreview.getInstance(project).selectFeature(path != null && feature(path.getLastPathComponent()) instanceof CadFeature f ? f.id() : null);
-        });
+        tree.addTreeSelectionListener(event -> CadPreview.getInstance(project).selectFeature(selectedId()));
         tree.addKeyListener(new KeyAdapter() {
             @Override
             public void keyPressed(KeyEvent event) {
@@ -102,6 +140,8 @@ final class CadStructurePanel implements CadPreview.Listener, Disposable {
                 if (followEditor && editor.getProject() == project && file != null) select(file, event.getNewPosition().line + 1);
             }
         }, this);
+        DefaultActionGroup popup = new DefaultActionGroup(rollBack, rollForward);
+        PopupHandler.installPopupMenu(tree, popup, "CadStructurePopup");
         panel.setToolbar(toolbar().getComponent());
         panel.setContent(ScrollPaneFactory.createScrollPane(tree, true));
         CadPreview preview = CadPreview.getInstance(project);
@@ -119,6 +159,9 @@ final class CadStructurePanel implements CadPreview.Listener, Disposable {
         DefaultTreeExpander expander = new DefaultTreeExpander(tree);
         actions.add(CommonActionsManager.getInstance().createExpandAllAction(expander, tree));
         actions.add(CommonActionsManager.getInstance().createCollapseAllAction(expander, tree));
+        actions.addSeparator();
+        actions.add(rollBack);
+        actions.add(rollForward);
         actions.addSeparator();
         actions.add(new DumbAwareToggleAction("Follow Editor", "Select the feature made at the line of the caret",
                 AllIcons.General.AutoscrollFromSource) {
@@ -170,6 +213,7 @@ final class CadStructurePanel implements CadPreview.Listener, Disposable {
             boolean newScript = !result.request().script().equals(shownScript);
             shownScript = result.request().script();
             features = result.features();
+            stopAt = result.stopAt();
             rebuild(newScript);
         }, project.getDisposed());
     }
@@ -180,8 +224,7 @@ final class CadStructurePanel implements CadPreview.Listener, Disposable {
         if (!newScript) {
             collectIds(tree.getExpandedDescendants(new TreePath(model.getRoot())), expanded);
         }
-        TreePath selection = tree.getSelectionPath();
-        String selected = selection == null ? null : feature(selection.getLastPathComponent()) instanceof CadFeature f ? f.id() : null;
+        String selected = selectedId();
         DefaultMutableTreeNode root = new DefaultMutableTreeNode();
         features.forEach(it -> root.add(node(it)));
         model.setRoot(root);
@@ -222,6 +265,11 @@ final class CadStructurePanel implements CadPreview.Listener, Disposable {
             if (below != null) error = below;
         }
         return error;
+    }
+
+    private @Nullable String selectedId() {
+        TreePath path = tree.getSelectionPath();
+        return path != null && feature(path.getLastPathComponent()) instanceof CadFeature f ? f.id() : null;
     }
 
     private static @Nullable Object feature(Object node) {
@@ -284,9 +332,13 @@ final class CadStructurePanel implements CadPreview.Listener, Disposable {
         @Override
         public void customizeCellRenderer(@NotNull JTree tree, Object value, boolean selected, boolean expanded,
                                           boolean leaf, int row, boolean hasFocus) {
+            setBorder(null);
             if (!(feature(value) instanceof CadFeature feature)) return;
-            setIcon(icon(feature));
-            append(feature.label(), feature.error() ? SimpleTextAttributes.ERROR_ATTRIBUTES : SimpleTextAttributes.REGULAR_ATTRIBUTES);
+            setIcon(feature.suppressed() ? IconLoader.getDisabledIcon(icon(feature)) : icon(feature));
+            append(feature.label(), feature.error() ? SimpleTextAttributes.ERROR_ATTRIBUTES
+                    : feature.suppressed() ? SimpleTextAttributes.GRAYED_ATTRIBUTES : SimpleTextAttributes.REGULAR_ATTRIBUTES);
+            // the rollback bar
+            if (feature.id().equals(stopAt)) setBorder(JBUI.Borders.customLine(JBUI.CurrentTheme.Focus.focusColor(), 0, 0, 2, 0));
             long elements = feature.details();
             if (elements > 0 && !details) append("  " + elements + (elements == 1 ? " element" : " elements"), SimpleTextAttributes.GRAYED_ATTRIBUTES);
             if (feature.file() != null) append("  " + feature.file() + ":" + feature.line(), SimpleTextAttributes.GRAYED_SMALL_ATTRIBUTES);

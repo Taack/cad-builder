@@ -12,7 +12,7 @@ public class CadStructurePanelTest extends BasePlatformTestCase {
     private CadStructurePanel panel;
 
     private static CadFeature feature(String id, String kind, int line, CadFeature... children) {
-        return new CadFeature(id, kind, id, "block", "block.groovy", line, false, false, null, List.of(children));
+        return new CadFeature(id, kind, id, "block", "block.groovy", line, false, false, false, null, List.of(children));
     }
 
     @Override
@@ -30,7 +30,7 @@ public class CadStructurePanelTest extends BasePlatformTestCase {
                         feature("solid0/cut0/cylinder0", "cylinder", 2),
                         feature("solid0/cut0/cylinder1", "cylinder", 2))));
         CadRunRequest request = new CadRunRequest("/nowhere/block.groovy", List.of());
-        CadPreview.getInstance(getProject()).show(new CadRunResult(request, List.of(), Map.of(), features, 10, null, null));
+        CadPreview.getInstance(getProject()).show(new CadRunResult(request, List.of(), Map.of(), features, 10, null, null, null));
         panel = new CadStructurePanel(getProject());
         PlatformTestUtil.dispatchAllInvocationEventsInIdeEventQueue();
     }

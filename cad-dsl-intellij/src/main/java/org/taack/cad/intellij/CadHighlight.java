@@ -13,7 +13,8 @@ import java.util.Set;
  * The nodes of a glTF model showing a feature: those of its part, for each place the part occupies in the model
  *
  * The runner writes a node for the displayed part or assembly, then, depth first, one for each component in the order
- * they were placed (write_glb_assembly of cad-dsl-native): the placements of the features number the nodes the same way.
+ * they were placed (write_glb_assembly of cad-dsl-native): the placements of the features number the nodes the same way,
+ * but for those after the feature the run stopped at, which the runner did not place.
  */
 final class CadHighlight {
     private static final Set<String> NODES = Set.of("part", "solid", "assembly");
@@ -45,6 +46,7 @@ final class CadHighlight {
         nodes.computeIfAbsent(feature.id(), it -> new ArrayList<>()).add(count++);
         if (!feature.kind().equals("assembly")) return true;
         for (CadFeature place : places(feature, new ArrayList<>())) {
+            if (place.suppressed()) continue;
             CadFeature placed = place.placed() == null ? null : features.get(place.placed());
             if (placed == null) return false;
             nodes.computeIfAbsent(place.id(), it -> new ArrayList<>()).add(count);
@@ -64,11 +66,12 @@ final class CadHighlight {
 
     /**
      * @return The nodes showing the feature of id: its own when it is a part, an assembly or a placement, those of its
-     * part otherwise, those of its features for a group of them; none when its part is not in the model
+     * part otherwise, those of its features for a group of them; none when its part is not in the model, or when the run
+     * stopped before it
      */
     List<Integer> nodes(@Nullable String id) {
         CadFeature feature = id == null ? null : features.get(id);
-        if (feature == null) return List.of();
+        if (feature == null || feature.suppressed()) return List.of();
         return new ArrayList<>(nodesOf(feature, new LinkedHashSet<>()));
     }
 
@@ -103,6 +106,6 @@ final class CadHighlight {
      */
     boolean hasShape(@Nullable String id) {
         CadFeature feature = id == null ? null : features.get(id);
-        return feature != null && !NO_SHAPE.contains(feature.kind());
+        return feature != null && !feature.suppressed() && !NO_SHAPE.contains(feature.kind());
     }
 }
