@@ -3,6 +3,7 @@ package org.taack.cad.dsl
 import groovy.transform.CompileStatic
 import org.junit.jupiter.api.Test
 import org.taack.cad.dsl.geom.Vec
+import org.taack.cad.dsl.geom.Vec2d
 
 import static org.taack.cad.dsl.CadDsl.*
 
@@ -18,7 +19,8 @@ class TaperedPrismTest {
 
     @Test
     void "Molded tray, its walls and pockets with a draft"() {
-        // walls leaning 3° inward, a ring with a draft on its top, then a pocket beside it, narrower at its bottom
+        // walls leaning 3° inward, a ring with a draft on its top, then a pocket beside it, narrower at its bottom:
+        // topZ(pos) picks the top of the tray, wireFrom(pos2d) draws at (u, v) on it, (x, y) here
         cd().wireFrom(new Vec(-40, -30, 0)) {
             edge(new Vec(40, -30, 0))
             edge(new Vec(40, 30, 0))
@@ -29,7 +31,7 @@ class TaperedPrismTest {
                     circle(12)
                     circle(6, true)
                 }.toFace().prism(8, draft: 5)
-                .topZ(new Vec(25, 0, 21)).wireFrom() {
+                .topZ(new Vec(25, 0, 21)).wireFrom(new Vec2d(25, 0)) {
                     circle(5)
                 }.toFace().hole(-10, draft: 2).display()
 

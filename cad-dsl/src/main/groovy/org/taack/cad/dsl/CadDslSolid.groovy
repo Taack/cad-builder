@@ -3,6 +3,13 @@ package org.taack.cad.dsl
 import groovy.transform.CompileStatic
 import org.taack.cad.dsl.geom.Vec
 
+/**
+ * A solid, and the selectors of its planar faces to draw on: topZ() is the face facing +Z the farthest along Z,
+ * topZ(pos) the planar face closest to pos, and so on for X and Y, butX() ... for the faces facing -X ...
+ * <p>
+ * pos only chooses the face: the sketch of {@link CadDslFace#wireFrom} with no position starts at the center of mass of
+ * the face, not at pos.
+ */
 @CompileStatic
 class CadDslSolid implements CadDslBase {
     CadDslFace topDir(Vec dir) {}

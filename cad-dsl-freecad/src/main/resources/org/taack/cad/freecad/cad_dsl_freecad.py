@@ -1127,7 +1127,12 @@ class Model:
 
     def visitCenter(self):
         self.from_stack.append(self.face.face_shape().CenterOfMass)
-        self.from2d = coords_projection(self.from_vec, self.direction, self.pt00 or V(0, 0, 0))
+        # (u, v) of the origin on a plane, whatever the axes of its parameters: the sketch is drawn in them (frame_of)
+        surface = self.face.surface()
+        if isinstance(surface, Part.Plane):
+            self.from2d = tuple(surface.parameter(self.from_vec))
+        else:
+            self.from2d = coords_projection(self.from_vec, self.direction, self.pt00 or V(0, 0, 0))
 
     def visitCenterEnd(self):
         self.from_stack.pop()
