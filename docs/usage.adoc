@@ -124,7 +124,8 @@ output goes to the Run tool window. Stopping the run stops the runner.
 browser (JCEF). Orbit, fit, edges on or off, and a time bar for the animations. Saving the script, or a class of its
 directory, runs it again.
 * *CAD Structure tool window*: the tree of the features of the last run. Double-clicking a feature, or Enter, opens the
-line that made it, in the script, a class beside it or a class of a jar of parts. The edges, arcs and texts of the
+line that made it, in the script, a class beside it or a class of a jar of parts; moving the caret of an editor to a line
+selects the feature it made, unless _Follow Editor_ is off. The edges, arcs and texts of the
 sketches are hidden unless asked for; the failing feature of a failed run is selected, in red. Selecting a feature
 highlights its part in the preview, in every place the part occupies, fades the others, and draws the shapes of the
 feature over it, through the solid: the primitive, the prism or the tools of a cut, with the OCCT kernel.
