@@ -1340,6 +1340,14 @@ class Model:
         if o is None:
             o = self.extrusion(base, direction, draft, cut)
         shape = o
+        if not cut and len(self.bool_shapes) > 1:
+            # made in the closure of a boolean operation, the prism is one of its solids, as a box is: fused to the
+            # current solid, a cut would remove it all, a common would keep it all
+            self.face = None
+            self.profile = []
+            self.sketch = None
+            self.primitive(o)
+            return
         if self.shape is not None:
             shape = self.cut(self.shape, o) if cut else self.boolean('Part::MultiFuse', [self.shape, o])
             # the result replaces the solid it is made from, which stays the last solid

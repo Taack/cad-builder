@@ -1159,9 +1159,18 @@ class CadDslVisitor implements ICadDslVisitor, ICadDslFeatureShapes {
     // The last prism, before it was fused to the solid or cut from it, see featureShape
     private MemorySegment lastPrism
 
-    // Fuses the prism to the current solid, or cuts it
+    // Fuses the prism to the current solid, or cuts it. Made in the closure of a boolean operation, a prism is one of
+    // its solids, as a box is: fused to the current solid, a cut would remove it all, a common would keep it all.
     private void addPrism(MemorySegment shape, boolean cut) {
         lastPrism = shape
+        if (!cut && boolShapes.size() > 1) {
+            Tr.cur "prism of the closure"
+            boolShapes.peek() << shape
+            face = null
+            makeWires.clear()
+            if (!this.shape) this.shape = shape
+            return
+        }
         if (this.shape) {
             Tr.cur "cut: $cut"
             if (cut) {

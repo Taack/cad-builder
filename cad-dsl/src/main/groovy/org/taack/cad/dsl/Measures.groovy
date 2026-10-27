@@ -38,7 +38,8 @@ final class Measures {
 
     @Override
     String toString() {
-        String.format(Locale.ROOT, 'volume %.1f cm³, area %.1f cm², center (%.1f, %.1f, %.1f), box (%.1f, %.1f, %.1f) .. (%.1f, %.1f, %.1f)%s',
-                volume / 1000d, area / 100d, center.x, center.y, center.z, min.x, min.y, min.z, max.x, max.y, max.z, valid ? '' : ', NOT VALID')
+        // in mm³ and mm², as the fields: in cm³, a small solid would read as an empty one
+        String.format(Locale.ROOT, 'volume %.1f mm³, area %.1f mm², center (%.1f, %.1f, %.1f), box (%.1f, %.1f, %.1f) .. (%.1f, %.1f, %.1f)%s',
+                volume, area, center.x, center.y, center.z, min.x, min.y, min.z, max.x, max.y, max.z, valid ? '' : ', NOT VALID')
     }
 }

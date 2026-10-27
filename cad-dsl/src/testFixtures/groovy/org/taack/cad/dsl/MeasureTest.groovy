@@ -53,6 +53,28 @@ class MeasureTest {
         assertEquals(6000d - 1800d, m.volume, 1e-3d)
     }
 
+    // A square 4 x 4 at (x, y), in the plane z = -1, its prism through the box
+    private static void squarePrism(CadDsl dsl, double x, double y) {
+        dsl.wireFrom(new Vec(x, y, -1)) {
+            edge(new Vec(x + 4, y, -1))
+            edge(new Vec(x + 4, y + 4, -1))
+            edge(new Vec(x, y + 4, -1))
+            edge(new Vec(x, y, -1))
+        }.toFace().prism(new Vec(0, 0, 32))
+    }
+
+    @Test
+    void "Prisms made in the closures of cut and common are their solids"() {
+        CadDsl cut = cd()
+        cut.position(new Vec(0, 0, 0)) { box(10, 20, 30) }
+        cut.cut { squarePrism(delegate, 3, 3); squarePrism(delegate, 3, 13) }
+        assertEquals(6000d - 2 * 480d, cut.check('cut').measure().volume, 1e-3d)
+        CadDsl common = cd()
+        common.position(new Vec(0, 0, 0)) { box(10, 20, 30) }
+        common.common { squarePrism(delegate, 3, 3) }
+        assertEquals(480d, common.check('common').measure().volume, 1e-3d)
+    }
+
     @Test
     void "Translate at the root, then cut the moved solid"() {
         def part = box(new Vec(0, 0, 0))

@@ -50,7 +50,8 @@ model; to put solids together, make them in the same model. Solids of two models
 other (see <<Checking a Model>>) and placed in the same assembly.
 * *The current solid.* The first solid made at the root of a model becomes its current solid. `cut`, `fuse` and
 `common` work on it, and their result becomes the current solid. Another solid made at the root, outside of their
-closures, is ignored: make it in a `fuse { ... }`.
+closures, is ignored: make it in a `fuse { ... }`. The prism of a face is fused to the current solid at the root (a
+`hole` is cut from it), and is one of the solids of the closure in a `cut`, `fuse` or `common`.
 * *Moves.* In a closure, `translate`, `rotate` and `mirror` move the last solid made in it. At the root, they move the
 current solid. `rotate(..., true)` and `mirror` keep the solid and add the moved copy.
 * *Position and direction.* `position(pos) { ... }` sets the origin of what is made in its closure. `direction(axis)`
@@ -146,7 +147,7 @@ A script can check its model rather than an eye on the preview, with the OCCT ke
 [source,groovy]
 ----
 CadDslSolid body = body(), battery = cd().position(new Vec(54, -17.5, -3)) { box(108, 35, 25.4) }
-println body.check('body').measure()          // volume 120.3 cm³, area 950.2 cm², center (...), box (...) .. (...)
+println body.check('body').measure()          // volume 120312.4 mm³, area 95021.7 mm², center (...), box (...) .. (...)
 assert body.overlap(battery) == 0d
 println "${body.distance(battery)} mm of clearance"
 ----
