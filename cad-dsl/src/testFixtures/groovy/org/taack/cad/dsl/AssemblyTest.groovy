@@ -64,6 +64,27 @@ class AssemblyTest {
     }
 
     @Test
+    void "STEP export keeps the name of a part made of a revolution"() {
+        File step = new File(dir, 'ring.step')
+        // a revolution is a shape with a location
+        CadDsl ring = cd()
+        ring.wireFrom(new Vec(0, 8, 0)) {
+            edge(new Vec(0, 10, 0))
+            edge(new Vec(1, 10, 0))
+            edge(new Vec(1, 8, 0))
+            edge(new Vec(0, 8, 0))
+        }.toFace().revolution(new Vec(), Vec.vX)
+        assembly('rings') {
+            def r = part(ring, 'ring')
+            place(r)
+            place(r) { translate(0, 0, 30) }
+        }.display(step.path)
+        String content = step.text
+        assertTrue(content.contains("PRODUCT('ring'"), 'ring')
+        assertTrue(!content.contains('Open CASCADE STEP translator'))
+    }
+
+    @Test
     @Tag('images')
     void "Assembly exports to STL and image"() {
         File stl = new File(dir, 'cart.stl')

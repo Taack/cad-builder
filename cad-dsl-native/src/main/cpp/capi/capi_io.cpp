@@ -282,7 +282,9 @@ Bnd_Box capi_assembly_box(const CadNode &assembly, int frameCount) {
 }
 
 namespace {
-// Writes an assembly tree to an XCAF document, each node once, however many times it is placed
+// Writes an assembly tree to an XCAF document, each node once, however many times it is placed. A part is added without
+// the location of its shape, which goes into the components placing it: XCAF would add a located shape, a revolution
+// for instance, as a reference to the shape without location, and its product would lose its name.
 struct StepAssemblyWriter {
     occ::handle<XCAFDoc_ShapeTool> shapeTool;
     occ::handle<XCAFDoc_ColorTool> colorTool;
@@ -294,10 +296,13 @@ struct StepAssemblyWriter {
         TDF_Label l;
         if (node.isAssembly) {
             l = shapeTool->NewShape();
-            for (const CadNode::Component &c : node.components)
-                shapeTool->AddComponent(l, label(*c.node), TopLoc_Location(c.location));
+            for (const CadNode::Component &c : node.components) {
+                TopLoc_Location location(c.location);
+                if (!c.node->isAssembly) location = location * c.node->shape.Location();
+                shapeTool->AddComponent(l, label(*c.node), location);
+            }
         } else {
-            l = shapeTool->AddShape(node.shape, false);
+            l = shapeTool->AddShape(node.shape.Located(TopLoc_Location()), false);
             if (node.hasColor) colorTool->SetColor(l, Quantity_ColorRGBA(node.color, static_cast<float>(node.alpha)), XCAFDoc_ColorGen);
         }
         if (!node.name.empty()) TDataStd_Name::Set(l, TCollection_ExtendedString(node.name.c_str(), true));
