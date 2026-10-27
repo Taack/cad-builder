@@ -105,9 +105,11 @@ it on the loopback interface, reads one JSON request per line, and answers with 
 ----
 
 The `display()` calls without a file name write binary glTF files instead of opening the viewer (see `CadDisplay`): a
-mesh per part, once however many times it is placed, with its faces (triangles) and their boundaries (lines); a node per
-part or assembly placed, named after it; an animation channel per moving component. The model is turned from
-millimeters and Z up to meters and Y up, as glTF expects (see `write_glb_assembly` in `occt_capi.h`).
+mesh per part, once however many times it is placed, with its faces (triangles) in its color and their boundaries
+(lines); a part whose color has an alpha (`Color.BLUE.alpha(0.3)`, see xref:assemblies.adoc[Assemblies]) is blended
+(`alphaMode` `BLEND`); a node per part or assembly placed, named after it; an animation channel per moving component.
+The model is turned from millimeters and Z up to meters and Y up, as glTF expects (see `write_glb_assembly` in
+`occt_capi.h`).
 `params` set the `param()` values of the script, and `classpath` adds jars and directories of classes to its own, for
 this run only: the shared parts it uses (see <<sharing-parts>>). `features` is the tree of the operations of the script,
 recorded while it runs (see `CadFeatureRecorder`): assemblies, parts, booleans, prisms, sketches, each with the file and
@@ -148,9 +150,10 @@ They resolve without the imports `CadScript` adds when it runs them, read from `
 then the script runs in `cad-dsl-runner`, out of the IDE, with the classpath of its module (see <<sharing-parts>>). Its
 output goes to the Run tool window. Stopping the run stops the runner.
 * *CAD Preview tool window*: the models the `display()` calls of the last run wrote, shown with three.js in the IDE
-browser (JCEF). Orbit, fit, edges on or off, and a time bar for the animations. Saving the script, or a class of its
-directory, runs it again. Clicking a part, without dragging, selects it in the CAD Structure and opens the line that
-made it; for a part of a jar of parts, the line that placed it in the assembly. Clicking nothing selects nothing.
+browser (JCEF). Orbit, fit, edges on or off, and a time bar for the animations. The parts are in their colors, those
+with an alpha seen through. Saving the script, or a class of its directory, runs it again. Clicking a part, without
+dragging, selects it in the CAD Structure and opens the line that made it; for a part of a jar of parts, the line that
+placed it in the assembly. Clicking nothing selects nothing.
 * *CAD Structure tool window*: the tree of the features of the last run. Double-clicking a feature, or Enter, opens the
 line that made it, in the script, a class beside it or a class of a jar of parts; moving the caret of an editor to a line
 selects the feature it made, unless _Follow Editor_ is off. The edges, arcs and texts of the
