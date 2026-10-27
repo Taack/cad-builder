@@ -289,13 +289,15 @@ private:
         return static_cast<int>(accessors.size()) - 1;
     }
 
-    int material(const std::string &name, const double rgb[3]) {
+    // alpha < 1 blends the faces with what is behind them
+    int material(const std::string &name, const double rgb[3], double alpha = 1) {
         std::vector<std::string> fields;
         if (!name.empty()) fields.push_back(field("name", quoted(name)));
         fields.push_back(field("pbrMetallicRoughness", object({
-                field("baseColorFactor", numbers({rgb[0], rgb[1], rgb[2], 1})),
+                field("baseColorFactor", numbers({rgb[0], rgb[1], rgb[2], alpha})),
                 field("metallicFactor", number(0)),
                 field("roughnessFactor", number(ROUGHNESS))})));
+        if (alpha < 1) fields.push_back(field("alphaMode", quoted("BLEND")));
         materials.push_back(object(fields));
         return static_cast<int>(materials.size()) - 1;
     }
@@ -313,7 +315,7 @@ private:
             int normal = floatAccessor(t.normals, 3, "VEC3", TARGET_ARRAY_BUFFER, false);
             primitives.push_back(object({field("attributes", object({field("POSITION", position), field("NORMAL", normal)})),
                                          field("indices", indexAccessor(t.triangles)),
-                                         field("material", material(part.name, rgb)),
+                                         field("material", material(part.name, rgb, part.hasColor ? part.alpha : 1)),
                                          field("mode", MODE_TRIANGLES)}));
         }
         if (!t.segments.empty()) {

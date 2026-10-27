@@ -21,6 +21,7 @@
 #include <OpenGl_GraphicDriver.hxx>
 #include <Prs3d_Drawer.hxx>
 #include <Prs3d_LineAspect.hxx>
+#include <Quantity_ColorRGBA.hxx>
 #include <STEPCAFControl_Writer.hxx>
 #include <StlAPI_Writer.hxx>
 #include <TCollection_ExtendedString.hxx>
@@ -170,7 +171,7 @@ extern "C" void write_stl(const TopoDS_Shape *shape, const char *fileName) {
     guard(__func__, [&] { write_meshed_stl(*shape, fileName); });
 }
 
-extern "C" occ::handle<CadNode> *handle_CadNode__part__TopoDS_Shape_name_hasColor_r_g_b(const TopoDS_Shape *shape, const char *name, int hasColor, double r, double g, double b) {
+extern "C" occ::handle<CadNode> *handle_CadNode__part__TopoDS_Shape_name_hasColor_r_g_b_a(const TopoDS_Shape *shape, const char *name, int hasColor, double r, double g, double b, double a) {
     TRACE("");
     return guard(__func__, [&] {
         occ::handle<CadNode> part = new CadNode();
@@ -178,6 +179,7 @@ extern "C" occ::handle<CadNode> *handle_CadNode__part__TopoDS_Shape_name_hasColo
         part->shape = *shape;
         part->hasColor = to_bool(hasColor);
         part->color = Quantity_Color(r, g, b, Quantity_TOC_sRGB);
+        part->alpha = a;
         return new occ::handle<CadNode>(part);
     });
 }
@@ -223,6 +225,7 @@ std::vector<occ::handle<AIS_Shape>> capi_display_assembly(const occ::handle<AIS_
         occ::handle<AIS_Shape> prs = new AIS_Shape(part.shape);
         prs->SetLocalTransformation(location);
         if (part.hasColor) prs->SetColor(part.color);
+        if (part.hasColor && part.alpha < 1) prs->SetTransparency(1 - part.alpha);
         context->Display(prs, AIS_Shaded, 0, false);
         presentations.push_back(prs);
     });
@@ -272,7 +275,7 @@ struct StepAssemblyWriter {
                 shapeTool->AddComponent(l, label(*c.node), TopLoc_Location(c.location));
         } else {
             l = shapeTool->AddShape(node.shape, false);
-            if (node.hasColor) colorTool->SetColor(l, node.color, XCAFDoc_ColorGen);
+            if (node.hasColor) colorTool->SetColor(l, Quantity_ColorRGBA(node.color, static_cast<float>(node.alpha)), XCAFDoc_ColorGen);
         }
         if (!node.name.empty()) TDataStd_Name::Set(l, TCollection_ExtendedString(node.name.c_str(), true));
         labels[&node] = l;

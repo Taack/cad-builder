@@ -45,8 +45,8 @@ class OcctAssemblyVisitor implements ICadDslAssemblyVisitor {
         CadDslVisitor.Tr.cur "assembly part: $name, $shape, color: $color"
         try (Arena arena = Arena.ofConfined()) {
             MemorySegment n = color ?
-                    handle_CadNode__part__TopoDS_Shape_name_hasColor_r_g_b(shape, cString(arena, name), 1, color.r, color.g, color.b) :
-                    handle_CadNode__part__TopoDS_Shape_name_hasColor_r_g_b(shape, cString(arena, name), 0, 0d, 0d, 0d)
+                    handle_CadNode__part__TopoDS_Shape_name_hasColor_r_g_b_a(shape, cString(arena, name), 1, color.r, color.g, color.b, color.a) :
+                    handle_CadNode__part__TopoDS_Shape_name_hasColor_r_g_b_a(shape, cString(arena, name), 0, 0d, 0d, 0d, 1d)
             new OcctPart(own(n, NativeLib::delete_handle_CadNode), shape)
         }
     }

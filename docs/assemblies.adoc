@@ -33,7 +33,10 @@ z (on a face, positive: a gap, negative: sunk into the face; on an axis, it slid
 around it, and `reverse()` turns its z the other way. Its x direction belongs to the
 part (global X projected on the face, in the part coordinates), so that mated parts follow each other's orientation.
 
-Colors are `Color.RED`, `Color.ORANGE`, ..., `Color.rgb(255, 136, 0)`, `Color.hex('#ff8800')` or `new Color(1, 0.5, 0)`.
+Colors are `Color.RED`, `Color.ORANGE`, ..., `Color.rgb(255, 136, 0)`, `Color.hex('#ff8800')` or `new Color(1, 0.5, 0)`. A
+color is opaque unless given an alpha, from 0 (invisible) to 1: `Color.BLUE.alpha(0.3)`, `Color.rgb(0, 0, 255, 77)`,
+`Color.hex('#0000ff4d')` or `new Color(0, 0, 1, 0.3)`; the part is then seen through, in the viewer, the images, the
+glTF files (blended) and the `.step` files (a transparency).
 
 `display()` shows every part with its color. To a `.step` file, the assembly tree is kept, with names and colors, and
 a part or sub-assembly placed several times is written once; to a `.stl` file, the parts are merged (STL has neither

@@ -26,7 +26,7 @@ class FreeCadAssemblyVisitor implements ICadDslAssemblyVisitor {
     @Override
     ICadDslNode visitPart(String name, Color color, ICadDslVisitor solid) {
         FreeCadVisitor model = (FreeCadVisitor) solid
-        new FreeCadPart(session.call(handle, 'visitPart', name, color ? [color.r, color.g, color.b] : null, model.handle) as int, model)
+        new FreeCadPart(session.call(handle, 'visitPart', name, color ? [color.r, color.g, color.b, color.a] : null, model.handle) as int, model)
     }
 
     private static int handleOf(ICadDslNode node) {

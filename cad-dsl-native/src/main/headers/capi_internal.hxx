@@ -84,6 +84,8 @@ public:
     TopoDS_Shape shape;
     bool hasColor = false;
     Quantity_Color color;
+    // opacity of the color, 1 for an opaque part
+    double alpha = 1;
     // Assembly
     std::vector<Component> components;
 

@@ -1532,7 +1532,7 @@ class PartNode:
     """A part of an assembly: the result of a model"""
 
     def __init__(self, model, name, color):
-        """color: [r, g, b] in [0, 1], None for the default one"""
+        """color: [r, g, b, a] in [0, 1], a the alpha, None for the default one"""
         self.model = model
         self.obj = model.result_shape()
         if self.obj is None:
@@ -1578,7 +1578,8 @@ class Assembly:
             if node.name:
                 copy.Label = node.name
             if node.color and App.GuiUp:
-                copy.ViewObject.ShapeAppearance = (App.Material(DiffuseColor=tuple(node.color)),)
+                copy.ViewObject.ShapeAppearance = (App.Material(DiffuseColor=tuple(node.color[:3]),
+                                                                Transparency=1 - node.color[3]),)
         self.imported[handle] = copy
         return copy
 

@@ -679,8 +679,9 @@ OCCT_CAPI void analyze(const TopoDS_Shape *myShape);
 /* Opens an interactive viewer window and blocks until it is closed. */
 OCCT_CAPI int visualize(TopoDS_Shape *shape);
 
-/* name may be NULL. r, g, b are sRGB components in [0, 1], used when hasColor is set. */
-OCCT_CAPI OCCT_HANDLE(CadNode) *handle_CadNode__part__TopoDS_Shape_name_hasColor_r_g_b(const TopoDS_Shape *shape, const char *name, int hasColor, double r, double g, double b);
+/* name may be NULL. r, g, b are sRGB components in [0, 1], and a the alpha in [0, 1] (1 for opaque), used when hasColor
+   is set. */
+OCCT_CAPI OCCT_HANDLE(CadNode) *handle_CadNode__part__TopoDS_Shape_name_hasColor_r_g_b_a(const TopoDS_Shape *shape, const char *name, int hasColor, double r, double g, double b, double a);
 
 /* An empty assembly; name may be NULL. */
 OCCT_CAPI OCCT_HANDLE(CadNode) *handle_CadNode__assembly__name(const char *name);
