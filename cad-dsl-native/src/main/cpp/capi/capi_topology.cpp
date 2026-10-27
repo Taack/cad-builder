@@ -546,8 +546,8 @@ extern "C" gp_Dir *new_gp_Dir__Normal__TopoDS_Face(const TopoDS_Face *aCurrentFa
         occ::handle<Geom_Surface> aSurface = BRep_Tool::Surface(*aCurrentFace);
         GeomLProp_SLProps props(aSurface, (umin + umax) / 2, (vmin + vmax) / 2, 1, 0.01);
         gp_Dir n = props.Normal();
-        std::cout << "gp_dir_normal_to_face: umin = " << umin << " umax = " << umax << " vmin = " << vmin << " vmax = " <<
-            vmax << " n.X " << n.X() << " n.Y " << n.Y() << " n.Z " << n.Z() << std::endl;
+        TRACE2(std::ostringstream{} << "umin = " << umin << " umax = " << umax << " vmin = " << vmin << " vmax = " << vmax
+            << " n.X " << n.X() << " n.Y " << n.Y() << " n.Z " << n.Z());
         return new gp_Dir(n);
     });
 }

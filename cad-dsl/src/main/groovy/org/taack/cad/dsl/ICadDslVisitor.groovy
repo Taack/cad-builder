@@ -139,6 +139,21 @@ interface ICadDslVisitor {
 
     void visitSolidRotate(Vec pos, Vec dir, double angle, boolean clone)
 
+    /**
+     * @return Measures of the current solid
+     */
+    Measures measure()
+
+    /**
+     * @return Volume shared by the current solid and the one of other, in mm³
+     */
+    double overlapVolume(ICadDslVisitor other)
+
+    /**
+     * @return Minimum distance between the current solid and the one of other, 0 when they touch or overlap
+     */
+    double distance(ICadDslVisitor other)
+
     void visitCone(double r1, double r2, double height)
 
     void visitHelix(double radius, double pitch, double height, double endRadius)

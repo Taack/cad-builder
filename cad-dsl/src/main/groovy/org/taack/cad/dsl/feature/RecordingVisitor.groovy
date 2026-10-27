@@ -2,6 +2,7 @@ package org.taack.cad.dsl.feature
 
 import groovy.transform.CompileStatic
 import org.taack.cad.dsl.ICadDslVisitor
+import org.taack.cad.dsl.ICadDslVisitorWrapper
 import org.taack.cad.dsl.PlateOptions
 import org.taack.cad.dsl.SvgOptions
 import org.taack.cad.dsl.TextOptions
@@ -27,7 +28,7 @@ import static org.taack.cad.dsl.feature.CadFeatureRecorder.v
  * visitFromEnd) goes under the face made of it, and a face under the prism or revolution made of it.
  */
 @CompileStatic
-final class RecordingVisitor implements ICadDslVisitor {
+final class RecordingVisitor implements ICadDslVisitor, ICadDslVisitorWrapper {
     @Delegate
     final ICadDslVisitor kernel
     final CadFeature root

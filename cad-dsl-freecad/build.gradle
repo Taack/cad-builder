@@ -38,9 +38,9 @@ application {
 }
 
 test {
-    // FreeCAD renders no images off screen, and writes no glTF yet
+    // FreeCAD renders no images off screen, writes no glTF and measures nothing yet
     useJUnitPlatform {
-        excludeTags 'images', 'gltf'
+        excludeTags 'images', 'gltf', 'measures'
     }
 }
 

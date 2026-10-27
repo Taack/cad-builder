@@ -5,11 +5,14 @@
 #include "capi_internal.hxx"
 
 #include <cmath>
+#include <stdexcept>
 
 #include <BRepAlgoAPI_Common.hxx>
 #include <BRepAlgoAPI_Cut.hxx>
 #include <BRepAlgoAPI_Fuse.hxx>
 #include <BRepCheck_Analyzer.hxx>
+#include <BRepBndLib.hxx>
+#include <Bnd_Box.hxx>
 #include <BRepOffsetAPI_MakeOffset.hxx>
 #include <BRepAdaptor_CompCurve.hxx>
 #include <BRepAdaptor_Surface.hxx>
@@ -356,7 +359,7 @@ extern "C" void _BRepFeat_MakeDPrism__Perform__Height(BRepFeat_MakeDPrism *p, do
 extern "C" TopoDS_Shape *ptrTopoDS_Shape__BRepFeat_MakeCylindricalHole__Perform__TopoDS_Shape_gp_Ax1_r_ptFrom_ptTo(
     const TopoDS_Shape *shape, const gp_Ax1 *ax1, double Radius, double PFrom, double PTo) {
     TRACE("");
-    std::cout << "PFrom = " << PFrom << "PTo = " << PTo << " " << (PFrom > PTo) << std::endl;
+    TRACE2(std::ostringstream{} << "PFrom = " << PFrom << " PTo = " << PTo);
     return guard(__func__, [&] {
         BRepFeat_MakeCylindricalHole makeCylindrical;
         makeCylindrical.Init(*shape, *ax1);
@@ -371,7 +374,7 @@ extern "C" TopoDS_Shape *ptrTopoDS_Shape__BRepFeat_MakeCylindricalHole__Perform_
 extern "C" TopoDS_Shape *ptrTopoDS_Shape__BRepFeat_MakeCylindricalHole__Perform__TopoDS_Shape_gp_Ax1_r_l(
     const TopoDS_Shape *shape, const gp_Ax1 *ax1, double Radius, double Length) {
     TRACE("");
-    std::cout << "Length = " << Length << std::endl;
+    TRACE2(std::ostringstream{} << "Length = " << Length);
     return guard(__func__, [&] {
         BRepFeat_MakeCylindricalHole makeCylindrical;
         makeCylindrical.Init(*shape, *ax1);
@@ -421,8 +424,7 @@ extern "C" TopoDS_Shape *new_TopoDS_Shape__BRepAlgoAPI_Cut__TopoDS_Shape_TopTool
     return guard(__func__, [&] {
         TopTools_ListOfShape aLS;
         aLS.Append(*result);
-        std::cout << "aLS.Size()" << aLS.Size() << std::endl;
-        std::cout << "aLT.Size()" << aLT->Size() << std::endl;
+        TRACE2(std::ostringstream{} << "aLS.Size() " << aLS.Size() << " aLT.Size() " << aLT->Size());
 
         BRepAlgoAPI_Cut aBuilder;
         aBuilder.SetArguments(aLS);
@@ -455,19 +457,31 @@ extern "C" TopoDS_Shape *new_TopoDS_Shape__brep_algoapi_fuse__s1_listrOfShape(co
     });
 }
 
+// The result of a boolean operation, or the errors of the algorithm as an exception instead of a broken shape
+template<class Operation>
+static TopoDS_Shape *boolean_result(const TopoDS_Shape &s1, const TopoDS_Shape &s2) {
+    Operation operation(s1, s2);
+    if (operation.HasErrors()) {
+        std::ostringstream errors;
+        operation.DumpErrors(errors);
+        throw std::runtime_error(errors.str());
+    }
+    return new TopoDS_Shape(operation.Shape());
+}
+
 extern "C" TopoDS_Shape *new_TopoDS_Shape__bBRepAlgoAPI_Cut__s1_s2(const TopoDS_Shape *result, const TopoDS_Shape *tool) {
     TRACE("OBSOLETE");
-    return guard(__func__, [&] { return new TopoDS_Shape(BRepAlgoAPI_Cut(*result, *tool).Shape()); });
+    return guard(__func__, [&] { return boolean_result<BRepAlgoAPI_Cut>(*result, *tool); });
 }
 
 extern "C" TopoDS_Shape *new_TopoDS_Shape__brep_algoapi_fuse__s1_s2(const TopoDS_Shape *s1, const TopoDS_Shape *s2) {
     TRACE("OBSOLETE");
-    return guard(__func__, [&] { return new TopoDS_Shape(BRepAlgoAPI_Fuse(*s1, *s2).Shape()); });
+    return guard(__func__, [&] { return boolean_result<BRepAlgoAPI_Fuse>(*s1, *s2); });
 }
 
 extern "C" TopoDS_Shape *new_TopoDS_Shape__brep_algoapi_common__s1_s2(const TopoDS_Shape *s1, const TopoDS_Shape *s2) {
     TRACE("OBSOLETE");
-    return guard(__func__, [&] { return new TopoDS_Shape(BRepAlgoAPI_Common(*s1, *s2).Shape()); });
+    return guard(__func__, [&] { return boolean_result<BRepAlgoAPI_Common>(*s1, *s2); });
 }
 
 /*
@@ -482,6 +496,22 @@ extern "C" gp_Pnt *new_gp_Pnt__CentreOfMass__TopoDS_Shape(const TopoDS_Shape *my
         GProp_GProps massProps;
         BRepGProp::SurfaceProperties(*myShape, massProps);
         return new gp_Pnt(massProps.CentreOfMass());
+    });
+}
+
+extern "C" double *R12_shape_measures(const TopoDS_Shape *shape) {
+    TRACE("");
+    return guard(__func__, [&]() -> double * {
+        GProp_GProps volume, surface;
+        BRepGProp::VolumeProperties(*shape, volume);
+        BRepGProp::SurfaceProperties(*shape, surface);
+        gp_Pnt center = volume.Mass() != 0.0 ? volume.CentreOfMass() : gp_Pnt();
+        Bnd_Box box;
+        BRepBndLib::AddOptimal(*shape, box, false, false);
+        double x1 = 0, y1 = 0, z1 = 0, x2 = 0, y2 = 0, z2 = 0;
+        if (!box.IsVoid()) box.Get(x1, y1, z1, x2, y2, z2);
+        double valid = BRepCheck_Analyzer(*shape).IsValid() ? 1.0 : 0.0;
+        return new double[12]{volume.Mass(), surface.Mass(), center.X(), center.Y(), center.Z(), x1, y1, z1, x2, y2, z2, valid};
     });
 }
 

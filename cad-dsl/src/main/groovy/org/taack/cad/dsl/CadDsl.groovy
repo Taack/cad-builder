@@ -7,6 +7,7 @@ import org.taack.cad.dsl.geom.IOpenShape2d
 import org.taack.cad.dsl.geom.Outline
 import org.taack.cad.dsl.geom.Vec
 import org.taack.cad.dsl.geom.Vec2d
+import org.taack.cad.dsl.check.ContourCheck
 import org.taack.cad.dsl.kernel.CadKernels
 
 import static java.lang.Math.*
@@ -32,6 +33,17 @@ class CadDsl extends CadDslSolid implements CadDslBase {
      */
     static CadDslAssembly assembly(String name = null, @DelegatesTo(value = CadDslAssembly, strategy = Closure.DELEGATE_FIRST) Closure c) {
         CadDslAssembly.build(name, c)
+    }
+
+    /**
+     * Builds the models made in build and finds in their contours what could be written shorter, see
+     * {@link org.taack.cad.dsl.check.ContourCheck}: close contours, copies, rows and circles of them, repeated edges,
+     * text drawn as contours.
+     * @param tolerance Distance in mm under which two contours are close
+     * @return The findings, each one starting with file:line of the code drawing the contours
+     */
+    static List<String> checkContours(Number tolerance = 1d, Closure build) {
+        ContourCheck.run(tolerance.toDouble(), build)
     }
 
     CadDslWire wireFrom(Vec pos, @DelegatesTo(value = CadDslEdge, strategy = Closure.DELEGATE_FIRST) Closure c = null) {

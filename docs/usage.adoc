@@ -57,6 +57,9 @@ cad-dsl-occt/build/install/cad-dsl/bin/cad-dsl sphere.groovy sphere.step  # <2>
 export CAD_DSL_OPTS="-Djava.library.path=$PWD/cad-dsl-native/build/lib/main/release"
 ----
 
+The OCCT kernel prints nothing but what the script prints. To follow what it does, every call of the C API and of the
+model, add `-Dcad.trace=true` to `CAD_DSL_OPTS`.
+
 From Gradle, `./gradlew :cad-dsl-occt:run --args="$PWD/sphere.groovy"` sets it to the library just built.
 
 Classes in the directory of the script are found too (`Contour.groovy` for a class `Contour`), to share parts

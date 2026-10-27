@@ -64,7 +64,7 @@ class CadBuilder {
 
     CadBuilder fuse(CadBuilder other) {
 
-        println "currentLoc = $currentLoc"
+        if (Natives.TRACE) println "currentLoc = $currentLoc"
         def trsf = own(new_gp_Trsf(), NativeLib::delete_gp_Trsf)
         _gp_Trsf__SetTranslation__gp_Vec(trsf, gpVec(currentLoc))
         other.currentShapeNative = own(new_TopoDS_Shape__Shape__BRepBuilderAPI_MakeShape(own(new_BRepBuilderAPI_Transform__TopoDS_Shape_gp_Trsf(other.currentShapeNative, trsf, 0, 0), NativeLib::delete_BRepBuilderAPI_Transform)), NativeLib::delete_TopoDS_Shape)
@@ -90,7 +90,7 @@ class CadBuilder {
 
     CadBuilder cylinder(Number radius, Number height, Vec dir = new Vec(1)) {
 
-        println "cyl : ${currentLoc}"
+        if (Natives.TRACE) println "cyl : ${currentLoc}"
 
         def ax2 = own(new_gp_Ax2__gp_Pnt_gp_Dir(gpPnt(currentLoc), gpDir(dir)), NativeLib::delete_gp_Ax2)
         def MKCylinder = own(new_BRepPrimAPI_MakeCylinder__gp_Ax2_r_h(ax2, radius.toDouble(), height.toDouble()), NativeLib::delete_BRepPrimAPI_MakeCylinder)
@@ -267,7 +267,7 @@ class CadBuilder {
      * @return
      */
     CadBuilder toFace() {
-        println "toFace $wireNatives"
+        if (Natives.TRACE) println "toFace $wireNatives"
         MemorySegment wire = ref_TopoDS_Wire__BRepBuilderAPI_MakeWire__Wire(wireNatives.first())
         currentFaceNative = own(new_TopoDS_Face__BRepBuilderAPI_MakeFace__TopoDS_Wire(wire), NativeLib::delete_TopoDS_Face)
         if (wireNatives.size() > 1) {
@@ -302,14 +302,14 @@ class CadBuilder {
     CadBuilder rect(BigDecimal sx, BigDecimal sy, @DelegatesTo(value = CadBuilder, strategy = Closure.DELEGATE_FIRST) Closure operations) {
         def centerOfFace = vec(own(new_gp_Pnt__CentreOfMass__TopoDS_Shape(currentFaceNative), NativeLib::delete_gp_Pnt))
         def faceDir = vecFromDir(own(new_gp_Dir__Normal__TopoDS_Face(currentFaceNative), NativeLib::delete_gp_Dir))
-        println "rect ($sx, $sy), faceDir = ${faceDir}, centerOfFace = ${centerOfFace}"
+        if (Natives.TRACE) println "rect ($sx, $sy), faceDir = ${faceDir}, centerOfFace = ${centerOfFace}"
         def gCoords1 = Vec.globalLocFromLocal(centerOfFace, faceDir, new Vec2d(-sx / 2.0, -sy / 2.0))
         def gCoords2 = Vec.globalLocFromLocal(centerOfFace, faceDir, new Vec2d(sx / 2.0, -sy / 2.0))
         def gCoords3 = Vec.globalLocFromLocal(centerOfFace, faceDir, new Vec2d(sx / 2.0, sy / 2.0))
         def gCoords4 = Vec.globalLocFromLocal(centerOfFace, faceDir, new Vec2d(-sx / 2.0, sy / 2.0))
 
         clockwiseLoc = [gCoords1, gCoords2, gCoords3, gCoords4]
-        println "rect $clockwiseLoc"
+        if (Natives.TRACE) println "rect $clockwiseLoc"
         operations.delegate = this
         operations.call()
         this as CadBuilder
@@ -335,25 +335,25 @@ class CadBuilder {
 
     void hole(BigDecimal diameter, BigDecimal length) {
         def gpDir = own(new_gp_Dir__Normal__TopoDS_Face(currentFaceNative), NativeLib::delete_gp_Dir)
-        println "hole $diameter Dir: ${vecFromDir(gpDir)}"
+        if (Natives.TRACE) println "hole $diameter Dir: ${vecFromDir(gpDir)}"
         clockwiseLoc.each {
-            println "holeHelper $diameter, Loc: $it, Dir: ${vecFromDir(gpDir)}"
+            if (Natives.TRACE) println "holeHelper $diameter, Loc: $it, Dir: ${vecFromDir(gpDir)}"
             holeHelper(it, gpDir, diameter, length)
         }
     }
 
     void hole(BigDecimal diameter) {
         def gpDir = own(new_gp_Dir__Normal__TopoDS_Face(currentFaceNative), NativeLib::delete_gp_Dir)
-        println "hole $diameter Dir: ${vecFromDir(gpDir)}"
+        if (Natives.TRACE) println "hole $diameter Dir: ${vecFromDir(gpDir)}"
         clockwiseLoc.each {
-            println "holeHelper $diameter, Loc: $it, Dir: ${vecFromDir(gpDir)}"
+            if (Natives.TRACE) println "holeHelper $diameter, Loc: $it, Dir: ${vecFromDir(gpDir)}"
             holeHelper(it, gpDir, diameter, 0.1, 0.0)
         }
     }
 
     CadBuilder cut(CadBuilder other) {
         MemorySegment trsf = own(new_gp_Trsf(), NativeLib::delete_gp_Trsf)
-        println "cut currentLoc = $currentLoc, other.currentLoc = ${other.currentLoc}"
+        if (Natives.TRACE) println "cut currentLoc = $currentLoc, other.currentLoc = ${other.currentLoc}"
         _gp_Trsf__SetTranslation__gp_Vec(trsf, gpVec(new Vec(0.0) - currentLoc))
         def toolNative = own(new_TopoDS_Shape__BRepBuilderAPI_Transform__Shape_gp_Trsf_bCopy(other.currentShapeNative, trsf, 1), NativeLib::delete_TopoDS_Shape)
         def cutNative = own(new_TopoDS_Shape__bBRepAlgoAPI_Cut__s1_s2(currentShapeNative, toolNative), NativeLib::delete_TopoDS_Shape)

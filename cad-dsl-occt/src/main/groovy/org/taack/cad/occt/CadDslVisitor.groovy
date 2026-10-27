@@ -4,10 +4,12 @@ import groovy.transform.CompileStatic
 import org.taack.cad.builder.*
 import org.taack.cad.dsl.CadDisplay
 import org.taack.cad.dsl.ICadDslVisitor
+import org.taack.cad.dsl.Measures
 import org.taack.cad.dsl.PlateOptions
 import org.taack.cad.dsl.SvgOptions
 import org.taack.cad.dsl.TextOptions
 import org.taack.cad.dsl.feature.ICadDslFeatureShapes
+import org.taack.cad.dsl.kernel.CadKernels
 import org.taack.cad.dsl.geom.*
 import org.taack.cad.dsl.svg.SvgContour
 
@@ -28,15 +30,17 @@ class CadDslVisitor implements ICadDslVisitor, ICadDslFeatureShapes {
         private static int inc = 0
 
         static void ind(String s) {
-            println "    " * inc++ + s
+            if (Natives.TRACE) println "    " * inc + s
+            inc++
         }
 
         static void dec(String s) {
-            println "    " * --inc + s
+            --inc
+            if (Natives.TRACE) println "    " * inc + s
         }
 
         static void cur(String s) {
-            println "    " * inc + s
+            if (Natives.TRACE) println "    " * inc + s
         }
     }
     private static final double THRU_SECTIONS_PRECISION = 1.0e-06d
@@ -239,7 +243,7 @@ class CadDslVisitor implements ICadDslVisitor, ICadDslFeatureShapes {
         Tr.cur "cutLasts: $cutLasts"
         for (def otherShape in cutLasts) {
             Tr.cur "cutting; $firstShape, $otherShape"
-            firstShape = own(new_TopoDS_Shape__bBRepAlgoAPI_Cut__s1_s2(firstShape, otherShape), NativeLib::delete_TopoDS_Shape)
+            firstShape = booleanResult('cut', new_TopoDS_Shape__bBRepAlgoAPI_Cut__s1_s2(firstShape, otherShape))
         }
         shape = firstShape
         boolShapes.pop()
@@ -272,7 +276,7 @@ class CadDslVisitor implements ICadDslVisitor, ICadDslFeatureShapes {
         def fuseLasts = boolShapes.peek()
         Tr.cur "fuseLasts: $fuseLasts"
         for (def otherShape in fuseLasts) {
-            firstShape = own(new_TopoDS_Shape__brep_algoapi_fuse__s1_s2(firstShape, otherShape), NativeLib::delete_TopoDS_Shape)
+            firstShape = booleanResult('fuse', new_TopoDS_Shape__brep_algoapi_fuse__s1_s2(firstShape, otherShape))
         }
         shape = firstShape
         popShape()
@@ -296,11 +300,48 @@ class CadDslVisitor implements ICadDslVisitor, ICadDslFeatureShapes {
         def commonLasts = boolShapes.peek()
         Tr.cur "commonLasts: $commonLasts"
         for (def otherShape in commonLasts) {
-            firstShape = own(new_TopoDS_Shape__brep_algoapi_common__s1_s2(firstShape, otherShape), NativeLib::delete_TopoDS_Shape)
+            firstShape = booleanResult('common', new_TopoDS_Shape__brep_algoapi_common__s1_s2(firstShape, otherShape))
         }
         shape = firstShape
         popShape()
         Tr.dec("visitCommonEnd")
+    }
+
+    /**
+     * @return The owned result of a boolean operation; it fails with the errors of OCCT rather than going on with a
+     * broken shape, e.g. when two solids share a face
+     */
+    private MemorySegment booleanResult(String operation, MemorySegment result) {
+        if (result == MemorySegment.NULL) throw new IllegalStateException("$operation: ${lastError()}")
+        own(result, NativeLib::delete_TopoDS_Shape)
+    }
+
+    @Override
+    Measures measure() {
+        double[] m = Natives.doubles(R12_shape_measures(shape), 12)
+        if (m == null) throw new IllegalStateException("measure: ${lastError()}")
+        new Measures(m[0], m[1], new Vec(m[2], m[3], m[4]), new Vec(m[5], m[6], m[7]), new Vec(m[8], m[9], m[10]), m[11] != 0d)
+    }
+
+    @Override
+    double overlapVolume(ICadDslVisitor other) {
+        def common = booleanResult('overlap', new_TopoDS_Shape__brep_algoapi_common__s1_s2(shape, occt(other).shape))
+        double[] m = Natives.doubles(R12_shape_measures(common), 12)
+        m ? m[0] : 0d
+    }
+
+    @Override
+    double distance(ICadDslVisitor other) {
+        double[] m = Natives.doubles(R7_BRepExtrema_DistShapeShape__s1_s2(shape, occt(other).shape), 7)
+        if (m == null || m[6] < 0) throw new IllegalStateException("distance: ${lastError()}")
+        m[6]
+    }
+
+    // The OCCT visitor behind other, recording the features or not
+    private static CadDslVisitor occt(ICadDslVisitor other) {
+        def kernel = CadKernels.unwrap(other)
+        if (!(kernel instanceof CadDslVisitor)) throw new IllegalArgumentException("not an OCCT solid: $other")
+        (CadDslVisitor) kernel
     }
 
     @Override
@@ -455,29 +496,32 @@ class CadDslVisitor implements ICadDslVisitor, ICadDslFeatureShapes {
         if (shape) {
             def translate = own(new_gp_Trsf(), NativeLib::delete_gp_Trsf)
             _gp_Trsf__SetTranslation__gp_Vec(translate, gpVec(distance))
-            def moved = own(new_TopoDS_Shape__BRepBuilderAPI_Transform__Shape_gp_Trsf_bCopy(shape, translate, 0), NativeLib::delete_TopoDS_Shape)
-            if (boolShapes.peek().empty) this.shape = moved
-            else {
-                boolShapes.peek().removeLast()
-                boolShapes.peek() << moved
-            }
+            replaceMoved(shape, own(new_TopoDS_Shape__BRepBuilderAPI_Transform__Shape_gp_Trsf_bCopy(shape, translate, 0), NativeLib::delete_TopoDS_Shape))
         }
+    }
+
+    /**
+     * The moved solid takes the place of the source in the list of the closure, and as the current solid when the
+     * source was it: at the root of a model, the next cut or fuse works on the moved solid
+     */
+    private void replaceMoved(MemorySegment source, MemorySegment moved) {
+        if (!boolShapes.peek().empty) {
+            boolShapes.peek().removeLast()
+            boolShapes.peek() << moved
+        }
+        if (boolShapes.peek().size() <= 1 || this.shape == source) this.shape = moved
     }
 
     @Override
     void visitSolidRotate(Vec pos, Vec dir, double angle, boolean clone) {
-        Tr.cur("visitSolidTranslatevisitSolidRotate ${boolShapes.peek()}")
+        Tr.cur("visitSolidRotate ${boolShapes.peek()}")
         def shape = boolShapes.peek().empty ? shape : boolShapes.peek().last()
         if (shape) {
             def translate = own(new_gp_Trsf(), NativeLib::delete_gp_Trsf)
             _gp_Trsf__SetRotation__gp_Vec(translate, own(new_gp_Ax1__p_dir(gpPnt(pos), gpDir(dir)), NativeLib::delete_gp_Ax1), angle)
             def moved = own(new_TopoDS_Shape__BRepBuilderAPI_Transform__Shape_gp_Trsf_bCopy(shape, translate, clone ? 1 : 0), NativeLib::delete_TopoDS_Shape)
-            if (boolShapes.peek().empty) this.shape = moved
-            else {
-                if (!clone)
-                    boolShapes.peek().removeLast()
-                boolShapes.peek() << moved
-            }
+            if (clone) boolShapes.peek() << moved
+            else replaceMoved(shape, moved)
         }
 
     }

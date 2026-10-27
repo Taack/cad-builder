@@ -99,6 +99,44 @@ class CadDslSolid implements CadDslBase {
         this
     }
 
+    /**
+     * Volume, area, center of mass, bounding box and validity of the current solid, to check a model in its script:
+     * <pre>
+     * def m = part.measure()
+     * assert m.valid && m.volume > 0
+     * println "${m.mass(1.24)} g, $m"
+     * </pre>
+     */
+    Measures measure() {
+        visitor.measure()
+    }
+
+    /**
+     * Fails when the current solid is not valid, or empty: a boolean operation went wrong, often on faces shared by
+     * two solids. To call on each part of a model, the check of OCCT taking time on big solids.
+     * @param name Name of the solid in the message
+     */
+    CadDslSolid check(String name = 'solid') {
+        def m = measure()
+        if (!m.valid || m.volume <= 0d) throw new IllegalStateException("$name is broken: $m")
+        this
+    }
+
+    /**
+     * @return Volume shared with other, in mm³: 0 when the solids do not interfere. other may come from another cd(),
+     * the solids are compared where they are, e.g. a part and the equipment put in it
+     */
+    double overlap(CadDslSolid other) {
+        visitor.overlapVolume(other.visitor)
+    }
+
+    /**
+     * @return Minimum distance to other, 0 when they touch or overlap: the clearance between two parts
+     */
+    double distance(CadDslSolid other) {
+        visitor.distance(other.visitor)
+    }
+
     CadDslSolid note(String text, Number height, Vec pos) {
 
     }

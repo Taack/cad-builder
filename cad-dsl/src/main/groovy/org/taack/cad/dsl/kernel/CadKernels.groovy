@@ -1,6 +1,8 @@
 package org.taack.cad.dsl.kernel
 
 import groovy.transform.CompileStatic
+import org.taack.cad.dsl.ICadDslVisitor
+import org.taack.cad.dsl.ICadDslVisitorWrapper
 
 /**
  * Lookup of the {@link CadKernel} available on the classpath.
@@ -26,6 +28,15 @@ final class CadKernels {
             }
             kernel
         }
+    }
+
+    /**
+     * @return The visitor of the kernel, inside the wrappers around it
+     */
+    static ICadDslVisitor unwrap(ICadDslVisitor visitor) {
+        ICadDslVisitor v = visitor
+        while (v instanceof ICadDslVisitorWrapper) v = ((ICadDslVisitorWrapper) v).kernel
+        v
     }
 
     /**

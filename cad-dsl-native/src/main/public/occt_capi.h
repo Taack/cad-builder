@@ -102,6 +102,9 @@ OCCT_CAPI void occt_clear_last_error(void);
 /* Releases the arrays returned by the R<n>_ / r4_ functions. */
 OCCT_CAPI void occt_free_doubles(double *values);
 
+/* Prints each call of the API on stdout when on is non-zero; off by default. */
+OCCT_CAPI void occt_set_trace(int on);
+
 #define OCCT_DECLARE_DELETE(T) OCCT_CAPI void delete_##T(T *ptr);
 #define OCCT_DECLARE_DELETE_HANDLE(T) OCCT_CAPI void delete_handle_##T(OCCT_HANDLE(T) *ptr);
 OCCT_CAPI_OBJECT_TYPES(OCCT_DECLARE_DELETE)
@@ -656,6 +659,10 @@ OCCT_CAPI TopoDS_Shape *new_TopoDS_Shape__brep_algoapi_fuse__s1_s2(const TopoDS_
 OCCT_CAPI TopoDS_Shape *new_TopoDS_Shape__brep_algoapi_common__s1_s2(const TopoDS_Shape *s1, const TopoDS_Shape *s2);
 
 OCCT_CAPI gp_Pnt *new_gp_Pnt__CentreOfMass__TopoDS_Shape(const TopoDS_Shape *myShape);
+
+/* {volume, area, center of mass x, y, z, box xmin, ymin, zmin, xmax, ymax, zmax, 1 when valid else 0}.
+   Release with occt_free_doubles. */
+OCCT_CAPI double *R12_shape_measures(const TopoDS_Shape *shape);
 
 /* {p1x, p1y, p1z, p2x, p2y, p2z, distance}; distance is -20000000 when no solution.
    Release with occt_free_doubles. */

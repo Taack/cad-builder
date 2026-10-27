@@ -6,6 +6,7 @@ import org.taack.cad.dsl.Color
 import org.taack.cad.dsl.ICadDslAssemblyVisitor
 import org.taack.cad.dsl.ICadDslNode
 import org.taack.cad.dsl.ICadDslVisitor
+import org.taack.cad.dsl.kernel.CadKernels
 import org.taack.cad.dsl.geom.Frame
 import org.taack.cad.dsl.geom.Trsf
 import org.taack.cad.dsl.geom.Vec
@@ -40,7 +41,7 @@ class OcctAssemblyVisitor implements ICadDslAssemblyVisitor {
 
     @Override
     ICadDslNode visitPart(String name, Color color, ICadDslVisitor solid) {
-        MemorySegment shape = ((CadDslVisitor) solid).resultShape()
+        MemorySegment shape = ((CadDslVisitor) CadKernels.unwrap(solid)).resultShape()
         if (!shape) throw new IllegalArgumentException("Empty part ${name ?: ''}: build a solid before adding it to the assembly")
         CadDslVisitor.Tr.cur "assembly part: $name, $shape, color: $color"
         try (Arena arena = Arena.ofConfined()) {

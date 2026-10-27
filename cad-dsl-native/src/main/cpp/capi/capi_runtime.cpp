@@ -77,6 +77,12 @@ extern "C" void occt_clear_last_error(void) {
     hasLastError = false;
 }
 
+bool capi_trace = false;
+
+extern "C" void occt_set_trace(int on) {
+    capi_trace = to_bool(on);
+}
+
 extern "C" void occt_free_doubles(double *values) {
     delete[] values;
 }

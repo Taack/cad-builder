@@ -6,6 +6,7 @@ import org.taack.cad.dsl.Color
 import org.taack.cad.dsl.ICadDslAssemblyVisitor
 import org.taack.cad.dsl.ICadDslNode
 import org.taack.cad.dsl.ICadDslVisitor
+import org.taack.cad.dsl.kernel.CadKernels
 import org.taack.cad.dsl.geom.Frame
 import org.taack.cad.dsl.geom.Trsf
 import org.taack.cad.dsl.geom.Vec
@@ -25,7 +26,7 @@ class FreeCadAssemblyVisitor implements ICadDslAssemblyVisitor {
 
     @Override
     ICadDslNode visitPart(String name, Color color, ICadDslVisitor solid) {
-        FreeCadVisitor model = (FreeCadVisitor) solid
+        FreeCadVisitor model = (FreeCadVisitor) CadKernels.unwrap(solid)
         new FreeCadPart(session.call(handle, 'visitPart', name, color ? [color.r, color.g, color.b, color.a] : null, model.handle) as int, model)
     }
 

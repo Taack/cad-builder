@@ -26,7 +26,10 @@
 #define CAPI_FUNCTION_NAME __PRETTY_FUNCTION__
 #endif
 
-#define TRACE2(message) TRACE_IMPL2(__FILE__, __LINE__, CAPI_FUNCTION_NAME, message)
+// Whether TRACE and TRACE2 print the calls, off unless occt_set_trace(1) (capi_runtime.cpp)
+extern bool capi_trace;
+
+#define TRACE2(message) if (capi_trace) TRACE_IMPL2(__FILE__, __LINE__, CAPI_FUNCTION_NAME, message)
 inline void TRACE_IMPL2(const char *file, int line, const char *function, std::ostringstream message) {
     std::cout << /*file << " : " <<*/ line << " : " << function << " : " << message.str() << "\n";
     std::cout.flush();
@@ -34,6 +37,7 @@ inline void TRACE_IMPL2(const char *file, int line, const char *function, std::o
 
 #define TRACE(message) TRACE_IMPL(__FILE__, __LINE__, CAPI_FUNCTION_NAME, message)
 inline void TRACE_IMPL(const char *file, int line, const char *function, const char *message) {
+    if (!capi_trace) return;
     std::cout << /*file << " : " <<*/ line << " : " << function << " : " << message << "\n";
     std::cout.flush();
 }

@@ -10,6 +10,7 @@ import java.util.function.Consumer
 
 import static org.taack.occt.NativeLib.occt_free_doubles
 import static org.taack.occt.NativeLib.occt_last_error
+import static org.taack.occt.NativeLib.occt_set_trace
 
 /**
  * Ownership of the objects returned by the OCCT C API (new_*, handle_*, ...).
@@ -24,6 +25,15 @@ import static org.taack.occt.NativeLib.occt_last_error
 final class Natives {
     // Scopes opened on this thread, most recent last; the current one is the most recent still alive.
     private static final ThreadLocal<List<WeakReference<Arena>>> SCOPES = ThreadLocal.withInitial { [] as List<WeakReference<Arena>> }
+
+    /**
+     * Whether the models and the C API print what they do, with -Dcad.trace=true
+     */
+    static final boolean TRACE = Boolean.getBoolean('cad.trace')
+
+    static {
+        occt_set_trace(TRACE ? 1 : 0)
+    }
 
     private Natives() {}
 

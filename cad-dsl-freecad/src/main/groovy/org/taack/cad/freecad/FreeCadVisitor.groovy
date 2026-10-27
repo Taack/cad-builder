@@ -3,6 +3,7 @@ package org.taack.cad.freecad
 import groovy.transform.CompileStatic
 import org.taack.cad.dsl.CadParams
 import org.taack.cad.dsl.ICadDslVisitor
+import org.taack.cad.dsl.Measures
 import org.taack.cad.dsl.PlateOptions
 import org.taack.cad.dsl.SvgOptions
 import org.taack.cad.dsl.TextOptions
@@ -328,6 +329,21 @@ class FreeCadVisitor implements ICadDslVisitor {
     @Override
     void visitSolidRotate(Vec pos, Vec dir, double angle, boolean clone) {
         call('visitSolidRotate', pos, dir, angle, clone)
+    }
+
+    @Override
+    Measures measure() {
+        throw new UnsupportedOperationException('measure: only with the OCCT kernel')
+    }
+
+    @Override
+    double overlapVolume(ICadDslVisitor other) {
+        throw new UnsupportedOperationException('overlap: only with the OCCT kernel')
+    }
+
+    @Override
+    double distance(ICadDslVisitor other) {
+        throw new UnsupportedOperationException('distance: only with the OCCT kernel')
     }
 
     @Override
