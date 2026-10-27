@@ -1,5 +1,5 @@
 //
-// C API: off-screen rendering, STEP / STL export and shape diagnostics.
+// C API: STEP import, off-screen rendering, STEP / STL export and shape diagnostics.
 //
 
 #ifdef _WIN32
@@ -23,6 +23,12 @@
 #include <Prs3d_LineAspect.hxx>
 #include <Quantity_ColorRGBA.hxx>
 #include <STEPCAFControl_Writer.hxx>
+#include <STEPCAFControl_Reader.hxx>
+#include <STEPControl_Reader.hxx>
+#include <TDF_Tool.hxx>
+#include <TopExp.hxx>
+#include <TopTools_IndexedMapOfShape.hxx>
+#include <UnitsMethods_LengthUnit.hxx>
 #include <StlAPI_Writer.hxx>
 #include <TCollection_ExtendedString.hxx>
 #include <TDataStd_Name.hxx>
@@ -35,12 +41,15 @@
 #include <XCAFDoc_ColorTool.hxx>
 #include <XCAFDoc_DocumentTool.hxx>
 #include <XCAFDoc_ShapeTool.hxx>
+#include <gp_Ax3.hxx>
 
+#include <algorithm>
 #include <cmath>
 #include <sstream>
 #include <string>
 #include <vector>
 #include <map>
+#include <optional>
 #include <stdexcept>
 
 #ifdef _WIN32
@@ -156,6 +165,20 @@ extern "C" void write_step(const TopoDS_Shape *shape, const char *fileName) {
         // Write as STEP file
         STEPCAFControl_Writer myWriter;
         myWriter.Perform(aDoc, fileName);
+    });
+}
+
+extern "C" TopoDS_Shape *new_TopoDS_Shape__STEPControl_Reader__fileName_gp_Ax2(const char *fileName, const gp_Ax2 *position) {
+    TRACE("");
+    return guard(__func__, [&] {
+        STEPControl_Reader reader;
+        if (reader.ReadFile(fileName) != IFSelect_RetDone) throw std::runtime_error(std::string("cannot read STEP file ") + fileName);
+        reader.TransferRoots();
+        TopoDS_Shape shape = reader.OneShape();
+        if (shape.IsNull()) throw std::runtime_error(std::string("no shape in STEP file ") + fileName);
+        gp_Trsf trsf;
+        trsf.SetDisplacement(gp_Ax3(), gp_Ax3(*position));
+        return new TopoDS_Shape(shape.Moved(TopLoc_Location(trsf)));
     });
 }
 
@@ -299,6 +322,164 @@ extern "C" void write_step_assembly(const occ::handle<CadNode> *assembly, const 
         myWriter.SetColorMode(true);
         myWriter.SetNameMode(true);
         myWriter.Perform(aDoc, fileName);
+    });
+}
+
+namespace {
+// Builds the CadNode tree of an XCAF document: a node per label and color, each one once
+struct StepAssemblyReader {
+    occ::handle<XCAFDoc_ShapeTool> shapeTool;
+    std::map<std::string, occ::handle<CadNode>> nodes;
+
+    static std::optional<Quantity_ColorRGBA> color(const TDF_Label &l) {
+        Quantity_ColorRGBA c;
+        if (XCAFDoc_ColorTool::GetColor(l, XCAFDoc_ColorSurf, c) || XCAFDoc_ColorTool::GetColor(l, XCAFDoc_ColorGen, c)) return c;
+        return std::nullopt;
+    }
+
+    static std::string name(const TDF_Label &l) {
+        occ::handle<TDataStd_Name> n;
+        if (!l.FindAttribute(TDataStd_Name::GetID(), n)) return "";
+        return TCollection_AsciiString(n->Get()).ToCString();
+    }
+
+    static occ::handle<CadNode> part(const TopoDS_Shape &shape, const std::string &name, const std::optional<Quantity_ColorRGBA> &c) {
+        occ::handle<CadNode> part = new CadNode();
+        part->name = name;
+        part->shape = shape;
+        if (c) {
+            part->hasColor = true;
+            part->color = c->GetRGB();
+            part->alpha = c->Alpha();
+        }
+        return part;
+    }
+
+    static void keyOf(std::ostringstream &key, const std::optional<Quantity_ColorRGBA> &c) {
+        if (c) key << ' ' << c->GetRGB().Red() << ' ' << c->GetRGB().Green() << ' ' << c->GetRGB().Blue() << ' ' << c->Alpha();
+        else key << " -";
+    }
+
+    // The node of label, its color the one of its instance, else its own, else the one of an assembly above it
+    occ::handle<CadNode> node(const TDF_Label &label, const std::optional<Quantity_ColorRGBA> &instance, const std::optional<Quantity_ColorRGBA> &above) {
+        TCollection_AsciiString entry;
+        TDF_Tool::Entry(label, entry);
+        std::ostringstream key;
+        key << entry.ToCString();
+        keyOf(key, instance);
+        keyOf(key, above);
+        auto found = nodes.find(key.str());
+        if (found != nodes.end()) return found->second;
+
+        std::optional<Quantity_ColorRGBA> c = instance ? instance : color(label);
+        if (!c) c = above;
+        occ::handle<CadNode> n;
+        if (XCAFDoc_ShapeTool::IsAssembly(label)) {
+            n = new CadNode();
+            n->name = name(label);
+            n->isAssembly = true;
+            NCollection_Sequence<TDF_Label> components;
+            XCAFDoc_ShapeTool::GetComponents(label, components);
+            for (const TDF_Label &component : components) {
+                TDF_Label referred;
+                if (!XCAFDoc_ShapeTool::GetReferredShape(component, referred)) continue;
+                n->components.push_back({node(referred, color(component), c), XCAFDoc_ShapeTool::GetLocation(component).Transformation()});
+            }
+        } else {
+            n = faceColors(label, c);
+        }
+        nodes[key.str()] = n;
+        return n;
+    }
+
+    // The part of label, or when faces of it have their own colors, an assembly of a part per color
+    occ::handle<CadNode> faceColors(const TDF_Label &label, const std::optional<Quantity_ColorRGBA> &partColor) {
+        TopoDS_Shape shape = shapeTool->GetShape(label);
+        TopTools_IndexedMapOfShape faces;
+        TopExp::MapShapes(shape, TopAbs_FACE, faces);
+        std::vector<std::optional<Quantity_ColorRGBA>> faceColor(faces.Extent() + 1);
+        bool colored = false;
+        NCollection_Sequence<TDF_Label> subShapes;
+        XCAFDoc_ShapeTool::GetSubShapes(label, subShapes);
+        for (const TDF_Label &sub : subShapes) {
+            std::optional<Quantity_ColorRGBA> c = color(sub);
+            if (!c) continue;
+            TopTools_IndexedMapOfShape subFaces;
+            TopExp::MapShapes(shapeTool->GetShape(sub), TopAbs_FACE, subFaces);
+            for (int i = 1; i <= subFaces.Extent(); i++) {
+                int index = faces.FindIndex(subFaces(i));
+                if (index > 0) {
+                    faceColor[index] = c;
+                    colored = true;
+                }
+            }
+        }
+        if (!colored) return part(shape, name(label), partColor);
+
+        // the faces of each color in a compound, in the order the colors are found
+        std::vector<std::pair<std::optional<Quantity_ColorRGBA>, TopoDS_Compound>> groups;
+        BRep_Builder builder;
+        for (int i = 1; i <= faces.Extent(); i++) {
+            std::optional<Quantity_ColorRGBA> c = faceColor[i] ? faceColor[i] : partColor;
+            auto group = std::find_if(groups.begin(), groups.end(), [&](const auto &g) {
+                return g.first.has_value() == c.has_value() && (!c || g.first->GetRGB().IsEqual(c->GetRGB()) && g.first->Alpha() == c->Alpha());
+            });
+            if (group == groups.end()) {
+                groups.push_back({c, TopoDS_Compound()});
+                builder.MakeCompound(groups.back().second);
+                group = groups.end() - 1;
+            }
+            builder.Add(group->second, faces(i));
+        }
+        occ::handle<CadNode> n = new CadNode();
+        n->name = name(label);
+        n->isAssembly = true;
+        for (const auto &group : groups) n->components.push_back({part(group.second, n->name, group.first), gp_Trsf()});
+        return n;
+    }
+};
+}
+
+extern "C" occ::handle<CadNode> *handle_CadNode__STEPCAFControl_Reader__fileName_name(const char *fileName, const char *name) {
+    TRACE("");
+    return guard(__func__, [&] {
+        occ::handle<TDocStd_Document> doc;
+        XCAFApp_Application::GetApplication()->NewDocument("MDTV-XCAF", doc);
+        XCAFDoc_DocumentTool::SetLengthUnit(doc, 1, UnitsMethods_LengthUnit_Millimeter);
+        STEPCAFControl_Reader reader;
+        reader.SetColorMode(true);
+        reader.SetNameMode(true);
+        if (reader.ReadFile(fileName) != IFSelect_RetDone) throw std::runtime_error(std::string("cannot read STEP file ") + fileName);
+        if (!reader.Transfer(doc)) throw std::runtime_error(std::string("cannot transfer STEP file ") + fileName);
+
+        StepAssemblyReader tree{XCAFDoc_DocumentTool::ShapeTool(doc->Main())};
+        NCollection_Sequence<TDF_Label> roots;
+        tree.shapeTool->GetFreeShapes(roots);
+        if (roots.IsEmpty()) throw std::runtime_error(std::string("no shape in STEP file ") + fileName);
+        occ::handle<CadNode> root;
+        if (roots.Length() == 1) {
+            root = tree.node(roots.First(), std::nullopt, std::nullopt);
+        } else {
+            root = new CadNode();
+            root->isAssembly = true;
+            for (const TDF_Label &l : roots) root->components.push_back({tree.node(l, std::nullopt, std::nullopt), gp_Trsf()});
+        }
+        if (name) root->name = name;
+        XCAFApp_Application::GetApplication()->Close(doc);
+        return new occ::handle<CadNode>(root);
+    });
+}
+
+extern "C" TopoDS_Shape *new_TopoDS_Shape__CadNode__compound(const occ::handle<CadNode> *node) {
+    TRACE("");
+    return guard(__func__, [&] {
+        BRep_Builder builder;
+        TopoDS_Compound compound;
+        builder.MakeCompound(compound);
+        (*node)->forEachPart(gp_Trsf(), [&](const CadNode &part, const gp_Trsf &location) {
+            builder.Add(compound, part.shape.Moved(TopLoc_Location(location)));
+        });
+        return new TopoDS_Shape(compound);
     });
 }
 

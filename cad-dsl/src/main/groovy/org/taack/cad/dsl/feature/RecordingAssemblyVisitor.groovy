@@ -67,6 +67,17 @@ final class RecordingAssemblyVisitor implements ICadDslAssemblyVisitor {
     }
 
     @Override
+    ICadDslNode visitImportStep(String fileName, String name) {
+        def part = recorder.record(new CadFeature('part', "STEP ${new File(fileName).name}", CadFeatureFrame.current()), null)
+        feature.children << part
+        recorder.last = part
+        ICadDslNode node = part.suppressed ? new Suppressed() : kernel.visitImportStep(fileName, name)
+        if (!part.suppressed) forwarded = true
+        recorder.nodes.put(node, part)
+        node
+    }
+
+    @Override
     void visitPlace(ICadDslNode node, Trsf location) {
         CadFeature placed = recorder.nodes.get(node)
         // a sub-assembly goes under the assembly it is first placed in

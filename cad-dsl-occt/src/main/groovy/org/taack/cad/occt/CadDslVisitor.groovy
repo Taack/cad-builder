@@ -224,6 +224,21 @@ class CadDslVisitor implements ICadDslVisitor, ICadDslFeatureShapes {
     }
 
     @Override
+    void visitImportStep(String fileName) {
+        def ax2 = directionNormal ? own(new_gp_Ax2__gp_Pnt_gp_Dir_Normal(gpPnt(fromVec), gpDir(direction), gpDir(directionNormal)), NativeLib::delete_gp_Ax2) : own(new_gp_Ax2__gp_Pnt_gp_Dir(gpPnt(fromVec), gpDir(direction)), NativeLib::delete_gp_Ax2)
+        MemorySegment shape
+        try (Arena arena = Arena.ofConfined()) {
+            shape = new_TopoDS_Shape__STEPControl_Reader__fileName_gp_Ax2(arena.allocateFrom(fileName), ax2)
+        }
+        if (shape == MemorySegment.NULL) throw new IllegalArgumentException("importStep($fileName): ${lastError()}")
+        shape = own(shape, NativeLib::delete_TopoDS_Shape)
+
+        Tr.cur "importStep($fileName) from: $fromVec, direction: $direction, directionNormal: $directionNormal, shape: $shape"
+        boolShapes.peek() << shape
+        if (!this.shape) this.shape = shape
+    }
+
+    @Override
     void visitCut() {
         Tr.ind("visitCut")
         boolShapes.peek().remove(shape)
@@ -1216,7 +1231,7 @@ class CadDslVisitor implements ICadDslVisitor, ICadDslFeatureShapes {
     @Override
     Object featureShape(String kind) {
         switch (kind) {
-            case ['box', 'sphere', 'cylinder', 'torus', 'cone', 'revolution']:
+            case ['box', 'sphere', 'cylinder', 'torus', 'cone', 'revolution', 'importStep']:
                 // the primitives and revolutions are the last shape added, until a boolean uses them
                 return !boolShapes.empty() && !boolShapes.peek().empty ? boolShapes.peek().last() : null
             case ['prism', 'pocket']:

@@ -16,6 +16,14 @@ interface ICadDslAssemblyVisitor extends ICadDslNode {
     ICadDslNode visitPart(String name, Color color, ICadDslVisitor solid)
 
     /**
+     * @return A part made of the shapes of a STEP file, with their assembly tree, names and colors when the kernel
+     * keeps them
+     * @param fileName Absolute path of the file
+     * @param name     Part name
+     */
+    ICadDslNode visitImportStep(String fileName, String name)
+
+    /**
      * Add an occurrence of node to the assembly, the component following the ones added before
      * @param location From the node coordinates to the assembly ones
      */

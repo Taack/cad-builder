@@ -65,6 +65,19 @@ class CadDslAssembly extends CadDslPart {
     }
 
     /**
+     * Declare a part made of the shapes of a STEP file, with its assembly tree, names and colors (the FreeCAD kernel
+     * keeps neither the tree nor the colors). It is not in the assembly until placed.
+     * @param fileName Path of the file, relative to the working directory
+     * @param name     Part name, the file name without its extension by default
+     */
+    CadDslPart importStep(String fileName, String name = null) {
+        File file = new File(fileName)
+        if (!file.isFile()) throw new FileNotFoundException("STEP file not found: ${file.absolutePath}")
+        String partName = name ?: file.name.replaceFirst(/\.[^.]*$/, '')
+        new CadDslPart(partName, visitor.visitImportStep(file.absolutePath, partName), visitor)
+    }
+
+    /**
      * Declare a sub-assembly. It is not in this assembly until placed.
      */
     CadDslAssembly assembly(String name = null, @DelegatesTo(value = CadDslAssembly, strategy = Closure.DELEGATE_FIRST) Closure c) {

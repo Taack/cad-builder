@@ -64,6 +64,11 @@ class FreeCadVisitor implements ICadDslVisitor {
     }
 
     @Override
+    void visitImportStep(String fileName) {
+        call('visitImportStep', fileName)
+    }
+
+    @Override
     void visitCut() {
         call('visitCut')
     }

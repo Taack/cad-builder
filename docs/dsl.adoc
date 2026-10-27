@@ -551,3 +551,30 @@ cd().box(30, 30, 5).topZ().wireFrom() {
 
 image::../cad-svg2.png[]
 ====
+
+== STEP Files
+
+`importStep(fileName)` reads the shapes of a STEP file (in millimeters); the path is relative to the working directory.
+To rebuild a STEP file as a DSL script instead, see xref:freecad.adoc#step-to-dsl[STEP to DSL].
+
+* In an assembly, `importStep(fileName, name)` declares a part made of the file, with its assembly tree, its names and
+  its colors, the ones of the faces too (a part whose faces have their own colors becomes a part per color). Place it
+  like any part: it can be mated by its faces, and exported to images, STEP and glTF files with its colors. The name is
+  the file name without its extension by default.
+* In a model, `cd().importStep(fileName)` makes a solid of the file, without its colors and tree, moved from the global
+  axes onto the current position and direction, like a primitive: it can be cut, fused and measured.
+
+The FreeCAD kernel keeps neither the tree nor the colors: both make a single part.
+
+A script turning a STEP file into an image or a glTF file:
+
+[source,groovy]
+----
+assembly { place(importStep(args[0])) }.display(args[1])
+----
+
+[source,bash]
+----
+cad-dsl-occt/build/install/cad-dsl/bin/cad-dsl StepView.groovy part.step part.png
+cad-dsl-occt/build/install/cad-dsl/bin/cad-dsl StepView.groovy part.step part.glb
+----

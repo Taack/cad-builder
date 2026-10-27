@@ -30,6 +30,16 @@ class FreeCadAssemblyVisitor implements ICadDslAssemblyVisitor {
         new FreeCadPart(session.call(handle, 'visitPart', name, color ? [color.r, color.g, color.b, color.a] : null, model.handle) as int, model)
     }
 
+    /**
+     * The shapes of the file in a single part, without their colors
+     */
+    @Override
+    ICadDslNode visitImportStep(String fileName, String name) {
+        FreeCadVisitor model = new FreeCadVisitor()
+        model.visitImportStep(fileName)
+        visitPart(name, null, model)
+    }
+
     private static int handleOf(ICadDslNode node) {
         node instanceof FreeCadAssemblyVisitor ? ((FreeCadAssemblyVisitor) node).handle : ((FreeCadPart) node).handle
     }

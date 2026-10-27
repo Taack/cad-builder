@@ -3,6 +3,7 @@ package org.taack.cad.dsl
 import groovy.transform.CompileStatic
 import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.io.TempDir
 import org.taack.cad.dsl.geom.Vec
 
 import static org.junit.jupiter.api.Assertions.assertEquals
@@ -13,6 +14,9 @@ import static org.taack.cad.dsl.CadDsl.cd
 @Tag('measures')
 class MeasureTest {
     private static final double TOLERANCE = 1e-6d
+
+    @TempDir
+    File dir
 
     // Vec has no equals
     private static void assertVec(Vec expected, Vec actual) {
@@ -80,5 +84,22 @@ class MeasureTest {
         def part = box(new Vec(0, 0, 0))
         part.translate(new Vec(100, 0, 0)).cut { position(new Vec(105, 0, 0)) { box(10, 20, 30) } }
         assertEquals(3000d, part.measure().volume, 1e-3d)
+    }
+
+    @Test
+    void "Import a STEP file at the current position and direction"() {
+        File step = new File(dir, 'box.step')
+        box(new Vec(0, 0, 0)).display(step.path)
+        def m = cd().position(new Vec(100, 0, 0)) { importStep(step.path) }.measure()
+        assertEquals(6000d, m.volume, 1e-3d)
+        assertVec(new Vec(100, 0, 0), m.min)
+        // along X, the z of the file goes along X
+        def turned = cd().position(new Vec(0, 0, 0)) { direction(new Vec(1, 0, 0)).importStep(step.path) }.measure()
+        assertEquals(30d, turned.size.x, 1e-3d)
+        // a cut of the imported solid
+        def cut = cd()
+        cut.importStep(step.path)
+        cut.cut { position(new Vec(0, 0, 0)) { box(5, 20, 30) } }
+        assertEquals(3000d, cut.measure().volume, 1e-3d)
     }
 }

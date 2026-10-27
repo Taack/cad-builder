@@ -670,7 +670,7 @@ OCCT_CAPI double *R7_BRepExtrema_DistShapeShape__s1_s2(const TopoDS_Shape *Shape
 
 /***********************************************************************************************************************
 
-    Output: rendering, export, diagnostics (capi_io.cpp, OcctAisHello.cpp)
+    Input and output: STEP import, rendering, export, diagnostics (capi_io.cpp, OcctAisHello.cpp)
 
 ***********************************************************************************************************************/
 
@@ -678,6 +678,9 @@ OCCT_CAPI double *R7_BRepExtrema_DistShapeShape__s1_s2(const TopoDS_Shape *Shape
 OCCT_CAPI int dumpShape(const TopoDS_Shape *shape, int width, int height, const char *fileName);
 
 OCCT_CAPI void write_step(const TopoDS_Shape *shape, const char *fileName);
+
+/* Reads the shapes of a STEP file, in millimeters, and moves them from the global axes onto position. */
+OCCT_CAPI TopoDS_Shape *new_TopoDS_Shape__STEPControl_Reader__fileName_gp_Ax2(const char *fileName, const gp_Ax2 *position);
 
 OCCT_CAPI void write_stl(const TopoDS_Shape *shape, const char *fileName);
 
@@ -705,6 +708,13 @@ OCCT_CAPI void write_step_assembly(const OCCT_HANDLE(CadNode) *assembly, const c
 OCCT_CAPI void write_stl_assembly(const OCCT_HANDLE(CadNode) *assembly, const char *fileName);
 
 OCCT_CAPI int visualize_assembly(const OCCT_HANDLE(CadNode) *assembly);
+
+/* The assembly tree of a STEP file, in millimeters, with the names and colors of its parts; name, if not NULL, replaces
+   the name of the root. A part whose faces have their own colors becomes an assembly of a part per color. */
+OCCT_CAPI OCCT_HANDLE(CadNode) *handle_CadNode__STEPCAFControl_Reader__fileName_name(const char *fileName, const char *name);
+
+/* The shapes of all the parts of node, moved to their static locations, in a compound. */
+OCCT_CAPI TopoDS_Shape *new_TopoDS_Shape__CadNode__compound(const OCCT_HANDLE(CadNode) *node);
 
 /* Static location of the component index of assembly (in the order they were added). */
 OCCT_CAPI void _CadNode__SetLocation__index_location(OCCT_HANDLE(CadNode) *assembly, int index, const gp_Trsf *location);

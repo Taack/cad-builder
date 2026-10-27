@@ -819,6 +819,13 @@ class Model:
         self.place(o, self.ax2())
         self.primitive(o)
 
+    def visitImportStep(self, file_name):
+        o = self.add('Part::Feature', 'Step')
+        o.Shape = Part.read(file_name)
+        # the placement of the file, if any, moved onto the current position
+        o.Placement = self.ax2().multiply(o.Placement)
+        self.primitive(o)
+
     def visitCut(self):
         if self.shape in self.bool_shapes[-1]:
             self.bool_shapes[-1].remove(self.shape)

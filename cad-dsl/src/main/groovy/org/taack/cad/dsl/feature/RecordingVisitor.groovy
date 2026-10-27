@@ -371,6 +371,13 @@ final class RecordingVisitor implements ICadDslVisitor, ICadDslVisitorWrapper {
     }
 
     @Override
+    void visitImportStep(String fileName) {
+        CadFeature f = add('importStep', "STEP ${new File(fileName).name}")
+        if (!f.suppressed) kernel.visitImportStep(fileName)
+        shape(f)
+    }
+
+    @Override
     void visitCone(double r1, double r2, double height) {
         CadFeature f = add('cone', "cone r${n(r1)} to r${n(r2)} × ${n(height)}")
         if (!f.suppressed) kernel.visitCone(r1, r2, height)

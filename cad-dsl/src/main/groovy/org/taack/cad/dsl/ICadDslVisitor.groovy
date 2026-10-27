@@ -31,6 +31,12 @@ interface ICadDslVisitor {
 
     void visitTorus(double torusRadius, double ringRadius)
 
+    /**
+     * The shapes of a STEP file, moved from the global axes onto the current position and direction
+     * @param fileName Absolute path of the file
+     */
+    void visitImportStep(String fileName)
+
     void visitCut()
 
     void visitCutEnd()

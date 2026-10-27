@@ -75,6 +75,28 @@ class GltfTest {
     }
 
     @Test
+    void "A STEP file is imported with its tree, names and colors"() {
+        File step = new File(dir, 'colors.step')
+        CadDsl.assembly('colors') {
+            place(part('block', Color.RED) { box(10, 10, 10) })
+            def pin = part('pin', Color.BLUE) { cylinder(1, 5) }
+            place(pin) { translate(20, 0, 0) }
+            place(pin) { translate(30, 0, 0) }
+        }.display(step.path)
+        File file = new File(dir, 'colors' + CadDisplay.GLTF_EXTENSION)
+        CadDsl.assembly { place(importStep(step.path)) }.display(file.path)
+
+        GlbFile gltf = GlbFile.read(file)
+        assertEquals(2, gltf.list('meshes').size())
+        assertNotNull(gltf.node('colors'))
+        List<Map> pins = gltf.list('nodes').findAll { it.name == 'pin' }
+        assertEquals(2, pins.size())
+        assertEquals(pins[0].mesh, pins[1].mesh)
+        Map pin = gltf.list('materials').find { it.name == 'pin' }
+        assertValues([0d, 0d, 1d, 1d], ((Map) pin.pbrMetallicRoughness).baseColorFactor)
+    }
+
+    @Test
     void "The animation has a key per frame for each moving component"() {
         File file = new File(dir, 'train' + CadDisplay.GLTF_EXTENSION)
         AnimationTest.gearTrain().display(file.path)

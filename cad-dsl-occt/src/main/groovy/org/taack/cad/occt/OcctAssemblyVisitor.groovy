@@ -53,6 +53,18 @@ class OcctAssemblyVisitor implements ICadDslAssemblyVisitor {
     }
 
     @Override
+    ICadDslNode visitImportStep(String fileName, String name) {
+        try (Arena arena = Arena.ofConfined()) {
+            MemorySegment n = handle_CadNode__STEPCAFControl_Reader__fileName_name(arena.allocateFrom(fileName), cString(arena, name))
+            if (n == MemorySegment.NULL) throw new IllegalArgumentException("importStep($fileName): ${lastError()}")
+            n = own(n, NativeLib::delete_handle_CadNode)
+            CadDslVisitor.Tr.cur "assembly importStep: $fileName, $name"
+            // the shapes in one compound, for the face queries
+            new OcctPart(n, own(new_TopoDS_Shape__CadNode__compound(n), NativeLib::delete_TopoDS_Shape))
+        }
+    }
+
+    @Override
     void visitPlace(ICadDslNode node, Trsf location) {
         MemorySegment n = node instanceof OcctAssemblyVisitor ? ((OcctAssemblyVisitor) node).node : ((OcctPart) node).node
         _CadNode__AddComponent__node_location(this.node, n, gpTrsf(location))

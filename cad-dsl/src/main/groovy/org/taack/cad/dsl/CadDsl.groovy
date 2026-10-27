@@ -141,6 +141,18 @@ class CadDsl extends CadDslSolid implements CadDslBase {
     }
 
     /**
+     * Import the shapes of a STEP file as a solid, moved from the global axes onto the current position and direction.
+     * Colors and assembly tree of the file are not kept.
+     * @param fileName Path of the file, relative to the working directory
+     */
+    CadDslSolid importStep(String fileName) {
+        File file = new File(fileName)
+        if (!file.isFile()) throw new FileNotFoundException("STEP file not found: ${file.absolutePath}")
+        visitor.visitImportStep(file.absolutePath)
+        new CadDslSolid(visitor: visitor)
+    }
+
+    /**
      * Start a helix whose axis is the current direction, from the current position.
      * Sweep a section along it with {@link CadDslHelix#profile} or {@link CadDslHelix#wire}.
      * @param radius    Helix radius at the start
