@@ -5,8 +5,6 @@ plugins {
     id 'maven-publish'
 }
 
-group = 'org.taack'
-version = '0.1'
 description = 'DSL for CAD Bodies and Assemblies'
 ext.pomName = 'Groovy CAD DSL'
 

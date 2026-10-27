@@ -23,7 +23,7 @@ sourceSets {
 }
 
 dependencies {
-    cadImplementation 'org.taack.cad:cad-dsl:0.1'
+    cadImplementation 'org.taack:cad-dsl:0.3'
     // parts shared as a jar, see parts/
     cadImplementation 'org.example.cad:parts:0.1'
 }

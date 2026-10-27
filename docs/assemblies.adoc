@@ -68,7 +68,7 @@ assembly('cart') {
 ----
 
 .Cart Result
-image::../cad-assembly.png[]
+image::images/cad-assembly.png[]
 
 == Animations
 
@@ -134,7 +134,7 @@ assembly('gear train') {
 ----
 
 .Gear Train Result
-image::../cad-animation.gif[]
+image::images/cad-animation.gif[]
 
 === Crank and Slider
 
@@ -201,7 +201,7 @@ assembly('crank and slider') {
 ----
 
 .Crank and Slider Result
-image::../cad-crank-slider.gif[]
+image::images/cad-crank-slider.gif[]
 
 === Animated Sub-assemblies
 
@@ -258,4 +258,4 @@ assembly('rolling cart') {
 ----
 
 .Rolling Cart Result
-image::../cad-rolling-cart.gif[]
+image::images/cad-rolling-cart.gif[]

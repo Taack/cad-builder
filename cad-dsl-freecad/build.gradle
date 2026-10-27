@@ -5,8 +5,6 @@ plugins {
     id 'application'
 }
 
-group = 'org.taack'
-version = '0.1'
 description = 'FreeCAD kernel for the CAD DSL, saving editable FCStd files'
 ext.pomName = 'Groovy CAD DSL FreeCAD Kernel'
 

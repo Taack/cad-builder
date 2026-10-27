@@ -5,9 +5,6 @@ plugins {
     id 'cpp-unit-test'
 }
 
-group = 'org.taack'
-version = '0.1'
-
 // OCCT 8.0 install prefix: -PocctHome=<dir>, the OCCT_HOME environment variable, or the platform default.
 def isMac = Os.isFamily(Os.FAMILY_MAC)
 // On Windows, the toolchain is Visual C++, and OCCT is installed with the Unix layout (see docs/building.adoc).

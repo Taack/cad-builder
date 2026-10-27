@@ -39,7 +39,7 @@ void "Pillow Block With Counterbored Holes and Prism"() {
 ----
 
 .Pillow Block Result
-image::../cad-pillow-block.png[]
+image::images/cad-pillow-block.png[]
 
 == How a Model is Built
 
@@ -83,7 +83,7 @@ void "Test cut 3 boxes"() {
 ----
 
 .Cut 3 Boxes Result
-image::../cad-cut-3-boxes.png[]
+image::images/cad-cut-3-boxes.png[]
 
 .Cut Version
 [source,groovy]
@@ -107,7 +107,7 @@ void "Test mix fuse - common - cut"() {
 ----
 
 .Cut Result
-image::../cad-cut.png[]
+image::images/cad-cut.png[]
 
 .Fuse Version
 [source,groovy]
@@ -131,7 +131,7 @@ void "Test mix fuse - common - fuse"() {
 ----
 
 .Fuse Result
-image::../cad-fuse.png[]
+image::images/cad-fuse.png[]
 
 == Checking a Model
 
@@ -210,7 +210,7 @@ void "Molded tray, its walls and pockets with a draft"() {
 ----
 
 .Molded Tray
-image::../cad-draft.png[]
+image::images/cad-draft.png[]
 
 == Outlines
 
@@ -260,7 +260,7 @@ void "Molded housing drawn as dimensioned, its walls leaning 2°"() {
 ----
 
 .Molded Housing
-image::../cad-outline.png[]
+image::images/cad-outline.png[]
 
 == Helix
 
@@ -279,7 +279,7 @@ void "Spring"() {
 ----
 
 .Spring Result
-image::../cad-spring.png[]
+image::images/cad-spring.png[]
 
 Swept in a `fuse`, a trapezoid profile threads the neck of the bottle:
 
@@ -310,7 +310,7 @@ static CadDsl helixThreading(CadDsl s) {
 ----
 
 .Bottle Neck Threaded with `helix`
-image::../cad-bottle-neck.png[]
+image::images/cad-bottle-neck.png[]
 
 == Wings and Propellers
 
@@ -346,7 +346,7 @@ void "Wing with Free Profile Sections"() {
 ----
 
 .Wing Result
-image::../cad-wing.png[]
+image::images/cad-wing.png[]
 
 `circularPattern(count[, axis]) { ... }` repeats the solids made in its closure around an axis (Z by default) through
 the current position; the copies join the enclosing `fuse`, `cut` or `common`. With `CadDslWing.pitchTwist(pitch, radius)`,
@@ -380,7 +380,7 @@ void "Three-blade Propeller"() {
 ----
 
 .Propeller Result
-image::../cad-propeller.png[]
+image::images/cad-propeller.png[]
 
 == Thru Sections
 
@@ -440,7 +440,7 @@ static CadDsl simpleThreading(CadDsl s) {
 ----
 
 .Bottle Neck Threaded with `thruSection`
-image::../cad-bottle-thru-section.png[]
+image::images/cad-bottle-thru-section.png[]
 
 == Plate Surfaces
 
@@ -484,7 +484,7 @@ static CadDslSolid solidUnderPlate() {
 ----
 
 .Plate Result
-image::../cad-plate.png[]
+image::images/cad-plate.png[]
 
 == Text
 
@@ -514,7 +514,7 @@ cd().box(60, 20, 5).topZ().wireFrom() {
 ----
 
 .Text Result
-image::../cad-text.png[]
+image::images/cad-text.png[]
 
 NOTE: Text needs OCCT built with FreeType (`-DUSE_FREETYPE=ON`), which the Windows build below turns off.
 
@@ -549,7 +549,7 @@ cd().box(30, 30, 5).topZ().wireFrom() {
 }.toFace().prism(1).display()
 ----
 
-image::../cad-svg2.png[]
+image::images/cad-svg2.png[]
 ====
 
 == STEP Files

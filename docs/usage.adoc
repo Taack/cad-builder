@@ -15,8 +15,8 @@ Artifact coordinates:
 .Maven
 [source,groovy]
 ----
-implementation 'org.taack.cad:cad-dsl:0.1'      // to write models
-runtimeOnly 'org.taack.cad:cad-dsl-occt:0.1'    // to build them
+implementation 'org.taack:cad-dsl:0.1'      // to write models
+runtimeOnly 'org.taack:cad-dsl-occt:0.1'    // to build them
 ----
 
 NOTE: See https://github.com/Taack/cad-dsl-app/blob/main/cad-dsl-linux-app-x86-64/build.gradle[sample-build.gradle] to deal with JMOD files
@@ -90,7 +90,7 @@ one side and a `BigDecimal` on the other, it is `Number & Comparable`, which no 
 on the literals of the conditional, or `as double` around it, gives it a `double`.
 
 To get code completion, write the imports anyway (`import org.taack.cad.dsl.geom.Vec`, `import static org.taack.cad.dsl.CadDsl.cd`…) and open the scripts
-in a project depending on `org.taack.cad:cad-dsl` only.
+in a project depending on `org.taack:cad-dsl` only.
 
 [[runner]]
 == Runner
@@ -229,7 +229,7 @@ group = 'org.example.cad'
 version = '0.1'
 
 dependencies {
-    api 'org.taack.cad:cad-dsl:0.1'
+    api 'org.taack:cad-dsl:0.1'
 }
 
 publishing {

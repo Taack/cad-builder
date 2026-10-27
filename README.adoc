@@ -14,7 +14,7 @@ its scripts use the part as any class:
 [source,groovy]
 ----
 dependencies {
-    cadImplementation 'org.taack.cad:cad-dsl:0.1'
+    cadImplementation 'org.taack:cad-dsl:0.1'
     cadImplementation 'org.example.cad:parts:0.1'   // the shared parts
 }
 ----
@@ -31,7 +31,7 @@ resolved, the classes of the modules they depend on. See xref:docs/usage.adoc#sh
 the example project in `cad-dsl-intellij/example`.
 
 .Assembly, with svg
-image::mj32.jpg[]
+image::docs/images/mj32.jpg[]
 
 == Modules
 

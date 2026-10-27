@@ -3,8 +3,6 @@ plugins {
     id 'application'
 }
 
-group = 'org.taack'
-version = '0.1'
 description = 'Runs CAD DSL scripts on request, for an IDE'
 
 // cad-dsl-native is loaded from java.library.path; it finds OCCT through its rpath (see docs/building.adoc, Native Library)

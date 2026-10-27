@@ -5,8 +5,6 @@ plugins {
     id 'application'
 }
 
-group = 'org.taack'
-version = '0.1'
 description = 'Converts STEP files to CAD DSL scripts, with FreeCAD'
 ext.pomName = 'Groovy CAD DSL STEP Converter'
 

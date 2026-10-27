@@ -23,7 +23,7 @@ final class CadKernels {
             if (kernel == null) {
                 Iterator<CadKernel> providers = ServiceLoader.load(CadKernel).iterator()
                 if (!providers.hasNext())
-                    throw new IllegalStateException("No CAD kernel found on the classpath: add a kernel implementation, 'org.taack.cad:cad-dsl-occt' or 'org.taack.cad:cad-dsl-freecad'")
+                    throw new IllegalStateException("No CAD kernel found on the classpath: add a kernel implementation, 'org.taack:cad-dsl-occt' or 'org.taack:cad-dsl-freecad'")
                 kernel = providers.next()
             }
             kernel
