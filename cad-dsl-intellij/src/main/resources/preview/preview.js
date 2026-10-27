@@ -36,6 +36,7 @@ let edgesVisible = true;
 let loading = 0;
 // the glTF node objects of the model, by index; the nodes of the selected feature, and the shapes shown over them
 let nodeObjects = [];
+let objectNodes = new Map();
 let highlighted = [];
 let shapeUrl = null;
 let shapes = [];
@@ -74,6 +75,24 @@ function dispose(root) {
         object.material?.dispose();
         object.userData.original?.dispose();
     });
+}
+
+// The glTF nodes under the pointer, the deepest first, to the IDE that opens the line that made them; none when it
+// points at nothing
+const raycaster = new THREE.Raycaster();
+function pick(event) {
+    if (!model || !window.cadPick) return;
+    const rect = renderer.domElement.getBoundingClientRect();
+    const pointer = new THREE.Vector2((event.clientX - rect.left) / rect.width * 2 - 1,
+        -(event.clientY - rect.top) / rect.height * 2 + 1);
+    raycaster.setFromCamera(pointer, camera);
+    raycaster.params.Line.threshold = camera.position.distanceTo(controls.target) / 200;
+    const hits = raycaster.intersectObject(model, true).filter(it => it.object.visible && !it.object.userData.shape);
+    // a face rather than the boundary drawn over it; the edges of a shape without faces
+    const hit = hits.find(it => it.object.isMesh) ?? hits[0];
+    const nodes = [];
+    for (let o = hit?.object; o; o = o.parent) if (objectNodes.has(o)) nodes.push(objectNodes.get(o));
+    window.cadPick(JSON.stringify(nodes));
 }
 
 // Puts back the materials the highlight replaced
@@ -187,8 +206,11 @@ window.cadPreview = {
             shapes = [];
             model = gltf.scene;
             nodeObjects = [];
+            objectNodes = new Map();
             gltf.parser.associations.forEach((value, object) => {
-                if (value?.nodes !== undefined) nodeObjects[value.nodes] = object;
+                if (value?.nodes === undefined) return;
+                nodeObjects[value.nodes] = object;
+                objectNodes.set(object, value.nodes);
             });
             prepare(model);
             scene.add(model);
@@ -222,6 +244,16 @@ playButton.addEventListener('click', () => {
 });
 timeSlider.addEventListener('input', () => {
     if (mixer) mixer.setTime(Number(timeSlider.value));
+});
+
+// a click picks, a drag turns the view
+let pressed = null;
+renderer.domElement.addEventListener('pointerdown', event => {
+    pressed = event.button === 0 ? { x: event.clientX, y: event.clientY } : null;
+});
+renderer.domElement.addEventListener('pointerup', event => {
+    if (pressed && Math.hypot(event.clientX - pressed.x, event.clientY - pressed.y) < 4) pick(event);
+    pressed = null;
 });
 
 window.addEventListener('resize', resize);

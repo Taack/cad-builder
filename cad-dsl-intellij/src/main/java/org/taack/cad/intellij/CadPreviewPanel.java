@@ -1,5 +1,6 @@
 package org.taack.cad.intellij;
 
+import com.google.gson.JsonParser;
 import com.intellij.icons.AllIcons;
 import com.intellij.openapi.Disposable;
 import com.intellij.openapi.actionSystem.ActionManager;
@@ -8,6 +9,7 @@ import com.intellij.openapi.actionSystem.ActionUpdateThread;
 import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.actionSystem.DefaultActionGroup;
 import com.intellij.openapi.application.ApplicationManager;
+import com.intellij.openapi.fileEditor.OpenFileDescriptor;
 import com.intellij.openapi.options.ShowSettingsUtil;
 import com.intellij.openapi.project.DumbAwareAction;
 import com.intellij.openapi.project.DumbAwareToggleAction;
@@ -15,10 +17,13 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.ComboBox;
 import com.intellij.openapi.ui.SimpleToolWindowPanel;
 import com.intellij.openapi.util.Disposer;
+import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.ui.JBColor;
 import com.intellij.ui.components.JBLabel;
 import com.intellij.ui.jcef.JBCefApp;
 import com.intellij.ui.jcef.JBCefBrowser;
+import com.intellij.ui.jcef.JBCefBrowserBase;
+import com.intellij.ui.jcef.JBCefJSQuery;
 import com.intellij.ui.jcef.utils.JBCefLocalRequestHandler;
 import com.intellij.ui.jcef.utils.JBCefStreamResourceHandler;
 import com.intellij.util.ui.JBUI;
@@ -113,10 +118,17 @@ final class CadPreviewPanel implements CadPreview.Listener, Disposable {
         files.addResource(MODEL_PATH, () -> new JBCefStreamResourceHandler(model(), "model/gltf-binary", this, NOT_CACHED));
         files.addResource(SHAPE_PATH, () -> new JBCefStreamResourceHandler(new ByteArrayInputStream(shape), "model/gltf-binary", this, NOT_CACHED));
         browser.getJBCefClient().addRequestHandler(files, browser.getCefBrowser());
+        JBCefJSQuery pick = JBCefJSQuery.create((JBCefBrowserBase) browser);
+        Disposer.register(this, pick);
+        pick.addHandler(nodes -> {
+            ApplicationManager.getApplication().invokeLater(() -> picked(nodes), project.getDisposed());
+            return null;
+        });
         browser.getJBCefClient().addLoadHandler(new CefLoadHandlerAdapter() {
             @Override
             public void onLoadEnd(CefBrowser cefBrowser, CefFrame frame, int httpStatusCode) {
                 if (!frame.isMain()) return;
+                cefBrowser.executeJavaScript("window.cadPick = nodes => {" + pick.inject("nodes") + "};", cefBrowser.getURL(), 0);
                 pageLoaded = true;
                 ApplicationManager.getApplication().invokeLater(() -> {
                     if (!models.isEmpty()) {
@@ -270,11 +282,41 @@ final class CadPreviewPanel implements CadPreview.Listener, Disposable {
         ApplicationManager.getApplication().invokeLater(this::highlight, project.getDisposed());
     }
 
+    /**
+     * Selects the feature of the part clicked in the model, and opens the line that made it. The part comes first, then
+     * the placements above it: the line placing a part of a jar opens, for instance. Clicking nothing selects nothing.
+     *
+     * @param json The glTF nodes picked, the deepest first, see preview.js
+     */
+    private void picked(String json) {
+        List<Integer> nodes = new ArrayList<>();
+        JsonParser.parseString(json).getAsJsonArray().forEach(it -> nodes.add(it.getAsInt()));
+        CadHighlight highlight = shownHighlight();
+        List<String> picked = highlight.picked(nodes);
+        CadPreview preview = CadPreview.getInstance(project);
+        for (String id : picked) {
+            CadFeature feature = highlight.feature(id);
+            VirtualFile file = feature == null ? null : CadSources.projectSource(project, shownScript, feature);
+            if (file == null) continue;
+            preview.selectFeature(id);
+            // after the CAD Structure selects it, so that the caret moved to its line keeps it selected
+            ApplicationManager.getApplication().invokeLater(
+                    () -> new OpenFileDescriptor(project, file, feature.line() - 1, 0).navigate(true), project.getDisposed());
+            return;
+        }
+        preview.selectFeature(picked.isEmpty() ? null : picked.getFirst());
+    }
+
+    // the nodes of the features in the model shown
+    private CadHighlight shownHighlight() {
+        List<CadModel> shown = models;
+        return new CadHighlight(features, selected < shown.size() ? shown.get(selected).feature() : null);
+    }
+
     // Highlights the parts of the selected feature in the model shown, and shows its own shapes over them
     private void highlight() {
-        List<CadModel> shown = models;
         String feature = CadPreview.getInstance(project).selectedFeature();
-        CadHighlight highlight = new CadHighlight(features, selected < shown.size() ? shown.get(selected).feature() : null);
+        CadHighlight highlight = shownHighlight();
         List<Integer> nodes = highlight.nodes(feature);
         int request = ++highlights;
         call("cadPreview.highlight(" + nodes + ")");

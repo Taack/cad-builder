@@ -24,6 +24,8 @@ final class CadHighlight {
     private final Map<String, CadFeature> features = new HashMap<>();
     private final Map<String, CadFeature> parents = new HashMap<>();
     private final Map<String, List<Integer>> nodes = new HashMap<>();
+    // the features each node shows: its part or assembly, then the placement of it
+    private final Map<Integer, List<String>> shownBy = new HashMap<>();
     private int count;
 
     /**
@@ -43,6 +45,7 @@ final class CadHighlight {
 
     // Numbers the nodes of feature and of its components, as the runner writes them; false when one is unknown
     private boolean number(CadFeature feature) {
+        shownBy.computeIfAbsent(count, it -> new ArrayList<>()).addFirst(feature.id());
         nodes.computeIfAbsent(feature.id(), it -> new ArrayList<>()).add(count++);
         if (!feature.kind().equals("assembly")) return true;
         for (CadFeature place : places(feature, new ArrayList<>())) {
@@ -50,6 +53,7 @@ final class CadHighlight {
             CadFeature placed = place.placed() == null ? null : features.get(place.placed());
             if (placed == null) return false;
             nodes.computeIfAbsent(place.id(), it -> new ArrayList<>()).add(count);
+            shownBy.computeIfAbsent(count, it -> new ArrayList<>()).add(place.id());
             if (!number(placed)) return false;
         }
         return true;
@@ -98,6 +102,21 @@ final class CadHighlight {
             if (NODES.contains(above.kind())) return !above.kind().equals("assembly");
         }
         return false;
+    }
+
+    /**
+     * @param picked A node of the model, then the nodes above it
+     * @return The features the nodes show, the deepest first: the part picked, its placement, the assembly holding it,
+     * the placement of that assembly...
+     */
+    List<String> picked(List<Integer> picked) {
+        List<String> found = new ArrayList<>();
+        picked.forEach(it -> found.addAll(shownBy.getOrDefault(it, List.of())));
+        return found;
+    }
+
+    @Nullable CadFeature feature(String id) {
+        return features.get(id);
     }
 
     /**

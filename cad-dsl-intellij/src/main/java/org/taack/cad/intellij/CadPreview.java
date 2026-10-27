@@ -12,6 +12,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -27,7 +28,7 @@ public final class CadPreview {
 
         void shown(@NotNull CadRunResult result);
 
-        /** The feature selected in the CAD Structure tool window, null when none is */
+        /** The feature selected in the CAD Structure tool window or picked in the preview, null when none is */
         default void featureSelected(@Nullable String feature) {}
     }
 
@@ -60,6 +61,7 @@ public final class CadPreview {
      * Selects a feature of the last run, to highlight it in the preview
      */
     public void selectFeature(@Nullable String feature) {
+        if (Objects.equals(feature, selectedFeature)) return;
         selectedFeature = feature;
         listeners.forEach(it -> it.featureSelected(feature));
     }

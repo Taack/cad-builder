@@ -19,16 +19,10 @@ import com.intellij.openapi.fileEditor.FileDocumentManager;
 import com.intellij.openapi.fileEditor.OpenFileDescriptor;
 import com.intellij.openapi.project.DumbAwareAction;
 import com.intellij.openapi.project.DumbAwareToggleAction;
-import com.intellij.openapi.project.DumbService;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.SimpleToolWindowPanel;
 import com.intellij.openapi.util.IconLoader;
-import com.intellij.openapi.vfs.LocalFileSystem;
 import com.intellij.openapi.vfs.VirtualFile;
-import com.intellij.psi.JavaPsiFacade;
-import com.intellij.psi.PsiClass;
-import com.intellij.psi.PsiFile;
-import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.ui.ColoredTreeCellRenderer;
 import com.intellij.ui.DoubleClickListener;
 import com.intellij.ui.PopupHandler;
@@ -49,13 +43,12 @@ import javax.swing.tree.TreePath;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 
 /**
@@ -206,6 +199,31 @@ final class CadStructurePanel implements CadPreview.Listener, Disposable {
     public void running(@NotNull CadRunRequest request) {}
 
     @Override
+    public void featureSelected(@Nullable String feature) {
+        // a feature picked in the preview
+        ApplicationManager.getApplication().invokeLater(() -> {
+            if (Objects.equals(feature, selectedId())) return;
+            TreePath path = feature == null ? null : find((DefaultMutableTreeNode) model.getRoot(), feature);
+            if (path == null) {
+                tree.clearSelection();
+                return;
+            }
+            tree.setSelectionPath(path);
+            tree.scrollPathToVisible(path);
+        }, project.getDisposed());
+    }
+
+    private static @Nullable TreePath find(DefaultMutableTreeNode node, String id) {
+        for (int i = 0; i < node.getChildCount(); i++) {
+            DefaultMutableTreeNode child = (DefaultMutableTreeNode) node.getChildAt(i);
+            if (((CadFeature) child.getUserObject()).id().equals(id)) return new TreePath(child.getPath());
+            TreePath below = find(child, id);
+            if (below != null) return below;
+        }
+        return null;
+    }
+
+    @Override
     public void shown(@NotNull CadRunResult result) {
         ApplicationManager.getApplication().invokeLater(() -> {
             // a run that failed before its first feature keeps the tree of the last one
@@ -313,19 +331,8 @@ final class CadStructurePanel implements CadPreview.Listener, Disposable {
         return true;
     }
 
-    // The file beside the script, else the class of the feature: a class of the project, or of a jar of parts
     private @Nullable VirtualFile source(CadFeature feature) {
-        if (feature.file() != null && shownScript != null) {
-            Path beside = Path.of(shownScript).resolveSibling(feature.file());
-            if (Files.isRegularFile(beside)) return LocalFileSystem.getInstance().findFileByNioFile(beside);
-        }
-        if (feature.className() == null || DumbService.isDumb(project)) return null;
-        // closures are inner classes: MjParts$_body_closure1 is in MjParts
-        String outer = feature.className().replaceFirst("\\$.*", "");
-        PsiClass found = JavaPsiFacade.getInstance(project).findClass(outer, GlobalSearchScope.allScope(project));
-        if (found == null) return null;
-        PsiFile file = found.getNavigationElement().getContainingFile();
-        return file == null ? null : file.getVirtualFile();
+        return CadSources.source(project, shownScript, feature);
     }
 
     private final class Renderer extends ColoredTreeCellRenderer {

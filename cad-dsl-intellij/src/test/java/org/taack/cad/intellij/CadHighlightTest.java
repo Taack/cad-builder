@@ -79,6 +79,16 @@ public class CadHighlightTest {
     }
 
     @Test
+    public void aPickedNodeShowsItsPartThenThePlacementsAboveIt() {
+        CadHighlight rail = new CadHighlight(RAIL, "rail");
+        // the second contact of the jack, in the jack, in the rail
+        assertEquals(List.of("rail/assembly:jack/part:contact", "rail/assembly:jack/place1",
+                "rail/assembly:jack", "rail/place0", "rail"), rail.picked(List.of(4, 2, 0)));
+        assertEquals(List.of("rail/group:screws/part:screw", "rail/place1", "rail"), rail.picked(List.of(5, 0)));
+        assertEquals(List.of(), rail.picked(List.of(9)));
+    }
+
+    @Test
     public void onlyTheOperationsDoneHaveShapes() {
         assertFalse(new CadHighlight(List.of(feature("solid0", "solid", suppressed("solid0/box0", "box", null))), "solid0").hasShape("solid0/box0"));
     }
