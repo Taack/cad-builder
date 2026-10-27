@@ -6,7 +6,7 @@ plugins {
 }
 
 group = 'org.taack'
-version = '0.1'
+version = '0.2'
 description = 'IntelliJ IDEA plugin for the CAD DSL scripts: completion, run configuration and 3D preview'
 
 def threeVersion = '0.186.1'
