@@ -26,10 +26,20 @@ To avoid passing it each time, add `occtHome=/home/<you>/.local/occt-8.0.1` to `
 ----
 ./gradlew -PocctHome=$HOME/.local/occt-8.0.1 cad-dsl-occt:test
 ./gradlew cad-dsl-freecad:test cad-dsl-step:test
-./gradlew clean <1>
+./gradlew cad-dsl-occt:test --rerun <1>
+./gradlew cad-dsl-occt:test --rerun --tests 'org.taack.cad.dsl.HelixTest' <2>
 ----
 
-<1> To replay tests, you have to clean the env.
+<1> Gradle skips a test task whose code and tests did not change since its last run (`UP-TO-DATE`):
+`--rerun` forces it. It applies to the task just before it only, so repeat it after each task to rerun.
+<2> Only one test class; a pattern such as `'org.taack.cad.dsl.HelixTest.*helix*'` selects methods.
+
+The OCCT tests render the shape of each `display(image())` to
+`cad-dsl-occt/build/test-images/<qualified test class>/<test method>.png`
+(`<test method>-2.png`, `-3.png`... when a test calls `image()` several times),
+and their report is `cad-dsl-occt/build/reports/tests/test/index.html`.
+The FreeCAD kernel renders no image: there `image()` is `null`, and `display(null)` only checks the shape.
+Tests use `display(image())`, never `display()`, which opens a window.
 
 [[building-windows]]
 == Building on Windows
