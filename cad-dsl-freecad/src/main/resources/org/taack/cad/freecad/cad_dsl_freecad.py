@@ -512,6 +512,21 @@ def font_file(font, bold, italic):
     return file_name
 
 
+def cap_height(font):
+    """The height of an M of font, for a font size (em) of 1: a ShapeString makes its Size the height of the capitals
+    (of an M), the DSL and OCCT the font size. 1 when fontTools cannot read the font."""
+    try:
+        from fontTools.ttLib import TTFont
+        from fontTools.pens.boundsPen import BoundsPen
+        f = TTFont(font, fontNumber=0)
+        glyphs = f.getGlyphSet()
+        pen = BoundsPen(glyphs)
+        glyphs[f.getBestCmap()[ord('M')]].draw(pen)
+        return pen.bounds[3] / f['head'].unitsPerEm
+    except Exception:
+        return 1.0
+
+
 # ---------------------------------------------------------------------------------------------------------------------
 # Models
 # ---------------------------------------------------------------------------------------------------------------------
@@ -1193,12 +1208,12 @@ class Model:
 
     def text(self, content, size, options, pen):
         import Draft
-        o = Draft.make_shapestring(content, font_file(options['font'], options['bold'], options['italic']), size)
+        font = font_file(options['font'], options['bold'], options['italic'])
+        o = Draft.make_shapestring(content, font, size * cap_height(font))
         o.MakeFace = False
         o.Justification = '%s-%s' % ({'BOTTOM': 'Bottom', 'CENTER': 'Middle', 'TOP': 'Top'}[options['valign']],
                                      options['align'].capitalize())
         o.Placement = pen
-        self.bindings.append((o, 'Size', size))
         self.drawn.append(o)
 
     def visitText(self, content, size, options):
@@ -1574,6 +1589,9 @@ class Assembly:
         # followed by _ then (M4_, M4_001)
         o = self.doc.addObject('App::Link', target.Label + ('_' if target.Label[-1:].isdigit() else ''))
         o.LinkedObject = target
+        # the placement of the link applies after the one of its target: a part made of a single primitive (a box at a
+        # position) keeps it, the link would else replace it
+        o.LinkTransform = True
         self.placed[handle] = self.placed.get(handle, 0) + 1
         o.Label = target.Label if self.placed[handle] == 1 else '%s (%d)' % (target.Label, self.placed[handle])
         o.Placement = to_placement(location)
