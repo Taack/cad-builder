@@ -15,19 +15,18 @@ Artifact coordinates:
 .Maven
 [source,groovy]
 ----
-implementation 'org.taack:cad-dsl:0.1'      // to write models
-runtimeOnly 'org.taack:cad-dsl-occt:0.1'    // to build them
+implementation 'org.taack:cad-dsl:0.3'      // to write models
+runtimeOnly 'org.taack:cad-dsl-occt:0.3'    // to build them
 ----
 
-NOTE: See https://github.com/Taack/cad-dsl-app/blob/main/cad-dsl-linux-app-x86-64/build.gradle[sample-build.gradle] to deal with JMOD files
+NOTE: You have to publish maven artifact locally, they are not uploaded yet.
 
-Build `cad-dsl-native` for your platform (see xref:building.adoc[Building]), and put its directory in `java.library.path`.
-
-== Sample App Using the Artifacts
-
-You can download a sample app: https://github.com/Taack/cad-dsl-app/tree/main/cad-dsl-linux-app-x86-64[cad-dsl-linux-app-x86-64].
+1. Download https://github.com/Taack/cad-builder/releases/tag/v0.3 sources
+2. Execute task: `./gradlew cad-dsl:publishToMavenLocal`
 
 == Scripts
+
+Build `cad-dsl-native` for your platform (see xref:building.adoc[Building]), and put its directory in `java.library.path`.
 
 `cad-dsl` runs a model written as a Groovy script, without any project or test around it.
 The DSL packages (`org.taack.cad.dsl`, `.geom`, `.helper`), `CadDsl.cd()` and `java.lang.Math` are imported for the script:
