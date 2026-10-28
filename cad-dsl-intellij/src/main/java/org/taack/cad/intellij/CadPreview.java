@@ -1,5 +1,6 @@
 package org.taack.cad.intellij;
 
+import com.intellij.execution.runners.ExecutionEnvironment;
 import com.intellij.openapi.Disposable;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.components.Service;
@@ -13,8 +14,11 @@ import org.jetbrains.annotations.Nullable;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * The last run of a project, shown by the CAD Preview tool window, and run again when its scripts are saved
@@ -35,6 +39,9 @@ public final class CadPreview {
     private final Project project;
     private final List<Listener> listeners = new CopyOnWriteArrayList<>();
     private final AtomicBoolean rerunPending = new AtomicBoolean();
+    // the runs of CAD scripts the IDE prepares, building and saving before them, and how many it ever scheduled
+    private final Set<ExecutionEnvironment> scheduled = ConcurrentHashMap.newKeySet();
+    private final AtomicLong schedules = new AtomicLong();
     private volatile @Nullable CadRunResult last;
     private volatile @Nullable String selectedFeature;
     // the feature the runs of a script stop at, see rollBack
@@ -117,14 +124,24 @@ public final class CadPreview {
         }, project.getDisposed());
     }
 
+    void runScheduled(@NotNull ExecutionEnvironment environment) {
+        schedules.incrementAndGet();
+        scheduled.add(environment);
+    }
+
+    void runStarted(@NotNull ExecutionEnvironment environment) {
+        scheduled.remove(environment);
+    }
+
     /**
-     * Runs the last script again, once however many times it is asked before the run starts
+     * Runs the last script again, once however many times it is asked before the run starts. A run being prepared
+     * replaces it: saving before a run, of the same script or of another one, asks for a rerun too.
      */
     public void rerun() {
         CadRunResult previous = last;
-        if (previous == null || !rerunPending.compareAndSet(false, true)) return;
+        if (previous == null || !scheduled.isEmpty() || !rerunPending.compareAndSet(false, true)) return;
         CadRunRequest request = previous.request();
-        // saving before a run asks for a rerun too: the run replaces it
+        long schedule = schedules.get();
         CadRunner.getInstance(project).submitUnlessSuperseded(request, new CadRunListener() {
             @Override
             public void started() {
@@ -139,7 +156,8 @@ public final class CadPreview {
 
             @Override
             public void finished(@NotNull CadRunResult result) {
-                show(result);
+                // a run scheduled meanwhile shows its own result, after this one would have flashed
+                if (schedules.get() == schedule) show(result);
             }
         });
     }

@@ -38,4 +38,8 @@
     <applicationListeners>
         <listener class="org.taack.cad.intellij.CadRerunOnSave" topic="com.intellij.openapi.vfs.newvfs.BulkFileListener"/>
     </applicationListeners>
+
+    <projectListeners>
+        <listener class="org.taack.cad.intellij.CadExecutionListener" topic="com.intellij.execution.ExecutionListener"/>
+    </projectListeners>
 </idea-plugin>

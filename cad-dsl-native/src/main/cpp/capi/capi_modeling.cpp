@@ -502,9 +502,11 @@ extern "C" gp_Pnt *new_gp_Pnt__CentreOfMass__TopoDS_Shape(const TopoDS_Shape *my
 extern "C" double *R12_shape_measures(const TopoDS_Shape *shape) {
     TRACE("");
     return guard(__func__, [&]() -> double * {
+        // adaptive integration: the fixed Gauss order of the default is wrong by percents on dense B-spline faces;
+        // 1e-3 is the largest adaptive tolerance, finer ones are several times slower for a few mm³ more
         GProp_GProps volume, surface;
-        BRepGProp::VolumeProperties(*shape, volume);
-        BRepGProp::SurfaceProperties(*shape, surface);
+        BRepGProp::VolumeProperties(*shape, volume, 1e-3);
+        BRepGProp::SurfaceProperties(*shape, surface, 1e-3);
         gp_Pnt center = volume.Mass() != 0.0 ? volume.CentreOfMass() : gp_Pnt();
         Bnd_Box box;
         BRepBndLib::AddOptimal(*shape, box, false, false);

@@ -37,7 +37,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
@@ -60,7 +59,6 @@ public final class CadRunner implements Disposable {
     private final ExecutorService queue = AppExecutorUtil.createBoundedApplicationPoolExecutor("CAD DSL runner", 1);
     private int lastId = 0;
     private final AtomicLong submissions = new AtomicLong();
-    private final Map<String, Long> lastSubmissions = new ConcurrentHashMap<>();
     // the output of a run reaches the IDE after its end event at times: it goes to the last run until the next one
     private volatile @Nullable CadRunListener current;
     private volatile boolean stopping;
@@ -81,25 +79,20 @@ public final class CadRunner implements Disposable {
      * Runs request after the runs submitted before it
      */
     public Future<?> submit(@NotNull CadRunRequest request, @NotNull CadRunListener listener) {
-        recordSubmission(request);
+        submissions.incrementAndGet();
         return queue.submit(() -> execute(request, listener));
     }
 
     /**
-     * Runs request unless another run of the same script is submitted before it starts
+     * Runs request unless another run is submitted before it starts: the preview shows the last run, of that script or
+     * of another one
      */
     public void submitUnlessSuperseded(@NotNull CadRunRequest request, @NotNull CadRunListener listener) {
-        long submission = recordSubmission(request);
+        long submission = submissions.incrementAndGet();
         queue.submit(() -> {
-            if (lastSubmissions.get(request.script()) == submission) execute(request, listener);
+            if (submissions.get() == submission) execute(request, listener);
             else listener.skipped();
         });
-    }
-
-    private long recordSubmission(CadRunRequest request) {
-        long submission = submissions.incrementAndGet();
-        lastSubmissions.merge(request.script(), submission, Math::max);
-        return submission;
     }
 
     /**
