@@ -69,13 +69,21 @@ class FreeCadKernel implements CadKernel {
     }
 
     /**
+     * @return Whether the assemblies are saved split, the assembly and each part in its own FCStd file, linked to each
+     * other, in a folder: -Dcad.freecad.split=true, or CAD_DSL_FREECAD_SPLIT=true
+     */
+    static boolean splitEnabled() {
+        (System.getProperty('cad.freecad.split') ?: System.getenv('CAD_DSL_FREECAD_SPLIT')) == 'true'
+    }
+
+    /**
      * Open the model (or assembly) of handle in the FreeCAD GUI: freecad.gui system property, FREECAD_GUI environment
      * variable, else FreeCAD on the PATH
      */
-    static void show(FreeCadSession session, int handle) {
+    static void show(FreeCadSession session, int handle, boolean assembly = false) {
         File file = File.createTempFile('cad-dsl-', '.FCStd')
-        session.call(handle, 'save', file.path)
+        String saved = assembly ? session.call(handle, 'save', file.path, splitEnabled()) : session.call(handle, 'save', file.path)
         String gui = System.getProperty('freecad.gui') ?: System.getenv('FREECAD_GUI') ?: 'FreeCAD'
-        new ProcessBuilder(gui, file.path).inheritIO().start()
+        new ProcessBuilder(gui, saved ?: file.path).inheritIO().start()
     }
 }

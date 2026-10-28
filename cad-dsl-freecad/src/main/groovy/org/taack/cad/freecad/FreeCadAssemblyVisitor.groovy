@@ -77,12 +77,13 @@ class FreeCadAssemblyVisitor implements ICadDslAssemblyVisitor {
 
     /**
      * @param fileName null to check the assembly (and show it in FreeCAD with -Dcad.freecad.gui=true), else a .step
-     * (with the assembly tree), .stl, .brep, .iges or .FCStd file
+     * (with the assembly tree), .stl, .brep, .iges or .FCStd file; x/x.FCStd beside x.FCStd with its parts in x/ when
+     * {@link FreeCadKernel#splitEnabled split}
      */
     @Override
     void display(String fileName) {
         session.call(null, 'setParams', CadParams.values())
-        session.call(handle, 'display', fileName)
-        if (!fileName && FreeCadKernel.guiEnabled()) FreeCadKernel.show(session, handle)
+        session.call(handle, 'display', fileName, FreeCadKernel.splitEnabled())
+        if (!fileName && FreeCadKernel.guiEnabled()) FreeCadKernel.show(session, handle, true)
     }
 }

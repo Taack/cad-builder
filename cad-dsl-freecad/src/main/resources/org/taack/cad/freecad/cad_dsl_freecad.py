@@ -1570,6 +1570,8 @@ class Assembly:
         self.sources = self.doc.addObject('App::DocumentObjectGroup', 'Sources')
         self.sources.Visibility = False
         self.links = []
+        # handle of the part or assembly each link shows
+        self.linked = []
         self.imported = {}
         self.placed = {}
 
@@ -1593,8 +1595,7 @@ class Assembly:
             if node.name:
                 copy.Label = node.name
             if node.color and App.GuiUp:
-                copy.ViewObject.ShapeAppearance = (App.Material(DiffuseColor=tuple(node.color[:3]),
-                                                                Transparency=1 - node.color[3]),)
+                copy.ViewObject.ShapeAppearance = (material(node.color),)
         self.imported[handle] = copy
         return copy
 
@@ -1613,6 +1614,7 @@ class Assembly:
         o.Placement = to_placement(location)
         self.root.addObject(o)
         self.links.append(o)
+        self.linked.append(handle)
 
     def visitMove(self, component, location, frames):
         self.links[component].Placement = to_placement(location)
@@ -1630,7 +1632,7 @@ class Assembly:
         self.doc.recompute()
         check_document(self.doc)
 
-    def display(self, file_name):
+    def display(self, file_name, split=False):
         self.check()
         if file_name is None:
             return
@@ -1645,13 +1647,119 @@ class Assembly:
                 import Import as exporter
             exporter.export([self.root], file_name)
         elif ext == '.fcstd':
-            self.save(file_name)
+            self.save(file_name, split)
         else:
             export(self.doc, self.root, Part.getShape(self.root), file_name, [])
 
-    def save(self, file_name):
+    def save(self, file_name, split=False):
+        """Save the document, or with split the assembly and its parts in files linked to each other (see
+        SplitSave)
+        :return: The path of the file of the assembly"""
         self.check()
+        if split:
+            return SplitSave(file_name).save(self)
         save_document(self.doc, None, file_name, [])
+        return os.path.abspath(file_name)
+
+
+class SplitSave:
+    """Save an assembly in a folder named as file_name, beside it: the assembly in a file named as file_name, each
+    distinct part (each model) and sub-assembly in its own file, named as it, linked by relative paths. A part saves
+    the document of its model; its color goes to the part, and to the links when a part of the same model has
+    another one."""
+
+    def __init__(self, file_name):
+        path = os.path.abspath(file_name)
+        self.name = os.path.splitext(os.path.basename(path))[0]
+        self.dir = os.path.join(os.path.dirname(path), self.name)
+        os.makedirs(self.dir, exist_ok=True)
+        self.used = set()
+        # saved object by handle, and saved model by document
+        self.saved = {}
+        self.models = {}
+        self.colors = {}
+        self.docs = []
+
+    def file(self, name):
+        """A path in the folder, named after name, distinct from the others"""
+        base = re.sub(r'[\\/:*?"<>|]', '_', name).strip() or 'part'
+        candidate, i = base, 1
+        while candidate.lower() in self.used:
+            i += 1
+            candidate = '%s_%d' % (base, i)
+        self.used.add(candidate.lower())
+        return os.path.join(self.dir, candidate + '.FCStd')
+
+    def save(self, assembly):
+        path = self.file(self.name)
+        # an assembly is saved twice, without its links first: no backup of the first save
+        preferences = App.ParamGet('User parameter:BaseApp/Preferences/Document')
+        backup = preferences.GetBool('CreateBackupFiles', True)
+        preferences.SetBool('CreateBackupFiles', False)
+        try:
+            self.assembly(assembly, path)
+            return path
+        finally:
+            preferences.SetBool('CreateBackupFiles', backup)
+            # the assemblies before the ones they link to; the models stay open, their handles do
+            for doc in self.docs:
+                App.closeDocument(doc.Name)
+
+    def target(self, handle):
+        """The saved object a link to the part or assembly of handle shows"""
+        if handle in self.saved:
+            return self.saved[handle]
+        node = handles[handle]
+        if isinstance(node, PartNode):
+            target = self.part(node)
+        else:
+            target = self.assembly(node, self.file(node.root.Label))
+        self.saved[handle] = target
+        return target
+
+    def part(self, node):
+        doc = node.model.doc
+        if doc.Name not in self.models:
+            node.model.check(node.obj)
+            if node.name:
+                node.obj.Label = node.name
+            if node.color and App.GuiUp:
+                node.obj.ViewObject.ShapeAppearance = (material(node.color),)
+            self.colors[node.obj.Name, doc.Name] = node.color
+            save_document(doc, [node.obj], self.file(node.obj.Label), node.model.bindings)
+            self.models[doc.Name] = node.obj
+        return node.obj
+
+    def assembly(self, assembly, path):
+        # both documents of a link are saved before it is made
+        doc = App.newDocument('Assembly')
+        self.docs.append(doc)
+        doc.saveAs(path)
+        root = doc.addObject('App::Part', 'Assembly')
+        root.Label = assembly.root.Label
+        for handle, link in zip(assembly.linked, assembly.links):
+            target = self.target(handle)
+            o = doc.addObject('App::Link', link.Name)
+            o.LinkedObject = target
+            o.LinkTransform = True
+            o.Label = link.Label
+            o.Placement = link.Placement
+            root.addObject(o)
+            node = handles[handle]
+            if isinstance(node, PartNode) and node.color and App.GuiUp and \
+                    self.colors.get((target.Name, target.Document.Name)) != node.color:
+                o.ViewObject.OverrideMaterial = True
+                o.ViewObject.ShapeMaterial = material(node.color)
+        doc.recompute()
+        check_document(doc)
+        fit_view(doc)
+        doc.save()
+        return root
+
+
+def material(color):
+    """The material of color [r, g, b, a] in [0, 1]"""
+    return App.Material(DiffuseColor=tuple(color[:3]), Transparency=1 - color[3])
 
 
 def copy_with_placements(doc, source):
