@@ -1,5 +1,5 @@
 
 subprojects {
-    version = '0.5_SNAPSHOT'
+    version = '0.4_SNAPSHOT'
     group = 'org.taack'
 }
