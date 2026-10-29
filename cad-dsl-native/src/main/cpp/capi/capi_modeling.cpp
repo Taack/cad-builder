@@ -445,7 +445,7 @@ extern "C" TopoDS_Shape *new_TopoDS_Shape__brep_algoapi_fuse__s1_listrOfShape(co
         BRepAlgoAPI_Fuse aBuilder;
         aBuilder.SetArguments(aLS);
         aBuilder.SetTools(*aLT);
-        aBuilder.SetRunParallel(false);
+        aBuilder.SetRunParallel(true);
         // Fuzzy value left to its default (Precision::Confusion())
         aBuilder.SetNonDestructive(false);
         // No gluing: it skips the intersection of overlapping solids, which stay apart in the result
@@ -460,7 +460,14 @@ extern "C" TopoDS_Shape *new_TopoDS_Shape__brep_algoapi_fuse__s1_listrOfShape(co
 // The result of a boolean operation, or the errors of the algorithm as an exception instead of a broken shape
 template<class Operation>
 static TopoDS_Shape *boolean_result(const TopoDS_Shape &s1, const TopoDS_Shape &s2) {
-    Operation operation(s1, s2);
+    TopTools_ListOfShape arguments, tools;
+    arguments.Append(s1);
+    tools.Append(s2);
+    Operation operation;
+    operation.SetArguments(arguments);
+    operation.SetTools(tools);
+    operation.SetRunParallel(true);
+    operation.Build();
     if (operation.HasErrors()) {
         std::ostringstream errors;
         operation.DumpErrors(errors);
@@ -470,17 +477,17 @@ static TopoDS_Shape *boolean_result(const TopoDS_Shape &s1, const TopoDS_Shape &
 }
 
 extern "C" TopoDS_Shape *new_TopoDS_Shape__bBRepAlgoAPI_Cut__s1_s2(const TopoDS_Shape *result, const TopoDS_Shape *tool) {
-    TRACE("OBSOLETE");
+    TRACE("");
     return guard(__func__, [&] { return boolean_result<BRepAlgoAPI_Cut>(*result, *tool); });
 }
 
 extern "C" TopoDS_Shape *new_TopoDS_Shape__brep_algoapi_fuse__s1_s2(const TopoDS_Shape *s1, const TopoDS_Shape *s2) {
-    TRACE("OBSOLETE");
+    TRACE("");
     return guard(__func__, [&] { return boolean_result<BRepAlgoAPI_Fuse>(*s1, *s2); });
 }
 
 extern "C" TopoDS_Shape *new_TopoDS_Shape__brep_algoapi_common__s1_s2(const TopoDS_Shape *s1, const TopoDS_Shape *s2) {
-    TRACE("OBSOLETE");
+    TRACE("");
     return guard(__func__, [&] { return boolean_result<BRepAlgoAPI_Common>(*s1, *s2); });
 }
 
