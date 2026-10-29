@@ -1,5 +1,6 @@
 package org.taack.cad.intellij;
 
+import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.project.ProjectManager;
 import com.intellij.openapi.vfs.newvfs.BulkFileListener;
@@ -24,7 +25,8 @@ final class CadRerunOnSave implements BulkFileListener {
                     && change.getFile().getName().endsWith(CadScripts.GROOVY_SUFFIX)
                     && change.getFile().isInLocalFileSystem()
                     && preview.dependsOn(Path.of(change.getFile().getPath())));
-            if (changed) preview.rerun();
+            // after the run that saved them, if any, is scheduled: it replaces the rerun
+            if (changed) ApplicationManager.getApplication().invokeLater(preview::rerun, project.getDisposed());
         }
     }
 }

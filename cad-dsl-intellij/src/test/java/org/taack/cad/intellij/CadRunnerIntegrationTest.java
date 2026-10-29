@@ -154,6 +154,26 @@ public class CadRunnerIntegrationTest extends BasePlatformTestCase {
         assertTrue(skipped.get(RUN_TIMEOUT_SECONDS, TimeUnit.SECONDS));
     }
 
+    public void testARerunReplacedByARunOfAnotherScriptIsSkipped() throws Exception {
+        CadRunRequest request = new CadRunRequest(script("block.groovy", "cd().box(1, 2, 3).display()").toString(), List.of());
+        CompletableFuture<Boolean> skipped = new CompletableFuture<>();
+        CadRunner.getInstance(getProject()).submit(
+                new CadRunRequest(script("slow.groovy", "Thread.sleep(1000)").toString(), List.of()), result -> {});
+        CadRunner.getInstance(getProject()).submitUnlessSuperseded(request, new CadRunListener() {
+            @Override
+            public void skipped() {
+                skipped.complete(true);
+            }
+
+            @Override
+            public void finished(@NotNull CadRunResult result) {
+                skipped.complete(false);
+            }
+        });
+        assertTrue(run(script("other.groovy", "cd().cylinder(1, 2).display()")).succeeded());
+        assertTrue(skipped.get(RUN_TIMEOUT_SECONDS, TimeUnit.SECONDS));
+    }
+
     public void testStoppingEndsTheRunAndTheNextRunStartsTheRunnerAgain() throws Exception {
         CountDownLatch started = new CountDownLatch(1);
         CompletableFuture<CadRunResult> end = new CompletableFuture<>();

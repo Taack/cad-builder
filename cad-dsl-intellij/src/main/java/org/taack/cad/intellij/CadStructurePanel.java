@@ -200,10 +200,12 @@ final class CadStructurePanel implements CadPreview.Listener, Disposable {
 
     @Override
     public void featureSelected(@Nullable String feature) {
-        // a feature picked in the preview
+        // a feature picked in the preview. The one selected by then: a selection made since would be undone, then
+        // selected again by its own notification, endlessly
         ApplicationManager.getApplication().invokeLater(() -> {
-            if (Objects.equals(feature, selectedId())) return;
-            TreePath path = feature == null ? null : find((DefaultMutableTreeNode) model.getRoot(), feature);
+            String selected = CadPreview.getInstance(project).selectedFeature();
+            if (Objects.equals(selected, selectedId())) return;
+            TreePath path = selected == null ? null : find((DefaultMutableTreeNode) model.getRoot(), selected);
             if (path == null) {
                 tree.clearSelection();
                 return;

@@ -34,6 +34,8 @@ let duration = 0;
 let playing = true;
 let edgesVisible = true;
 let loading = 0;
+// the last load done, the model shown otherwise: the highlight and the shapes asked meanwhile wait for the new model
+let loaded = 0;
 // the glTF node objects of the model, by index; the nodes of the selected feature, and the shapes shown over them
 let nodeObjects = [];
 let objectNodes = new Map();
@@ -202,6 +204,7 @@ window.cadPreview = {
         loader.load(url, gltf => {
             // a slower load of an older model is dropped
             if (request !== loading) return;
+            loaded = request;
             if (model) dispose(model);
             shapes = [];
             model = gltf.scene;
@@ -219,18 +222,24 @@ window.cadPreview = {
             setAnimation(gltf);
             showMessage('');
             if (refit) fit();
-        }, undefined, error => showMessage('Cannot read the model: ' + (error.message || error)));
+        }, undefined, error => {
+            if (request !== loading) return;
+            loaded = request;
+            applyHighlight();
+            loadShapes();
+            showMessage('Cannot read the model: ' + (error.message || error));
+        });
     },
     fit,
     /** Highlights the parts of the glTF nodes, none for an empty list */
     highlight(nodes) {
         highlighted = nodes;
-        applyHighlight();
+        if (loaded === loading) applyHighlight();
     },
     /** Shows the shapes of the glTF file at url over the highlighted parts, none for null */
     overlay(url) {
         shapeUrl = url;
-        loadShapes();
+        if (loaded === loading) loadShapes();
     },
     edges(visible) {
         edgesVisible = visible;
