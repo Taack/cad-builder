@@ -4,12 +4,12 @@ include 'cad-dsl', 'cad-dsl-native', 'cad-dsl-occt', 'cad-dsl-freecad', 'cad-dsl
 
 /*
 ./gradlew clean
-./gradlew -PocctHome=$HOME/.local/occt-8.0.1 :cad-dsl-native:linkRelease
-./gradlew -PocctHome=$HOME/.local/occt-8.0.1 cad-dsl:publishToMavenLocal
-./gradlew -PocctHome=$HOME/.local/occt-8.0.1 :cad-dsl-occt:installDist
-./gradlew -PocctHome=$HOME/.local/occt-8.0.1 :cad-dsl-step:installDist
-./gradlew -PocctHome=$HOME/.local/occt-8.0.1 :cad-dsl-freecad:installDist
-./gradlew -PocctHome=$HOME/.local/occt-8.0.1 :cad-dsl-runner:installDist
+./gradlew -PocctHome=$HOME/.local/occt-8.0.1-egl :cad-dsl-native:linkRelease
+./gradlew -PocctHome=$HOME/.local/occt-8.0.1-egl cad-dsl:publishToMavenLocal
+./gradlew -PocctHome=$HOME/.local/occt-8.0.1-egl :cad-dsl-occt:installDist
+./gradlew -PocctHome=$HOME/.local/occt-8.0.1-egl :cad-dsl-step:installDist
+./gradlew -PocctHome=$HOME/.local/occt-8.0.1-egl :cad-dsl-freecad:installDist
+./gradlew -PocctHome=$HOME/.local/occt-8.0.1-egl :cad-dsl-runner:installDist
 cd cad-dsl-runner/build/install/
 tar -cvf cad-dsl-runner.tar cad-dsl-runner
 gzip cad-dsl-runner.tar
@@ -17,6 +17,6 @@ cd -
 cp cad-dsl-runner/build/install/cad-dsl-runner.tar.gz .
 
 ./gradlew :cad-dsl-intellij:buildPlugin
-cp cad-dsl-intellij/build/distributions/cad-dsl-intellij-0.3.zip .
+cp cad-dsl-intellij/build/distributions/cad-dsl-intellij-0.4.zip .
 
  */

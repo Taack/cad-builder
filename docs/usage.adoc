@@ -15,13 +15,13 @@ Artifact coordinates:
 .Maven
 [source,groovy]
 ----
-implementation 'org.taack:cad-dsl:0.3'      // to write models
-runtimeOnly 'org.taack:cad-dsl-occt:0.3'    // to build them
+implementation 'org.taack:cad-dsl:0.4'      // to write models
+runtimeOnly 'org.taack:cad-dsl-occt:0.4'    // to build them
 ----
 
 NOTE: You have to publish maven artifact locally, they are not uploaded yet.
 
-1. Download https://github.com/Taack/cad-builder/releases/tag/v0.3 sources
+1. Download https://github.com/Taack/cad-builder/releases/tag/v0.4 sources
 2. Execute task: `./gradlew cad-dsl:publishToMavenLocal`
 
 == Scripts

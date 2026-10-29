@@ -22,7 +22,7 @@ java {
 
 dependencies {
     // the parts are built with the DSL: the runner brings its own cad-dsl, which must be the same version
-    cadImplementation 'org.taack:cad-dsl:0.3'
+    cadImplementation 'org.taack:cad-dsl:0.4'
 }
 
 publishing {
