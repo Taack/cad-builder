@@ -20,7 +20,12 @@ sys.path.insert(0, os.environ['CAD_DSL_LIB'])
 # alone when it cannot start, or with CAD_DSL_HEADLESS=true
 if os.environ.get('CAD_DSL_HEADLESS') != 'true':
     try:
+        import FreeCAD
         import FreeCADGui
+        # No notification area: off screen, Qt warns that it cannot raise its popup, and FreeCAD notifies that warning
+        # under the lock of the popup, which it holds: a deadlock, during a recompute that shows its progress
+        FreeCAD.ParamGet('User parameter:BaseApp/Preferences/NotificationArea').SetBool(
+            'NotificationAreaEnabled', False)
         FreeCADGui.showMainWindow()
         # Qt sets the numbers of the user's locale (fr_FR: 0,5): the preferences would be read wrong, the deviation
         # of the meshes of the views 0.5 as 0, and the curved faces meshed without end
@@ -30,8 +35,6 @@ if os.environ.get('CAD_DSL_HEADLESS') != 'true':
         print('cad-dsl-freecad: no FreeCAD GUI (%s), the documents have no colors' % e)
 
 import cad_dsl_freecad
-import faulthandler
-faulthandler.dump_traceback_later(60, repeat=True, file=sys.__stderr__)
 
 
 def serve():

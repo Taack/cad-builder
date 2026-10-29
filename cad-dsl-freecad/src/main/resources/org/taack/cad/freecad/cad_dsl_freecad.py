@@ -1527,9 +1527,11 @@ ISOMETRIC = (0.424708, 0.17592, 0.339851, 0.820473)
 # Side of the thumbnail of a saved document, in pixels: the ThumbnailSize of FreeCAD by default
 THUMBNAIL_SIZE = 256
 THUMBNAIL_ENTRY = 'thumbnails/Thumbnail.png'
-# The renderer of "Offscreen (new)" in the image preferences of FreeCAD. The preferences are not saved (see
+# The renderer of "Offscreen (new)" in the image preferences of FreeCAD; fitAll without animation, which needs the Qt
+# event loop: the first one of a session would frame a scene of meters. The preferences are not saved (see
 # cad_dsl_server.py)
 App.ParamGet('User parameter:BaseApp/Preferences/View').SetString('SavePicture', 'QtOffscreenRenderer')
+App.ParamGet('User parameter:BaseApp/Preferences/View').SetBool('UseNavigationAnimations', False)
 
 
 def view_3d(doc):
@@ -1549,8 +1551,6 @@ def fit_view(doc):
         return
     r = App.Rotation(*ISOMETRIC)
     view.setCamera('OrthographicCamera { orientation %r %r %r %r }' % (r.Axis.x, r.Axis.y, r.Axis.z, r.Angle))
-    # the first fitAll of a session frames a scene of meters (the ground grid, sized to the model afterward)
-    view.fitAll()
     view.fitAll()
     # the offscreen view is taller than wide, fitAll widens the camera for it: fitted to a square, as the thumbnail
     width, height = view.getSize()

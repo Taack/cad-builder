@@ -13,7 +13,9 @@ plates, `Draft` shape strings for the texts. Assemblies are `App::Part` of `App:
 
 `display("x.FCStd")` saves the document, editable in FreeCAD; `display("x.step")`, `.stl`, `.brep` and `.iges` export
 the shape. `display()` checks the model, and opens it in FreeCAD with `-Dcad.freecad.gui=true` (the default of the
-`cad-dsl-freecad` script). FreeCADCmd renders no images, and does not keep the colors (they belong to its GUI).
+`cad-dsl-freecad` script). FreeCADCmd renders no images, and does not keep the colors (they belong to its GUI). The
+thumbnail of an FCStd file, shown by FreeCAD and the file managers, is its isometric view when an X display is reachable
+(`DISPLAY`, nothing opens on it); without one, it is the logo of FreeCAD.
 
 With `-Dcad.freecad.split=true` (in `JAVA_OPTS`, or `CAD_DSL_FREECAD_SPLIT=true`), an assembly saved with
 `display("x.FCStd")` is split into files linked to each other, in the folder `x` beside `x.FCStd`: the assembly in
