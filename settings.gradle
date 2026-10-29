@@ -10,11 +10,17 @@ include 'cad-dsl', 'cad-dsl-native', 'cad-dsl-occt', 'cad-dsl-freecad', 'cad-dsl
 ./gradlew -PocctHome=$HOME/.local/occt-8.0.1-egl :cad-dsl-step:installDist
 ./gradlew -PocctHome=$HOME/.local/occt-8.0.1-egl :cad-dsl-freecad:installDist
 ./gradlew -PocctHome=$HOME/.local/occt-8.0.1-egl :cad-dsl-runner:installDist
-cd cad-dsl-runner/build/install/
-tar -cvf cad-dsl-runner.tar cad-dsl-runner
-gzip cad-dsl-runner.tar
-cd -
-cp cad-dsl-runner/build/install/cad-dsl-runner.tar.gz .
+cp cad-dsl-native/build/lib/main/release/libcad-dsl-native.so .
+# cad-dsl-native.dll: the same linkRelease on Windows (docs/building.adoc), copied here
+mkdir -p runner/linux runner/windows
+cp -r cad-dsl-runner/build/install/cad-dsl-runner runner/linux/
+cp -r cad-dsl-runner/build/install/cad-dsl-runner runner/windows/
+rm runner/linux/cad-dsl-runner/bin/cad-dsl-runner.bat runner/windows/cad-dsl-runner/bin/cad-dsl-runner
+mkdir runner/linux/cad-dsl-runner/native runner/windows/cad-dsl-runner/native
+cp libcad-dsl-native.so runner/linux/cad-dsl-runner/native/
+cp cad-dsl-native.dll runner/windows/cad-dsl-runner/native/
+tar -C runner/linux -czf cad-dsl-runner-linux.tar.gz cad-dsl-runner
+(cd runner/windows && zip -qr ../../cad-dsl-runner-windows.zip cad-dsl-runner)
 
 ./gradlew :cad-dsl-intellij:buildPlugin
 cp cad-dsl-intellij/build/distributions/cad-dsl-intellij-0.4.zip .
