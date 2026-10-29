@@ -1519,24 +1519,77 @@ def save_document(doc, visible, file_name, bindings):
                 o.Visibility = o in visible
     fit_view(doc)
     doc.saveAs(os.path.abspath(file_name))
+    save_thumbnail(doc)
 
 
 # Orientation of the isometric view of FreeCAD (x, y, z, w)
 ISOMETRIC = (0.424708, 0.17592, 0.339851, 0.820473)
+# Side of the thumbnail of a saved document, in pixels: the ThumbnailSize of FreeCAD by default
+THUMBNAIL_SIZE = 256
+THUMBNAIL_ENTRY = 'thumbnails/Thumbnail.png'
+# The renderer of "Offscreen (new)" in the image preferences of FreeCAD. The preferences are not saved (see
+# cad_dsl_server.py)
+App.ParamGet('User parameter:BaseApp/Preferences/View').SetString('SavePicture', 'QtOffscreenRenderer')
+
+
+def view_3d(doc):
+    """The 3D view of doc, None without the GUI"""
+    if not App.GuiUp:
+        return None
+    import FreeCADGui
+    views = FreeCADGui.getDocument(doc.Name).mdiViewsOfType('Gui::View3DInventor')
+    return views[0] if views else None
 
 
 def fit_view(doc):
     """Show the visible features of doc in an isometric view, saved with it: the camera of a new view looks at the
     origin from the top, 4 mm high. The camera is set at once (viewIsometric animates, it needs the Qt event loop)."""
-    if not App.GuiUp:
-        return
-    import FreeCADGui
-    views = FreeCADGui.getDocument(doc.Name).mdiViewsOfType('Gui::View3DInventor')
-    if not views:
+    view = view_3d(doc)
+    if view is None:
         return
     r = App.Rotation(*ISOMETRIC)
-    views[0].setCamera('OrthographicCamera { orientation %r %r %r %r }' % (r.Axis.x, r.Axis.y, r.Axis.z, r.Angle))
-    views[0].fitAll()
+    view.setCamera('OrthographicCamera { orientation %r %r %r %r }' % (r.Axis.x, r.Axis.y, r.Axis.z, r.Angle))
+    # the first fitAll of a session frames a scene of meters (the ground grid, sized to the model afterward)
+    view.fitAll()
+    view.fitAll()
+    # the offscreen view is taller than wide, fitAll widens the camera for it: fitted to a square, as the thumbnail
+    width, height = view.getSize()
+    if width < height:
+        camera = view.getCameraNode()
+        camera.height.setValue(camera.height.getValue() * width / height)
+
+
+def has_gl_context():
+    from PySide import QtGui
+    return QtGui.QOpenGLContext().create()
+
+
+def save_thumbnail(doc):
+    """Write the view of doc as the thumbnail of its file. FreeCAD renders its thumbnail in the framebuffer of the
+    view, which the offscreen platform has not, and writes its logo instead; the offscreen renderer has a GL context of
+    its own, through the X display. Without one, the logo stays: the renderer would fail with an error Python cannot
+    catch."""
+    view = view_3d(doc)
+    if view is None or not has_gl_context():
+        return
+    import tempfile
+    import zipfile
+    descriptor, image = tempfile.mkstemp(prefix='cad-dsl-', suffix='.png')
+    os.close(descriptor)
+    try:
+        view.saveImage(image, THUMBNAIL_SIZE, THUMBNAIL_SIZE, 'Transparent')
+        with open(image, 'rb') as f:
+            thumbnail = f.read()
+    finally:
+        os.remove(image)
+    # FreeCAD reads the entries of its files in order: they are copied as they are, the thumbnail replaced
+    path = doc.FileName
+    copy = path + '.part'
+    with zipfile.ZipFile(path) as source, zipfile.ZipFile(copy, 'w') as target:
+        target.comment = source.comment
+        for entry in source.infolist():
+            target.writestr(entry, thumbnail if entry.filename == THUMBNAIL_ENTRY else source.read(entry))
+    os.replace(copy, path)
 
 
 # ---------------------------------------------------------------------------------------------------------------------
@@ -1754,6 +1807,7 @@ class SplitSave:
         check_document(doc)
         fit_view(doc)
         doc.save()
+        save_thumbnail(doc)
         return root
 
 

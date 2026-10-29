@@ -22,6 +22,8 @@
 #ifdef _WIN32
   #include <WNT_WClass.hxx>
   #include <WNT_Window.hxx>
+#elif defined(OCCT_HEADLESS)
+  #include <iostream>
 #else
 #include <Xw_Window.hxx>
 #include <X11/Xlib.h>
@@ -39,6 +41,12 @@
   #pragma comment(lib, "TKernel.lib")
 #endif
 
+#ifdef OCCT_HEADLESS
+static int visualizeBodies(const CadNode &, int, double) {
+  std::cerr << "display(): no viewer, OCCT is built without Xlib; give display() a file name" << std::endl;
+  return 0;
+}
+#else
 //! Sample single-window viewer class.
 class OcctAisHello : public AIS_ViewController {
 public:
@@ -248,6 +256,7 @@ static int visualizeBodies(const CadNode &anAssembly, int theFrameCount, double 
 #endif
   return 0;
 }
+#endif
 
 extern "C" int visualize(TopoDS_Shape* truc) {
   CadNode aPart;

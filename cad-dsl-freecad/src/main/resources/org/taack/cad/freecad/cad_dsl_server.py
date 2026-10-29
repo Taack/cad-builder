@@ -30,6 +30,8 @@ if os.environ.get('CAD_DSL_HEADLESS') != 'true':
         print('cad-dsl-freecad: no FreeCAD GUI (%s), the documents have no colors' % e)
 
 import cad_dsl_freecad
+import faulthandler
+faulthandler.dump_traceback_later(60, repeat=True, file=sys.__stderr__)
 
 
 def serve():

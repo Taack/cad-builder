@@ -24,11 +24,19 @@ if (occtToolkits.empty) {
     logger.warn("No OCCT toolkits found in $occtLib, set -PocctHome or OCCT_HOME to an OCCT 8.0 install prefix")
 }
 
+// An OCCT built with -DUSE_XLIB=OFF renders through EGL, off-screen only, without any X server: a server renders the
+// images with it. Its CMake config does not record that option on Linux, but its libTKService then does not need libX11.
+def occtTKService = file("$occtLib/libTKService.so")
+def occtHeadless = !isMac && !isWindows && occtTKService.exists() &&
+        !new String(occtTKService.bytes, 'ISO-8859-1').contains('libX11.so')
+if (occtHeadless) logger.lifecycle("OCCT without Xlib: off-screen rendering through EGL, no interactive viewer")
+
 def occtLinkerArgs
 if (isWindows) {
     occtLinkerArgs = ["/LIBPATH:$occtLib"] + (occtToolkits + ["user32"]).collect { "${it}.lib" }
 } else {
-    def otherLibs = isMac ? ["X11", "xcb", "Xau", "Xdmcp"] : ["GL", "GLU", "GLX", "GLEW", "X11", "xcb", "Xau", "Xdmcp"]
+    def otherLibs = isMac ? ["X11", "xcb", "Xau", "Xdmcp"] :
+            occtHeadless ? ["EGL"] : ["GL", "GLU", "GLX", "GLEW", "X11", "xcb", "Xau", "Xdmcp"]
     def linkerLibs = (occtToolkits + otherLibs).collect { "-l$it" }
     if (isMac) {
         linkerLibs << "-framework"
@@ -59,6 +67,7 @@ tasks.withType(CppCompile).configureEach {
     } else {
         compilerArgs.add '-std=c++17'
     }
+    if (occtHeadless) macros.put('OCCT_HEADLESS', null)
 }
 
 tasks.withType(LinkSharedLibrary).configureEach {

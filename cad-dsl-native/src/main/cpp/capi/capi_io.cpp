@@ -55,13 +55,58 @@
 #ifdef _WIN32
 #include <WNT_WClass.hxx>
 #include <WNT_Window.hxx>
+#elif defined(OCCT_HEADLESS)
+#include <Aspect_NeutralWindow.hxx>
+#include <EGL/egl.h>
+#include <EGL/eglext.h>
 #else
 #include <Xw_Window.hxx>
+#endif
+
+#ifdef OCCT_HEADLESS
+// OpenGL context of an EGL display without any window system. OCCT's own EGL setup asks for a configuration with
+// window surfaces, which such a display (Mesa surfaceless) does not have: this one asks for pbuffers.
+class HeadlessEglContext {
+public:
+    EGLDisplay display;
+    EGLConfig config = nullptr;
+    EGLContext context = EGL_NO_CONTEXT;
+
+    HeadlessEglContext() {
+        display = eglGetPlatformDisplay(EGL_PLATFORM_SURFACELESS_MESA, EGL_DEFAULT_DISPLAY, nullptr);
+        // drivers other than Mesa render without a window system on their default display
+        if (display == EGL_NO_DISPLAY) display = eglGetDisplay(EGL_DEFAULT_DISPLAY);
+        if (display == EGL_NO_DISPLAY || !eglInitialize(display, nullptr, nullptr))
+            throw std::runtime_error("no EGL display");
+
+        const EGLint attributes[] = {
+            EGL_SURFACE_TYPE, EGL_PBUFFER_BIT, EGL_RENDERABLE_TYPE, EGL_OPENGL_BIT,
+            EGL_RED_SIZE, 8, EGL_GREEN_SIZE, 8, EGL_BLUE_SIZE, 8, EGL_DEPTH_SIZE, 24, EGL_STENCIL_SIZE, 8,
+            EGL_NONE
+        };
+        EGLint count = 0;
+        if (!eglChooseConfig(display, attributes, &config, 1, &count) || count == 0 || !eglBindAPI(EGL_OPENGL_API) ||
+            (context = eglCreateContext(display, config, EGL_NO_CONTEXT, nullptr)) == EGL_NO_CONTEXT) {
+            eglTerminate(display);
+            throw std::runtime_error("no EGL context with pbuffers for OpenGL");
+        }
+    }
+
+    ~HeadlessEglContext() {
+        eglMakeCurrent(display, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
+        eglDestroyContext(display, context);
+        eglTerminate(display);
+    }
+};
 #endif
 
 // Renders one image per file name: frame i into fileNames[i], or the static locations when there is one file and frameCount is 0
 static int dump(const char *function, const CadNode &assembly, int frameCount, int width, int height, const std::vector<std::string> &fileNames) {
     return guard(function, [&] {
+#ifdef OCCT_HEADLESS
+        // destroyed after the views and the driver that use it
+        HeadlessEglContext egl;
+#endif
         occ::handle<Aspect_DisplayConnection> _displayConnection = new Aspect_DisplayConnection();
 
         // don't waste the time waiting for VSync when window is not displayed on the screen
@@ -70,7 +115,12 @@ static int dump(const char *function, const CadNode &assembly, int frameCount, i
 
         occ::handle<OpenGl_GraphicDriver> _graphicDriver = new OpenGl_GraphicDriver(_displayConnection, false);
         _graphicDriver->ChangeOptions() = _caps;
+#ifdef OCCT_HEADLESS
+        if (!_graphicDriver->InitEglContext(egl.display, egl.context, egl.config))
+            throw std::runtime_error("OCCT rejected the EGL context");
+#else
         _graphicDriver->InitContext();
+#endif
 
         //* Viewer setup
         occ::handle<V3d_Viewer> _viewer = new V3d_Viewer(_graphicDriver);
@@ -88,6 +138,10 @@ static int dump(const char *function, const CadNode &assembly, int frameCount, i
                                                          CS_VREDRAW | CS_HREDRAW, 0, 0,
                                                          ::LoadCursor(NULL, IDC_ARROW));
         occ::handle<WNT_Window> _win = new WNT_Window("", _wClass, WS_POPUP, 0, 0, width, height, Quantity_NOC_BLACK);
+#elif defined(OCCT_HEADLESS)
+        // Without a native window, OCCT renders into an EGL pbuffer
+        occ::handle<Aspect_NeutralWindow> _win = new Aspect_NeutralWindow();
+        _win->SetSize(width, height);
 #else // Linux
         occ::handle<Xw_Window> _win = new Xw_Window(_graphicDriver->GetDisplayConnection(), "", 0, 0, width, height);
 #endif
