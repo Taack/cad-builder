@@ -180,6 +180,53 @@ checkContours { Projector.assemble() }.each { println it }
 // Projector.groovy:2826, ...: 8 small contours side by side, 9.17 mm high, like text: draw it with text()
 ----
 
+== Selectors
+
+.Selector Example
+====
+
+.Code Sample
+[source,groovy]
+----
+  @Test
+  void "Basic Box and Studs"() {
+      cd().box(length, length, height).butZ()
+      .hollowedSolid(-thickness).topZ().wireFrom() {
+          to(stud_spacing, stud_spacing)
+          circle(stud_diameter)
+          move(2 * stud_spacing, 0)
+          circle(stud_diameter)
+          move(0, 2 * stud_spacing)
+          circle(stud_diameter)
+          move(-2 * stud_spacing, 0)
+          circle(stud_diameter)
+      }.toFace()
+              .prism(stud_height)
+              .butZ(
+                new Vec(
+                    length / 2,
+                    length / 2,
+                    height - 2 * thickness)     <1>
+              )
+              .wireFrom() {
+                  circle(stud_diameter + wall_thickness)
+                  circle(stud_diameter, true)
+              }.toFace()
+                .prism(
+                    height - thickness          <2>
+                ).display(image())
+
+  }
+----
+
+<1> `butZ` stands for buttomZ(coords) which mean go to the center of the face at the bottom of this position
+<2> Draw back cylinder
+
+
+.Result
+image::images/cad-butz.png[]
+
+====
 == Drafts
 
 `prism(dir, draft: degrees)` and `hole(dir, draft: degrees)` make prisms whose side faces lean by the draft angle, as
