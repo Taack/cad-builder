@@ -65,14 +65,43 @@ class GroovyCompletionEngine {
     }
 
     List<Diagnostic> diagnose(String text) {
-        List<Message> messages = compiler.compile(text) { ProbingCompiler.Result r -> r.errors + r.warnings }
-        Set<String> seen = new HashSet<>()
-        List<Diagnostic> res = []
-        for (Message m in messages) {
-            Diagnostic d = diagnostic(m, text)
-            if (d != null && seen.add("${d.range} ${d.message}".toString())) res << d
+        analyse(text).diagnostics
+    }
+
+    /**
+     * The semantic tokens of the source, encoded as LSP expects them, see {@link SemanticTokenizer}
+     */
+    List<Integer> semanticTokens(String text) {
+        analyse(text).tokens
+    }
+
+    private static final class Analysis {
+        List<Diagnostic> diagnostics
+        List<Integer> tokens
+    }
+
+    /** The last texts analysed: the diagnostics and the tokens of a text are asked one after the other */
+    private final Map<String, Analysis> analyses = Collections.synchronizedMap(new LinkedHashMap<String, Analysis>(16, 0.75f, true) {
+        @Override
+        protected boolean removeEldestEntry(Map.Entry<String, Analysis> eldest) {
+            size() > 16
         }
-        res
+    })
+
+    private Analysis analyse(String text) {
+        Analysis cached = analyses.get(text)
+        if (cached != null) return cached
+        Analysis a = compiler.compile(text) { ProbingCompiler.Result r ->
+            Set<String> seen = new HashSet<>()
+            List<Diagnostic> diagnostics = []
+            for (Message m in r.errors + r.warnings) {
+                Diagnostic d = diagnostic(m, text)
+                if (d != null && seen.add("${d.range} ${d.message}".toString())) diagnostics << d
+            }
+            new Analysis(diagnostics: diagnostics, tokens: SemanticTokenizer.tokens(text, r.module))
+        }
+        analyses.put(text, a)
+        a
     }
 
     private void fill(CompletionCandidates list, CursorContext context, ModuleNode module) {

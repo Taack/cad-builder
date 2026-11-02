@@ -57,6 +57,12 @@ class GroovyLanguageServer implements LanguageServer, LanguageClientAware {
         }
 
         @Override
+        CompletableFuture<SemanticTokens> semanticTokensFull(SemanticTokensParams params) {
+            String text = documents.get(params.textDocument.uri)
+            CompletableFuture.completedFuture(new SemanticTokens(text != null ? engine.semanticTokens(text) : []))
+        }
+
+        @Override
         CompletableFuture<DocumentDiagnosticReport> diagnostic(DocumentDiagnosticParams params) {
             String text = documents.get(params.textDocument.uri)
             List<Diagnostic> diagnostics = text != null ? engine.diagnose(text) : []
@@ -91,6 +97,7 @@ class GroovyLanguageServer implements LanguageServer, LanguageClientAware {
         capabilities.setTextDocumentSync(TextDocumentSyncKind.Full)
         capabilities.setCompletionProvider(new CompletionOptions(false, ['.']))
         capabilities.setDiagnosticProvider(new DiagnosticRegistrationOptions(false, false))
+        capabilities.setSemanticTokensProvider(new SemanticTokensWithRegistrationOptions(SemanticTokenizer.LEGEND, true))
         CompletableFuture.completedFuture(new InitializeResult(capabilities, new ServerInfo('groovy-dsl-lsp', '0.1')))
     }
 

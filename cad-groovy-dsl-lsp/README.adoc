@@ -20,6 +20,11 @@ included. On a completion request, the engine:
 When the source does not parse, the code after the cursor is replaced by the brackets closing those open before it.
 Nothing is generated or run: `@Grab` is disabled and `@ASTTest` removed.
 
+Semantic tokens (`textDocument/semanticTokens/full`) come from the Groovy lexer, which works on code that does not
+parse (keywords, strings, comments, numbers, annotations), refined by the type checked AST when the source parses
+(methods, properties, parameters, variables, types), see `SemanticTokenizer`. The diagnostics and the tokens of a text
+share one compilation.
+
 Diagnostics come from the same compilation. The type checker runs on all the code, dynamic code included, so its errors
 are warnings by default (`GroovyCompletionEngine.typeCheckingSeverity`).
 
