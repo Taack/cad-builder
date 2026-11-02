@@ -70,7 +70,7 @@ editor.onLspAction(MyController.&groovyLsp as MethodClosure)
 AST transformations of the application (GORM, Grails) do not run on it. The DSL jar is only read, so it may be built
 on another Groovy and Java, as the CAD DSL is (Groovy 6, Java 25).
 
-The app `cad-dsl-lsp` of intranet3 (`app/cad-dsl-lsp`) is a complete example: it bundles the CAD DSL jar and reads the
+The app `cad-groovy-dsl-lsp` of intranet3 (`app/cad-groovy-dsl-lsp`) is a complete example: it bundles the CAD DSL jar and reads the
 default imports of its scripts from it.
 
 === As a process
