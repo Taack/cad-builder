@@ -10,7 +10,11 @@ write models: change them only when the user asks.
 
 ## Build and run
 
-- OCCT is found through `occtHome` in `~/.gradle/gradle.properties`.
+- OCCT is found through `occtHome` in `~/.gradle/gradle.properties`, or passed as `-PocctHome=<dir>` when that file
+  does not set it.
+- `cad-dsl-runner` runs a script per request for the IntelliJ plugin and the intranet (`intranet3/app/cad-dsl-lsp`):
+  `./gradlew :cad-dsl-runner:installDist`. Its protocol is in the javadoc of `CadRunner`. A run may carry a
+  `classpath` of jars, for parts shared as a library.
 - Build the native library and the CLI: `./gradlew -q :cad-dsl-native:linkRelease :cad-dsl-occt:installDist`. When
   `cad-dsl-occt/build` or the native library is missing, or a script behaves as with older code, rebuild them first.
 - Run a script (the classes beside it are found):
