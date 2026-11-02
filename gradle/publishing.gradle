@@ -2,7 +2,7 @@
 
 ext.isReleaseVersion = { -> !version.endsWith('SNAPSHOT') }
 
-if (project.name in ['cad-dsl' /*, 'cad-dsl-freecad'*/]) {
+if (project.name in ['cad-dsl', 'cad-groovy-dsl-lsp']) {
     publishing {
         publications {
             maven(MavenPublication) {
@@ -43,7 +43,7 @@ if (project.name in ['cad-dsl' /*, 'cad-dsl-freecad'*/]) {
                 maven {
                     name = "myRepo"
                     // change to point to your repo, e.g. http://my.org/repo
-                    url = layout.buildDirectory.dir('repo')
+                    url = parent.layout.buildDirectory.dir('myRepo')
                     metadataSources {
                         gradleMetadata()
                     }

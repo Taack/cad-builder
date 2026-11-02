@@ -1,0 +1,96 @@
+= cad-groovy-dsl-lsp
+
+A Language Server completing Groovy code written with a DSL: inside a closure, it offers the members of the delegate
+declared by `@DelegatesTo`, and after a dot, those of the type before it.
+
+== How it works
+
+The Groovy type checker already knows the delegates of the closures, `@DelegatesTo.Target` and `genericTypeIndex`
+included. On a completion request, the engine:
+
+. puts an identifier at the cursor, `+__lspCursor__+`, in place of the word being typed;
+. compiles the source up to the type checking, every class with `@TypeChecked` added when it has neither it nor
+  `@CompileStatic`, and keeps going after the errors once the source is parsed;
+. lets a type checking extension, `CursorProbe`, record the receiver and the delegates of the closures when the type
+  checker fails to resolve the identifier, the only moment it knows them;
+. lists, from the class nodes of the type checker, the local variables, the members of the delegates in the order of
+  their resolve strategy, those of the class being edited, the static imports, and after a dot the members of the type
+  and its GDK methods.
+
+When the source does not parse, the code after the cursor is replaced by the brackets closing those open before it.
+Nothing is generated or run: `@Grab` is disabled and `@ASTTest` removed.
+
+Diagnostics come from the same compilation. The type checker runs on all the code, dynamic code included, so its errors
+are warnings by default (`GroovyCompletionEngine.typeCheckingSeverity`).
+
+== Use
+
+The library is built on Groovy 4, the one of Grails 7, and published to mavenLocal:
+
+----
+./gradlew test publishToMavenLocal
+----
+
+=== In a Taack application
+
+The Taack editor (`LspClient.kt`) sends one JSON-RPC message per POST, and asks for completion on Ctrl+Space.
+`JsonRpcHttp` answers them, and the documents are kept in the HTTP session:
+
+[source,groovy]
+----
+// build.gradle
+implementation 'org.taack:cad-groovy-dsl-lsp:0.5'
+
+// a service: one engine for the application, it is stateless and thread safe
+class GroovyLspService {
+    final GroovyCompletionEngine engine = new GroovyCompletionEngine(
+            new GroovyOnlyClassLoader(),    // the JDK and Groovy, not the classes of the application
+            ['/path/to/my-dsl.jar'],        // the DSL
+            [new ImportCustomizer().addStarImports('my.dsl')])  // the default imports of the scripts
+}
+
+// the controller
+def groovyLsp() {
+    Map<String, String> documents = session.getAttribute('groovyLspDocuments') as Map<String, String>
+    if (documents == null) {
+        documents = new ConcurrentHashMap<String, String>()
+        session.setAttribute('groovyLspDocuments', documents)
+    }
+    String response = JsonRpcHttp.handle(request.inputStream.getText('UTF-8'),
+            new GroovyLanguageServer(groovyLspService.engine, documents))
+    if (response) render(text: response, contentType: 'application/json', encoding: 'UTF-8')
+    else render(status: 204)
+}
+
+// the form
+editor.onLspAction(MyController.&groovyLsp as MethodClosure)
+----
+
+`GroovyOnlyClassLoader` keeps the code being edited apart from the application: it sees the DSL only, and the global
+AST transformations of the application (GORM, Grails) do not run on it. The DSL jar is only read, so it may be built
+on another Groovy and Java, as the CAD DSL is (Groovy 6, Java 25).
+
+The app `cad-dsl-lsp` of intranet3 (`app/cad-dsl-lsp`) is a complete example: it bundles the CAD DSL jar and reads the
+default imports of its scripts from it.
+
+=== As a process
+
+For the editors starting a language server, on stdin and stdout:
+
+----
+./gradlew installDist
+build/install/groovy-dsl-lsp/bin/groovy-dsl-lsp \
+    --classpath ../cad-builder/cad-dsl/build/libs/cad-dsl-0.5_SNAPSHOT.jar \
+    --star-imports org.taack.cad.dsl,org.taack.cad.dsl.geom,org.taack.cad.dsl.helper \
+    --static-star-imports org.taack.cad.dsl.CadDsl,java.lang.Math
+----
+
+== Limits
+
+* What a DSL adds at run time (`methodMissing`, `propertyMissing`, metaclass) is unknown to the type checker.
+* No completion of class names, after `new` for instance.
+* Parameter names show for the classes compiled with `-parameters` only.
+* The compiler runs on each request, 10 to 60 ms on a script once the classes of the DSL are loaded, more for the
+  first one.
+* The type checking extensions and AST transformations named by the code being edited, and those of the DSL classpath,
+  run in the server: edit code from trusted users only.
