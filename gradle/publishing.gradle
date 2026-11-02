@@ -3,6 +3,11 @@
 ext.isReleaseVersion = { -> !version.endsWith('SNAPSHOT') }
 
 if (project.name in ['cad-dsl', 'cad-groovy-dsl-lsp']) {
+    java {
+        withJavadocJar()
+        withSourcesJar()
+    }
+
     publishing {
         publications {
             maven(MavenPublication) {
