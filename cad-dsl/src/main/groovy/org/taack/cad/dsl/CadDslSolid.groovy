@@ -45,7 +45,14 @@ class CadDslSolid implements CadDslBase {
     }
 
     CadDslSolid display(String fileName = null) {
-        visitor.display(CadDisplay.target(fileName))
+        display(null, fileName)
+    }
+
+    /**
+     * @param option How the image or the viewer shows the model, null for the kernel's look
+     */
+    CadDslSolid display(DisplayOption option, String fileName = null) {
+        visitor.display(CadDisplay.target(fileName), option)
         this
     }
 

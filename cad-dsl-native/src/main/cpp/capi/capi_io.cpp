@@ -17,7 +17,9 @@
 #include <BRepCheck_Analyzer.hxx>
 #include <BRepCheck_Result.hxx>
 #include <Bnd_Box.hxx>
-#include <Image_AlienPixMap.hxx>
+#include <Graphic3d_Camera.hxx>
+#include <Graphic3d_Texture2D.hxx>
+#include <Image_PixMap.hxx>
 #include <OpenGl_GraphicDriver.hxx>
 #include <Prs3d_Drawer.hxx>
 #include <Prs3d_LineAspect.hxx>
@@ -35,6 +37,10 @@
 #include <TDocStd_Document.hxx>
 #include <TopLoc_Location.hxx>
 #include <TopoDS_Compound.hxx>
+#include <V3d_AmbientLight.hxx>
+#include <V3d_DirectionalLight.hxx>
+#include <V3d_PositionalLight.hxx>
+#include <V3d_ImageDumpOptions.hxx>
 #include <V3d_View.hxx>
 #include <V3d_Viewer.hxx>
 #include <XCAFApp_Application.hxx>
@@ -44,6 +50,7 @@
 #include <gp_Ax3.hxx>
 
 #include <algorithm>
+#include <fstream>
 #include <cmath>
 #include <sstream>
 #include <string>
@@ -100,8 +107,21 @@ public:
 };
 #endif
 
+// Writes the RGB or RGBA image as PAM data, without an image library: the JVM converts it to the format of the extension
+static bool savePam(const Image_PixMap &image, const std::string &fileName) {
+    bool alpha = image.Format() == Image_Format_RGBA;
+    std::ofstream out(fileName, std::ios::binary);
+    out << "P7\nWIDTH " << image.Width() << "\nHEIGHT " << image.Height() << "\nDEPTH " << (alpha ? 4 : 3)
+        << "\nMAXVAL 255\nTUPLTYPE " << (alpha ? "RGB_ALPHA" : "RGB") << "\nENDHDR\n";
+    // Row(0) is the top row, whatever the order in memory
+    for (size_t y = 0; y < image.Height(); y++)
+        out.write((const char *) image.Row(y), (std::streamsize) (image.Width() * (alpha ? 4 : 3)));
+    return out.good();
+}
+
 // Renders one image per file name: frame i into fileNames[i], or the static locations when there is one file and frameCount is 0
-static int dump(const char *function, const CadNode &assembly, int frameCount, int width, int height, const std::vector<std::string> &fileNames) {
+static int dump(const char *function, const CadNode &assembly, int frameCount, int width, int height, const std::vector<std::string> &fileNames,
+                const CadDisplayOptions *options) {
     return guard(function, [&] {
 #ifdef OCCT_HEADLESS
         // destroyed after the views and the driver that use it
@@ -112,6 +132,9 @@ static int dump(const char *function, const CadNode &assembly, int frameCount, i
         // don't waste the time waiting for VSync when window is not displayed on the screen
         OpenGl_Caps _caps;
         _caps.buffersNoSwap = true;
+        // cleared with alpha 0: a transparent background
+        bool transparent = options && options->transparentBackground;
+        if (transparent) _caps.buffersOpaqueAlpha = false;
 
         occ::handle<OpenGl_GraphicDriver> _graphicDriver = new OpenGl_GraphicDriver(_displayConnection, false);
         _graphicDriver->ChangeOptions() = _caps;
@@ -160,24 +183,29 @@ static int dump(const char *function, const CadNode &assembly, int frameCount, i
         _context->SetDisplayMode(AIS_Shaded, false);
         _context->DefaultDrawer()->SetFaceBoundaryDraw(true);
         _context->DefaultDrawer()->FaceBoundaryAspect()->SetColor(Quantity_NOC_CYAN);
+        capi_setup_view(_view, _context, options);
 
         // Render immediate structures into back buffer rather than front.
         _view->View()->SetImmediateModeDrawToFront(false);
 
         //* Dump
-        occ::handle<Image_AlienPixMap> pixmap = new Image_AlienPixMap;
+        occ::handle<Image_PixMap> pixmap = new Image_PixMap;
+        V3d_ImageDumpOptions dumpOptions;
+        dumpOptions.Width = width;
+        dumpOptions.Height = height;
+        dumpOptions.BufferType = transparent ? Graphic3d_BT_RGBA : Graphic3d_BT_RGB;
+        pixmap->InitZero(transparent ? Image_Format_RGBA : Image_Format_RGB, width, height);
 
         std::vector<occ::handle<AIS_Shape>> presentations = capi_display_assembly(_context, assembly);
         // the same view for every frame, showing the whole motion
         Bnd_Box box = capi_assembly_box(assembly, frameCount);
-        if (box.IsVoid()) _view->FitAll(0.1, true);
-        else _view->FitAll(box, 0.1, true);
+        capi_fit_view(_view, box, 0.1, options);
 
         int saved = 1;
         for (size_t i = 0; i < fileNames.size(); i++) {
             if (frameCount > 0) capi_move_assembly(_context, assembly, presentations, (int) i);
-            _view->ToPixMap(*pixmap, width, height);
-            if (!pixmap->Save(fileNames[i].c_str())) saved = 0;
+            if (!_view->ToPixMap(*pixmap, dumpOptions)) saved = 0;
+            else if (!savePam(*pixmap, fileNames[i])) saved = 0;
         }
         return saved;
     });
@@ -187,20 +215,22 @@ extern "C" int dumpShape(const TopoDS_Shape *shape, int width, int height, const
     TRACE("");
     CadNode part;
     part.shape = *shape;
-    return dump(__func__, part, 0, width, height, {fileName});
+    return dump(__func__, part, 0, width, height, {fileName}, nullptr);
 }
 
-extern "C" int dumpAssembly(const occ::handle<CadNode> *assembly, int width, int height, const char *fileName) {
+extern "C" int dumpAssembly(const occ::handle<CadNode> *assembly, int width, int height, const char *fileName,
+                            const CadDisplayOptions *options) {
     TRACE("");
-    return dump(__func__, **assembly, 0, width, height, {fileName});
+    return dump(__func__, **assembly, 0, width, height, {fileName}, options);
 }
 
-extern "C" int dumpAssemblyFrames(const occ::handle<CadNode> *assembly, int frameCount, int width, int height, const char *fileNames) {
+extern "C" int dumpAssemblyFrames(const occ::handle<CadNode> *assembly, int frameCount, int width, int height, const char *fileNames,
+                                  const CadDisplayOptions *options) {
     TRACE("");
     std::vector<std::string> names;
     std::istringstream lines(fileNames);
     for (std::string line; std::getline(lines, line);) names.push_back(line);
-    return dump(__func__, **assembly, frameCount, width, height, names);
+    return dump(__func__, **assembly, frameCount, width, height, names, options);
 }
 
 extern "C" void write_step(const TopoDS_Shape *shape, const char *fileName) {
@@ -315,6 +345,68 @@ void capi_move_assembly(const occ::handle<AIS_InteractiveContext> &context, cons
     assembly.forEachPart(gp_Trsf(), [&](const CadNode &, const gp_Trsf &location) {
         context->SetLocation(presentations[i++], TopLoc_Location(location));
     }, frame);
+}
+
+static Quantity_Color srgb(const double *c) {
+    return Quantity_Color(c[0], c[1], c[2], Quantity_TOC_sRGB);
+}
+
+// Vertical gradient through three colors, stretched over the background: OCCT gradients have two colors only
+static occ::handle<Graphic3d_Texture2D> gradient(const double *colors) {
+    // fine enough not to show steps without filtering, which would blend the top row with the bottom one
+    const int height = 1024;
+    occ::handle<Image_PixMap> image = new Image_PixMap();
+    image->InitZero(Image_Format_RGBA, 2, height);
+    for (int y = 0; y < height; y++) {
+        // row 0 is the top of the image
+        double t = 2.0 * y / (height - 1);
+        const double *from = t < 1 ? colors : colors + 3;
+        const double *to = from + 3;
+        float f = (float) (t < 1 ? t : t - 1);
+        Quantity_Color c(srgb(from).Rgb() * (1.0f - f) + srgb(to).Rgb() * f);
+        for (int x = 0; x < 2; x++) image->SetPixelColor(x, y, Quantity_ColorRGBA(c, 1.0f), true);
+    }
+    occ::handle<Graphic3d_Texture2D> texture = new Graphic3d_Texture2D(image);
+    return texture;
+}
+
+void capi_setup_view(const occ::handle<V3d_View> &view, const occ::handle<AIS_InteractiveContext> &context,
+                     const CadDisplayOptions *options) {
+    if (!options) return;
+    const occ::handle<Prs3d_Drawer> &drawer = context->DefaultDrawer();
+    drawer->SetFaceBoundaryDraw(options->edgesVisible != 0);
+    if (options->hasEdgeColor) drawer->FaceBoundaryAspect()->SetColor(srgb(options->edgeColor));
+    if (options->hasBackground && !options->transparentBackground) view->SetBackgroundImage(gradient(options->background), Aspect_FM_STRETCH);
+    if (options->hasLight[0] || options->hasLight[1] || options->hasLight[2]) {
+        view->SetLightOff();
+        occ::handle<V3d_AmbientLight> ambient = new V3d_AmbientLight(Quantity_NOC_GRAY30);
+        view->Viewer()->AddLight(ambient);
+        view->SetLightOn(ambient);
+        for (int i = 0; i < 3; i++) {
+            if (!options->hasLight[i]) continue;
+            const double *p = options->lightPosition + 3 * i;
+            occ::handle<V3d_PositionalLight> light = new V3d_PositionalLight(gp_Pnt(p[0], p[1], p[2]), srgb(options->lightColor + 3 * i));
+            view->Viewer()->AddLight(light);
+            view->SetLightOn(light);
+        }
+    }
+    if (options->fieldOfView > 0) {
+        view->Camera()->SetProjectionType(Graphic3d_Camera::Projection_Perspective);
+        view->Camera()->SetFOVy(options->fieldOfView);
+    }
+}
+
+void capi_fit_view(const occ::handle<V3d_View> &view, const Bnd_Box &box, double margin, const CadDisplayOptions *options) {
+    if (box.IsVoid()) view->FitAll(margin, false);
+    else view->FitAll(box, margin, false);
+    if (options && options->hasCamera) {
+        // in orthographic, the scale of the fit stays
+        const double *e = options->eye, *t = options->target, *u = options->up;
+        view->Camera()->SetEyeAndCenter(gp_Pnt(e[0], e[1], e[2]), gp_Pnt(t[0], t[1], t[2]));
+        view->Camera()->SetUp(gp_Dir(u[0], u[1], u[2]));
+        view->Camera()->OrthogonalizeUp();
+    }
+    view->ZFitAll();
 }
 
 Bnd_Box capi_assembly_box(const CadNode &assembly, int frameCount) {

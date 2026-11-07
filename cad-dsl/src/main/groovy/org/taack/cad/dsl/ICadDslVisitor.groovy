@@ -47,7 +47,10 @@ interface ICadDslVisitor {
 
     void visitFace(Vec direction, Vec position)
 
-    void display(String fileName)
+    /**
+     * @param option How an image or the viewer shows the shape, null for the kernel's look
+     */
+    void display(String fileName, DisplayOption option)
 
     void visitCenter()
 

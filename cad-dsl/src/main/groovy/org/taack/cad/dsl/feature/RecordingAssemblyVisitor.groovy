@@ -2,6 +2,7 @@ package org.taack.cad.dsl.feature
 
 import groovy.transform.CompileStatic
 import org.taack.cad.dsl.Color
+import org.taack.cad.dsl.DisplayOption
 import org.taack.cad.dsl.ICadDslAssemblyVisitor
 import org.taack.cad.dsl.ICadDslNode
 import org.taack.cad.dsl.ICadDslVisitor
@@ -100,9 +101,9 @@ final class RecordingAssemblyVisitor implements ICadDslAssemblyVisitor {
     }
 
     @Override
-    void display(String fileName) {
+    void display(String fileName, DisplayOption option) {
         recorder.displayed(fileName, feature)
-        if (forwarded || !recorder.stopping) kernel.display(fileName)
+        if (forwarded || !recorder.stopping) kernel.display(fileName, option)
     }
 
     @Override

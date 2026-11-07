@@ -15,7 +15,35 @@ It takes inspiration from https://github.com/CadQuery/cadquery[CadQuery], in Gro
 `display("x.glb")` writes a binary glTF file: the faces and their boundaries as the viewer draws them, the tree of the
 assembly and its animation, readable by any glTF viewer (see xref:usage.adoc#runner[Runner]).
 
-NOTE: Without FreeImage support in OCCT (`-DUSE_FREEIMAGE=ON`), `display("x.png")` writes PPM data whatever the extension.
+Images are written in the format of their extension, `.png`, `.jpg`, `.bmp`, `.gif` or `.tiff`, by the JVM: OCCT
+needs no image library.
+
+=== Display Options
+
+`display(option)` and `display(option, "x.png")` show the model as a `DisplayOption` says, made with its builder; what
+it leaves out keeps the look of the kernel. The options act on images and on the viewer of OCCT, FreeCAD ignores them.
+
+[source,groovy]
+----
+cd().box(80, 60, 10).topZ().wireFrom() {
+    circle(20)
+}.toFace().prism(30).display(DisplayOption.builder()
+        .edges(true, Color.BLACK)                                   // face boundaries shown, and their color
+        .camera(new Vec(150, -200, 150), new Vec(40, 30, 10))       // eye, target, and up (Vec.vZ by default)
+        .perspective(30)                                            // field of view in degrees, or orthographic()
+        .background(Color.hex('#1e3c72'), Color.hex('#7f8fa6'), Color.WHITE) // gradient: top, middle, bottom
+        .light(1, new Vec(200, -200, 300), Color.WHITE)            // lights 1 to 3: position and color
+        .light(2, new Vec(-200, 100, 100), Color.ORANGE)
+        .build())
+----
+
+image::images/cad-display-options.png[]
+
+With a camera, an orthographic view keeps the scale that fits the model; with lights, they replace the default ones,
+beside a dim ambient light.
+
+`transparentBackground()`, instead of `background(...)`, gives the images a transparent background: they must then be
+`.png`, `.gif` or `.tiff` files. The viewer keeps its gray background.
 
 == A First Part
 

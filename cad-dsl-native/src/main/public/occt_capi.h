@@ -674,7 +674,29 @@ OCCT_CAPI double *R7_BRepExtrema_DistShapeShape__s1_s2(const TopoDS_Shape *Shape
 
 ***********************************************************************************************************************/
 
-/* Renders the shape off-screen into an image file; returns non-zero on success. */
+/* How an image or the viewer shows the models; the functions taking it use their own look when it is NULL. Colors
+   are sRGB components in [0, 1]. */
+typedef struct CadDisplayOptions {
+    int edgesVisible;            /* draw the boundaries of the faces */
+    int hasEdgeColor;
+    double edgeColor[3];
+    int hasCamera;               /* look from eye at target, up toward up, instead of the default axonometric view */
+    double eye[3];
+    double target[3];
+    double up[3];
+    double fieldOfView;          /* perspective with this vertical field of view in degrees, orthographic when 0 */
+    int transparentBackground;   /* images with an alpha channel and a transparent background; the viewer keeps its
+                                    gray one */
+    int hasBackground;           /* gradient from top to middle to bottom, instead of a gray background */
+    double background[9];
+    int hasLight[3];             /* positional lights at lightPosition[3 i], of color lightColor[3 i], instead of the
+                                    default lights when one is set */
+    double lightPosition[9];
+    double lightColor[9];
+} CadDisplayOptions;
+
+/* Renders the shape off-screen into an image file, as PAM data (P7, RGB, or RGBA with a transparent background)
+   whatever the extension, for the caller to convert; returns non-zero on success. */
 OCCT_CAPI int dumpShape(const TopoDS_Shape *shape, int width, int height, const char *fileName);
 
 OCCT_CAPI void write_step(const TopoDS_Shape *shape, const char *fileName);
@@ -701,13 +723,13 @@ OCCT_CAPI void _CadNode__AddComponent__node_location(OCCT_HANDLE(CadNode) *assem
 
 /* Same as dumpShape, write_step, write_stl and visualize, for every part of the assembly tree, with its color.
    To STEP, parts and sub-assemblies placed several times are written once. */
-OCCT_CAPI int dumpAssembly(const OCCT_HANDLE(CadNode) *assembly, int width, int height, const char *fileName);
+OCCT_CAPI int dumpAssembly(const OCCT_HANDLE(CadNode) *assembly, int width, int height, const char *fileName, const CadDisplayOptions *options);
 
 OCCT_CAPI void write_step_assembly(const OCCT_HANDLE(CadNode) *assembly, const char *fileName);
 
 OCCT_CAPI void write_stl_assembly(const OCCT_HANDLE(CadNode) *assembly, const char *fileName);
 
-OCCT_CAPI int visualize_assembly(const OCCT_HANDLE(CadNode) *assembly);
+OCCT_CAPI int visualize_assembly(const OCCT_HANDLE(CadNode) *assembly, const CadDisplayOptions *options);
 
 /* The assembly tree of a STEP file, in millimeters, with the names and colors of its parts; name, if not NULL, replaces
    the name of the root. A part whose faces have their own colors becomes an assembly of a part per color. */
@@ -725,10 +747,10 @@ OCCT_CAPI void _CadNode__SetFrames__index_count_values(OCCT_HANDLE(CadNode) *ass
 
 /* Renders the frames of the animation, from 0, into the image files named by fileNames, one per line; with
    frameCount = 0, a single image of the static locations. Returns non-zero on success. */
-OCCT_CAPI int dumpAssemblyFrames(const OCCT_HANDLE(CadNode) *assembly, int frameCount, int width, int height, const char *fileNames);
+OCCT_CAPI int dumpAssemblyFrames(const OCCT_HANDLE(CadNode) *assembly, int frameCount, int width, int height, const char *fileNames, const CadDisplayOptions *options);
 
 /* Same as visualize_assembly, playing the frameCount frames of the animation in a loop, fps frames per second. */
-OCCT_CAPI int visualize_animation(const OCCT_HANDLE(CadNode) *assembly, int frameCount, double fps);
+OCCT_CAPI int visualize_animation(const OCCT_HANDLE(CadNode) *assembly, int frameCount, double fps, const CadDisplayOptions *options);
 
 /***********************************************************************************************************************
 

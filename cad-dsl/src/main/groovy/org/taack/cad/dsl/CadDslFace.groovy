@@ -125,7 +125,14 @@ class CadDslFace implements CadDslBase {
     }
 
     CadDslFace display(String fileName = null) {
-        visitor.display(CadDisplay.target(fileName))
+        display(null, fileName)
+    }
+
+    /**
+     * @param option How the image or the viewer shows the model, null for the kernel's look
+     */
+    CadDslFace display(DisplayOption option, String fileName = null) {
+        visitor.display(CadDisplay.target(fileName), option)
         this
     }
 }

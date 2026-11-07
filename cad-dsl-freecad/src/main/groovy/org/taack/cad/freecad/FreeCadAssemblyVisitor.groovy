@@ -3,6 +3,7 @@ package org.taack.cad.freecad
 import groovy.transform.CompileStatic
 import org.taack.cad.dsl.CadParams
 import org.taack.cad.dsl.Color
+import org.taack.cad.dsl.DisplayOption
 import org.taack.cad.dsl.ICadDslAssemblyVisitor
 import org.taack.cad.dsl.ICadDslNode
 import org.taack.cad.dsl.ICadDslVisitor
@@ -81,7 +82,7 @@ class FreeCadAssemblyVisitor implements ICadDslAssemblyVisitor {
      * {@link FreeCadKernel#splitEnabled split}
      */
     @Override
-    void display(String fileName) {
+    void display(String fileName, DisplayOption option) {
         session.call(null, 'setParams', CadParams.values())
         session.call(handle, 'display', fileName, FreeCadKernel.splitEnabled())
         if (!fileName && FreeCadKernel.guiEnabled()) FreeCadKernel.show(session, handle, true)

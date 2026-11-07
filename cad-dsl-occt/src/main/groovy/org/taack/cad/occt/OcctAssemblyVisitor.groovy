@@ -2,7 +2,9 @@ package org.taack.cad.occt
 
 import groovy.transform.CompileStatic
 import org.taack.cad.dsl.CadDisplay
+import org.taack.cad.dsl.CadImages
 import org.taack.cad.dsl.Color
+import org.taack.cad.dsl.DisplayOption
 import org.taack.cad.dsl.ICadDslAssemblyVisitor
 import org.taack.cad.dsl.ICadDslNode
 import org.taack.cad.dsl.ICadDslVisitor
@@ -110,17 +112,18 @@ class OcctAssemblyVisitor implements ICadDslAssemblyVisitor {
     }
 
     @Override
-    void display(String fileName) {
-        if (fileName?.contains('%')) {
-            // an image per frame
-            int count = Math.max(frameCount, 1)
-            List<File> files = (0..<count).collect { int i -> new File(String.format(fileName, i)) }
-            files*.parentFile.findAll { it != null }.unique()*.mkdirs()
-            try (Arena arena = Arena.ofConfined()) {
-                dumpAssemblyFrames(node, frameCount ? count : 0, 1920, 1080, arena.allocateFrom(files*.path.join('\n')))
-            }
-        } else if (fileName) {
-            try (Arena arena = Arena.ofConfined()) {
+    void display(String fileName, DisplayOption option) {
+        try (Arena arena = Arena.ofConfined()) {
+            MemorySegment o = OcctDisplayOptions.of(arena, option)
+            if (fileName?.contains('%')) {
+                // an image per frame
+                int count = Math.max(frameCount, 1)
+                List<File> files = (0..<count).collect { int i -> new File(String.format(fileName, i)) }
+                files*.parentFile.findAll { it != null }.unique()*.mkdirs()
+                OcctDisplayOptions.check(option, fileName)
+                dumpAssemblyFrames(node, frameCount ? count : 0, 1920, 1080, arena.allocateFrom(files*.path.join('\n')), o)
+                files.each { CadImages.convert(it) }
+            } else if (fileName) {
                 MemorySegment t = arena.allocateFrom(fileName)
                 if (fileName.endsWith(".step")) {
                     write_step_assembly(node, t)
@@ -128,11 +131,14 @@ class OcctAssemblyVisitor implements ICadDslAssemblyVisitor {
                     write_stl_assembly(node, t)
                 } else if (fileName.endsWith(CadDisplay.GLTF_EXTENSION)) {
                     if (!write_glb_assembly(node, frameCount, fps, t)) throw new IllegalStateException("display($fileName): ${lastError()}")
-                } else
-                    dumpAssembly(node, 1920, 1080, t)
-            }
-        } else if (frameCount > 1) visualize_animation(node, frameCount, fps)
-        else visualize_assembly(node)
+                } else {
+                    OcctDisplayOptions.check(option, fileName)
+                    dumpAssembly(node, 1920, 1080, t, o)
+                    CadImages.convert(new File(fileName))
+                }
+            } else if (frameCount > 1) visualize_animation(node, frameCount, fps, o)
+            else visualize_assembly(node, o)
+        }
     }
 
     private static MemorySegment cString(Arena arena, String s) {

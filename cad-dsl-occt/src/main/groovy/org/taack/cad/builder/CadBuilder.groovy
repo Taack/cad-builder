@@ -1,6 +1,7 @@
 package org.taack.cad.builder
 
 import groovy.transform.CompileStatic
+import org.taack.cad.dsl.CadImages
 import org.taack.cad.dsl.geom.Vec
 import org.taack.cad.dsl.geom.Vec2d
 import org.taack.cad.occt.Natives
@@ -119,8 +120,10 @@ class CadBuilder {
                     write_step(this.currentShapeNative, t)
                 } else if (fileName.endsWith(".stl")) {
                     write_stl(this.currentShapeNative, t)
-                } else
+                } else {
                     dumpShape(currentShapeNative, w, h, t)
+                    CadImages.convert(new File(fileName))
+                }
             }
         } else visualize(currentNative)
     }

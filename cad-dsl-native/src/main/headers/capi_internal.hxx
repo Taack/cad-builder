@@ -120,6 +120,15 @@ void capi_move_assembly(const occ::handle<AIS_InteractiveContext> &context, cons
 // Bounding box of the assembly over the frameCount frames of its animation (the static locations when 0).
 Bnd_Box capi_assembly_box(const CadNode &assembly, int frameCount);
 
+class V3d_View;
+
+// Applies the options, if not NULL, before the parts are displayed: edges, background, lights and projection (capi_io.cpp).
+void capi_setup_view(const occ::handle<V3d_View> &view, const occ::handle<AIS_InteractiveContext> &context,
+                     const CadDisplayOptions *options);
+
+// Fits box (the whole view when void) with a margin, then moves the camera as the options say, if not NULL.
+void capi_fit_view(const occ::handle<V3d_View> &view, const Bnd_Box &box, double margin, const CadDisplayOptions *options);
+
 // Triangulates the faces and discretizes the edges of shape, with a deflection relative to its size (capi_gltf.cpp).
 void capi_mesh_shape(const TopoDS_Shape &shape);
 

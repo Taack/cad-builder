@@ -33,4 +33,4 @@ Check in the script rather than with scripts beside it, in a `verify()` method o
 
 - `cad-dsl Main.groovy [args]` runs a script, the classes beside it are found. `-Dcad.trace=true` in `CAD_DSL_OPTS`
   prints what the kernel does.
-- `display("x.png")` writes PPM data whatever the extension: `magick x.png x2.png` before reading it.
+- `display("x.png")` writes a PNG image (`.jpg`, `.bmp`, `.gif`, `.tiff` work too).

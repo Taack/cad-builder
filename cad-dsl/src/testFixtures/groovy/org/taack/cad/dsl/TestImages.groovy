@@ -5,16 +5,13 @@ import org.junit.jupiter.api.extension.AfterEachCallback
 import org.junit.jupiter.api.extension.BeforeEachCallback
 import org.junit.jupiter.api.extension.ExtensionContext
 
-import javax.imageio.ImageIO
-import java.awt.image.BufferedImage
-
 /**
  * The images of the DSL tests: display(image()) renders the shape of a test to
  * {@code <cad.test.images>/<qualified test class>/<test method>.png}, when the kernel renders images off screen (its test task
  * sets the system property cad.test.images); else image() is null, and display(null) only checks the shape.
  * <p>
  * Registered for every test by autodetection (META-INF/services), it names the images after the running test, then
- * turns into PNG the PPM data an OCCT built without FreeImage writes whatever the extension.
+ * converts with {@link CadImages} those a kernel would have left as Netpbm data.
  */
 @CompileStatic
 class TestImages implements BeforeEachCallback, AfterEachCallback {
@@ -48,40 +45,8 @@ class TestImages implements BeforeEachCallback, AfterEachCallback {
     @Override
     void afterEach(ExtensionContext context) {
         for (File f in written.get()) {
-            if (f.isFile()) toPng(f)
+            CadImages.convert(f)
         }
         written.get().clear()
-    }
-
-    // Rewrites as PNG a file holding binary PPM (P6) data
-    private static void toPng(File f) {
-        byte[] data = f.bytes
-        if (data.length < 2 || (char) data[0] != ('P' as char) || (char) data[1] != ('6' as char)) return
-        // header: P6, width, height, maxval, separated by whitespace, # comments to the end of their line
-        int at = 2
-        int[] values = new int[3]
-        for (int i = 0; i < 3; i++) {
-            while (true) {
-                char c = (char) data[at]
-                if (c == ('#' as char)) {
-                    while ((char) data[at] != ('\n' as char)) at++
-                } else if (!Character.isWhitespace(c)) break
-                at++
-            }
-            int v = 0
-            while (Character.isDigit((char) data[at])) v = v * 10 + Character.digit((char) data[at++], 10)
-            values[i] = v
-        }
-        at++
-        int width = values[0], height = values[1]
-        if (values[2] > 255) return
-        BufferedImage img = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB)
-        for (int y = 0; y < height; y++) {
-            for (int x = 0; x < width; x++) {
-                int r = data[at++] & 0xff, g = data[at++] & 0xff, b = data[at++] & 0xff
-                img.setRGB(x, y, (r << 16) | (g << 8) | b)
-            }
-        }
-        ImageIO.write(img, 'png', f)
     }
 }
