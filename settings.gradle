@@ -11,14 +11,15 @@ include 'cad-dsl', 'cad-groovy-dsl-lsp', 'cad-dsl-native', 'cad-dsl-occt', 'cad-
 ./gradlew -PocctHome=$HOME/.local/occt-8.0.1-egl :cad-dsl-freecad:installDist
 ./gradlew -PocctHome=$HOME/.local/occt-8.0.1-egl :cad-dsl-runner:installDist
 cp cad-dsl-native/build/lib/main/release/libcad-dsl-native.so .
-# cad-dsl-native.dll: the same linkRelease on Windows (docs/building.adoc), copied here
+# cad-dsl-native.dll: the same linkRelease on Windows (docs/building.adoc, OCCT with RapidJSON), copied here with the
+# DLLs of C:\occt-8.0.1\bin into occt-dll/: Windows has no rpath, the launcher finds them in native through PATH
 mkdir -p runner/linux runner/windows
 cp -r cad-dsl-runner/build/install/cad-dsl-runner runner/linux/
 cp -r cad-dsl-runner/build/install/cad-dsl-runner runner/windows/
 rm runner/linux/cad-dsl-runner/bin/cad-dsl-runner.bat runner/windows/cad-dsl-runner/bin/cad-dsl-runner
 mkdir runner/linux/cad-dsl-runner/native runner/windows/cad-dsl-runner/native
 cp libcad-dsl-native.so runner/linux/cad-dsl-runner/native/
-cp cad-dsl-native.dll runner/windows/cad-dsl-runner/native/
+cp cad-dsl-native.dll occt-dll/*.dll runner/windows/cad-dsl-runner/native/
 tar -C runner/linux -czf cad-dsl-runner-linux.tar.gz cad-dsl-runner
 (cd runner/windows && zip -qr ../../cad-dsl-runner-windows.zip cad-dsl-runner)
 

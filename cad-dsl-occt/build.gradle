@@ -36,6 +36,21 @@ jextract.libraries {
     }
 }
 
+// jextract declares C_LONG as an OfLong, the size of a C long where it runs: on Windows, where a long has 32 bits,
+// bindings generated on Linux or macOS then fail to initialize. The C API uses no long: make it platform-neutral.
+tasks.named('generateCad-dsl-nativeBindings') {
+    doLast {
+        outputs.files.asFileTree.matching { include '**/NativeLib$shared.java' }.each { File f ->
+            String source = f.text
+            String portable = source.replace(
+                    'public static final ValueLayout.OfLong C_LONG = (ValueLayout.OfLong) Linker',
+                    'public static final ValueLayout C_LONG = (ValueLayout) Linker')
+            if (portable == source) throw new GradleException("C_LONG not found in $f: check the jextract output")
+            f.text = portable
+        }
+    }
+}
+
 dependencies {
     api project(':cad-dsl')
     testImplementation platform('org.junit:junit-bom:6.0.3')

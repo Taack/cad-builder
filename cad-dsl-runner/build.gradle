@@ -34,6 +34,18 @@ application {
     applicationDefaultJvmArgs = ['--enable-native-access=ALL-UNNAMED']
 }
 
+// Windows has no rpath: the OCCT DLLs that cad-dsl-native.dll links are found through PATH only. A distribution ships
+// them in native, beside it. The endlocal of the launcher drops any PATH set before, so it is set on the java line.
+tasks.named('startScripts', CreateStartScripts) {
+    doLast {
+        String script = windowsScript.text
+        String withPath = script.replace('endlocal & "%JAVA_EXE%"',
+                'endlocal & set "PATH=%APP_HOME%\\native;%PATH%" & "%JAVA_EXE%"')
+        if (withPath == script) throw new GradleException("No java command line in $windowsScript")
+        windowsScript.text = withPath
+    }
+}
+
 tasks.named('run', JavaExec) {
     dependsOn ':cad-dsl-native:linkRelease'
     systemProperty 'java.library.path', nativeLibDir
