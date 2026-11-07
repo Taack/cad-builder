@@ -340,6 +340,25 @@ image::images/cad-bent-rod.png[]
 .Paper Clip
 image::images/cad-paper-clip.png[]
 
+`rounded(maxRadius)` rounds each bend of a path through points as much as its edges allow, up to `maxRadius`: the
+arcs of two bends take up to 49 % of the edge between them each. It suits paths of many points, a coil computed point
+by point for instance, where the radius of each bend depends on the length of its edges.
+
+.Square Spiral, Rounded
+[source,groovy]
+----
+List<Vec> points = (0..12).collect { int i -> double a = 6d + 4d * i; new Vec(i % 4 < 2 ? a : -a, (i + 1) % 4 < 2 ? a : -a, i) }
+cd().path(points).rounded().wire(1)
+----
+
+.Square Spiral, Rounded
+image::images/cad-spiral-rounded.png[]
+
+`wire(radius)` checks that the wire does not cross itself: it fails when two parts of the path are closer than its
+diameter, naming them, the turns of a coil too close for instance. A mitred bend is not a crossing, nor the end of a
+closed path meeting its start. The check follows what is drawn with `edge`, `arc` and `arcAround`; after a `move` or a
+`to`, it is not made.
+
 == Helix
 
 `helix(radius, pitch, height[, endRadius])` starts a helix around the current direction (a negative pitch makes it

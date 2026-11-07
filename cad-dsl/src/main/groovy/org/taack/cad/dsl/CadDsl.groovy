@@ -171,20 +171,15 @@ class CadDsl extends CadDslSolid implements CadDslBase {
      * Sweep a section along it with {@link CadDslPath#wire}.
      */
     CadDslPath path(Vec from, @DelegatesTo(value = CadDslEdge, strategy = Closure.DELEGATE_FIRST) Closure c) {
-        visitor.visitPath(from)
-        c.delegate = new CadDslEdge(visitor: visitor, at3d: from)
-        c.call()
-        visitor.visitPathEnd(from)
-        new CadDslPath(visitor: visitor)
+        CadDslPath.drawn(visitor, from, c)
     }
 
     /**
-     * Start a path of straight edges through the points, see {@link #path(Vec, Closure)}.
+     * Start a path of straight edges through the points, see {@link #path(Vec, Closure)}. Its bends are mitred:
+     * {@link CadDslPath#rounded} rounds them.
      */
     CadDslPath path(List<Vec> points) {
-        path(points.first()) {
-            for (Vec p : points.tail()) edge(p)
-        }
+        CadDslPath.through(visitor, points, points.collect { 0d })
     }
 
     /**
@@ -204,49 +199,7 @@ class CadDsl extends CadDslSolid implements CadDslBase {
      * @throws IllegalArgumentException when the arcs of two bends overlap on the edge between them
      */
     CadDslPath path(List<Vec> points, List<? extends Number> bendRadii) {
-        if (bendRadii.size() != points.size()) throw new IllegalArgumentException("path: ${bendRadii.size()} radii for ${points.size()} points")
-        double smallest = Double.POSITIVE_INFINITY
-        CadDslPath path = path(points.first()) {
-            Vec at = points.first()
-            double previousTangent = 0d
-            for (int i = 1; i < points.size() - 1; i++) {
-                Vec p = points[i]
-                double radius = bendRadii[i].toDouble()
-                Vec u1 = unit(points[i - 1], p, i), u2 = unit(points[i + 1], p, i)
-                double cosine = u1.cord(u2)
-                if (radius <= 0d || cosine < -1d + 1e-12d) { // mitred, or no bend
-                    edge(p)
-                    at = p
-                    previousTangent = 0d
-                    continue
-                }
-                double half = acos(Math.min(1d, cosine)) / 2d, tangent = radius / tan(half)
-                double length = points[i - 1].distance(p)
-                if (previousTangent + tangent > length + 1e-6d * Math.max(1d, length)) throw new IllegalArgumentException(
-                        "path: the bends at points ${i - 1} and $i overlap, ${previousTangent + tangent} along their edge of ${length}")
-                Vec bisector = u1 + u2
-                Vec from = p + u1 * tangent, to = p + u2 * tangent
-                Vec center = p + bisector * (radius / sin(half) / bisector.distance(new Vec()))
-                if (from.distance(at) > 1e-6d * Math.max(1d, radius)) edge(from) // two bends may meet: a half circle
-                arcAround(to, center)
-                at = to
-                previousTangent = tangent
-                smallest = Math.min(smallest, radius)
-            }
-            Vec last = points.last()
-            double length = points[points.size() - 2].distance(last)
-            if (previousTangent > length + 1e-6d * Math.max(1d, length)) throw new IllegalArgumentException(
-                    "path: the bend at point ${points.size() - 2} goes beyond the end, ${previousTangent} along its edge of ${length}")
-            if (last.distance(at) > 1e-6d) edge(last)
-        }
-        path.smallestBend = smallest
-        path
-    }
-
-    private static Vec unit(Vec to, Vec from, int i) {
-        double length = to.distance(from)
-        if (length < 1e-9d) throw new IllegalArgumentException("path: point $i is repeated")
-        (to - from) * (1d / length)
+        CadDslPath.through(visitor, points, bendRadii)
     }
 
     /**

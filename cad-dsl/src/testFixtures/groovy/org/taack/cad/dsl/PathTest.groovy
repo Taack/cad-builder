@@ -59,4 +59,32 @@ class PathTest {
         assertThrows(IllegalArgumentException) { cd().path(points, 15) }
         assertThrows(IllegalArgumentException) { cd().path(points, 3).wire(3) }
     }
+
+    @Test
+    void "Square Spiral rounded"() {
+        // each bend as round as its edges allow
+        List<Vec> points = (0..12).collect { int i -> double a = 6d + 4d * i; new Vec(i % 4 < 2 ? a : -a, (i + 1) % 4 < 2 ? a : -a, i) }
+        CadDslPath spiral = cd().path(points).rounded()
+        assert spiral.smallestBend > 2d
+        spiral.wire(1).check('spiral').display(image())
+    }
+
+    @Test
+    void "Wire crossing itself"() {
+        // the strands 5 apart, a wire 8 thick
+        IllegalArgumentException e = assertThrows(IllegalArgumentException) {
+            cd().path([new Vec(), new Vec(50, 0, 0), new Vec(50, 5, 0), new Vec(0, 5, 0)]).wire(4)
+        }
+        assert e.message.contains('cross itself')
+        // a coil of pitch 6: a wire 6 thick touches the next turn, 5.6 thick does not
+        List<Vec> coil = (0..48).collect { int i -> double a = Math.PI * i / 8d; new Vec(20 * Math.cos(a), 20 * Math.sin(a), 6d * i / 16d) }
+        assertThrows(IllegalArgumentException) { cd().path(coil).rounded().wire(3.1) }
+        cd().path(coil).rounded().wire(2.8).check('coil')
+        // a mitred bend is not a crossing, nor the start of a closed ring at its end
+        cd().path([new Vec(), new Vec(30, 0, 0), new Vec(0, 10, 0)]).wire(3).check('mitre')
+        cd().path(new Vec(10, 0, 0)) {
+            arc(new Vec(-10, 0, 0), new Vec(0, 10, 0))
+            arc(new Vec(10, 0, 0), new Vec(0, -10, 0))
+        }.wire(2).check('ring')
+    }
 }
