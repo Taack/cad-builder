@@ -188,6 +188,68 @@ class CadDsl extends CadDslSolid implements CadDslBase {
     }
 
     /**
+     * Start a path through the points, its bends rounded: at each inner point, an arc of the radius, tangent to the two
+     * edges, in their plane, see {@link #path(List, List)}.
+     * @param bendRadius Radius of the bends, on the center line
+     */
+    CadDslPath path(List<Vec> points, Number bendRadius) {
+        path(points, points.collect { bendRadius })
+    }
+
+    /**
+     * Start a path through the points, its bends rounded: at each inner point, an arc of its radius, tangent to the two
+     * edges, in their plane. Two bends of a quarter turn, their radii half the distance of their points, make a half
+     * circle. Sweep a circle along it with {@link CadDslPath#wire}, thinner than the bends.
+     * @param bendRadii One per point, those of the two ends not used; 0 for a mitred bend
+     * @throws IllegalArgumentException when the arcs of two bends overlap on the edge between them
+     */
+    CadDslPath path(List<Vec> points, List<? extends Number> bendRadii) {
+        if (bendRadii.size() != points.size()) throw new IllegalArgumentException("path: ${bendRadii.size()} radii for ${points.size()} points")
+        double smallest = Double.POSITIVE_INFINITY
+        CadDslPath path = path(points.first()) {
+            Vec at = points.first()
+            double previousTangent = 0d
+            for (int i = 1; i < points.size() - 1; i++) {
+                Vec p = points[i]
+                double radius = bendRadii[i].toDouble()
+                Vec u1 = unit(points[i - 1], p, i), u2 = unit(points[i + 1], p, i)
+                double cosine = u1.cord(u2)
+                if (radius <= 0d || cosine < -1d + 1e-12d) { // mitred, or no bend
+                    edge(p)
+                    at = p
+                    previousTangent = 0d
+                    continue
+                }
+                double half = acos(Math.min(1d, cosine)) / 2d, tangent = radius / tan(half)
+                double length = points[i - 1].distance(p)
+                if (previousTangent + tangent > length + 1e-6d * Math.max(1d, length)) throw new IllegalArgumentException(
+                        "path: the bends at points ${i - 1} and $i overlap, ${previousTangent + tangent} along their edge of ${length}")
+                Vec bisector = u1 + u2
+                Vec from = p + u1 * tangent, to = p + u2 * tangent
+                Vec center = p + bisector * (radius / sin(half) / bisector.distance(new Vec()))
+                if (from.distance(at) > 1e-6d * Math.max(1d, radius)) edge(from) // two bends may meet: a half circle
+                arcAround(to, center)
+                at = to
+                previousTangent = tangent
+                smallest = Math.min(smallest, radius)
+            }
+            Vec last = points.last()
+            double length = points[points.size() - 2].distance(last)
+            if (previousTangent > length + 1e-6d * Math.max(1d, length)) throw new IllegalArgumentException(
+                    "path: the bend at point ${points.size() - 2} goes beyond the end, ${previousTangent} along its edge of ${length}")
+            if (last.distance(at) > 1e-6d) edge(last)
+        }
+        path.smallestBend = smallest
+        path
+    }
+
+    private static Vec unit(Vec to, Vec from, int i) {
+        double length = to.distance(from)
+        if (length < 1e-9d) throw new IllegalArgumentException("path: point $i is repeated")
+        (to - from) * (1d / length)
+    }
+
+    /**
      * Make a wing (or a blade) by lofting through sections declared with {@link CadDslWing#section}.
      * From the current position, the chord goes along X, the span along Y and the thickness along Z.
      * @return

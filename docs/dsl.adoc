@@ -309,6 +309,37 @@ void "Molded housing drawn as dimensioned, its walls leaning 2°"() {
 .Molded Housing
 image::images/cad-outline.png[]
 
+== Paths
+
+`path(from) { ... }` draws a path with `edge`, `arc` and `arcAround`, in absolute coordinates, and `path(points)` one of
+straight edges through points. `wire(radius)` sweeps a circle along it: a cable, a tube, a bent rod. Its bends are
+mitred where two edges meet at an angle.
+
+`path(points, bendRadius)` rounds them: at each inner point, an arc of the radius on the center line, tangent to the two
+edges, in their plane. `path(points, bendRadii)` takes a radius per point, those of the ends not used, 0 for a mitred
+bend; two quarter turns whose radii are half the distance of their points make a half circle. The arcs of two bends
+must fit on the edge between them, and the wire must be thinner than the bends, else the path or `wire` fails: a wire
+that crossed itself would not be a valid solid.
+
+.Bent Rod and Paper Clip
+[source,groovy]
+----
+cd().path([new Vec(), new Vec(40, 0, 0), new Vec(40, 30, 0), new Vec(40, 30, 25), new Vec(0, 30, 25)], 6).wire(2)
+
+double r1 = 4d, r2 = 3d, r3 = 2d
+List<Vec> points = [new Vec(12, 0, 0), new Vec(12, 0, -2 * r1 + 30), new Vec(12 - 2 * r1, 0, -2 * r1 + 30),
+                    new Vec(12 - 2 * r1, 0, 0), new Vec(12 - 2 * r1 + 2 * r2, 0, 0),
+                    new Vec(12 - 2 * r1 + 2 * r2, 0, 18), new Vec(12 - 2 * r1 + 2 * r2 - 2 * r3, 0, 18),
+                    new Vec(12 - 2 * r1 + 2 * r2 - 2 * r3, 0, 8)]
+cd().path(points, [0, r1, r1, r2, r2, r3, r3, 0]).wire(0.5)
+----
+
+.Bent Rod
+image::images/cad-bent-rod.png[]
+
+.Paper Clip
+image::images/cad-paper-clip.png[]
+
 == Helix
 
 `helix(radius, pitch, height[, endRadius])` starts a helix around the current direction (a negative pitch makes it
