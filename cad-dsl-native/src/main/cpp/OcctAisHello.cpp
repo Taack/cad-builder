@@ -42,7 +42,7 @@
 #endif
 
 #ifdef OCCT_HEADLESS
-static int visualizeBodies(const CadNode &, int, double) {
+static int visualizeBodies(const CadNode &, int, double, const CadDisplayOptions *) {
   std::cerr << "display(): no viewer, OCCT is built without Xlib; give display() a file name" << std::endl;
   return 0;
 }
@@ -51,7 +51,7 @@ static int visualizeBodies(const CadNode &, int, double) {
 class OcctAisHello : public AIS_ViewController {
 public:
   //! Main constructor.
-  OcctAisHello(const CadNode &anAssembly, int theFrameCount) : myAssembly(anAssembly) {
+  OcctAisHello(const CadNode &anAssembly, int theFrameCount, const CadDisplayOptions *theOptions) : myAssembly(anAssembly) {
     // graphic driver setup
     occ::handle<Aspect_DisplayConnection> aDisplay = new Aspect_DisplayConnection();
     occ::handle<Graphic3d_GraphicDriver> aDriver = new OpenGl_GraphicDriver(aDisplay);
@@ -95,12 +95,12 @@ public:
 
     // interactive context and demo scene
     myContext = new AIS_InteractiveContext(aViewer);
+    capi_setup_view(myView, myContext, theOptions);
 
     myPresentations = capi_display_assembly(myContext, anAssembly);
     // the whole motion in view
     Bnd_Box aBox = capi_assembly_box(anAssembly, theFrameCount);
-    if (aBox.IsVoid()) myView->FitAll(0.01, false);
-    else myView->FitAll(aBox, 0.01, false);
+    capi_fit_view(myView, aBox, 0.01, theOptions);
 
     aWindow->Map();
     myView->Redraw();
@@ -192,11 +192,11 @@ private:
   std::chrono::steady_clock::time_point myStart;
 };
 
-static int visualizeBodies(const CadNode &anAssembly, int theFrameCount, double theFps) {
+static int visualizeBodies(const CadNode &anAssembly, int theFrameCount, double theFps, const CadDisplayOptions *theOptions) {
   // No OSD::SetSignal here: it replaces the JVM's SIGSEGV handler, which the JVM relies on
   // (implicit null checks, safepoints), and any later JVM fault then aborts the process.
 
-  OcctAisHello aViewer(anAssembly, theFrameCount);
+  OcctAisHello aViewer(anAssembly, theFrameCount, theOptions);
   AnimationClock aClock(theFrameCount, theFps);
   int aShown = 0;
 #ifdef _WIN32
@@ -261,13 +261,14 @@ static int visualizeBodies(const CadNode &anAssembly, int theFrameCount, double 
 extern "C" int visualize(TopoDS_Shape* truc) {
   CadNode aPart;
   aPart.shape = *truc;
-  return visualizeBodies(aPart, 0, 0);
+  return visualizeBodies(aPart, 0, 0, nullptr);
 }
 
-extern "C" int visualize_assembly(const occ::handle<CadNode>* anAssembly) {
-  return visualizeBodies(**anAssembly, 0, 0);
+extern "C" int visualize_assembly(const occ::handle<CadNode>* anAssembly, const CadDisplayOptions *theOptions) {
+  return visualizeBodies(**anAssembly, 0, 0, theOptions);
 }
 
-extern "C" int visualize_animation(const occ::handle<CadNode>* anAssembly, int theFrameCount, double theFps) {
-  return visualizeBodies(**anAssembly, theFrameCount, theFps);
+extern "C" int visualize_animation(const occ::handle<CadNode>* anAssembly, int theFrameCount, double theFps,
+                                   const CadDisplayOptions *theOptions) {
+  return visualizeBodies(**anAssembly, theFrameCount, theFps, theOptions);
 }

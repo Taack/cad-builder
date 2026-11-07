@@ -1,6 +1,7 @@
 package org.taack.cad.binding
 
 import groovy.transform.CompileStatic
+import org.taack.cad.dsl.CadImages
 import org.taack.cad.dsl.TestImages
 
 import java.lang.foreign.Arena
@@ -25,6 +26,7 @@ final class LowLevelImages {
         if (file == null) return
         try (Arena arena = Arena.ofConfined()) {
             if (dumpShape(shape, 1920, 1080, arena.allocateFrom(file)) == 0) throw new IllegalStateException("Cannot render $file")
+            CadImages.convert(new File(file))
         }
     }
 }

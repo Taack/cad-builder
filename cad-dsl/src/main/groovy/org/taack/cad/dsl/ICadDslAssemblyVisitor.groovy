@@ -59,6 +59,7 @@ interface ICadDslAssemblyVisitor extends ICadDslNode {
     /**
      * @param fileName null to open the viewer, a .step, .stl or image file, or an image file name pattern for
      * String.format (e.g. 'frames/%03d.png') to render each frame of the animation
+     * @param option How the images or the viewer show the assembly, null for the kernel's look
      */
-    void display(String fileName)
+    void display(String fileName, DisplayOption option)
 }

@@ -2,6 +2,7 @@ package org.taack.cad.freecad
 
 import groovy.transform.CompileStatic
 import org.taack.cad.dsl.CadParams
+import org.taack.cad.dsl.DisplayOption
 import org.taack.cad.dsl.ICadDslVisitor
 import org.taack.cad.dsl.Measures
 import org.taack.cad.dsl.PlateOptions
@@ -99,7 +100,7 @@ class FreeCadVisitor implements ICadDslVisitor {
      * cell in the Params spreadsheet
      */
     @Override
-    void display(String fileName) {
+    void display(String fileName, DisplayOption option) {
         session.call(null, 'setParams', CadParams.values())
         call('display', fileName)
         if (!fileName && FreeCadKernel.guiEnabled()) FreeCadKernel.show(session, handle)

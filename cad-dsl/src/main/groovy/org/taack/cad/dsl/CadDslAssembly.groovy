@@ -152,10 +152,17 @@ class CadDslAssembly extends CadDslPart {
      * an animation, an image file name pattern for String.format (e.g. 'frames/%03d.png') to render each frame
      */
     CadDslAssembly display(String fileName = null) {
+        display(null, fileName)
+    }
+
+    /**
+     * @param option How the images or the viewer show the assembly, null for the kernel's look
+     */
+    CadDslAssembly display(DisplayOption option, String fileName = null) {
         int frameCount = duration > 0 ? Math.max(1, Math.round(duration * fps) as int) : 0
         moveAll(frameCount, Collections.newSetFromMap(new IdentityHashMap<CadDslAssembly, Boolean>()))
         visitor.visitAnimation(frameCount, fps)
-        visitor.display(CadDisplay.target(fileName))
+        visitor.display(CadDisplay.target(fileName), option)
         this
     }
 

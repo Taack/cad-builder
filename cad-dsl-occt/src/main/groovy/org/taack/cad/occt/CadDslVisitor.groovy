@@ -3,6 +3,8 @@ package org.taack.cad.occt
 import groovy.transform.CompileStatic
 import org.taack.cad.builder.*
 import org.taack.cad.dsl.CadDisplay
+import org.taack.cad.dsl.CadImages
+import org.taack.cad.dsl.DisplayOption
 import org.taack.cad.dsl.ICadDslVisitor
 import org.taack.cad.dsl.Measures
 import org.taack.cad.dsl.PlateOptions
@@ -932,9 +934,10 @@ class CadDslVisitor implements ICadDslVisitor, ICadDslFeatureShapes {
     }
 
     @Override
-    void display(String fileName) {
-        if (fileName) {
-            try (Arena arena = Arena.ofConfined()) {
+    void display(String fileName, DisplayOption option) {
+        try (Arena arena = Arena.ofConfined()) {
+            MemorySegment o = OcctDisplayOptions.of(arena, option)
+            if (fileName) {
                 MemorySegment t = arena.allocateFrom(fileName)
                 MemorySegment s = shape ?: face
                 if (fileName.endsWith(".step")) {
@@ -943,13 +946,20 @@ class CadDslVisitor implements ICadDslVisitor, ICadDslFeatureShapes {
                     write_stl(s, t)
                 } else if (fileName.endsWith(CadDisplay.GLTF_EXTENSION)) {
                     if (!write_glb(s, t)) throw new IllegalStateException("display($fileName): ${lastError()}")
-                } else
-                    dumpShape(s, 1920, 1080, t)
+                } else {
+                    OcctDisplayOptions.check(option, fileName)
+                    dumpAssembly(part(s), 1920, 1080, t, o)
+                    CadImages.convert(new File(fileName))
+                }
+            } else {
+                visualize_assembly(part(resultShape() ?: ref_TopoDS_Shape__BRepBuilderAPI_MakeWire__Shape(addCurrentWireNative())), o)
             }
-        } else {
-            visualize(resultShape() ?: ref_TopoDS_Shape__BRepBuilderAPI_MakeWire__Shape(addCurrentWireNative()))
         }
+    }
 
+    // A part of shape, without name nor color, for the functions of the C API rendering assemblies
+    private static MemorySegment part(MemorySegment shape) {
+        own(handle_CadNode__part__TopoDS_Shape_name_hasColor_r_g_b_a(shape, MemorySegment.NULL, 0, 0d, 0d, 0d, 1d), NativeLib::delete_handle_CadNode)
     }
 
     /**

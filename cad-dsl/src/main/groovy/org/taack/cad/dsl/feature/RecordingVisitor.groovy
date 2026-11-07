@@ -1,6 +1,7 @@
 package org.taack.cad.dsl.feature
 
 import groovy.transform.CompileStatic
+import org.taack.cad.dsl.DisplayOption
 import org.taack.cad.dsl.ICadDslVisitor
 import org.taack.cad.dsl.ICadDslVisitorWrapper
 import org.taack.cad.dsl.PlateOptions
@@ -526,9 +527,9 @@ final class RecordingVisitor implements ICadDslVisitor, ICadDslVisitorWrapper {
     }
 
     @Override
-    void display(String fileName) {
+    void display(String fileName, DisplayOption option) {
         recorder.displayed(fileName, root)
-        if (forwarded || !recorder.stopping) kernel.display(fileName)
+        if (forwarded || !recorder.stopping) kernel.display(fileName, option)
     }
 
     @Override
