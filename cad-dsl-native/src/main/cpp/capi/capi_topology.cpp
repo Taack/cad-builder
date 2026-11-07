@@ -23,6 +23,11 @@
 #include <BRepTools_WireExplorer.hxx>
 #include <BRep_Builder.hxx>
 #include <BRep_Tool.hxx>
+#include <Geom_Curve.hxx>
+#include <Geom_Line.hxx>
+#include <Geom_Circle.hxx>
+#include <Geom_TrimmedCurve.hxx>
+#include <gp_Circ.hxx>
 #include <Geom2d_Curve.hxx>
 #include <GeomLProp_SLProps.hxx>
 #include <Geom_Curve.hxx>
@@ -801,5 +806,60 @@ extern "C" TopoDS_Wire *util_ShapeFix_Wire__Load__ShapeExtend_WireData(const occ
         }
 
         return new TopoDS_Wire(aMakeWire.Wire());
+    });
+}
+
+// --- add to read contours (convert STEP -> DSL) ---
+extern "C" gp_Pnt *new_gp_Pnt__BRep_Tool__Pnt__TopoDS_Vertex(const TopoDS_Vertex *v) {
+    return guard(__func__, [&] { return new gp_Pnt(BRep_Tool::Pnt(*v)); });
+}
+
+// {ax, ay, az, bx, by, bz} ends of edge (3D curve parameter first/last)
+extern "C" double *R6_TopoDS_Edge__endpoints(const TopoDS_Edge *e) {
+    return guard(__func__, [&]() -> double * {
+        double f, l;
+        occ::handle<Geom_Curve> c = BRep_Tool::Curve(*e, f, l);
+        if (c.IsNull()) return nullptr;
+        gp_Pnt a = c->Value(f), b = c->Value(l);
+        return new double[6]{a.X(), a.Y(), a.Z(), b.X(), b.Y(), b.Z()};
+    });
+}
+
+// kind of curve for edge: 0 = line, 1 = circle, 2 = other
+extern "C" int int_TopoDS_Edge__curveType(const TopoDS_Edge *e) {
+    return guard(__func__, [&]() -> int {
+        double f, l;
+        occ::handle<Geom_Curve> c = BRep_Tool::Curve(*e, f, l);
+        if (c.IsNull()) return 2;
+        if (c->IsKind(STANDARD_TYPE(Geom_Line))) return 0;
+        if (c->IsKind(STANDARD_TYPE(Geom_Circle))) return 1;
+        occ::handle<Geom_TrimmedCurve> t = occ::handle<Geom_TrimmedCurve>::DownCast(c);
+        if (!t.IsNull()) {
+            occ::handle<Geom_Curve> b = t->BasisCurve();
+            if (b->IsKind(STANDARD_TYPE(Geom_Line))) return 0;
+            if (b->IsKind(STANDARD_TYPE(Geom_Circle))) return 1;
+        }
+        return 2;
+    });
+}
+
+// if circle: {cx, cy, cz, ax, ay, az, radius}; either null
+extern "C" double *R7_TopoDS_Edge__circle(const TopoDS_Edge *e) {
+    return guard(__func__, [&]() -> double * {
+        double f, l;
+        occ::handle<Geom_Curve> c = BRep_Tool::Curve(*e, f, l);
+        if (c.IsNull()) return nullptr;
+        occ::handle<Geom_Circle> circ;
+        if (c->IsKind(STANDARD_TYPE(Geom_Circle))) circ = occ::handle<Geom_Circle>::DownCast(c);
+        else {
+            occ::handle<Geom_TrimmedCurve> t = occ::handle<Geom_TrimmedCurve>::DownCast(c);
+            if (!t.IsNull() && t->BasisCurve()->IsKind(STANDARD_TYPE(Geom_Circle)))
+                circ = occ::handle<Geom_Circle>::DownCast(t->BasisCurve());
+        }
+        if (circ.IsNull()) return nullptr;
+        gp_Circ c2 = circ->Circ();
+        gp_Pnt ctr = c2.Location();
+        gp_Dir ax = c2.Axis().Direction();
+        return new double[7]{ctr.X(), ctr.Y(), ctr.Z(), ax.X(), ax.Y(), ax.Z(), c2.Radius()};
     });
 }
