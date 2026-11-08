@@ -331,7 +331,13 @@ std::vector<occ::handle<AIS_Shape>> capi_display_assembly(const occ::handle<AIS_
     assembly.forEachPart(gp_Trsf(), [&](const CadNode &part, const gp_Trsf &location) {
         occ::handle<AIS_Shape> prs = new AIS_Shape(part.shape);
         prs->SetLocalTransformation(location);
-        if (part.hasColor) prs->SetColor(part.color);
+        if (part.hasColor) {
+            prs->SetColor(part.color);
+            // SetColor gives the face boundaries the color of the faces too, which hides them: keep the context's edges
+            const occ::handle<Prs3d_LineAspect> &edges = context->DefaultDrawer()->FaceBoundaryAspect();
+            prs->Attributes()->SetFaceBoundaryAspect(
+                new Prs3d_LineAspect(edges->Aspect()->Color(), edges->Aspect()->Type(), edges->Aspect()->Width()));
+        }
         if (part.hasColor && part.alpha < 1) prs->SetTransparency(1 - part.alpha);
         context->Display(prs, AIS_Shaded, 0, false);
         presentations.push_back(prs);

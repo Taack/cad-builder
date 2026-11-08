@@ -67,4 +67,16 @@ class DisplayOptionTest {
                 .background(Color.WHITE, Color.WHITE, Color.GRAY)
                 .build(), image())
     }
+
+    @Test
+    @Tag('images')
+    void "Edges Of Colored Parts"() {
+        assembly('pair') {
+            place(part('cube', Color.BLUE) { box(20, 20, 20) })
+            place(part('shaft', Color.ORANGE) { cylinder(8, 30) }) { translate(40, 0, 0) }
+        }.display(DisplayOption.builder()
+                .edges(true, Color.BLACK)
+                .transparentBackground()
+                .build(), image())
+    }
 }
