@@ -42,6 +42,7 @@ final class DisplayOption {
     final boolean edgesVisible
     /** Color of the edges, null for the kernel's */
     final Color edgeColor
+    final Double edgeWidth
     /** Camera: where it is, the point it looks at, and its up direction; null for the kernel's */
     final Vec cameraEye
     final Vec cameraTarget
@@ -60,6 +61,7 @@ final class DisplayOption {
     private DisplayOption(Builder b) {
         edgesVisible = b.edgesVisible
         edgeColor = b.edgeColor
+        edgeWidth = b.edgeWidth
         cameraEye = b.cameraEye
         cameraTarget = b.cameraTarget
         cameraUp = b.cameraUp
@@ -87,7 +89,7 @@ final class DisplayOption {
 
     @Override
     String toString() {
-        "DisplayOption{edgesVisible=$edgesVisible, edgeColor=$edgeColor, camera=[$cameraEye, $cameraTarget, $cameraUp], " +
+        "DisplayOption{edgesVisible=$edgesVisible, edgeWidth=$edgeWidth, edgeColor=$edgeColor, camera=[$cameraEye, $cameraTarget, $cameraUp], " +
                 "fieldOfView=$fieldOfView, transparentBackground=$transparentBackground, background=[$backgroundTop, $backgroundMiddle, $backgroundBottom], lights=$lights}"
     }
 
@@ -95,6 +97,7 @@ final class DisplayOption {
     static final class Builder {
         private boolean edgesVisible = true
         private Color edgeColor
+        private Double edgeWidth
         private Vec cameraEye
         private Vec cameraTarget
         private Vec cameraUp
@@ -114,9 +117,10 @@ final class DisplayOption {
         }
 
         /** Shows the boundaries of the faces in color */
-        Builder edges(boolean visible, Color color) {
+        Builder edges(boolean visible, Color color, Double width = 1.0) {
             edgesVisible = visible
             edgeColor = color
+            edgeWidth = width
             this
         }
 

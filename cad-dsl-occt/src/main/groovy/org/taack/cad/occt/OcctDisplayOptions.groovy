@@ -29,6 +29,7 @@ final class OcctDisplayOptions {
         if (option.edgeColor) {
             CadDisplayOptions.hasEdgeColor(s, 1)
             rgb(CadDisplayOptions.edgeColor(s), 0, option.edgeColor)
+            CadDisplayOptions.edgeWidth(s, option.edgeWidth)
         }
         if (option.cameraEye) {
             CadDisplayOptions.hasCamera(s, 1)

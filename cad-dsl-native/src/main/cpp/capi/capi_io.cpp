@@ -381,7 +381,10 @@ void capi_setup_view(const occ::handle<V3d_View> &view, const occ::handle<AIS_In
     if (!options) return;
     const occ::handle<Prs3d_Drawer> &drawer = context->DefaultDrawer();
     drawer->SetFaceBoundaryDraw(options->edgesVisible != 0);
-    if (options->hasEdgeColor) drawer->FaceBoundaryAspect()->SetColor(srgb(options->edgeColor));
+    if (options->hasEdgeColor) {
+        drawer->FaceBoundaryAspect()->SetColor(srgb(options->edgeColor));
+        drawer->FaceBoundaryAspect()->SetWidth(options->edgeWidth);
+    }
     if (options->hasBackground && !options->transparentBackground) view->SetBackgroundImage(gradient(options->background), Aspect_FM_STRETCH);
     if (options->hasLight[0] || options->hasLight[1] || options->hasLight[2]) {
         view->SetLightOff();

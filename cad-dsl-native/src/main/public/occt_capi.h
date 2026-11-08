@@ -680,6 +680,7 @@ typedef struct CadDisplayOptions {
     int edgesVisible;            /* draw the boundaries of the faces */
     int hasEdgeColor;
     double edgeColor[3];
+    double edgeWidth;
     int hasCamera;               /* look from eye at target, up toward up, instead of the default axonometric view */
     double eye[3];
     double target[3];
