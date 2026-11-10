@@ -96,14 +96,15 @@ class FreeCadVisitor implements ICadDslVisitor {
 
     /**
      * @param fileName null to check the model (and show it in FreeCAD with -Dcad.freecad.gui=true), else a .step,
-     * .stl, .brep, .iges or .FCStd file, whose numbers equal to a parameter (see {@link CadParams}) are bound to its
-     * cell in the Params spreadsheet
+     * .stl, .brep, .iges or .FCStd file, whose numbers are bound to the cells of the parameters (see {@link CadParams})
+     * in the Params spreadsheet: those moving with them when the script is run by {@link FreeCadScript}, else those
+     * equal to one
      */
     @Override
     void display(String fileName, DisplayOption option) {
         session.call(null, 'setParams', CadParams.values())
         call('display', fileName)
-        if (!fileName && FreeCadKernel.guiEnabled()) FreeCadKernel.show(session, handle)
+        if (!fileName && FreeCadKernel.guiEnabled() && !FreeCadScript.rerun) FreeCadKernel.show(session, handle)
     }
 
     @Override

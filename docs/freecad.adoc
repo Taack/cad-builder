@@ -23,10 +23,17 @@ With `-Dcad.freecad.split=true` (in `JAVA_OPTS`, or `CAD_DSL_FREECAD_SPLIT=true`
 placed several times has one file. The links use relative paths: the folder can be moved. With `display()`, FreeCAD
 opens the split assembly.
 
+The sketches are fully constrained: the ends of their edges joined, the ends and the centers of the circles symmetric
+to each other about the axes or the origin of the sketch (`Symmetric`, the mirrored circles and arcs of equal radii),
+the lines horizontal or vertical, then the positions of the other ends and centers from the origin, the radii of the
+circles, a radius (or a center) for the arcs; the other curves are blocked. A centered contour thus has dimensions on a
+quarter of it, the mirrored holes on one of them. Contours of more than 200 edges, and the texts and SVG drawings, keep their
+edges free.
+
 Declare the dimensions as parameters with `param(name, value)`: they go to the `Params` spreadsheet of the FCStd file,
-and every number given to a feature equal to a parameter (or to its opposite) is bound to its cell: the dimensions of
-the primitives, the lengths of the prisms, the radii of the circles and arcs of the sketches (as constraints), the
-positions of the primitives and sketches. Change a cell in FreeCAD, and the model follows.
+and the numbers of the features computed from them are bound to their cells, as expressions: the dimensions of the
+primitives, the lengths of the prisms, the dimensions of the sketches, the positions of the primitives, sketches,
+moved copies and of the parts of the assemblies. Change a cell in FreeCAD, and the model follows.
 
 .pillow-block-params.groovy
 [source,groovy]
@@ -46,7 +53,18 @@ cd().box(length, 60, thickness).topZ().wireFrom() {
 cad-dsl-freecad/build/install/cad-dsl-freecad/bin/cad-dsl-freecad pillow-block-params.groovy block.FCStd
 ----
 
-NOTE: The binding goes by value: give the parameters distinct values, different from the other numbers of the model.
+`cad-dsl-freecad` finds what each number is computed from by running the script again, once per parameter moved by a
+thousandth, then once more to save the files: a number that moves with parameters is bound to an affine expression of
+them (`Params.width / 2 - Params.radius`), the others stay as they are. Saving an FCStd file thus takes about
+2 + (number of parameters) runs; the extra runs check, export and save nothing else, and do not open FreeCAD.
+
+NOTE: The script must make the same features in the same order whatever the parameters: a parameter that changes them
+(a count of holes), or whose run fails, binds the numbers equal to it (or to its opposite) instead. A number computed
+from a parameter by a non-linear function (`sin`, `sqrt`) gets its tangent, exact at the value of the script only. The
+features whose shape is computed by the kernel (texts, SVG drawings, thickness of a whole solid, imported STEP files) do
+not follow. Run with the DSL (`display("x.FCStd")` in a test), the numbers equal to a parameter are bound to it.
+In a split assembly, each file has its own `Params` spreadsheet.
+
 A parameter can also be set from outside the script: `-Dcad.param.thickness=12` (in `JAVA_OPTS`), with any kernel.
 
 `FreeCADCmd` is found on the `PATH`, or set with the `freecad.cmd` system property (or `FREECAD_CMD`); the GUI is
