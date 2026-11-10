@@ -6,7 +6,7 @@ import groovy.transform.CompileStatic
  * Named parameters of the models, declared with {@link CadDsl#param}.
  *
  * A parameter is a plain number for the DSL; kernels may use the names: the FreeCAD one writes them in the Params
- * spreadsheet of the FCStd files it saves, and binds each dimension equal to a parameter to its cell.
+ * spreadsheet of the FCStd files it saves, and binds the dimensions computed from parameters to their cells.
  * A parameter can be set from outside the script with the system property cad.param.&lt;name&gt;.
  */
 @CompileStatic

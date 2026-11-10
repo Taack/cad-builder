@@ -85,6 +85,6 @@ class FreeCadAssemblyVisitor implements ICadDslAssemblyVisitor {
     void display(String fileName, DisplayOption option) {
         session.call(null, 'setParams', CadParams.values())
         session.call(handle, 'display', fileName, FreeCadKernel.splitEnabled())
-        if (!fileName && FreeCadKernel.guiEnabled()) FreeCadKernel.show(session, handle, true)
+        if (!fileName && FreeCadKernel.guiEnabled() && !FreeCadScript.rerun) FreeCadKernel.show(session, handle, true)
     }
 }

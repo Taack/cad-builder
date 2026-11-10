@@ -29,6 +29,12 @@ App.ParamGet('User parameter:BaseApp/Preferences/Document').SetBool('DuplicateLa
 COINCIDENCE = 1e-5
 # Contours of more edges are not constrained: solving the sketch would take long
 MAX_CONSTRAINED = 200
+# Sketches of more geometries are not dimensioned: they are solved again for each contour added
+MAX_DIMENSIONED = 400
+# Sine of the angle under which a line is horizontal or vertical
+ALIGNMENT = 1e-7
+# The constraints holding a number, which a parameter can drive
+DIMENSIONS = ('Radius', 'Diameter', 'Distance', 'DistanceX', 'DistanceY', 'Angle')
 PLATE_C0 = 0
 
 # Models, assemblies and parts known to the JVM, by handle
@@ -432,8 +438,11 @@ def sketch_geometry(edge):
 
 
 def add_edges(model, sketch, edges, chain):
-    """Add edges, in the sketch coordinates, to a sketch: their radius constrained, and their ends joined by
-    coincident constraints when they follow each other (chain True), or no constraints (chain None)"""
+    """Add edges, in the sketch coordinates, to a sketch, fully constrained as they are: their ends joined by coincident
+    constraints when they follow each other (chain True), the ends and the centers of the circles symmetric to each
+    other (or to those of the sketch) about the axes or the origin, the lines horizontal or vertical, the positions of
+    the other ends and centers from the origin, the radii (equal for the mirrored circles and arcs), or a center for
+    the half circles; the curves of other kinds blocked. No constraints with chain None."""
     geometries = [g for g in (sketch_geometry(e) for e in edges) if g is not None]
     if not geometries:
         return []
@@ -441,38 +450,267 @@ def add_edges(model, sketch, edges, chain):
     ids = sketch.addGeometry(geometries, False)
     if chain is None or len(geometries) > MAX_CONSTRAINED:
         return ids
-    constraints = [Sketcher.Constraint('Radius', i, g.Radius) for i, g in zip(ids, geometries)
-                   if isinstance(g, (Part.Circle, Part.ArcOfCircle))]
-    radii = len(constraints)
-    if chain:
-        pairs = list(zip(range(len(ids)), range(1, len(ids))))
-        if len(ids) > 2:
-            pairs.append((len(ids) - 1, 0))
-        for a, b in pairs:
-            c = coincident(ids[a], geometries[a], ids[b], geometries[b])
-            if c is not None:
-                constraints.append(c)
-    if constraints:
-        first = len(sketch.Constraints)
-        sketch.addConstraint(constraints)
-        for k in range(radii):
-            model.bindings.append((sketch, 'Constraints[%d]' % (first + k), constraints[k].Value))
+    C = Sketcher.Constraint
+    circles = [(i, g) for i, g in zip(ids, geometries) if isinstance(g, Part.Circle)]
+    arcs = [(i, g) for i, g in zip(ids, geometries) if isinstance(g, Part.ArcOfCircle)]
+    first = len(sketch.Constraints)
+    if len(sketch.Geometry) > MAX_DIMENSIONED:
+        # the radii and the junctions only, which are not redundant
+        vertices = junctions(ids, geometries, chain)
+        sketch.addConstraint([C('Radius', i, g.Radius) for i, g in circles + arcs] + coincidences(vertices))
+    else:
+        existing = sketch_points(sketch.Geometry[:ids[0]])
+        constraints, twins = positions(ids, geometries, chain, existing)
+        fixed = constraints + [C('Equal', twins[i], i) if i in twins else C('Radius', i, g.Radius)
+                               for i, g in circles]
+        # the ends of an arc fixed, its center is on their bisector
+        arc_twins = mirrored_arcs(arcs, [(i, g) for i, g in enumerate(sketch.Geometry[:ids[0]])
+                                         if isinstance(g, Part.ArcOfCircle)])
+        bisected = [arc_constraints(i, g, arc_twins.get(i)) for i, g in arcs]
+        sketch.addConstraint(fixed + [b[0] for b in bisected])
+        if sketch.solve() != 0:
+            # dependent constraints, not expected: as many of them as the solver accepts, slow
+            sketch.delConstraints(list(range(first, len(sketch.Constraints))), False)
+            for c in fixed:
+                add_independent(sketch, [c])
+            for b in bisected:
+                add_independent(sketch, b)
+    for k in range(first, len(sketch.Constraints)):
+        c = sketch.Constraints[k]
+        if c.Type in DIMENSIONS:
+            model.bindings.append((sketch, 'Constraints[%d]' % k, c.Value))
     return ids
 
 
-def coincident(a, ga, b, gb):
-    """The constraint joining the closest ends of two geometries, None if they do not touch"""
-    if isinstance(ga, (Part.Circle, Part.Ellipse)) or isinstance(gb, (Part.Circle, Part.Ellipse)):
+def arc_constraints(i, g, twin=None):
+    """The constraints fixing an arc whose ends are fixed, the best first: its radius (equal to that of twin, the arc
+    it mirrors, if any), or for a half circle (whose radius gives the center but moves nothing at first order) the
+    coordinate of its center along its bisector"""
+    C = Sketcher.Constraint
+    chord = g.EndPoint - g.StartPoint
+    along_x = C('DistanceX', i, 3, g.Center.x)
+    along_y = C('DistanceY', i, 3, g.Center.y)
+    # the bisector is normal to the chord
+    center = [along_y, along_x] if abs(chord.x) > abs(chord.y) else [along_x, along_y]
+    radius = C('Radius', i, g.Radius) if twin is None else C('Equal', twin, i)
+    # within 10 degrees of a half circle
+    if chord.Length > 2 * g.Radius * math.cos(math.radians(5)):
+        return center + [radius]
+    return [radius] + center
+
+
+def add_independent(sketch, candidates):
+    """Add the first of the candidate constraints that the others of the sketch do not imply, if any"""
+    for c in candidates:
+        k = sketch.addConstraint(c)
+        if sketch.solve() == 0:
+            return True
+        sketch.delConstraint(k)
+    return False
+
+
+# The symmetries looked for in the sketches: the mirror of a point, and the last arguments of the Symmetric constraint
+SYMMETRIES = (
+    # about the vertical axis (V_Axis), the horizontal axis (H_Axis), the origin (the root point)
+    (lambda x, y: (-x, y), (-2,)),
+    (lambda x, y: (x, -y), (-1,)),
+    (lambda x, y: (-x, -y), (-1, 1)),
+)
+
+
+class PointIndex:
+    """Points of a sketch, (id, pos, geometry), found by their position"""
+
+    def __init__(self, points):
+        self.points = points
+        self.cells = {}
+        for k, (i, pos, g) in enumerate(points):
+            p = geometry_point(g, pos)
+            self.cells.setdefault(self.cell(p.x, p.y), []).append(k)
+
+    @staticmethod
+    def cell(x, y):
+        return round(x / COINCIDENCE / 10), round(y / COINCIDENCE / 10)
+
+    def find(self, x, y):
+        """The index of the point at (x, y), None if none"""
+        for k in self.cells.get(self.cell(x, y), []):
+            i, pos, g = self.points[k]
+            p = geometry_point(g, pos)
+            if abs(p.x - x) < COINCIDENCE and abs(p.y - y) < COINCIDENCE:
+                return k
         return None
-    best = None
-    for pa, va in ((1, ga.StartPoint), (2, ga.EndPoint)):
-        for pb, vb in ((1, gb.StartPoint), (2, gb.EndPoint)):
-            d = (va - vb).Length
-            if best is None or d < best[0]:
-                best = (d, pa, pb)
-    if best[0] < COINCIDENCE:
-        return Sketcher.Constraint('Coincident', a, best[1], b, best[2])
-    return None
+
+
+def sketch_points(geometries):
+    """The ends of the lines and arcs and the centers of the circles of a sketch, (id, pos, geometry)"""
+    points = []
+    for i, g in enumerate(geometries):
+        if isinstance(g, Part.Circle):
+            points.append((i, 3, g))
+        elif isinstance(g, (Part.LineSegment, Part.ArcOfCircle)):
+            points += [(i, 1, g), (i, 2, g)]
+    return points
+
+
+def same_radius(g, h):
+    return abs(g.Radius - h.Radius) < COINCIDENCE
+
+
+def mirrored_arcs(arcs, existing):
+    """The arc each arc of arcs mirrors (one of existing, or an arc before it) about an axis or the origin, the same
+    radius, by id"""
+    twins = {}
+    for n, (i, g) in enumerate(arcs):
+        for j, h in existing + arcs[:n]:
+            if same_radius(g, h) and any(
+                    (V(*mirror(h.Center.x, h.Center.y), 0) - g.Center).Length < COINCIDENCE for mirror, _ in SYMMETRIES):
+                twins[i] = j
+                break
+    return twins
+
+
+def positions(ids, geometries, chain, existing=()):
+    """The constraints fixing the ends of the geometries and the centers of the circles where they are: coincident
+    junctions, the points symmetric to each other, or to the existing points of the sketch, about the axes or the
+    origin, the horizontal and vertical lines, then the x and y of each group of points they do not tie yet; the curves
+    other than lines and circles blocked
+    :return: The constraints, and the circle each circle mirrors with the same radius, by id"""
+    C = Sketcher.Constraint
+    blocked = [i for i, g in zip(ids, geometries)
+               if not isinstance(g, (Part.LineSegment, Part.Circle, Part.ArcOfCircle))]
+    vertices = junctions(ids, geometries, chain)
+    constraints = [C('Block', i) for i in blocked] + coincidences(vertices)
+    vertex_of = {(i, pos): k for k, v in enumerate(vertices) for i, pos, _ in v}
+    # the centers of the circles are points too
+    points = vertices + [[(i, 3, g)] for i, g in zip(ids, geometries) if isinstance(g, Part.Circle)]
+    xs, ys = Groups(len(points)), Groups(len(points))
+    for k, v in enumerate(points):
+        if any(i in blocked for i, _, _ in v):
+            xs.claim(k)
+            ys.claim(k)
+    twins = {}
+    # the symmetric points tie the x and y of their groups: with the points of this contour, then with those fixed
+    index = PointIndex([v[0] for v in points])
+    for k, v in enumerate(points):
+        i, pos, g = v[0]
+        p = geometry_point(g, pos)
+        for mirror, about in SYMMETRIES:
+            m = index.find(*mirror(p.x, p.y))
+            if m is None or m == k or (pos == 3) != (points[m][0][1] == 3) or \
+                    not (xs.can_union(k, m) and ys.can_union(k, m)):
+                continue
+            # two ends of the same geometry would only be tied by one equation: ends of others at the same points
+            pair = next(((a, b) for a in v for b in points[m] if a[0] != b[0]), None)
+            if pair is None:
+                continue
+            xs.union(k, m)
+            ys.union(k, m)
+            (i, pos, g), (j, jpos, h) = pair
+            constraints.append(C('Symmetric', i, pos, j, jpos, *about))
+            if pos == 3 and same_radius(g, h):
+                twins[j] = i
+    fixed = PointIndex(list(existing))
+    for k, v in enumerate(points):
+        i, pos, g = v[0]
+        p = geometry_point(g, pos)
+        for mirror, about in SYMMETRIES:
+            e = fixed.find(*mirror(p.x, p.y))
+            if e is None or (pos == 3) != (existing[e][1] == 3) or not (xs.free(k) and ys.free(k)):
+                continue
+            xs.claim(k)
+            ys.claim(k)
+            j, jpos, h = existing[e]
+            constraints.append(C('Symmetric', j, jpos, i, pos, *about))
+            if pos == 3 and isinstance(h, (Part.Circle, Part.ArcOfCircle)) and same_radius(g, h) and i not in twins:
+                twins[i] = j
+            break
+    for i, g in zip(ids, geometries):
+        if isinstance(g, Part.LineSegment):
+            a, b = vertex_of[(i, 1)], vertex_of[(i, 2)]
+            d = g.EndPoint - g.StartPoint
+            if abs(d.y) < ALIGNMENT * d.Length:
+                if ys.union(a, b):
+                    constraints.append(C('Horizontal', i))
+            elif abs(d.x) < ALIGNMENT * d.Length and xs.union(a, b):
+                constraints.append(C('Vertical', i))
+    for k, v in enumerate(points):
+        i, pos, g = v[0]
+        p = geometry_point(g, pos)
+        if xs.claim(k):
+            constraints.append(C('DistanceX', i, pos, p.x))
+        if ys.claim(k):
+            constraints.append(C('DistanceY', i, pos, p.y))
+    return constraints, twins
+
+
+class Groups:
+    """Union-find of the points of a sketch whose x (or y) are tied, equal or opposite, each group fixed once"""
+
+    def __init__(self, n):
+        self.parent = list(range(n))
+        self.fixed = [False] * n
+
+    def root(self, k):
+        while self.parent[k] != k:
+            self.parent[k] = self.parent[self.parent[k]]
+            k = self.parent[k]
+        return k
+
+    def can_union(self, a, b):
+        """Whether the groups of a and b are distinct, and not both fixed"""
+        a, b = self.root(a), self.root(b)
+        return a != b and not (self.fixed[a] and self.fixed[b])
+
+    def free(self, k):
+        return not self.fixed[self.root(k)]
+
+    def union(self, a, b):
+        """Tie the groups of a and b, False when they are tied already, or both fixed"""
+        if not self.can_union(a, b):
+            return False
+        a, b = self.root(a), self.root(b)
+        self.parent[b] = a
+        self.fixed[a] = self.fixed[a] or self.fixed[b]
+        return True
+
+    def claim(self, k):
+        """Fix the group of k, False when it is fixed already"""
+        r = self.root(k)
+        if self.fixed[r]:
+            return False
+        self.fixed[r] = True
+        return True
+
+
+def geometry_point(g, pos):
+    """The start (pos 1), end (pos 2) or center (pos 3) point of a sketch geometry"""
+    return g.StartPoint if pos == 1 else g.EndPoint if pos == 2 else g.Center
+
+
+def is_closed(g):
+    return isinstance(g, (Part.Circle, Part.Ellipse)) or (g.StartPoint - g.EndPoint).Length < COINCIDENCE
+
+
+def junctions(ids, geometries, chain):
+    """The ends of the open geometries, grouped by the point they are at when chain: lists of (id, pos, geometry)"""
+    vertices = []
+    for i, g in zip(ids, geometries):
+        if is_closed(g):
+            continue
+        for pos in (1, 2):
+            p = geometry_point(g, pos)
+            for v in vertices if chain else []:
+                if (geometry_point(v[0][2], v[0][1]) - p).Length < COINCIDENCE:
+                    v.append((i, pos, g))
+                    break
+            else:
+                vertices.append([(i, pos, g)])
+    return vertices
+
+
+def coincidences(vertices):
+    return [Sketcher.Constraint('Coincident', v[0][0], v[0][1], i, pos) for v in vertices for i, pos, _ in v[1:]]
 
 
 def to_local(edges, pl):
@@ -654,7 +892,7 @@ class Model:
         """Copy of obj moved by pl (a compound: Part::Mirroring ignores the placement of a link)"""
         o = self.add('Part::Compound', obj.Name + 'Moved')
         o.Links = [obj]
-        o.Placement = pl
+        self.place(o, pl)
         return o
 
     def static(self, shape, name):
@@ -965,6 +1203,8 @@ class Model:
             o = self.add('Part::Mirroring', 'Mirror')
             o.Source = s
             o.Base = vec(pos)
+            for c in ('x', 'y', 'z'):
+                self.bindings.append((o, 'Base.' + c, getattr(o.Base, c)))
             o.Normal = vec(direction)
             self.primitive(o)
 
@@ -1429,6 +1669,8 @@ class Model:
             raise ValueError('%s: empty shape' % result.Label)
 
     def display(self, file_name):
+        if skipped(file_name, lambda: self.bindings):
+            return
         if file_name is None:
             self.check(self.result_shape())
             return
@@ -1467,7 +1709,7 @@ def export(doc, result, shape, file_name, bindings):
     elif ext in ('.iges', '.igs'):
         shape.exportIges(file_name)
     elif ext == '.fcstd':
-        save_document(doc, [result], file_name, bindings)
+        save_document(doc, [result], file_name, bindings, expressions(bindings))
     else:
         raise ValueError('%s: the FreeCAD kernel exports .step, .stl, .brep, .iges and .FCStd files, not images'
                          % file_name)
@@ -1481,38 +1723,68 @@ def alias(name):
     return a
 
 
-def param_expression(value):
-    """The expression of the parameter equal to value (or to its opposite), None if none"""
+def param_expression(value, names=None):
+    """The expression of the parameter equal to value (or to its opposite), None if none; among names if given"""
     if value == 0:
         return None
     for sign in (1, -1):
         for name, p in params.items():
-            if abs(sign * value - p) <= 1e-9 * max(1.0, abs(p)):
+            if (names is None or name in names) and abs(sign * value - p) <= 1e-9 * max(1.0, abs(p)):
                 return ('Params.%s' if sign > 0 else '-Params.%s') % alias(name)
     return None
 
 
-def bind_params(doc, bindings):
-    """Write the parameters in the Params spreadsheet, and bind the numbers equal to one of them to its cell"""
-    if not params:
-        return
+def binding_key(obj, path):
+    return obj.Document.Name, obj.Name, path
+
+
+def expressions(bindings):
+    """The expressions of the numbers of bindings, saved to an FCStd file by display, by binding key: by sensitivity in
+    the final run of a script run by FreeCadScript, else the parameter each is equal to. Records the numbers in the
+    other runs of FreeCadScript."""
+    values = [b[2] for b in bindings]
+    s = sensitivity
+    found = None
+    if s is not None and s.mode is not None:
+        if s.mode == 'final':
+            found = s.expressions(len(s.values), values)
+        s.values.append(values)
+    if found is None:
+        found = [param_expression(v) for v in values]
+    return {binding_key(obj, path): e for (obj, path, _), e in zip(bindings, found)}
+
+
+def params_sheet(doc):
+    """The Params spreadsheet of doc, holding the parameters, created when missing"""
     sheet = doc.getObject('Params') or doc.addObject('Spreadsheet::Sheet', 'Params')
     for i, (name, value) in enumerate(params.items(), 1):
         sheet.set('A%d' % i, name)
         sheet.set('B%d' % i, repr(float(value)))
         sheet.setAlias('B%d' % i, alias(name))
+    return sheet
+
+
+def bind_params(doc, bindings, bound=None):
+    """Write the parameters in the Params spreadsheet, and bind the numbers of the features of doc to them, with the
+    expressions of bound (see expressions), by default those of the parameters they are equal to"""
+    if not params:
+        return
+    if bound is None:
+        bound = {binding_key(obj, path): param_expression(v) for obj, path, v in bindings}
+    params_sheet(doc)
     doc.recompute()
     names = set(o.Name for o in doc.Objects)
-    for obj, path, value in bindings:
-        expression = param_expression(value)
-        if expression and obj.Name in names:
+    for obj, path, _ in bindings:
+        expression = bound.get(binding_key(obj, path))
+        if expression and obj.Document is doc and obj.Name in names:
             obj.setExpression(path, expression)
     doc.recompute()
 
 
-def save_document(doc, visible, file_name, bindings):
-    """Save doc, showing only the visible features (None to keep the visibility as it is)"""
-    bind_params(doc, bindings)
+def save_document(doc, visible, file_name, bindings, bound=None):
+    """Save doc, showing only the visible features (None to keep the visibility as it is), its numbers bound to the
+    parameters (see bind_params)"""
+    bind_params(doc, bindings, bound)
     if visible is not None:
         for o in doc.Objects:
             if hasattr(o, 'Visibility'):
@@ -1555,7 +1827,11 @@ def fit_view(doc):
     # the offscreen view is taller than wide, fitAll widens the camera for it: fitted to a square, as the thumbnail
     width, height = view.getSize()
     if width < height:
-        camera = view.getCameraNode()
+        try:
+            camera = view.getCameraNode()
+        except RuntimeError:
+            # pivy built for another Coin than FreeCAD's: "No SWIG wrapped library loaded"
+            return
         camera.height.setValue(camera.height.getValue() * width / height)
 
 
@@ -1627,6 +1903,8 @@ class Assembly:
         self.linked = []
         self.imported = {}
         self.placed = {}
+        # the bindings of the parts and sub-assemblies copied, to their copies
+        self.copied_bindings = []
 
     def visitPart(self, name, color, model):
         return register(PartNode(handles[model], name, color))
@@ -1638,7 +1916,10 @@ class Assembly:
         node = handles[handle]
         source = node.obj if isinstance(node, PartNode) else node.root
         before = set(o.Name for o in self.doc.Objects)
-        copy = copy_with_placements(self.doc, source)
+        copy, copies = copy_with_placements(self.doc, source)
+        bindings = node.model.bindings if isinstance(node, PartNode) else node.bindings(False)
+        self.copied_bindings += [(copies[obj.Name], path, value) for obj, path, value in bindings
+                                 if obj.Document is source.Document and obj.Name in copies]
         # the copies are hidden in the Sources group, the links show them (the links of a sub-assembly stay visible)
         copied = [o for o in self.doc.Objects if o.Name not in before and not o.getParentGeoFeatureGroup()]
         for o in copied:
@@ -1685,7 +1966,23 @@ class Assembly:
         self.doc.recompute()
         check_document(self.doc)
 
+    def bindings(self, split):
+        """The numbers that a parameter can drive in the files saved by save: the positions of the links, and the
+        numbers of the copies of the parts and sub-assemblies, or with split of the parts, in the order they are
+        saved"""
+        found = [] if split else list(self.copied_bindings)
+        seen = set()
+        for handle, link in zip(self.linked, self.links):
+            node = handles[handle]
+            if split and handle not in seen:
+                seen.add(handle)
+                found += node.model.bindings if isinstance(node, PartNode) else node.bindings(True)
+            found += [(link, 'Placement.Base.' + c, getattr(link.Placement.Base, c)) for c in ('x', 'y', 'z')]
+        return found
+
     def display(self, file_name, split=False):
+        if skipped(file_name, lambda: self.bindings(split)):
+            return
         self.check()
         if file_name is None:
             return
@@ -1700,18 +1997,18 @@ class Assembly:
                 import Import as exporter
             exporter.export([self.root], file_name)
         elif ext == '.fcstd':
-            self.save(file_name, split)
+            self.save(file_name, split, expressions(self.bindings(split)))
         else:
             export(self.doc, self.root, Part.getShape(self.root), file_name, [])
 
-    def save(self, file_name, split=False):
+    def save(self, file_name, split=False, bound=None):
         """Save the document, or with split the assembly and its parts in files linked to each other (see
-        SplitSave)
+        SplitSave), their numbers bound to the parameters (see bind_params)
         :return: The path of the file of the assembly"""
         self.check()
         if split:
-            return SplitSave(file_name).save(self)
-        save_document(self.doc, None, file_name, [])
+            return SplitSave(file_name, bound).save(self)
+        save_document(self.doc, None, file_name, self.bindings(False), bound)
         return os.path.abspath(file_name)
 
 
@@ -1721,8 +2018,10 @@ class SplitSave:
     the document of its model; its color goes to the part, and to the links when a part of the same model has
     another one."""
 
-    def __init__(self, file_name):
+    def __init__(self, file_name, bound=None):
         path = os.path.abspath(file_name)
+        # expressions of the numbers, by binding key (see expressions); None for the parameters they are equal to
+        self.bound = bound
         self.name = os.path.splitext(os.path.basename(path))[0]
         self.dir = os.path.join(os.path.dirname(path), self.name)
         os.makedirs(self.dir, exist_ok=True)
@@ -1779,7 +2078,7 @@ class SplitSave:
             if node.color and App.GuiUp:
                 node.obj.ViewObject.ShapeAppearance = (material(node.color),)
             self.colors[node.obj.Name, doc.Name] = node.color
-            save_document(doc, [node.obj], self.file(node.obj.Label), node.model.bindings)
+            save_document(doc, [node.obj], self.file(node.obj.Label), node.model.bindings, self.bound)
             self.models[doc.Name] = node.obj
         return node.obj
 
@@ -1797,6 +2096,7 @@ class SplitSave:
             o.LinkTransform = True
             o.Label = link.Label
             o.Placement = link.Placement
+            self.bind_link(link, o)
             root.addObject(o)
             node = handles[handle]
             if isinstance(node, PartNode) and node.color and App.GuiUp and \
@@ -1811,6 +2111,17 @@ class SplitSave:
         return root
 
 
+    def bind_link(self, link, o):
+        """Bind the position of o, the copy of link, as that of link"""
+        for c in ('x', 'y', 'z'):
+            path = 'Placement.Base.' + c
+            value = getattr(link.Placement.Base, c)
+            expression = param_expression(value) if self.bound is None else self.bound.get(binding_key(link, path))
+            if expression and params:
+                params_sheet(o.Document)
+                o.setExpression(path, expression)
+
+
 def material(color):
     """The material of color [r, g, b, a] in [0, 1]"""
     return App.Material(DiffuseColor=tuple(color[:3]), Transparency=1 - color[3])
@@ -1818,7 +2129,8 @@ def material(color):
 
 def copy_with_placements(doc, source):
     """Copy source and what it depends on into doc. The copies of the sketches lose their placement (their attacher
-    resets it): it is set back, the sources found by a temporary label."""
+    resets it): it is set back, the sources found by a temporary label.
+    :return: The copy of source, and the copies of the features with a placement, by name of their source"""
     sources = [source] + [o for o in source.OutListRecursive if hasattr(o, 'Placement')]
     labels = [o.Label for o in sources]
     for o in sources:
@@ -1828,13 +2140,15 @@ def copy_with_placements(doc, source):
     finally:
         for o, label in zip(sources, labels):
             o.Label = label
+    copied = {}
     for o, label in zip(sources, labels):
         copies = doc.getObjectsByLabel('cad_dsl_copy_' + o.Name)
         if copies:
             copies[0].Label = label
             if copies[0].Placement != o.Placement and not copies[0].ExpressionEngine:
                 copies[0].Placement = o.Placement
-    return copy
+            copied[o.Name] = copies[0]
+    return copy, copied
 
 
 def planar_face_frame(shape, direction, position):
@@ -1898,6 +2212,149 @@ def new_model():
     return register(Model())
 
 
+# ---------------------------------------------------------------------------------------------------------------------
+# Parameters bound by sensitivity
+# ---------------------------------------------------------------------------------------------------------------------
+
+# Coefficient under which a number does not move with a parameter
+SENSITIVITY = 1e-6
+# Denominators of the coefficients written as fractions: Params.width / 2
+DENOMINATORS = (1, 2, 3, 4, 5, 6, 8, 10, 12, 16, 20, 25, 32, 50, 64, 100)
+
+
+class Sensitivity:
+    """The runs of a script by FreeCadScript, which binds the numbers of the FCStd files it saves to the parameters
+    they move with: 'record' runs it as usual, 'probe' with a parameter moved by delta, checking, exporting and saving
+    nothing, then 'final' saves the FCStd files again, each number moving with parameters bound to an affine
+    expression of them. The runs make the same features in the same order: the numbers of the files match by
+    position."""
+
+    def __init__(self):
+        self.mode = None
+        self.name = None
+        self.delta = 0.0
+        # numbers of the bindings of each FCStd file saved by the current run
+        self.values = []
+        # parameter -> (delta, values of its probe)
+        self.probes = {}
+        # parameters whose probe failed
+        self.failed = []
+        self.first_handle = 0
+
+    def expressions(self, k, values):
+        """The expressions of the numbers of the k-th FCStd file saved, values: None for those that move with no
+        parameter. A parameter whose probe failed or made other features binds the numbers equal to it."""
+        moved = {}
+        by_value = list(self.failed)
+        for name, (delta, runs) in self.probes.items():
+            if k < len(runs) and len(runs[k]) == len(values):
+                moved[name] = (delta, runs[k])
+            else:
+                by_value.append(name)
+        found = []
+        for i, v in enumerate(values):
+            coefficients = [(name, (probe[i] - v) / delta) for name, (delta, probe) in moved.items()]
+            coefficients = [(name, c) for name, c in coefficients if abs(c) > SENSITIVITY]
+            if coefficients:
+                found.append(affine_expression(v, coefficients))
+            else:
+                found.append(param_expression(v, by_value) if by_value else None)
+        return found
+
+
+sensitivity = None
+
+
+def simple_fraction(x):
+    """(n, d) when x > 0 is close to n / d, d one of DENOMINATORS, else None"""
+    for d in DENOMINATORS:
+        n = round(x * d)
+        if n > 0 and abs(x * d - n) < SENSITIVITY * d:
+            return n, d
+    return None
+
+
+def number(x):
+    return '%.12g' % x
+
+
+def affine_expression(value, coefficients):
+    """value as an expression of the parameters: the sum of coefficient * parameter, (name, coefficient) in
+    coefficients, plus a constant"""
+    terms = []
+    constant = value
+    for name, c in coefficients:
+        ref = 'Params.' + alias(name)
+        f = simple_fraction(abs(c))
+        if f is None:
+            text = '%s * %s' % (number(abs(c)), ref)
+        else:
+            n, d = f
+            c = math.copysign(n / d, c)
+            text = ref if n == 1 else '%d * %s' % (n, ref)
+            if d != 1:
+                text += ' / %d' % d
+        constant -= c * params[name]
+        terms.append((c < 0, text))
+    expression = ('-' if terms[0][0] else '') + terms[0][1]
+    for negative, text in terms[1:]:
+        expression += (' - ' if negative else ' + ') + text
+    if abs(constant) > 1e-9 * max(1.0, abs(value)):
+        expression += (' - ' if constant < 0 else ' + ') + number(abs(constant))
+    return expression
+
+
+def is_fcstd(file_name):
+    return file_name is not None and os.path.splitext(file_name)[1].lower() == '.fcstd'
+
+
+def skipped(file_name, bindings):
+    """Whether display skips file_name in a run of FreeCadScript: a probe checks and saves nothing, it records the
+    numbers of the FCStd files (bindings(), see expressions); the final run saves only the FCStd files, the record run
+    did the rest"""
+    s = sensitivity
+    if s is None or s.mode not in ('probe', 'final'):
+        return False
+    if s.mode == 'probe':
+        if is_fcstd(file_name):
+            s.values.append([b[2] for b in bindings()])
+        return True
+    return not is_fcstd(file_name)
+
+
+def begin_run(mode, name=None, delta=0.0):
+    """Start a run of FreeCadScript: 'record', 'probe' (the parameter name moved by delta) or 'final'"""
+    global sensitivity
+    if sensitivity is None:
+        sensitivity = Sensitivity()
+    s = sensitivity
+    s.mode, s.name, s.delta, s.values = mode, name, delta, []
+    s.first_handle = _last_handle[0]
+
+
+def end_run(ok):
+    """End the run started by begin_run, ok when the script did not fail, and close its models and assemblies
+    :return: The number of FCStd files it saved"""
+    s = sensitivity
+    if s.mode == 'probe':
+        if ok:
+            s.probes[s.name] = (s.delta, s.values)
+        else:
+            s.failed.append(s.name)
+    count = len(s.values)
+    s.mode = None
+    opened = [h for h in handles if h > s.first_handle]
+    # the assemblies before the models they link to
+    for h in sorted(opened, key=lambda h: not isinstance(handles[h], Assembly)):
+        close(h)
+    return count
+
+
+def clear_runs():
+    global sensitivity
+    sensitivity = None
+
+
 def new_assembly(name):
     return register(Assembly(name))
 
@@ -1948,4 +2405,7 @@ FUNCTIONS = {
     'volume': volume,
     'loadModule': load_module,
     'close': close,
+    'beginRun': begin_run,
+    'endRun': end_run,
+    'clearRuns': clear_runs,
 }
