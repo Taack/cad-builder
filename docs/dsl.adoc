@@ -187,7 +187,8 @@ display.
 edges, arcs and splines), and finds what could be written shorter, each finding starting with the lines drawing the
 contours:
 
-* nearly the same contours, maybe in parallel planes: a method with parameters, or an offset (`Outline.offset`);
+* nearly the same contours, maybe in parallel planes: a method with parameters, or an offset (`Outline.offset`); those
+drawn by the same line, in a loop or a method called for each side, are drawn once already and are not reported;
 * circles of several models at the same positions: holes, pins and screws, whose positions go in a constant;
 * copies of a contour, moved, turned or mirrored, and those in a row or around a center: a method, a loop or
 `circularPattern`;
