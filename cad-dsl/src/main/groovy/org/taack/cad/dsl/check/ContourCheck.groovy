@@ -242,8 +242,10 @@ final class ContourCheck {
         root = { Shape s -> family[s] == null || family[s].is(s) ? s : root(family[s]) }
         for (int i = 0; i < shapes.size(); i++) for (int j = i + 1; j < shapes.size(); j++) {
             Shape a = shapes[i], b = shapes[j]
-            // the outline and the holes of a face; circles are short to draw
-            if (!a.contour.in3d || !b.contour.in3d || a.contour.wire == b.contour.wire || (a.circle && b.circle)) continue
+            // the outline and the holes of a face; circles are short to draw; a line run twice, in a loop or a method
+            // called for each side, draws its contours once already
+            if (!a.contour.in3d || !b.contour.in3d || a.contour.wire == b.contour.wire || (a.circle && b.circle) ||
+                    (a.contour.source == b.contour.source && a.contour.source != '?')) continue
             // in parallel planes, b is compared in the plane of a; small contours are close for less
             Double gap = a.planeGap(b)
             double[] shift = gap == null ? [0d, 0d, 0d] as double[] : scale(a.normal, -gap)
