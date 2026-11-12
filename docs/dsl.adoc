@@ -82,6 +82,9 @@ closures, is ignored: make it in a `fuse { ... }`. The prism of a face is fused 
 `hole` is cut from it), and is one of the solids of the closure in a `cut`, `fuse` or `common`.
 * *Moves.* In a closure, `translate`, `rotate` and `mirror` move the last solid made in it. At the root, they move the
 current solid. `rotate(..., true)` and `mirror` keep the solid and add the moved copy.
+* *Operations in a closure.* In a closure, `cut`, `fuse` and `common` work on the last solid made in it, the one they
+are called on, and their result takes its place: in a `cut`, `box(4, 4, 20).cut { ... }` shortens the bar, which is
+then cut from the current solid; the solids of the inner closure leave the current solid alone.
 * *Position and direction.* `position(pos) { ... }` sets the origin of what is made in its closure. `direction(axis)`
 sets the axis of the next cylinders, cones and prisms, and stays set after the closure: set `direction(Vec.vZ)` back.
 * *Faces shared by two solids.* A boolean operation between solids that share a face, or that end on the same curve,

@@ -812,7 +812,8 @@ class Model:
     def __init__(self):
         self.doc = App.newDocument('Model')
         self.shape = None
-        self.shape_cut_base = None
+        # the solid each cut, fuse or common being built works on, see begin_boolean
+        self.bool_bases = []
         self.face = None
         # Face picked by visitFace
         self.selected = None
@@ -1065,48 +1066,55 @@ class Model:
         self.primitive(o)
 
     def visitCut(self):
-        if self.shape in self.bool_shapes[-1]:
-            self.bool_shapes[-1].remove(self.shape)
-        self.bool_shapes.append([])
-        if self.shape is not None:
-            self.shape_cut_base = self.shape
+        self.begin_boolean()
 
     def visitCutEnd(self):
-        if not self.bool_shapes[-1]:
-            return
-        result = self.shape_cut_base
-        for other in self.bool_shapes[-1]:
-            result = self.cut(result, other)
-        self.shape = result
-        self.bool_shapes.pop()
-        # the result is the last solid, as after a fuse or a prism
-        self.bool_shapes[-1].append(result)
+        def cut(base, tools):
+            for tool in tools:
+                base = self.cut(base, tool)
+            return base
+        self.end_boolean('cut', cut)
 
     def visitFuse(self):
-        self.bool_shapes.append([])
-        if self.shape is not None:
-            self.bool_shapes[-1].append(self.shape)
+        self.begin_boolean()
 
     def visitFuseEnd(self):
-        if not self.bool_shapes[-1]:
-            return
-        self.shape = self.boolean('Part::MultiFuse', [self.shape] + self.bool_shapes[-1])
-        self.pop_shape()
+        self.end_boolean('fuse', lambda base, tools: self.boolean('Part::MultiFuse', [base] + tools))
 
     def visitCommon(self):
-        self.visitFuse()
+        self.begin_boolean()
 
     def visitCommonEnd(self):
-        if not self.bool_shapes[-1]:
-            return
-        self.shape = self.boolean('Part::MultiCommon', [self.shape] + self.bool_shapes[-1])
-        self.pop_shape()
+        self.end_boolean('common', lambda base, tools: self.boolean('Part::MultiCommon', [base] + tools))
 
-    def pop_shape(self):
-        self.bool_shapes.pop()
-        if self.bool_shapes[-1]:
-            self.bool_shapes[-1].pop(0)
-        self.bool_shapes[-1].insert(0, self.shape)
+    def begin_boolean(self):
+        """Opens the list of the solids of a cut, fuse or common, and takes out of its closure the solid it works on:
+        the current solid at the root of a model, the last solid made in a closure, which it is called on"""
+        shapes = self.bool_shapes[-1]
+        if len(self.bool_shapes) > 1:
+            base = shapes.pop() if shapes else None
+        else:
+            base = self.shape
+            if base in shapes:
+                shapes.remove(base)
+        self.bool_bases.append(base)
+        self.bool_shapes.append([])
+
+    def end_boolean(self, operation, apply):
+        """The result is the last solid of the closure around the operation, and the current solid at the root"""
+        tools = self.bool_shapes.pop()
+        result = self.bool_bases.pop()
+        if tools:
+            if result is None:
+                if operation == 'cut':
+                    raise RuntimeError('cut: no solid to cut')
+                result, tools = tools[0], tools[1:]
+            if tools:
+                result = apply(result, tools)
+        if result is not None:
+            self.bool_shapes[-1].append(result)
+            if len(self.bool_shapes) == 1:
+                self.shape = result
 
     def visitFillet(self, radius):
         shape = self.current_shape()

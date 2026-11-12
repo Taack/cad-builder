@@ -80,6 +80,32 @@ class MeasureTest {
     }
 
     @Test
+    void "Cut, fuse and common in a closure work on the solid they are called on"() {
+        // a 4 x 4 x 20 bar through a 10 mm cube, less its part above z = 5: a pocket 4 x 4 x 5 in the cube
+        def cut = cd().box(10, 10, 10).cut {
+            position(new Vec(3, 3, -5)) { box(4, 4, 20) }.cut { position(new Vec(0, 0, 5)) { box(10, 10, 15) } }
+        }
+        assertEquals(1000d - 80d, cut.check('cut').measure().volume, 1e-3d)
+        // two 4 mm cubes at opposite corners
+        def fuse = cd().box(10, 10, 10).cut {
+            box(4, 4, 4).fuse { position(new Vec(6, 6, 0)) { box(4, 4, 4) } }
+        }
+        assertEquals(1000d - 128d, fuse.check('fuse').measure().volume, 1e-3d)
+        // a 4 mm cube less its part under z = 2
+        def common = cd().box(10, 10, 10).cut {
+            box(4, 4, 4).common { position(new Vec(0, 0, 2)) { box(10, 10, 20) } }
+        }
+        assertEquals(1000d - 32d, common.check('common').measure().volume, 1e-3d)
+        // the result is the last solid of the closure: translate moves it
+        def moved = cd().box(10, 10, 10).cut {
+            box(4, 4, 4).cut { position(new Vec(0, 0, 2)) { box(10, 10, 20) } }
+            translate(new Vec(6, 6, 0))
+        }
+        assertEquals(1000d - 32d, moved.check('moved').measure().volume, 1e-3d)
+        assertVec(new Vec(0, 0, 0), moved.measure().min)
+    }
+
+    @Test
     void "Translate at the root, then cut the moved solid"() {
         def part = box(new Vec(0, 0, 0))
         part.translate(new Vec(100, 0, 0)).cut { position(new Vec(105, 0, 0)) { box(10, 20, 30) } }
