@@ -51,7 +51,6 @@ class CadDslVisitor implements ICadDslVisitor, ICadDslFeatureShapes {
     private final Arena nativeScope = Natives.openScope()
 
     MemorySegment shape
-    MemorySegment shapeCutBase = null
     MemorySegment face
     final List<MemorySegment> makeWires = []
     // Texts (faces) and SVG drawings (wires) of the current sketch, joined to its wires by toFace()
@@ -79,6 +78,8 @@ class CadDslVisitor implements ICadDslVisitor, ICadDslFeatureShapes {
     List<IOpenShape> openShapeList = []
     List<IClosedShape2d> closedShape2dList = []
     final Stack<List<MemorySegment>> boolShapes
+    // The solid each cut, fuse or common being built works on, see beginBoolean
+    private final Stack<MemorySegment> boolBases = new Stack<>()
 
     CadDslVisitor() {
         boolShapes = new Stack<List<MemorySegment>>()
@@ -242,86 +243,74 @@ class CadDslVisitor implements ICadDslVisitor, ICadDslFeatureShapes {
 
     @Override
     void visitCut() {
-        Tr.ind("visitCut")
-        boolShapes.peek().remove(shape)
-        boolShapes.push([])
-        Tr.cur "shape: $shape"
-        if (shape) {
-            shapeCutBase = shape
-        } else Tr.cur "visitCut: Empty shape !!"
-//        shape = null
+        beginBoolean('cut')
     }
 
     @Override
     void visitCutEnd() {
-        if (boolShapes.peek().empty) return
-        def cutLasts = boolShapes.peek()
-        def firstShape = shapeCutBase//cutLasts.first()
-        Tr.cur "cutLasts: $cutLasts"
-        for (def otherShape in cutLasts) {
-            Tr.cur "cutting; $firstShape, $otherShape"
-            firstShape = booleanResult('cut', new_TopoDS_Shape__bBRepAlgoAPI_Cut__s1_s2(firstShape, otherShape))
-        }
-        shape = firstShape
-        boolShapes.pop()
-        // the result is the last solid, as after a fuse or a prism
-        boolShapes.peek() << shape
-        Tr.dec("visitCutEnd $shape")
+        endBoolean('cut') { MemorySegment base, MemorySegment tool -> new_TopoDS_Shape__bBRepAlgoAPI_Cut__s1_s2(base, tool) }
     }
 
     @Override
     void visitFuse() {
-        Tr.ind("visitFuse")
-        boolShapes.push([])
-        Tr.cur("shape: $shape")
-        if (shape) boolShapes.peek() << shape
-        else Tr.cur "visitFuse: Empty shape !!"
-//        shape = null
-    }
-
-    private void popShape() {
-        boolShapes.pop()
-        if (!boolShapes.peek().empty) boolShapes.peek().removeFirst()
-        boolShapes.peek().addFirst(shape)
-
+        beginBoolean('fuse')
     }
 
     @Override
     void visitFuseEnd() {
-        if (boolShapes.peek().empty) return
-        def firstShape = shape// boolShapes.peek().first()
-        def fuseLasts = boolShapes.peek()
-        Tr.cur "fuseLasts: $fuseLasts"
-        for (def otherShape in fuseLasts) {
-            firstShape = booleanResult('fuse', new_TopoDS_Shape__brep_algoapi_fuse__s1_s2(firstShape, otherShape))
-        }
-        shape = firstShape
-        popShape()
-        Tr.dec("visitFuseEnd $shape")
+        endBoolean('fuse') { MemorySegment base, MemorySegment tool -> new_TopoDS_Shape__brep_algoapi_fuse__s1_s2(base, tool) }
     }
 
     @Override
     void visitCommon() {
-        Tr.ind("visitCommon")
-        boolShapes.push([])
-        Tr.cur("shape: $shape")
-        if (shape) boolShapes.peek() << shape
-        else Tr.cur "visitCommon: Empty shape !!"
-//        shape = null
+        beginBoolean('common')
     }
 
     @Override
     void visitCommonEnd() {
-        if (boolShapes.peek().empty) return
-        def firstShape = shape
-        def commonLasts = boolShapes.peek()
-        Tr.cur "commonLasts: $commonLasts"
-        for (def otherShape in commonLasts) {
-            firstShape = booleanResult('common', new_TopoDS_Shape__brep_algoapi_common__s1_s2(firstShape, otherShape))
+        endBoolean('common') { MemorySegment base, MemorySegment tool -> new_TopoDS_Shape__brep_algoapi_common__s1_s2(base, tool) }
+    }
+
+    private boolean inClosure() {
+        boolShapes.size() > 1
+    }
+
+    /**
+     * Opens the list of the solids of a cut, fuse or common, and takes out of its closure the solid it works on: the
+     * current solid at the root of a model, the last solid made in a closure, which it is called on (as translate
+     * moves it)
+     */
+    private void beginBoolean(String operation) {
+        Tr.ind(operation)
+        List<MemorySegment> shapes = boolShapes.peek()
+        MemorySegment base
+        if (inClosure()) base = shapes.empty ? null : shapes.removeLast()
+        else {
+            base = shape
+            shapes.remove(shape)
         }
-        shape = firstShape
-        popShape()
-        Tr.dec("visitCommonEnd")
+        Tr.cur "$operation of $base"
+        boolBases.push(base)
+        boolShapes.push([])
+    }
+
+    /**
+     * Applies the operation to its solid with each solid of its closure; the result is the last solid of the closure
+     * around it, and the current solid at the root
+     */
+    private void endBoolean(String operation, Closure<MemorySegment> apply) {
+        List<MemorySegment> tools = boolShapes.pop()
+        MemorySegment result = boolBases.pop()
+        Tr.cur "$operation with $tools"
+        for (MemorySegment tool in tools) {
+            if (result == null && operation == 'cut') throw new IllegalStateException('cut: no solid to cut')
+            result = result == null ? tool : booleanResult(operation, apply.call(result, tool))
+        }
+        if (result != null) {
+            boolShapes.peek() << result
+            if (!inClosure()) shape = result
+        }
+        Tr.dec("$operation: $result")
     }
 
     /**
