@@ -42,8 +42,9 @@ tasks.named('generateCad-dsl-nativeBindings') {
     doLast {
         outputs.files.asFileTree.matching { include '**/NativeLib$shared.java' }.each { File f ->
             String source = f.text
-            String portable = source.replace(
-                    'public static final ValueLayout.OfLong C_LONG = (ValueLayout.OfLong) Linker',
+            // OfLong where jextract runs on Linux or macOS, OfInt on Windows
+            String portable = source.replaceFirst(
+                    /public static final ValueLayout\.Of(Long|Int) C_LONG = \(ValueLayout\.Of(Long|Int)\) Linker/,
                     'public static final ValueLayout C_LONG = (ValueLayout) Linker')
             if (portable == source) throw new GradleException("C_LONG not found in $f: check the jextract output")
             f.text = portable
