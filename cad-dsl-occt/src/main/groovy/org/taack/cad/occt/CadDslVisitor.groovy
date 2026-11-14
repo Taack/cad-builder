@@ -1108,11 +1108,17 @@ class CadDslVisitor implements ICadDslVisitor, ICadDslFeatureShapes {
     private void contoursToFace() {
         Tr.cur("toFace: makeWires: $makeWires, drawnShapes: $drawnShapes")
         if (makeWires) {
+            // a wire that could not be made, or of which no face can be made, is NULL: given to the builder, it would
+            // crash the JVM
             MemorySegment wire = ref_TopoDS_Wire__BRepBuilderAPI_MakeWire__Wire(makeWires.first())
+            if (wire == MemorySegment.NULL) throw new IllegalStateException("toFace: the wire could not be made: ${lastError()}")
             face = own(new_TopoDS_Face__BRepBuilderAPI_MakeFace__TopoDS_Wire(wire), NativeLib::delete_TopoDS_Face)
+            if (face == MemorySegment.NULL) throw new IllegalStateException("toFace: no face of the wire: ${lastError()}")
             def builder = own(new_BRep_Builder(), NativeLib::delete_BRep_Builder)
-            for (MemorySegment w in makeWires.drop(1)) {
-                _TopoDS_Builder__Add__resTopoDS_Shape_toAddTopoDS_Shape(builder, face, ref_TopoDS_Shape__BRepBuilderAPI_MakeWire__Shape(w))
+            makeWires.drop(1).eachWithIndex { MemorySegment w, int i ->
+                MemorySegment hole = ref_TopoDS_Shape__BRepBuilderAPI_MakeWire__Shape(w)
+                if (hole == MemorySegment.NULL) throw new IllegalStateException("toFace: wire ${i + 2} could not be made: ${lastError()}")
+                _TopoDS_Builder__Add__resTopoDS_Shape_toAddTopoDS_Shape(builder, face, hole)
             }
         }
         if (makeWires.size() > 1 || drawnShapes) {
