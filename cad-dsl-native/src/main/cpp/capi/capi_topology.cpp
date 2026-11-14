@@ -385,7 +385,11 @@ extern "C" TopoDS_Face *new_TopoDS_Face__BRepBuilderAPI_MakeFace__TopoDS_Wire(co
     return guard(__func__, [&] {
         wire_check2(*wire);
         wire_check1(*wire);
-        return new TopoDS_Face(BRepBuilderAPI_MakeFace(*wire).Face());
+        BRepBuilderAPI_MakeFace make(*wire);
+        // a failure gives a null face rather than an exception: the caller gets NULL instead of a face it would crash on
+        if (!make.IsDone() || make.Face().IsNull())
+            throw Standard_Failure("No face of the wire: it is not closed or not planar");
+        return new TopoDS_Face(make.Face());
     });
 }
 
