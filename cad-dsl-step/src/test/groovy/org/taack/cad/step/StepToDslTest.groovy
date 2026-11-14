@@ -109,6 +109,34 @@ class StepToDslTest {
         assertTrue(difference < 0.02d, "difference ${difference}\n${script.text}")
     }
 
+    /**
+     * A flat milled across a thread, into its core: it touches the helical flanks, which OCCT does not defeature, and
+     * is no end of the thread. It is cut from the rings, over its length.
+     */
+    @Test
+    @Timeout(value = 300, threadMode = Timeout.ThreadMode.SEPARATE_THREAD)
+    void "A flat across a thread is cut from the rings"() {
+        double pitch = 25.4d / 24d
+        File step = new File(dir, 'flat.step')
+        cd().cylinder(7.6d, 20d).fuse {
+            position(new Vec(0d, 0d, 10d)) {
+                helix(7.5d, pitch, 8d).profile(new Vec2d(-0.1d, 0d)) {
+                    edge(new Vec2d(0.45d, 0.4d))
+                    edge(new Vec2d(0.45d, 0.55d))
+                    edge(new Vec2d(-0.1d, 0.95d))
+                    edge(new Vec2d(-0.1d, 0d))
+                }
+            }
+        }.cut {
+            position(new Vec(7d, -10d, 12d)) { box(5d, 20d, 9d) }
+        }.display(step.path)
+        File script = new File(dir, 'flat.groovy')
+        script.text = StepToDsl.convert(step)
+        assertTrue(script.text.contains('a flat on the plane'), script.text)
+        double difference = StepToDsl.check(step, script)
+        assertTrue(difference < 0.02d, "difference ${difference}\n${script.text}")
+    }
+
     @Test
     void "Assemblies keep their tree, each part written once"() {
         File step = new File(dir, 'cart.step')
@@ -119,5 +147,9 @@ class StepToDslTest {
         assertEquals(4, script.count('= part('), script)
         // axle: shaft and 2 wheels, cart: chassis, 2 axles and the cap
         assertEquals(7, script.count('place('), script)
+        // the solids are compared one by one: chassis, 2 shafts, 4 wheels and the cap
+        List<StepToDsl.SolidDifference> differences = StepToDsl.checkSolids(step, new File(dir, 'cart.groovy'))
+        assertEquals(8, differences.size())
+        differences.each { assertEquals(0d, it.difference, 1e-6, it.label) }
     }
 }

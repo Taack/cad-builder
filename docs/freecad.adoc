@@ -83,6 +83,8 @@ Each solid is recognized, from the simplest to the most general form:
 * a primitive: a box along the axes, a cylinder, a sphere;
 * a 2.5D solid, whose faces are all normal or parallel to an axis: prisms of its cross-sections;
 * a solid of revolution: the revolution of its section by a half-plane through the axis;
+* a threaded solid of revolution, its thread drawn as rings: the revolution of its section, the flats across the
+  thread cut from it, then the other features as below;
 * else a 2.5D base, the faces that do not fit removed (defeaturing), then the holes, pockets and bosses on it (the
   material removed from the base and added to it), each one a 2.5D solid, a primitive or a revolution.
 
@@ -98,4 +100,7 @@ cad-dsl-freecad/build/install/cad-dsl-freecad/bin/cad-dsl-freecad part.groovy pa
 ----
 
 <1> `--check` runs the script with the FreeCAD kernel, and prints how far what it builds is from the STEP file
-(the volume of their symmetric difference); without a script file, the script goes to the standard output.
+(the volume of their symmetric difference); without a script file, the script goes to the standard output. The solids
+of an assembly are compared one by one, each with the solid built closest to it, as they overlap: the difference is
+printed for each one. When the booleans of FreeCAD fail on a solid (helical faces), its difference of volume is printed
+instead, and it is left out of the total.

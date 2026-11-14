@@ -29,19 +29,61 @@ final class StepToDsl {
     }
 
     /**
-     * Run the script with the FreeCAD kernel, and compare what it builds with the STEP file
-     * @return The volume of the symmetric difference of both, relative to the STEP volume: 0 when the script rebuilds
-     * the STEP file exactly
+     * The difference of what the script builds from the STEP file, solid by solid
+     * @param label The label of the solid in the STEP file
+     * @param volume Its volume
+     * @param difference The volume of the symmetric difference of it and the solid built closest to it, null when
+     * FreeCAD fails to compute it (booleans between free-form faces)
+     * @param builtVolume The volume of the solid built closest to it
      */
-    static double check(File step, File script) {
+    @groovy.transform.Immutable
+    static final class SolidDifference {
+        String label
+        double volume
+        Double difference
+        double builtVolume
+
+        Double getRelative() { difference == null ? null : volume > 0 ? difference / volume : 0d }
+    }
+
+    /**
+     * Run the script with the FreeCAD kernel, and compare what it builds with the STEP file, solid by solid
+     * @return The differences of the solids of the STEP file, all 0 when the script rebuilds it exactly
+     * @throws IllegalStateException when the script cannot be built
+     */
+    static List<SolidDifference> checkSolids(File step, File script) {
         File built = File.createTempFile('step2dsl-', '.step')
         try {
-            CadScript.run(script, [built.path])
-            double volume = session().call(null, 'step2dsl.volume', step.absolutePath) as double
-            (session().call(null, 'step2dsl.difference', step.absolutePath, built.path) as double) / volume
+            try {
+                CadScript.run(script, [built.path])
+            } catch (RuntimeException e) {
+                throw new IllegalStateException("FreeCAD could not build the script: ${e.message}", e)
+            }
+            (session().call(null, 'step2dsl.differences', step.absolutePath, built.path) as List<List>).collect {
+                new SolidDifference(it[0] as String, it[1] as double, it[2] as Double, it[3] as double)
+            }
         } finally {
             built.delete()
         }
+    }
+
+    private static String percent(double ratio) {
+        String.format(Locale.ROOT, '%.4g', ratio * 100)
+    }
+
+    /**
+     * @return The volume of the symmetric differences of the solids built by the script and those of the STEP file,
+     * relative to the STEP volume: 0 when the script rebuilds the STEP file exactly; the solids FreeCAD cannot
+     * compare are left out
+     */
+    static double check(File step, File script) {
+        relative(checkSolids(step, script))
+    }
+
+    private static double relative(List<SolidDifference> differences) {
+        List<SolidDifference> compared = differences.findAll { it.difference != null }
+        double volume = compared.sum(0d) { SolidDifference d -> d.volume } as double
+        volume > 0 ? (compared.sum(0d) { SolidDifference d -> d.difference } as double) / volume : 0d
     }
 
     static void main(String[] args) {
@@ -62,10 +104,15 @@ final class StepToDsl {
         if (checking) {
             File toRun = out != null ? out : File.createTempFile('step2dsl-', '.groovy').with { it.text = script; it }
             try {
-                double difference = check(step, toRun)
-                System.err.println "step2dsl: the script differs from ${step.name} by ${String.format(Locale.ROOT, '%.4g', difference * 100)} % of its volume"
+                List<SolidDifference> differences = checkSolids(step, toRun)
+                if (differences.size() > 1) differences.each {
+                    System.err.println "step2dsl: ${it.label} ${it.difference == null ? "could not be compared (FreeCAD booleans failed), its volume differs by ${percent(it.volume > 0 ? (it.builtVolume - it.volume) / it.volume : 0d)} %" : "differs by ${percent(it.relative)} % of its volume"}"
+                }
+                List<String> uncompared = differences.findAll { it.difference == null }*.label
+                System.err.println "step2dsl: the script differs from ${step.name} by ${percent(relative(differences))} % of its volume" +
+                        (uncompared ? ", without ${uncompared.join(', ')}" : '')
             } catch (RuntimeException e) {
-                System.err.println "step2dsl: FreeCAD could not build the script: ${e.message}"
+                System.err.println "step2dsl: ${e.message}"
                 System.exit(1)
             }
         }

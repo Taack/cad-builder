@@ -8,7 +8,8 @@ distinct sub-assembly. Each solid is recognized, from the simplest to the most g
     heights of its planar faces;
   - a solid of revolution: the revolution of its section by a half-plane through the axis; a threaded one too, its
     thread (free-form flanks between two close radii) made of rings;
-  - a threaded solid of revolution with other features (flats, pockets...): the threaded solid as base, then them;
+  - a threaded solid of revolution with other features: the threaded solid as base, the flats across its thread
+    cut from it (OCCT does not defeature them), then the other features (pockets, holes...);
   - else a 2.5D base, the faces that do not fit removed by defeaturing, then the material removed from it cut (holes,
     pockets, fillets...) and the material added to it fused, each one a 2.5D solid, a primitive or a revolution.
     Free-form faces, and the faces touching them, are not removed: a solid that keeps some is approximated.
@@ -338,9 +339,9 @@ def main_axis(shape):
     return a[0], canonical(a[1])
 
 
-def revolution_axis(shape, threads=False):
+def revolution_axis(shape, threads=False, flat_faces=()):
     """(point, direction) of the axis all the faces of the solid turn around, None if they do not; with threads, the
-    flanks of threads around it are accepted"""
+    flanks of threads around it are accepted, and the flat faces"""
     axis = None
     for f in shape.Faces:
         a = surface_axis(f.Surface)
@@ -354,7 +355,8 @@ def revolution_axis(shape, threads=False):
         return None
     flanks = [e for f in shape.Faces if threads and is_thread(f, axis) for e in f.Edges]
     for f in shape.Faces:
-        if not (turns_around(f, axis) or (threads and is_thread(f, axis)) or thread_end(f, axis, flanks)):
+        if not (turns_around(f, axis) or (threads and is_thread(f, axis)) or thread_end(f, axis, flanks)
+                or any(f.isSame(g) for g in flat_faces)):
             return None
     return axis[0], canonical(axis[1])
 
@@ -364,7 +366,8 @@ def thread_section(shape, axis):
     ends in the section"""
     origin, d = axis
     flanks = [e for f in shape.Faces if is_thread(f, axis) for e in f.Edges]
-    ends = [f.CenterOfMass - origin for f in shape.Faces if thread_end(f, axis, flanks)]
+    ends = [f.CenterOfMass - origin for f in shape.Faces if thread_end(f, axis, flanks)] + \
+           [f.CenterOfMass - origin for f in flats(shape, axis)]
     x = unit(radial_direction(d))
     y = d.cross(x)
     directions = [x * math.cos(i * math.pi / 8) + y * math.sin(i * math.pi / 8) for i in range(16)]
@@ -372,9 +375,41 @@ def thread_section(shape, axis):
 
 
 def thread_end(face, axis, flanks):
-    """Whether the face closes a thread at one of its ends: a plane along the axis, bounded by edges of the flanks"""
-    return (bool(flanks) and isinstance(face.Surface, Part.Plane) and abs(unit(face.Surface.Axis).dot(axis[1])) < 1e-6
-            and any(e.isSame(g) for e in face.Edges for g in flanks))
+    """Whether the face closes a thread at one of its ends: a plane along the axis, bounded by edges of the flanks, in
+    the band of the thread (a flat cutting the core of the thread, under its root, is no end)"""
+    if not (flanks and isinstance(face.Surface, Part.Plane) and abs(unit(face.Surface.Axis).dot(axis[1])) < 1e-6
+            and any(e.isSame(g) for e in face.Edges for g in flanks)):
+        return False
+    # the point of the plane closest to the axis, at the middle of the face: on a flat, in the band of an end
+    origin, d = axis
+    foot = face.Surface.projectPoint(origin + d * (face.CenterOfMass - origin).dot(d))
+    if not face.isInside(foot, 1e-6, True):
+        return True
+    root = min(distance_to_axis(axis, v.Point) for e in flanks for v in e.Vertexes)
+    return distance_to_axis(axis, foot) > root - 1e-3
+
+
+def distance_to_axis(axis, p):
+    v = p - axis[0]
+    return (v - axis[1] * v.dot(axis[1])).Length
+
+
+def flats(shape, axis):
+    """The flats across the thread of a threaded solid of revolution: planes along the axis facing away from it,
+    bounded by edges of the flanks, which are no thread ends. Defeaturing does not remove them, as they touch the
+    flanks: they are cut from the revolution instead"""
+    flanks = [e for f in shape.Faces if is_thread(f, axis) for e in f.Edges]
+    result = []
+    for f in shape.Faces:
+        s = f.Surface
+        if not isinstance(s, Part.Plane) or abs(unit(s.Axis).dot(axis[1])) > 1e-6 or thread_end(f, axis, flanks) \
+                or not any(e.isSame(g) for e in f.Edges for g in flanks):
+            continue
+        foot = s.projectPoint(axis[0])
+        n = f.normalAt(*f.Surface.parameter(f.CenterOfMass))
+        if distance_to_axis(axis, foot) > LIN and (foot - axis[0]).dot(n) > 0:
+            result.append(f)
+    return result
 
 
 def on_axis(axis, p):
@@ -584,7 +619,9 @@ class SolidWriter:
         base = shape
         # OCCT may leave some of the features: removed again, while it removes some
         for _ in range(MAX_DEFEATURING_PASSES):
-            features = [f for f in base.Faces if not turns_around(f, axis) and not is_thread(f, axis)]
+            kept = flats(base, axis)
+            features = [f for f in base.Faces if not turns_around(f, axis) and not is_thread(f, axis)
+                        and not any(f.isSame(g) for g in kept)]
             if not features or len(features) > MAX_FEATURE_FACES:
                 break
             b = defeatured(base, features)
@@ -598,11 +635,13 @@ class SolidWriter:
             if b is None or len(b.Faces) >= len(base.Faces):
                 break
             base = b
-        if base is shape or revolution_axis(base, threads=True) is None:
+        if base is shape and not flats(base, axis) or revolution_axis(base, True, flats(base, axis)) is None:
             return None
         lines = self.threaded(base, axis)
         if not lines:
             return None
+        for f in flats(base, axis):
+            lines += self.flat_cut(base, axis, f)
         for s in shape.cut(base).Solids:
             lines += self.feature(s, False)
         for s in base.cut(shape).Solids:
@@ -624,6 +663,27 @@ class SolidWriter:
         for s in removed:
             lines += self.feature(s, True)
         return lines
+
+    def flat_cut(self, shape, axis, face):
+        """The cut of a flat from a threaded solid of revolution: a prism from the plane of the face, over its length
+        along the axis (past the ends of the solid it reaches), facing away from the axis"""
+        origin, d = axis
+        n = unit(face.normalAt(*face.Surface.parameter(face.CenterOfMass)))
+        foot = face.Surface.projectPoint(origin)
+        w = d.cross(n)
+        size = shape.BoundBox.DiagonalLength
+        along = [v.Point.dot(d) for v in face.Vertexes]
+        ends = [v.Point.dot(d) for v in shape.Vertexes]
+        a, b = min(along), max(along)
+        if a - min(ends) < LIN:
+            a -= 1
+        if max(ends) - b < LIN:
+            b += 1
+        base = foot - d * foot.dot(d)
+        corners = [base + d * a - w * size, base + d * b - w * size, base + d * b + w * size, base + d * a + w * size]
+        wire = Part.makePolygon(corners + [corners[0]])
+        self.notes.append('a flat on the plane through %s facing %s' % (vec(foot), vec(n)))
+        return self.wire_statements([wire], '.toFace().hole(%s)' % vec(n * size))
 
     def feature(self, shape, cut):
         """Statements adding a solid to the one built, or cutting it"""
@@ -830,18 +890,67 @@ def volume(path):
 
 
 def difference(path1, path2):
-    """Volume of the symmetric difference of the solids of two STEP files"""
-    a = Part.read(path1)
-    b = Part.read(path2)
-    cuts = a.cut(b).Volume + b.cut(a).Volume
-    if len(a.Solids) != 1 or len(b.Solids) != 1:
-        # the volumes of the solids overlapping in an assembly are counted twice: nothing to compare the cuts with
-        return cuts
-    # against a helical thread, the booleans fail, leaving solids whole or empty: they are then made again with a
-    # tolerance, kept when the cuts and the common add up to the volumes
+    """Volume of the symmetric difference of the solids of two STEP files, the sum of those of each solid of the
+    first one with its match in the second one (see differences)"""
+    return sum(d[2] for d in differences(path1, path2) if d[2] is not None)
+
+
+def solid_difference(a, b):
+    """Volume of the symmetric difference of two solids"""
+    # against helical faces, the booleans fail, leaving solids whole or empty, the common empty though both overlap:
+    # they are also made with a tolerance, the results kept when the cuts and the common add up to the volumes, the
+    # smallest one, as failing booleans miss some of the common
+    results = []
     for tolerance in (0.0, 1e-4):
-        common = a.common(b, tolerance).Volume
-        a_b, b_a = a.cut(b, tolerance).Volume, b.cut(a, tolerance).Volume
+        try:
+            common = a.common(b, tolerance).Volume
+            a_b, b_a = a.cut(b, tolerance).Volume, b.cut(a, tolerance).Volume
+        except Exception:
+            continue
         if max(abs(common + a_b - a.Volume), abs(common + b_a - b.Volume)) < 1e-3 * a.Volume:
-            return a_b + b_a
-    return cuts
+            results.append(a_b + b_a)
+    return min(results) if results else None
+
+
+def labelled_solids(path):
+    """(label, solid) of each solid of a STEP file, placed in it"""
+    import Import
+    doc = App.newDocument('Solids')
+    try:
+        Import.insert(path, doc.Name)
+        roots = [o for o in doc.Objects if is_node(o) and o.getParentGeoFeatureGroup() is None and
+                 o.getParentGroup() is None and not any(is_node(p) and p.TypeId == 'App::Link' for p in o.InList)]
+        result = []
+
+        def walk(node, placement):
+            pl = placement.multiply(node.placement)
+            if node.is_part:
+                s = node.shape.copy()
+                s.Placement = pl
+                result.append((node.label, s))
+            for c in node.children:
+                walk(c, pl)
+        for n in (tree(o) for o in roots):
+            if n is not None:
+                walk(n, App.Placement())
+        return result
+    finally:
+        App.closeDocument(doc.Name)
+
+
+def differences(path1, path2):
+    """[label, volume, symmetric difference, volume built] of each solid of the first STEP file with the solid of the second one
+    closest to it (by center of mass and volume): the solids of an assembly overlap, the difference of the whole
+    files would count them twice, and fails on them. The difference is None when the booleans fail"""
+    def closest(solids, a):
+        return min(solids, key=lambda s: (s.CenterOfMass - a.CenterOfMass).Length +
+                   abs(s.Volume - a.Volume) / max(a.Volume, 1e-9))
+    # the solids as read, their placement applied: the booleans fail on some placed by the assembly tree
+    solids = Part.read(path1).Solids
+    built = Part.read(path2).Solids
+    result = []
+    for label, placed in labelled_solids(path1):
+        a = closest(solids, placed)
+        b = closest(built, a) if built else None
+        result.append([label, a.Volume, solid_difference(a, b) if b else a.Volume, b.Volume if b else 0])
+    return result
