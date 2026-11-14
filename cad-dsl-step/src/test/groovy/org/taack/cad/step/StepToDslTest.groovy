@@ -2,6 +2,7 @@ package org.taack.cad.step
 
 import groovy.transform.CompileStatic
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.Timeout
 import org.junit.jupiter.api.io.TempDir
 import org.taack.cad.dsl.AssemblyTest
 import org.taack.cad.dsl.CadDslSolid
@@ -76,6 +77,36 @@ class StepToDslTest {
             circle(3)
         }.toFace().hole(-40))
         assertTrue(script.contains('.toFace().hole('), script)
+    }
+
+    /**
+     * A 5/8"-24 thread above a flat: neither a revolution nor 2.5D, its helical flanks are free-form faces, which OCCT
+     * did not end defeaturing. The thread is drawn as rings, the flat cut from them.
+     */
+    @Test
+    @Timeout(value = 300, threadMode = Timeout.ThreadMode.SEPARATE_THREAD)
+    void "A thread is made of rings, the features beside it cut from them"() {
+        double pitch = 25.4d / 24d
+        File step = new File(dir, 'threaded.step')
+        cd().cylinder(7.6d, 20d).cut {
+            position(new Vec(6d, -10d, -1d)) { box(5d, 20d, 9d) }
+        }.fuse {
+            position(new Vec(0d, 0d, 10d)) {
+                helix(7.5d, pitch, 8d).profile(new Vec2d(-0.1d, 0d)) {
+                    edge(new Vec2d(0.45d, 0.4d))
+                    edge(new Vec2d(0.45d, 0.55d))
+                    edge(new Vec2d(-0.1d, 0.95d))
+                    edge(new Vec2d(-0.1d, 0d))
+                }
+            }
+        }.display(step.path)
+        File script = new File(dir, 'threaded.groovy')
+        script.text = StepToDsl.convert(step)
+        assertTrue(script.text.contains('drawn as rings'), script.text)
+        assertTrue(script.text.contains('.toFace().revolution('), script.text)
+        // rings against a helix: their teeth are half in the grooves of the other
+        double difference = StepToDsl.check(step, script)
+        assertTrue(difference < 0.02d, "difference ${difference}\n${script.text}")
     }
 
     @Test

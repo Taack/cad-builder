@@ -6,9 +6,12 @@ distinct sub-assembly. Each solid is recognized, from the simplest to the most g
   - a primitive: an axis-aligned box, a cylinder, a sphere;
   - a 2.5D solid along an axis, all its faces normal or parallel to it: prisms of the cross-sections between the
     heights of its planar faces;
-  - a solid of revolution: the revolution of its section by a half-plane through the axis;
+  - a solid of revolution: the revolution of its section by a half-plane through the axis; a threaded one too, its
+    thread (free-form flanks between two close radii) made of rings;
+  - a threaded solid of revolution with other features (flats, pockets...): the threaded solid as base, then them;
   - else a 2.5D base, the faces that do not fit removed by defeaturing, then the material removed from it cut (holes,
     pockets, fillets...) and the material added to it fused, each one a 2.5D solid, a primitive or a revolution.
+    Free-form faces, and the faces touching them, are not removed: a solid that keeps some is approximated.
 Curves other than lines and arcs of circle are approximated by polylines. What cannot be converted is reported in the
 script, which says how far its volume is from the STEP one when the solid is approximated.
 """
@@ -30,6 +33,7 @@ MAX_AXES = 8
 # Most faces removed to find the base of a solid, and most groups of them tried one by one
 MAX_FEATURE_FACES = 200
 MAX_FEATURE_GROUPS = 40
+MAX_DEFEATURING_PASSES = 3
 
 
 # ---------------------------------------------------------------------------------------------------------------------
@@ -221,6 +225,30 @@ def slabs(shape, d):
     return result
 
 
+def flattening(wires):
+    """The projection of points on the plane of the wires: the vertices of a section drift from it by the tolerances
+    of the STEP file, by up to 1e-4 mm, and OCCT makes no face of a wire that is not planar"""
+    try:
+        plane = Part.makeCompound(wires).findPlane(1e-3)
+    except Exception:
+        plane = None
+    if plane is None:
+        return lambda p: p
+    origin, n = plane.Position, unit(plane.Axis)
+    for k in range(3):
+        if abs(n[k]) > 1 - 1e-9:
+            # a plane across an axis at a written coordinate: the points rounded to 1e-6 stay in it, the edges having
+            # a tolerance of 1e-7
+            level = float(num(origin[k]))
+
+            def snap(p, k=k, level=level):
+                q = V(p)
+                q[k] = level
+                return q
+            return snap
+    return lambda p: p - n * (p - origin).dot(n)
+
+
 def arc(start, via, end):
     """An arc of circle, a line when it is almost straight (its points would be aligned once written)"""
     chord = end - start
@@ -244,16 +272,79 @@ def circle_via(points):
     return None
 
 
-def revolution_axis(shape):
-    """(point, direction) of the axis all the faces of the solid turn around, None if they do not"""
+def surface_axis(s):
+    """(point, direction) of the axis of a surface of revolution, None for other surfaces"""
+    if isinstance(s, (Part.Cylinder, Part.Toroid)):
+        return s.Center, unit(s.Axis)
+    if isinstance(s, Part.Cone):
+        return s.Apex, unit(s.Axis)
+    if isinstance(s, Part.SurfaceOfRevolution):
+        return s.Location, unit(s.Direction)
+    return None
+
+
+def turns_around(face, axis):
+    """Whether the face is a surface of revolution around the axis, or a plane normal to it"""
+    s = face.Surface
+    if isinstance(s, Part.Plane):
+        return parallel(s.Axis, axis[1])
+    if isinstance(s, Part.Sphere):
+        return on_axis(axis, s.Center)
+    a = surface_axis(s)
+    return a is not None and parallel(axis[1], a[1]) and on_axis(axis, a[0])
+
+
+def is_thread(face, axis):
+    """Whether the face is the flank of a thread around the axis: a free-form face between two close radii, winding
+    around the axis"""
+    if not isinstance(face.Surface, Part.BSplineSurface):
+        return False
+    try:
+        points = face.tessellate(0.05)[0]
+    except Exception:
+        return False
+    origin, d = axis
+    x = unit(Part.Plane(V(0, 0, 0), d).value(1, 0) - Part.Plane(V(0, 0, 0), d).value(0, 0))
+    y = d.cross(x)
+    radii = []
+    sectors = set()
+    for p in points:
+        v = p - origin
+        radial = v - d * v.dot(d)
+        radii.append(radial.Length)
+        sectors.add(int((math.atan2(radial.dot(y), radial.dot(x)) + math.pi) / (math.pi / 6)) % 12)
+    if not radii or min(radii) < LIN:
+        return False
+    # a band narrower than a fifth of its radius, over a quarter turn at least
+    return max(radii) - min(radii) <= 0.2 * max(radii) and len(sectors) >= 4
+
+
+def main_axis(shape):
+    """The axis of the surfaces of revolution of the solid of largest area, None if it has none"""
+    axes = []
+    for f in shape.Faces:
+        a = surface_axis(f.Surface)
+        if a is None:
+            continue
+        for e in axes:
+            if parallel(e[0][1], a[1]) and on_axis(e[0], a[0]):
+                e[1] += f.Area
+                break
+        else:
+            axes.append([a, f.Area])
+    if not axes:
+        return None
+    a = max(axes, key=lambda e: e[1])[0]
+    return a[0], canonical(a[1])
+
+
+def revolution_axis(shape, threads=False):
+    """(point, direction) of the axis all the faces of the solid turn around, None if they do not; with threads, the
+    flanks of threads around it are accepted"""
     axis = None
     for f in shape.Faces:
-        s = f.Surface
-        if isinstance(s, (Part.Cylinder, Part.Cone, Part.Toroid)):
-            a = (s.Center if not isinstance(s, Part.Cone) else s.Apex, unit(s.Axis))
-        elif isinstance(s, Part.SurfaceOfRevolution):
-            a = (s.Location, unit(s.Direction))
-        else:
+        a = surface_axis(f.Surface)
+        if a is None:
             continue
         if axis is None:
             axis = a
@@ -261,17 +352,29 @@ def revolution_axis(shape):
             return None
     if axis is None:
         return None
+    flanks = [e for f in shape.Faces if threads and is_thread(f, axis) for e in f.Edges]
     for f in shape.Faces:
-        s = f.Surface
-        if isinstance(s, Part.Plane):
-            if not parallel(s.Axis, axis[1]):
-                return None
-        elif isinstance(s, Part.Sphere):
-            if not on_axis(axis, s.Center):
-                return None
-        elif not isinstance(s, (Part.Cylinder, Part.Cone, Part.Toroid, Part.SurfaceOfRevolution)):
+        if not (turns_around(f, axis) or (threads and is_thread(f, axis)) or thread_end(f, axis, flanks)):
             return None
     return axis[0], canonical(axis[1])
+
+
+def thread_section(shape, axis):
+    """The radial direction of the section of a threaded solid farthest from the ends of its threads, where a tooth
+    ends in the section"""
+    origin, d = axis
+    flanks = [e for f in shape.Faces if is_thread(f, axis) for e in f.Edges]
+    ends = [f.CenterOfMass - origin for f in shape.Faces if thread_end(f, axis, flanks)]
+    x = unit(radial_direction(d))
+    y = d.cross(x)
+    directions = [x * math.cos(i * math.pi / 8) + y * math.sin(i * math.pi / 8) for i in range(16)]
+    return max(directions, key=lambda r: min([r.getAngle(e - d * e.dot(d)) for e in ends] or [0]))
+
+
+def thread_end(face, axis, flanks):
+    """Whether the face closes a thread at one of its ends: a plane along the axis, bounded by edges of the flanks"""
+    return (bool(flanks) and isinstance(face.Surface, Part.Plane) and abs(unit(face.Surface.Axis).dot(axis[1])) < 1e-6
+            and any(e.isSame(g) for e in face.Edges for g in flanks))
 
 
 def on_axis(axis, p):
@@ -279,10 +382,15 @@ def on_axis(axis, p):
     return (v - axis[1] * v.dot(axis[1])).Length < 1e-5
 
 
-def half_plane_section(shape, axis):
-    """Wires of the section of the solid by a half-plane bounded by the axis"""
+def radial_direction(d):
+    """A direction normal to d, the same for the same d"""
+    return Part.Plane(V(0, 0, 0), d).value(1, 0) - Part.Plane(V(0, 0, 0), d).value(0, 0)
+
+
+def half_plane_section(shape, axis, radial=None):
+    """Wires of the section of the solid by a half-plane bounded by the axis, along the radial direction"""
     origin, d = axis
-    radial = Part.Plane(V(0, 0, 0), d).value(1, 0) - Part.Plane(V(0, 0, 0), d).value(0, 0)
+    radial = radial or radial_direction(d)
     size = shape.BoundBox.DiagonalLength * 2 + 10
     # centered along the axis on the solid
     c = origin + d * (shape.BoundBox.Center - origin).dot(d)
@@ -303,6 +411,8 @@ class SolidWriter:
         self.notes = []
         # direction of the primitives, which stays set
         self.direction = V(0, 0, 1)
+        # projection of the points of the wires written on their plane
+        self.flat = lambda p: p
 
     def at(self, origin, d, statement):
         """A primitive along d at origin"""
@@ -317,6 +427,7 @@ class SolidWriter:
 
     def wire_statements(self, wires, end):
         """{R}wireFrom(...) { ... }.move(...) { ... }<end>, for planar wires"""
+        self.flat = flattening(wires)
         lines = []
         for i, w in enumerate(wires):
             start, body = self.wire_body(w)
@@ -329,7 +440,8 @@ class SolidWriter:
     def wire_body(self, wire):
         """Start point and statements of a closed wire"""
         edges = wire.OrderedEdges
-        vertexes = [v.Point for v in wire.OrderedVertexes]
+        flat = self.flat
+        vertexes = [flat(v.Point) for v in wire.OrderedVertexes]
         start = vertexes[0]
         body = []
         position = start
@@ -344,14 +456,14 @@ class SolidWriter:
                 if e.isClosed():
                     # a full circle: two half circles
                     q = (l - f) / 4
-                    a = [e.valueAt(f + k * q) for k in range(4)] if forward else \
-                        [e.valueAt(l - k * q) for k in range(4)]
+                    a = [flat(e.valueAt(f + k * q)) for k in range(4)] if forward else \
+                        [flat(e.valueAt(l - k * q)) for k in range(4)]
                     body.append('arc(%s, %s)' % (vec(a[2]), vec(a[1])))
                     body.append('arc(%s, %s)' % (vec(position), vec(a[3])))
                 else:
-                    body.append(arc(position, e.valueAt((f + l) / 2), end))
+                    body.append(arc(position, flat(e.valueAt((f + l) / 2)), end))
             else:
-                points = e.discretize(Deflection=DEFLECTION)
+                points = [flat(p) for p in e.discretize(Deflection=DEFLECTION)]
                 if not forward:
                     points.reverse()
                 points[-1] = end
@@ -416,8 +528,8 @@ class SolidWriter:
             lines += self.wire_statements(s.wires, '.toFace().%s(%s)' % ('hole' if cut else 'prism', vec(d * (s.z1 - s.z0))))
         return lines
 
-    def revolved(self, shape, axis):
-        wires = half_plane_section(shape, axis)
+    def revolved(self, shape, axis, radial=None):
+        wires = half_plane_section(shape, axis, radial)
         if not wires:
             return None
         return self.wire_statements(wires, '.toFace().revolution(%s, %s, 360)' % (vec(axis[0]), vec(axis[1])))
@@ -448,7 +560,54 @@ class SolidWriter:
             lines = self.revolved(shape, axis)
             if lines:
                 return lines
-        return self.featured(shape, candidates)
+        axis = revolution_axis(shape, threads=True)
+        if axis is not None:
+            lines = self.threaded(shape, axis)
+            if lines:
+                return lines
+        return self.threaded_base(shape) or self.featured(shape, candidates)
+
+    def threaded(self, shape, axis):
+        """A threaded solid of revolution: the revolution of its section, the thread made of rings"""
+        lines = self.revolved(shape, axis, thread_section(shape, axis))
+        if lines:
+            flanks = [f for f in shape.Faces if is_thread(f, axis)]
+            self.notes.append('a thread of %d faces around %s drawn as rings, not as a helix' % (len(flanks), vec(axis[1])))
+        return lines
+
+    def threaded_base(self, shape):
+        """A threaded solid of revolution as base, then the material removed from it and added to it; None if the
+        solid has no thread"""
+        axis = main_axis(shape)
+        if axis is None or not any(is_thread(f, axis) for f in shape.Faces):
+            return None
+        base = shape
+        # OCCT may leave some of the features: removed again, while it removes some
+        for _ in range(MAX_DEFEATURING_PASSES):
+            features = [f for f in base.Faces if not turns_around(f, axis) and not is_thread(f, axis)]
+            if not features or len(features) > MAX_FEATURE_FACES:
+                break
+            b = defeatured(base, features)
+            if b is None:
+                # with one of the shoulders, the other planes cut being ends of the solid, then with all of them
+                shoulders = notched(base, features, axis)
+                for extra in [[f] for f in shoulders] + ([shoulders] if len(shoulders) > 1 else []):
+                    b = defeatured(base, features + extra)
+                    if b is not None:
+                        break
+            if b is None or len(b.Faces) >= len(base.Faces):
+                break
+            base = b
+        if base is shape or revolution_axis(base, threads=True) is None:
+            return None
+        lines = self.threaded(base, axis)
+        if not lines:
+            return None
+        for s in shape.cut(base).Solids:
+            lines += self.feature(s, False)
+        for s in base.cut(shape).Solids:
+            lines += self.feature(s, True)
+        return lines
 
     def featured(self, shape, candidates):
         """A base, defeatured from the solid, then the material removed from it and added to it"""
@@ -486,9 +645,15 @@ class SolidWriter:
 
 
 def defeatured(shape, faces):
-    """The solid without the faces (its features), None if they cannot be removed"""
+    """The solid without the faces (its features), None if they cannot be removed. Faces touching a free-form face
+    are kept, and free-form faces themselves: OCCT takes minutes for each one, or does not end (the helical flanks of a
+    thread, a flat along it)"""
     if not faces:
         return shape
+    free_form = [e for f in shape.Faces if isinstance(f.Surface, Part.BSplineSurface) for e in f.Edges]
+    faces = [f for f in faces if not any(e.isSame(g) for e in f.Edges for g in free_form)]
+    if not faces:
+        return None
     try:
         base = shape.defeaturing(faces)
         if base.isValid() and len(base.Solids) == 1 and not base.isSame(shape):
@@ -505,6 +670,15 @@ def defeatured(shape, faces):
         except Exception:
             pass
     return base if not base.isSame(shape) else None
+
+
+def notched(shape, features, axis):
+    """The planes normal to the axis cut by the features, not bounded by circles alone: a flat leaves a shoulder that
+    OCCT does not extend when removing it"""
+    return [f for f in shape.Faces
+            if isinstance(f.Surface, Part.Plane) and turns_around(f, axis) and not any(f.isSame(g) for g in features)
+            and any(not isinstance(e.Curve, Part.Circle) for e in f.Edges)
+            and any(e.isSame(h) for e in f.Edges for g in features for h in g.Edges)]
 
 
 def connected(faces):
@@ -659,4 +833,15 @@ def difference(path1, path2):
     """Volume of the symmetric difference of the solids of two STEP files"""
     a = Part.read(path1)
     b = Part.read(path2)
-    return a.cut(b).Volume + b.cut(a).Volume
+    cuts = a.cut(b).Volume + b.cut(a).Volume
+    if len(a.Solids) != 1 or len(b.Solids) != 1:
+        # the volumes of the solids overlapping in an assembly are counted twice: nothing to compare the cuts with
+        return cuts
+    # against a helical thread, the booleans fail, leaving solids whole or empty: they are then made again with a
+    # tolerance, kept when the cuts and the common add up to the volumes
+    for tolerance in (0.0, 1e-4):
+        common = a.common(b, tolerance).Volume
+        a_b, b_a = a.cut(b, tolerance).Volume, b.cut(a, tolerance).Volume
+        if max(abs(common + a_b - a.Volume), abs(common + b_a - b.Volume)) < 1e-3 * a.Volume:
+            return a_b + b_a
+    return cuts
