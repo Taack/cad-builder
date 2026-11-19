@@ -1,6 +1,10 @@
 rootProject.name = 'cad-builder'
 
-include 'cad-dsl', 'cad-groovy-dsl-lsp', 'cad-dsl-native', 'cad-dsl-occt', 'cad-dsl-freecad', 'cad-dsl-step', 'cad-dsl-runner', 'cad-dsl-intellij'
+include 'cad-dsl', 'cad-groovy-dsl-lsp',
+        'cad-dsl-native', 'cad-dsl-occt',
+        'cad-dsl-freecad', 'cad-dsl-step',
+        'cad-dsl-runner', 'cad-dsl-intellij',
+        'cad-dsl-step-native'
 
 /*
 ./gradlew clean
