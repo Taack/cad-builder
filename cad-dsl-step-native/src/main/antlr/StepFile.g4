@@ -1,5 +1,11 @@
 //ISO-10303-21
-grammar step_file;
+grammar StepFile;
+
+@header {
+   package org.taack.cad.step.antlr;
+}
+
+
 step_file
     : 'ISO-10303-21;' header_section data_section 'END-ISO-10303-21;' EOF
     ;

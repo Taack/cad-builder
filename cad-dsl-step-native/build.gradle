@@ -18,6 +18,10 @@ java {
     }
 }
 
+generateGrammarSource {
+    arguments += ["-visitor"]
+}
+
 dependencies {
     // reads the STEP files, and runs the scripts made to check them
     implementation project(':cad-dsl')
