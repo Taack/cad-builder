@@ -1,11 +1,11 @@
 //ISO-10303-21
 grammar step_file;
 step_file
-    : header_section data_section EOF
+    : 'ISO-10303-21;' header_section data_section 'END-ISO-10303-21;' EOF
     ;
 
 header_section
-    : 'ISO-10303-21;' header header_fd header_fn header_sc endsec
+    : header header_fd header_fn header_sc endsec
     ;
 
 header_fd
@@ -50,6 +50,8 @@ exp
             | UNSPECIFIED
             | BOTH
             | LENGTH_MEASURE
+            | STERADIAN
+            | NOT_KNOWN
             | TRUE
             | DOL
             | RADIAN
@@ -94,6 +96,25 @@ data_item
     | data_edge_loop
     | data_plane
     | data_advanced_face
+    | data_fill_area_style_colour
+    | data_mechanical_design_geometric_presentation_representation
+    | data_circle
+    | data_cylindrical_surface
+    | data_face_bound
+    | data_shape_definition_representation
+    | data_product_definition_formation_with_specified_source
+    | data_application_context
+    | data_context_dependent_shape_representation
+    | data_application_protocol_definition
+    | data_spherical_surface
+    | data_product_definition_shape
+    | data_brep_with_voids
+    | data_conical_surface
+    | data_product
+    | data_advanced_brep_shape_representation
+    | data_closed_shell
+    | data_oriented_closed_shell
+    | data_next_assembly_usage_occurrence
     ;
 
 data_item_serie_item
@@ -112,6 +133,10 @@ data_item_serie_item
     | data_item_serie_item_geometric_representation_item
     | data_item_serie_item_rational_b_spline_curve
     | data_item_serie_item_representation_item
+    | data_item_serie_item_solid_angle_unit
+    | data_item_serie_item_representation_relationship
+    | data_item_serie_item_representation_relationship_with_transformation
+    | data_item_serie_item_shape_representation_relationship
     ;
 
  data_item_serie_item_length_unit
@@ -132,6 +157,18 @@ data_item_serie_item
 
   data_item_serie_item_geometric_representation_context
     : 'GEOMETRIC_REPRESENTATION_CONTEXT' par
+    ;
+
+  data_item_serie_item_representation_relationship
+    : 'REPRESENTATION_RELATIONSHIP' par
+    ;
+
+  data_item_serie_item_representation_relationship_with_transformation
+    : 'REPRESENTATION_RELATIONSHIP_WITH_TRANSFORMATION' par
+    ;
+
+  data_item_serie_item_shape_representation_relationship
+    : 'SHAPE_REPRESENTATION_RELATIONSHIP' par
     ;
 
   data_item_serie_item_global_uncertainty_assigned_context
@@ -174,6 +211,10 @@ data_item_serie_item
     : 'REPRESENTATION_ITEM' par
     ;
 
+  data_item_serie_item_solid_angle_unit
+    : 'SOLID_ANGLE_UNIT' par
+    ;
+
 data_list
     : data_length_unit
     | REF_LITERAL '=(' data_item_serie_item+ ')' nl
@@ -184,8 +225,80 @@ data_styled_item
     : 'STYLED_ITEM' par nl
     ;
 
+data_circle
+    : 'CIRCLE' par nl
+    ;
+
+data_brep_with_voids
+    : 'BREP_WITH_VOIDS' par nl
+    ;
+
+data_cylindrical_surface
+    : 'CYLINDRICAL_SURFACE' par nl
+    ;
+
+data_product
+    : 'PRODUCT' par nl
+    ;
+
+data_closed_shell
+    : 'CLOSED_SHELL' par nl
+    ;
+
+data_oriented_closed_shell
+    : 'ORIENTED_CLOSED_SHELL' par nl
+    ;
+
+data_shape_definition_representation
+    : 'SHAPE_DEFINITION_REPRESENTATION' par nl
+    ;
+
+data_face_bound
+    : 'FACE_BOUND' par nl
+    ;
+
+data_product_definition_formation_with_specified_source
+    : 'PRODUCT_DEFINITION_FORMATION_WITH_SPECIFIED_SOURCE' par nl
+    ;
+
+data_application_protocol_definition
+    : 'APPLICATION_PROTOCOL_DEFINITION' par nl
+    ;
+
+data_conical_surface
+    : 'CONICAL_SURFACE' par nl
+    ;
+
+data_next_assembly_usage_occurrence
+    : 'NEXT_ASSEMBLY_USAGE_OCCURRENCE' par nl
+    ;
+
 data_presentation_layer_ass
     : 'PRESENTATION_LAYER_ASSIGNMENT' par nl
+    ;
+
+data_mechanical_design_geometric_presentation_representation
+    : 'MECHANICAL_DESIGN_GEOMETRIC_PRESENTATION_REPRESENTATION' par nl
+    ;
+
+data_context_dependent_shape_representation
+    : 'CONTEXT_DEPENDENT_SHAPE_REPRESENTATION' par nl
+    ;
+
+data_application_context
+    : 'APPLICATION_CONTEXT' par nl
+    ;
+
+data_spherical_surface
+    : 'SPHERICAL_SURFACE' par nl
+    ;
+
+data_product_definition_shape
+    : 'PRODUCT_DEFINITION_SHAPE' par nl
+    ;
+
+data_advanced_brep_shape_representation
+    : 'ADVANCED_BREP_SHAPE_REPRESENTATION' par nl
     ;
 
 data_cartesian_point
@@ -272,6 +385,10 @@ data_oriented_edge
     : 'ORIENTED_EDGE' par nl
     ;
 
+data_fill_area_style_colour
+    : 'FILL_AREA_STYLE_COLOUR' par nl
+    ;
+
 DOUBLE_NUMBER
     : [-0-9.E]+
     ;
@@ -290,6 +407,10 @@ BOTH
 
 FALSE
     : '.F.'
+    ;
+
+NOT_KNOWN
+    : '.NOT_KNOWN.'
     ;
 
 DOL
@@ -318,6 +439,10 @@ STRING_LITERAL
 
 LENGTH_MEASURE
     : 'LENGTH_MEASURE'
+    ;
+
+STERADIAN
+    : '.STERADIAN.'
     ;
 
 ESC: '\\"';
