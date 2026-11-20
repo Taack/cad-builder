@@ -28,16 +28,33 @@ data_length_unit
     : REF_LITERAL '=( LENGTH_UNIT ( ) NAMED_UNIT ( * ) SI_UNIT ( .MILLI., .METRE. ) );'
     ;
 
-data_namr_unit
-    : REF_LITERAL '=( NAMED_UNIT ( * ) PLANE_ANGLE_UNIT ( ) SI_UNIT ( $, .RADIAN. ) );'
+empty_par
+    : '(' ')'
     ;
 
 par
     : '(' exp (sep exp)* ')' (sep exp)*
+    | empty_par
     ;
 
 exp
-    : ( par | (STRING_LITERAL | DOUBLE_NUMBER | INTEGER_NUMBER | REF_LITERAL | ASTERIX | FALSE | UNSPECIFIED | BOTH | LENGTH_MEASURE)  )+
+    : (
+        par
+        |
+            (STRING_LITERAL
+            | DOUBLE_NUMBER
+            | INTEGER_NUMBER
+            | REF_LITERAL
+            | ASTERIX
+            | FALSE
+            | UNSPECIFIED
+            | BOTH
+            | LENGTH_MEASURE
+            | TRUE
+            | DOL
+            | RADIAN
+            )
+      )+
     ;
 
 header
@@ -73,11 +90,93 @@ data_item
     | edge_curve
     | data_uncertainty_measure_with_unit
     | data_presentation_style_assignement
+    | data_face_outer_bound
+    | data_edge_loop
+    | data_plane
+    | data_advanced_face
+    ;
+
+data_item_serie_item
+    : data_item_serie_item_length_unit
+    | data_item_serie_item_named_unit
+    | data_item_serie_item_plane_angle_unit
+    | data_item_serie_item_si_unit
+    | data_item_serie_item_geometric_representation_context
+    | data_item_serie_item_global_uncertainty_assigned_context
+    | data_item_serie_item_global_unit_assigned_context
+    | data_item_serie_item_representation_context
+    | data_item_serie_item_bounded_curve
+    | data_item_serie_item_b_spline_curve
+    | data_item_serie_item_b_spline_curve_with_knots
+    | data_item_serie_item_curve
+    | data_item_serie_item_geometric_representation_item
+    | data_item_serie_item_rational_b_spline_curve
+    | data_item_serie_item_representation_item
+    ;
+
+ data_item_serie_item_length_unit
+    : 'LENGTH_UNIT' par
+    ;
+
+ data_item_serie_item_named_unit
+    : 'NAMED_UNIT' par
+    ;
+
+ data_item_serie_item_plane_angle_unit
+    : 'PLANE_ANGLE_UNIT' par
+    ;
+
+ data_item_serie_item_si_unit
+    : 'SI_UNIT' par
+    ;
+
+  data_item_serie_item_geometric_representation_context
+    : 'GEOMETRIC_REPRESENTATION_CONTEXT' par
+    ;
+
+  data_item_serie_item_global_uncertainty_assigned_context
+    : 'GLOBAL_UNCERTAINTY_ASSIGNED_CONTEXT' par
+    ;
+
+  data_item_serie_item_global_unit_assigned_context
+    : 'GLOBAL_UNIT_ASSIGNED_CONTEXT' par
+    ;
+
+  data_item_serie_item_representation_context
+    : 'REPRESENTATION_CONTEXT' par
+    ;
+
+  data_item_serie_item_bounded_curve
+    : 'BOUNDED_CURVE' par
+    ;
+
+  data_item_serie_item_b_spline_curve
+    : 'B_SPLINE_CURVE' par
+    ;
+
+  data_item_serie_item_b_spline_curve_with_knots
+    : 'B_SPLINE_CURVE_WITH_KNOTS' par
+    ;
+
+  data_item_serie_item_curve
+    : 'CURVE' par
+    ;
+
+  data_item_serie_item_geometric_representation_item
+    : 'GEOMETRIC_REPRESENTATION_ITEM' par
+    ;
+
+  data_item_serie_item_rational_b_spline_curve
+    : 'RATIONAL_B_SPLINE_CURVE' par
+    ;
+
+  data_item_serie_item_representation_item
+    : 'REPRESENTATION_ITEM' par
     ;
 
 data_list
     : data_length_unit
-    | data_namr_unit
+    | REF_LITERAL '=(' data_item_serie_item+ ')' nl
     | REF_LITERAL '=' data_item
     ;
 
@@ -129,12 +228,24 @@ data_surface_style_usage
     : 'SURFACE_STYLE_USAGE' par nl
     ;
 
+data_advanced_face
+    : 'ADVANCED_FACE' par nl
+    ;
+
 data_vertex_point
     : 'VERTEX_POINT' par nl
     ;
 
 data_uncertainty_measure_with_unit
     : 'UNCERTAINTY_MEASURE_WITH_UNIT' par nl
+    ;
+
+data_face_outer_bound
+    : 'FACE_OUTER_BOUND' par nl
+    ;
+
+data_edge_loop
+    : 'EDGE_LOOP' par nl
     ;
 
 data_surface_style_fill_area
@@ -151,6 +262,10 @@ data_presentation_style_assignement
 
 data_line
     : 'LINE' par nl
+    ;
+
+data_plane
+    : 'PLANE' par nl
     ;
 
 data_oriented_edge
@@ -177,6 +292,18 @@ FALSE
     : '.F.'
     ;
 
+DOL
+    : '$'
+    ;
+
+TRUE
+    : '.T.'
+    ;
+
+RADIAN
+    : '.RADIAN.'
+    ;
+
 UNSPECIFIED
     : '.UNSPECIFIED.'
     ;
@@ -190,7 +317,7 @@ STRING_LITERAL
     ;
 
 LENGTH_MEASURE
-    : 'LENGTH_MEASURE' '(' DOUBLE_NUMBER ')'
+    : 'LENGTH_MEASURE'
     ;
 
 ESC: '\\"';
