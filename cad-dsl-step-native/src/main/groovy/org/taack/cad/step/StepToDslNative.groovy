@@ -23,6 +23,7 @@ final class StepToDslNative extends StepFileBaseVisitor {
     private StepToDslNative() {}
 
     private StepFile stepFile
+    private Integer currentId
 
     private static String unquote(String s) {
         if (!s) return s
@@ -43,11 +44,28 @@ final class StepToDslNative extends StepFileBaseVisitor {
         String date = unquote(ctx.par().exp(1).STRING_LITERAL().text)
         String soft =  unquote(ctx.par().exp(2).par().exp(1).par().exp(2).STRING_LITERAL().text)
         stepFile = new StepFile(fn, soft, new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.US).parse(date))
-        println stepFile
         return super.visitHeader_fn(ctx)
     }
 
-    /**
+    @Override
+    Object visitData_list(StepFileParser.Data_listContext ctx) {
+        currentId = ctx.REF_LITERAL().text.substring(1).toInteger()
+        return super.visitData_list(ctx)
+    }
+
+    @Override
+    Object visitData_cartesian_point(StepFileParser.Data_cartesian_pointContext ctx) {
+        List<String> pts = ctx.par().exp(1).par().exp()*.DOUBLE_NUMBER().text
+        StepFile.addPoint(currentId, pts)
+        return super.visitData_cartesian_point(ctx)
+    }
+
+    @Override
+    Object visitEndsec(StepFileParser.EndsecContext ctx) {
+        println stepFile
+        return super.visitEndsec(ctx)
+    }
+/**
      * @return The Groovy script rebuilding the STEP file with the DSL
      */
     String convert(File step) {
