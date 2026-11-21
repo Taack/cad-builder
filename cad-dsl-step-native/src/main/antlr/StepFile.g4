@@ -30,10 +30,6 @@ endsec
     : 'ENDSEC' nl
     ;
 
-data_length_unit
-    : REF_LITERAL '=( LENGTH_UNIT ( ) NAMED_UNIT ( * ) SI_UNIT ( .MILLI., .METRE. ) );'
-    ;
-
 empty_par
     : '(' ')'
     ;
@@ -55,14 +51,16 @@ exp
             | FALSE
             | UNSPECIFIED
             | BOTH
-            | LENGTH_MEASURE
+            | LENGTH_MEASURE par
             | STERADIAN
             | NOT_KNOWN
             | TRUE
             | DOL
             | RADIAN
+            | MILLI
+            | METRE
             )
-      )+
+      )
     ;
 
 header
@@ -222,8 +220,7 @@ data_item_serie_item
     ;
 
 data_list
-    : data_length_unit
-    | REF_LITERAL '=(' data_item_serie_item+ ')' nl
+    : REF_LITERAL '=(' data_item_serie_item+ ')' nl
     | REF_LITERAL '=' data_item
     ;
 
@@ -435,12 +432,24 @@ UNSPECIFIED
     : '.UNSPECIFIED.'
     ;
 
+MILLI
+    : '.MILLI.'
+    ;
+
+METRE
+    : '.METRE.'
+    ;
+
 REF_LITERAL
     : '#' INTEGER_NUMBER
     ;
 
 STRING_LITERAL
-    : '\'' (ESC | .)*? '\''
+    : QUOTE (ESC | .)*? QUOTE
+    ;
+
+QUOTE
+    : '\''
     ;
 
 LENGTH_MEASURE

@@ -5,11 +5,12 @@ import org.antlr.v4.runtime.CharStream
 import org.antlr.v4.runtime.CharStreams
 import org.antlr.v4.runtime.CommonTokenStream
 import org.antlr.v4.runtime.tree.ParseTree
-import org.taack.cad.dsl.CadScript
 import org.taack.cad.step.antlr.StepFileBaseVisitor
 import org.taack.cad.step.antlr.StepFileLexer
 import org.taack.cad.step.antlr.StepFileParser
-import org.taack.cad.step.antlr.StepFileVisitor
+
+import java.text.DateFormat
+import java.text.SimpleDateFormat
 
 /**
  * Converts STEP files to CAD DSL scripts: step2dsl &lt;file.step&gt; [script.groovy] [--check]
@@ -21,6 +22,15 @@ import org.taack.cad.step.antlr.StepFileVisitor
 final class StepToDslNative extends StepFileBaseVisitor {
     private StepToDslNative() {}
 
+    private StepFile stepFile
+
+    private static String unquote(String s) {
+        if (!s) return s
+        if (s[0] == "'") s = s.substring(1)
+        if (s[s.length()-1] == "'") s = s.substring(0, s.length()-1)
+        s
+    }
+
     @Override
     Object visitHeader_fd(StepFileParser.Header_fdContext ctx) {
         println "fd: $ctx"
@@ -29,11 +39,15 @@ final class StepToDslNative extends StepFileBaseVisitor {
 
     @Override
     Object visitHeader_fn(StepFileParser.Header_fnContext ctx) {
-        println "fn: $ctx"
-        println "fn(par): ${ctx.par()}"
+        String fn = unquote(ctx.par().exp(0).text)
+        String date = unquote(ctx.par().exp(1).STRING_LITERAL().text)
+        String soft =  unquote(ctx.par().exp(2).par().exp(1).par().exp(2).STRING_LITERAL().text)
+        stepFile = new StepFile(fn, soft, new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.US).parse(date))
+        println stepFile
         return super.visitHeader_fn(ctx)
     }
-/**
+
+    /**
      * @return The Groovy script rebuilding the STEP file with the DSL
      */
     String convert(File step) {
@@ -50,7 +64,6 @@ final class StepToDslNative extends StepFileBaseVisitor {
     static void main(String[] args) {
         List<String> files = args.findAll { !it.startsWith('-') }
         println "${new File('.').absolutePath}"
-        boolean checking = '--check' in args
         if (!files || files.size() > 2 || args.any { it.startsWith('-') && it != '--check' }) {
             System.err.println '''\
                 Usage: step2dsl <file.step> [script.groovy] [--check]

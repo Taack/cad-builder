@@ -91,18 +91,6 @@ public class StepFileBaseListener implements StepFileListener {
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void enterData_length_unit(StepFileParser.Data_length_unitContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
-	@Override public void exitData_length_unit(StepFileParser.Data_length_unitContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
 	@Override public void enterEmpty_par(StepFileParser.Empty_parContext ctx) { }
 	/**
 	 * {@inheritDoc}

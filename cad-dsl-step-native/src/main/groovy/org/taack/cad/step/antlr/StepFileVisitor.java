@@ -49,12 +49,6 @@ public interface StepFileVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitEndsec(StepFileParser.EndsecContext ctx);
 	/**
-	 * Visit a parse tree produced by {@link StepFileParser#data_length_unit}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitData_length_unit(StepFileParser.Data_length_unitContext ctx);
-	/**
 	 * Visit a parse tree produced by {@link StepFileParser#empty_par}.
 	 * @param ctx the parse tree
 	 * @return the visitor result

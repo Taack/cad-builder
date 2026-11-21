@@ -70,16 +70,6 @@ public interface StepFileListener extends ParseTreeListener {
 	 */
 	void exitEndsec(StepFileParser.EndsecContext ctx);
 	/**
-	 * Enter a parse tree produced by {@link StepFileParser#data_length_unit}.
-	 * @param ctx the parse tree
-	 */
-	void enterData_length_unit(StepFileParser.Data_length_unitContext ctx);
-	/**
-	 * Exit a parse tree produced by {@link StepFileParser#data_length_unit}.
-	 * @param ctx the parse tree
-	 */
-	void exitData_length_unit(StepFileParser.Data_length_unitContext ctx);
-	/**
 	 * Enter a parse tree produced by {@link StepFileParser#empty_par}.
 	 * @param ctx the parse tree
 	 */
