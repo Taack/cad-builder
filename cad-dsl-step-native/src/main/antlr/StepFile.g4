@@ -119,6 +119,14 @@ data_item
     | data_closed_shell
     | data_oriented_closed_shell
     | data_next_assembly_usage_occurrence
+    | data_manifold_solid_brep
+    | data_shape_representation_relationship
+    | data_item_defined_transformation
+    | data_product_context
+    | data_product_definition
+    | data_shape_representation
+    | data_product_related_product_category
+    | data_product_definition_context
     ;
 
 data_item_serie_item
@@ -390,6 +398,38 @@ data_oriented_edge
 
 data_fill_area_style_colour
     : 'FILL_AREA_STYLE_COLOUR' par nl
+    ;
+
+data_manifold_solid_brep
+    : 'MANIFOLD_SOLID_BREP' par nl
+    ;
+
+data_shape_representation_relationship
+    : 'SHAPE_REPRESENTATION_RELATIONSHIP' par nl
+    ;
+
+data_item_defined_transformation
+    : 'ITEM_DEFINED_TRANSFORMATION' par nl
+    ;
+
+data_product_context
+    : 'PRODUCT_CONTEXT' par nl
+    ;
+
+data_product_definition
+    : 'PRODUCT_DEFINITION' par nl
+    ;
+
+data_shape_representation
+    : 'SHAPE_REPRESENTATION' par nl
+    ;
+
+data_product_related_product_category
+    : 'PRODUCT_RELATED_PRODUCT_CATEGORY' par nl
+    ;
+
+data_product_definition_context
+    : 'PRODUCT_DEFINITION_CONTEXT' par nl
     ;
 
 DOUBLE_NUMBER

@@ -77,7 +77,7 @@ final class StepToDslNative extends StepFileBaseVisitor {
 
     @Override
     Object visitEndsec(StepFileParser.EndsecContext ctx) {
-        println stepFile
+        //println stepFile
         return super.visitEndsec(ctx)
     }
 
@@ -109,6 +109,12 @@ final class StepToDslNative extends StepFileBaseVisitor {
                                                  ctx.par().exp(2).REF_LITERAL().text.substring(1),
                                                  ctx.par().exp(3).REF_LITERAL().text.substring(1)])
         return super.visitData_axis2_placement_3d(ctx)
+    }
+
+    @Override
+    Object visitData_edge_loop(StepFileParser.Data_edge_loopContext ctx) {
+        StepFile.addEdgeLoop(currentId, ctx.par().exp(1).par().exp()*.REF_LITERAL().text*.substring(1))
+        return super.visitData_edge_loop(ctx)
     }
 
     @Override

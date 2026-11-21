@@ -159,6 +159,26 @@ class StepFile {
     }
 
     @CompileStatic
+    final static class EdgeLoop {
+        private final List<Integer> oeList
+
+        private EdgeLoop(List<Integer> oe) {
+            this.oeList = oe
+        }
+
+        static EdgeLoop valueOfEdgeLoop(List<Integer> orientedEdges) {
+            return new EdgeLoop(orientedEdges)
+        }
+
+        @Override
+        String toString() {
+            return "EdgeLoop{" +
+                    "oeList=" + oeList +
+                    '}'
+        }
+    }
+
+    @CompileStatic
     final static class Point {
         private final double x
         private final double y
@@ -202,6 +222,7 @@ class StepFile {
     private static final Map<Integer, Vector> vectorMap = [:]
     private static final Map<Integer, EdgeCurve> edgeCurveMap = [:]
     private static final Map<Integer, OrientedEdge> orientedEdgeMap = [:]
+    private static final Map<Integer, EdgeLoop> edgeLoopMap = [:]
     private static final Map<Integer, Axis2Placement3d> axis2Placement3dMap = [:]
 
     static void addPoint(Integer id, double x, double y, double z) {
@@ -252,6 +273,10 @@ class StepFile {
         orientedEdgeMap.put(id, OrientedEdge.valueOfOrientedEdge(text.toInteger(), sameSense))
     }
 
+    static void addEdgeLoop(Integer id, List<String> text) {
+        edgeLoopMap.put(id, EdgeLoop.valueOfEdgeLoop(text*.toInteger()))
+    }
+
     @Override
     String toString() {
         return "StepFile{" +
@@ -265,7 +290,8 @@ class StepFile {
                 "colorMap=" + colorMap + '\n' +
                 "vertexPointMap=" + vertexPointMap + '\n' +
                 "vectorMap=" + vectorMap + '\n' +
-                "axis2Placement3d=" + axis2Placement3dMap + '\n' +
+                "axis2Placement3dMap=" + axis2Placement3dMap + '\n' +
+                "edgeLoopMap=" + edgeLoopMap + '\n' +
                 '}'
     }
 }
