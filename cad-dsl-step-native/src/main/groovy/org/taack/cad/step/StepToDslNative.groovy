@@ -73,7 +73,7 @@ final class StepToDslNative extends StepFileBaseVisitor {
 
     @Override
     Object visitData_color_rgb(StepFileParser.Data_color_rgbContext ctx) {
-        StepFile.addCol(currentId, ctx.par().exp(1).par().exp()*.DOUBLE_NUMBER().text)
+        StepFile.addCol(currentId, ctx.par().exp()[1..3]*.DOUBLE_NUMBER().text)
         return super.visitData_color_rgb(ctx)
     }
 
@@ -82,7 +82,20 @@ final class StepToDslNative extends StepFileBaseVisitor {
         println stepFile
         return super.visitEndsec(ctx)
     }
-/**
+
+    @Override
+    Object visitData_vector(StepFileParser.Data_vectorContext ctx) {
+        StepFile.addVector(currentId, [ctx.par().exp(1).REF_LITERAL().text.substring(1), ctx.par().exp(2).DOUBLE_NUMBER().text])
+        return super.visitData_vector(ctx)
+    }
+
+    @Override
+    Object visitData_vertex_point(StepFileParser.Data_vertex_pointContext ctx) {
+        StepFile.addVertexPoint(currentId, ctx.par().exp(1).REF_LITERAL().text.substring(1))
+        return super.visitData_vertex_point(ctx)
+    }
+
+    /**
      * @return The Groovy script rebuilding the STEP file with the DSL
      */
     String convert(File step) {

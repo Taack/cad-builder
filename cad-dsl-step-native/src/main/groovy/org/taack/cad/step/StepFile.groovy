@@ -14,6 +14,7 @@ class StepFile {
         this.creationDate = creationDate
     }
 
+    @CompileStatic
     final static class Line {
         private final Integer p1
         private final Integer p2
@@ -25,6 +26,34 @@ class StepFile {
 
         static Line valueOfLine(Integer p1, Integer p2) {
             return new Line(p1, p2)
+        }
+    }
+
+    @CompileStatic
+    final static class VertexPoint {
+        private final Integer p1
+
+        private VertexPoint(Integer p1) {
+            this.p1 = p1
+        }
+
+        static VertexPoint valueOfVertexPoint(Integer p1) {
+            return new VertexPoint(p1)
+        }
+    }
+
+    @CompileStatic
+    final static class Vector {
+        private final Integer p1
+        private final double length
+
+        private Vector(Integer p1, double length) {
+            this.p1 = p1
+            this.length = length
+        }
+
+        static Vector valueOfVector(Integer p1, double length) {
+            return new Vector(p1, length)
         }
     }
 
@@ -68,6 +97,8 @@ class StepFile {
     private static final Map<Integer, Point> dirMap = [:]
     private static final Map<Integer, Line> lineMap = [:]
     private static final Map<Integer, Point> colorMap = [:]
+    private static final Map<Integer, VertexPoint> vertexPointMap = [:]
+    private static final Map<Integer, Vector> vectorMap = [:]
 
     static void addPoint(Integer id, double x, double y, double z) {
         pointMap.put(id, Point.valueOfPoint(x, y, z))
@@ -95,6 +126,14 @@ class StepFile {
 
     static void addLine(Integer id, List<String> text) {
         lineMap.put(id, Line.valueOfLine(text[0].toInteger(), text[0].toInteger()))
+    }
+
+    static void addVertexPoint(Integer id, String text) {
+        vertexPointMap.put(id, VertexPoint.valueOfVertexPoint(text.toInteger()))
+    }
+
+    static void addVector(Integer id, List<String> text) {
+        vectorMap.put(id, Vector.valueOfVector(text[0].toInteger(), text[1].toDouble()))
     }
 
     @Override
