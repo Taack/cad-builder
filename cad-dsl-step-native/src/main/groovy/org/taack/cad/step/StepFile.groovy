@@ -1,6 +1,7 @@
 package org.taack.cad.step
 
 import groovy.transform.CompileStatic
+import static java.lang.Math.*
 
 @CompileStatic
 class StepFile {
@@ -49,10 +50,15 @@ class StepFile {
             return new VertexPoint(p1)
         }
 
+        Point getPoint() {
+            pointMap[p1]
+        }
+
         @Override
         String toString() {
             return "VertexPoint{" +
                     "p1=" + p1 +
+                    ", point=" + point +
                     '}'
         }
     }
@@ -94,6 +100,18 @@ class StepFile {
             this.sameSense = sameSense
         }
 
+        VertexPoint getVertexPoint1() {
+            vertexPointMap[vp1]
+        }
+
+        VertexPoint getVertexPoint2() {
+            vertexPointMap[vp1]
+        }
+
+        VertexPoint getVertexPoint3() {
+            vertexPointMap[vp1]
+        }
+
         static EdgeCurve valueOfEdgeCurve(Integer vp1, Integer vp2, Integer vp3, Boolean sameSense) {
             return new EdgeCurve(vp1, vp2, vp3, sameSense)
         }
@@ -104,6 +122,9 @@ class StepFile {
                     "vp1=" + vp1 +
                     ", vp2=" + vp2 +
                     ", vp3=" + vp3 +
+                    ", vertexPoint1=" + vertexPoint1 +
+                    ", vertexPoint2=" + vertexPoint2 +
+                    ", vertexPoint3=" + vertexPoint3 +
                     ", sameSense=" + sameSense +
                     '}'
         }
@@ -137,11 +158,11 @@ class StepFile {
 
     @CompileStatic
     final static class OrientedEdge {
-        private final Integer vp1
+        private final Integer ec
         private final Boolean sameSense
 
-        private OrientedEdge(Integer vp1, Boolean sameSense) {
-            this.vp1 = vp1
+        private OrientedEdge(Integer edgeCurve, Boolean sameSense) {
+            this.ec = edgeCurve
             this.sameSense = sameSense
         }
 
@@ -149,10 +170,15 @@ class StepFile {
             return new OrientedEdge(vp1, sameSense)
         }
 
+        EdgeCurve getEdgeCurve() {
+            edgeCurveMap[ec]
+        }
+
         @Override
         String toString() {
             return "OrientedEdge{" +
-                    "vp1=" + vp1 +
+                    "vp1=" + ec +
+                    ", edgeCurve=" + edgeCurve +
                     ", sameSense=" + sameSense +
                     '}'
         }
@@ -170,10 +196,17 @@ class StepFile {
             return new EdgeLoop(orientedEdges)
         }
 
+        List<OrientedEdge> getOrientedEdges() {
+            oeList.collect {
+                orientedEdgeMap[it]
+            }
+        }
+
         @Override
         String toString() {
             return "EdgeLoop{" +
                     "oeList=" + oeList +
+                    ", orientedEdges=" + orientedEdges +
                     '}'
         }
     }
@@ -195,6 +228,22 @@ class StepFile {
         private static boolean isOrigin(double x, double y, double z) {
             return x == 0 && y == 0 && z == 0;
         }
+
+        Point minus(Point other) {
+            valueOfPoint(other.x - x, other.y - y, other.z - z)
+        }
+
+        double abs(Point other) {
+            abs(x - other.x) + abs(y - other.y) + abs(z - other.z)
+        }
+        Map<Integer, Point> closestPointMap(double tol = 0.0d) {
+            pointMap.findAll { abs(it.value) <= tol }
+        }
+
+        Map<Integer, Point> symetricalPointMap(Point center = ORIGIN, double tol = 0.0d) {
+            pointMap.findAll { (it.value - this).abs(center) <= tol }
+        }
+
 
         static Point valueOfPoint(double x, double y, double z) {
             // returns a cached instance if it is the origin, or a new instance
@@ -283,15 +332,15 @@ class StepFile {
                 "fileName='" + fileName + '\'' +
                 ", software='" + software + '\'' +
                 ", creationDate=" + creationDate + '\n' +
-                "pointMap=" + pointMap + '\n' +
-                "dirMap=" + dirMap + '\n' +
-                "edgeCurveMap=" + edgeCurveMap + '\n' +
-                "lineMap=" + lineMap + '\n' +
-                "colorMap=" + colorMap + '\n' +
-                "vertexPointMap=" + vertexPointMap + '\n' +
-                "vectorMap=" + vectorMap + '\n' +
-                "axis2Placement3dMap=" + axis2Placement3dMap + '\n' +
-                "edgeLoopMap=" + edgeLoopMap + '\n' +
+                "pointMap=" + pointMap.size() + '\n' +
+                "dirMap=" + dirMap.size() + '\n' +
+                "edgeCurveMap=" + edgeCurveMap.size() + '\n' +
+                "lineMap=" + lineMap.size() + '\n' +
+                "colorMap=" + colorMap.size() + '\n' +
+                "vertexPointMap=" + vertexPointMap.size() + '\n' +
+                "vectorMap=" + vectorMap.size() + '\n' +
+                "axis2Placement3dMap=" + axis2Placement3dMap.size() + '\n' +
+                "edgeLoopMap=" + edgeLoopMap.size() + '\n' +
                 '}'
     }
 }

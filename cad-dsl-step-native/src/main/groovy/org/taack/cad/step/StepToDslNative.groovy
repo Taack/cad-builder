@@ -77,7 +77,7 @@ final class StepToDslNative extends StepFileBaseVisitor {
 
     @Override
     Object visitEndsec(StepFileParser.EndsecContext ctx) {
-        //println stepFile
+        println stepFile
         return super.visitEndsec(ctx)
     }
 
