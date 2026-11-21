@@ -14,6 +14,20 @@ class StepFile {
         this.creationDate = creationDate
     }
 
+    final static class Line {
+        private final Integer p1
+        private final Integer p2
+
+        private Line(Integer p1, Integer p2) {
+            this.p1 = p1
+            this.p2 = p2
+        }
+
+        static Line valueOfLine(Integer p1, Integer p2) {
+            return new Line(p1, p2)
+        }
+    }
+
     @CompileStatic
     final static class Point {
         private final double x
@@ -51,13 +65,36 @@ class StepFile {
     }
 
     private static final Map<Integer, Point> pointMap = [:]
+    private static final Map<Integer, Point> dirMap = [:]
+    private static final Map<Integer, Line> lineMap = [:]
+    private static final Map<Integer, Point> colorMap = [:]
 
     static void addPoint(Integer id, double x, double y, double z) {
         pointMap.put(id, Point.valueOfPoint(x, y, z))
     }
 
+    static void addDir(Integer id, double x, double y, double z) {
+        dirMap.put(id, Point.valueOfPoint(x, y, z))
+    }
+
+    static void addCol(Integer id, double x, double y, double z) {
+        colorMap.put(id, Point.valueOfPoint(x, y, z))
+    }
+
     static void addPoint(Integer id, List<String> text) {
-        pointMap.put(id, Point.valueOfPoint(text[0].toDouble(), text[1].toDouble(), text[2].toDouble()))
+        addPoint(id, text[0].toDouble(), text[1].toDouble(), text[2].toDouble())
+    }
+
+    static void addDir(Integer id, List<String> text) {
+        addDir(id, text[0].toDouble(), text[1].toDouble(), text[2].toDouble())
+    }
+
+    static void addCol(Integer id, List<String> text) {
+        addCol(id, text[0].toDouble(), text[1].toDouble(), text[2].toDouble())
+    }
+
+    static void addLine(Integer id, List<String> text) {
+        lineMap.put(id, Line.valueOfLine(text[0].toInteger(), text[0].toInteger()))
     }
 
     @Override

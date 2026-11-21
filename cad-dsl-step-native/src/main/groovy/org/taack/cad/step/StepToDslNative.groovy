@@ -55,9 +55,26 @@ final class StepToDslNative extends StepFileBaseVisitor {
 
     @Override
     Object visitData_cartesian_point(StepFileParser.Data_cartesian_pointContext ctx) {
-        List<String> pts = ctx.par().exp(1).par().exp()*.DOUBLE_NUMBER().text
-        StepFile.addPoint(currentId, pts)
+        StepFile.addPoint(currentId, ctx.par().exp(1).par().exp()*.DOUBLE_NUMBER().text)
         return super.visitData_cartesian_point(ctx)
+    }
+
+    @Override
+    Object visitData_line(StepFileParser.Data_lineContext ctx) {
+        StepFile.addLine(currentId, [ctx.par().exp(1).REF_LITERAL().text.substring(1), ctx.par().exp(2).REF_LITERAL().text.substring(1)])
+        return super.visitData_line(ctx)
+    }
+
+    @Override
+    Object visitData_direction(StepFileParser.Data_directionContext ctx) {
+        StepFile.addDir(currentId, ctx.par().exp(1).par().exp()*.DOUBLE_NUMBER().text)
+        return super.visitData_direction(ctx)
+    }
+
+    @Override
+    Object visitData_color_rgb(StepFileParser.Data_color_rgbContext ctx) {
+        StepFile.addCol(currentId, ctx.par().exp(1).par().exp()*.DOUBLE_NUMBER().text)
+        return super.visitData_color_rgb(ctx)
     }
 
     @Override
