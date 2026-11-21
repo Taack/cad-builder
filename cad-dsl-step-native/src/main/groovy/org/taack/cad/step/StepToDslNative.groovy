@@ -9,7 +9,6 @@ import org.taack.cad.step.antlr.StepFileBaseVisitor
 import org.taack.cad.step.antlr.StepFileLexer
 import org.taack.cad.step.antlr.StepFileParser
 
-import java.text.DateFormat
 import java.text.SimpleDateFormat
 
 /**
@@ -34,7 +33,6 @@ final class StepToDslNative extends StepFileBaseVisitor {
 
     @Override
     Object visitHeader_fd(StepFileParser.Header_fdContext ctx) {
-        println "fd: $ctx"
         return super.visitHeader_fd(ctx)
     }
 
@@ -90,6 +88,30 @@ final class StepToDslNative extends StepFileBaseVisitor {
     }
 
     @Override
+    Object visitEdge_curve(StepFileParser.Edge_curveContext ctx) {
+        StepFile.addEdgeCurve(currentId, [ctx.par().exp(1).REF_LITERAL().text.substring(1),
+                                          ctx.par().exp(2).REF_LITERAL().text.substring(1),
+                                          ctx.par().exp(3).REF_LITERAL().text.substring(1)],
+                                          ctx.par().exp(4).TRUE() ? true : false )
+        return super.visitEdge_curve(ctx)
+    }
+
+    @Override
+    Object visitData_oriented_edge(StepFileParser.Data_oriented_edgeContext ctx) {
+        StepFile.addOrientedEdge(currentId, ctx.par().exp(3).REF_LITERAL().text.substring(1),
+                                ctx.par().exp(4).TRUE() ? true : false)
+        return super.visitData_oriented_edge(ctx)
+    }
+
+    @Override
+    Object visitData_axis2_placement_3d(StepFileParser.Data_axis2_placement_3dContext ctx) {
+        StepFile.addAxis2Placement3d(currentId, [ctx.par().exp(1).REF_LITERAL().text.substring(1),
+                                                 ctx.par().exp(2).REF_LITERAL().text.substring(1),
+                                                 ctx.par().exp(3).REF_LITERAL().text.substring(1)])
+        return super.visitData_axis2_placement_3d(ctx)
+    }
+
+    @Override
     Object visitData_vertex_point(StepFileParser.Data_vertex_pointContext ctx) {
         StepFile.addVertexPoint(currentId, ctx.par().exp(1).REF_LITERAL().text.substring(1))
         return super.visitData_vertex_point(ctx)
@@ -104,7 +126,6 @@ final class StepToDslNative extends StepFileBaseVisitor {
         StepFileLexer lexer = new StepFileLexer(input)
         CommonTokenStream tokens = new CommonTokenStream(lexer)
         StepFileParser parser = new StepFileParser(tokens)
-
         ParseTree tree = parser.step_file()
         visit(tree)
     }

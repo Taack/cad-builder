@@ -27,6 +27,14 @@ class StepFile {
         static Line valueOfLine(Integer p1, Integer p2) {
             return new Line(p1, p2)
         }
+
+        @Override
+        String toString() {
+            return "Line{" +
+                    "p1=" + p1 +
+                    ", p2=" + p2 +
+                    '}'
+        }
     }
 
     @CompileStatic
@@ -39,6 +47,13 @@ class StepFile {
 
         static VertexPoint valueOfVertexPoint(Integer p1) {
             return new VertexPoint(p1)
+        }
+
+        @Override
+        String toString() {
+            return "VertexPoint{" +
+                    "p1=" + p1 +
+                    '}'
         }
     }
 
@@ -54,6 +69,92 @@ class StepFile {
 
         static Vector valueOfVector(Integer p1, double length) {
             return new Vector(p1, length)
+        }
+
+        @Override
+        String toString() {
+            return "Vector{" +
+                    "p1=" + p1 +
+                    ", length=" + length +
+                    '}'
+        }
+    }
+
+    @CompileStatic
+    final static class EdgeCurve {
+        private final Integer vp1
+        private final Integer vp2
+        private final Integer vp3
+        private final Boolean sameSense
+
+        private EdgeCurve(Integer vp1, Integer vp2, Integer vp3, Boolean sameSense) {
+            this.vp1 = vp1
+            this.vp2 = vp2
+            this.vp3 = vp3
+            this.sameSense = sameSense
+        }
+
+        static EdgeCurve valueOfEdgeCurve(Integer vp1, Integer vp2, Integer vp3, Boolean sameSense) {
+            return new EdgeCurve(vp1, vp2, vp3, sameSense)
+        }
+
+        @Override
+        String toString() {
+            return "EdgeCurve{" +
+                    "vp1=" + vp1 +
+                    ", vp2=" + vp2 +
+                    ", vp3=" + vp3 +
+                    ", sameSense=" + sameSense +
+                    '}'
+        }
+    }
+
+    @CompileStatic
+    final static class Axis2Placement3d {
+        private final Integer p1
+        private final Integer p2
+        private final Integer p3
+
+        private Axis2Placement3d(Integer p1, Integer p2, Integer p3) {
+            this.p1 = p1
+            this.p2 = p2
+            this.p3 = p3
+        }
+
+        static Axis2Placement3d valueOfAxis2Placement3d(Integer p1, Integer p2, Integer p3) {
+            return new Axis2Placement3d(p1, p2, p3)
+        }
+
+        @Override
+        String toString() {
+            return "Axis2Placement3d{" +
+                    "p1=" + p1 +
+                    ", p2=" + p2 +
+                    ", p3=" + p3 +
+                    '}'
+        }
+    }
+
+    @CompileStatic
+    final static class OrientedEdge {
+        private final Integer vp1
+        private final Boolean sameSense
+
+        private OrientedEdge(Integer vp1, Boolean sameSense) {
+            this.vp1 = vp1
+            this.sameSense = sameSense
+        }
+
+        static OrientedEdge valueOfOrientedEdge(Integer vp1, Boolean sameSense) {
+            return new OrientedEdge(vp1, sameSense)
+        }
+
+        @Override
+        String toString() {
+            return "OrientedEdge{" +
+                    "vp1=" + vp1 +
+                    ", sameSense=" + sameSense +
+                    '}'
         }
     }
 
@@ -99,6 +200,9 @@ class StepFile {
     private static final Map<Integer, Point> colorMap = [:]
     private static final Map<Integer, VertexPoint> vertexPointMap = [:]
     private static final Map<Integer, Vector> vectorMap = [:]
+    private static final Map<Integer, EdgeCurve> edgeCurveMap = [:]
+    private static final Map<Integer, OrientedEdge> orientedEdgeMap = [:]
+    private static final Map<Integer, Axis2Placement3d> axis2Placement3dMap = [:]
 
     static void addPoint(Integer id, double x, double y, double z) {
         pointMap.put(id, Point.valueOfPoint(x, y, z))
@@ -136,13 +240,32 @@ class StepFile {
         vectorMap.put(id, Vector.valueOfVector(text[0].toInteger(), text[1].toDouble()))
     }
 
+    static void addEdgeCurve(Integer id, List<String> text, boolean sameSense) {
+        edgeCurveMap.put(id, EdgeCurve.valueOfEdgeCurve(text[0].toInteger(), text[1].toInteger(), text[2].toInteger(), sameSense))
+    }
+
+    static void addAxis2Placement3d(Integer id, List<String> text) {
+        axis2Placement3dMap.put(id, Axis2Placement3d.valueOfAxis2Placement3d(text[0].toInteger(), text[1].toInteger(), text[2].toInteger()))
+    }
+
+    static void addOrientedEdge(Integer id, String text, boolean sameSense) {
+        orientedEdgeMap.put(id, OrientedEdge.valueOfOrientedEdge(text.toInteger(), sameSense))
+    }
+
     @Override
     String toString() {
         return "StepFile{" +
                 "fileName='" + fileName + '\'' +
                 ", software='" + software + '\'' +
-                ", creationDate=" + creationDate +
-                pointMap +
+                ", creationDate=" + creationDate + '\n' +
+                "pointMap=" + pointMap + '\n' +
+                "dirMap=" + dirMap + '\n' +
+                "edgeCurveMap=" + edgeCurveMap + '\n' +
+                "lineMap=" + lineMap + '\n' +
+                "colorMap=" + colorMap + '\n' +
+                "vertexPointMap=" + vertexPointMap + '\n' +
+                "vectorMap=" + vectorMap + '\n' +
+                "axis2Placement3d=" + axis2Placement3dMap + '\n' +
                 '}'
     }
 }
