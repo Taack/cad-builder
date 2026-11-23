@@ -25,6 +25,7 @@ generateGrammarSource {
 dependencies {
     // reads the STEP files, and runs the scripts made to check them
     implementation project(':cad-dsl')
+    implementation 'org.apache.commons:commons-collections4:4.6.0'
     antlr "org.antlr:antlr4:4.13.2"
     testImplementation testFixtures(project(':cad-dsl'))
     testImplementation platform('org.junit:junit-bom:6.0.3')

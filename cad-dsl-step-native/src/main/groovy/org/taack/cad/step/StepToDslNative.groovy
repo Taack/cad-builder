@@ -78,6 +78,7 @@ final class StepToDslNative extends StepFileBaseVisitor {
     @Override
     Object visitEndsec(StepFileParser.EndsecContext ctx) {
         println stepFile
+        stepFile.computeClosestPointMap()
         return super.visitEndsec(ctx)
     }
 
@@ -137,18 +138,11 @@ final class StepToDslNative extends StepFileBaseVisitor {
     }
 
     static void main(String[] args) {
-        List<String> files = args.findAll { !it.startsWith('-') }
-        println "${new File('.').absolutePath}"
-        if (!files || files.size() > 2 || args.any { it.startsWith('-') && it != '--check' }) {
-            System.err.println '''\
-                Usage: step2dsl <file.step> [script.groovy] [--check]
-                Writes the CAD DSL script rebuilding the STEP file, to the standard output when no script is given.
-                --check runs the script with the FreeCAD kernel, and prints how far what it builds is from the STEP file.'''.stripIndent()
-            System.exit(args.any { it in ['-h', '--help'] } ? 0 : 2)
-        }
-        File step = new File(files[0])
+        File step = new File('test.step')
         StepToDslNative stepToDsl = new StepToDslNative()
         String script = stepToDsl.convert(step)
+
+
         println script
         System.exit(0)
     }

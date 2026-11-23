@@ -1,7 +1,9 @@
 package org.taack.cad.step
 
 import groovy.transform.CompileStatic
-import static java.lang.Math.*
+import org.apache.commons.collections4.map.MultiKeyMap
+
+import static java.lang.Math.abs
 
 @CompileStatic
 class StepFile {
@@ -233,15 +235,15 @@ class StepFile {
             valueOfPoint(other.x - x, other.y - y, other.z - z)
         }
 
-        double abs(Point other) {
+        double pabs(Point other) {
             abs(x - other.x) + abs(y - other.y) + abs(z - other.z)
         }
-        Map<Integer, Point> closestPointMap(double tol = 0.0d) {
-            pointMap.findAll { abs(it.value) <= tol }
+        Map<Integer, Point> computeClosestPointMap(double tol = 0.0d) {
+            pointMap.findAll { pabs(it.value) <= tol }
         }
 
         Map<Integer, Point> symetricalPointMap(Point center = ORIGIN, double tol = 0.0d) {
-            pointMap.findAll { (it.value - this).abs(center) <= tol }
+            pointMap.findAll { (it.value - this).pabs(center) <= tol }
         }
 
 
@@ -264,6 +266,7 @@ class StepFile {
     }
 
     private static final Map<Integer, Point> pointMap = [:]
+    private static final MultiKeyMap<Integer, Point> commonPoints = new MultiKeyMap<>()
     private static final Map<Integer, Point> dirMap = [:]
     private static final Map<Integer, Line> lineMap = [:]
     private static final Map<Integer, Point> colorMap = [:]
@@ -326,6 +329,20 @@ class StepFile {
         edgeLoopMap.put(id, EdgeLoop.valueOfEdgeLoop(text*.toInteger()))
     }
 
+    static computeClosestPointMap() {
+        pointMap.each { Map.Entry<Integer, Point> entryOut ->
+            List<Integer> cpl = entryOut.value.computeClosestPointMap()*.key
+            cpl.each{ int entryInKey ->
+                if (entryInKey != entryOut.key && !commonPoints.get(entryInKey, entryOut.key))
+                    commonPoints.put(entryOut.key, entryInKey ,entryOut.value)
+            }
+        }
+        println "commonPoints = ${commonPoints.size()}"
+        println "pointMap = ${pointMap.size()}"
+        List<Integer[]> commonEntriesInAL = commonPoints.keySet()*.keys
+        Set<Integer> commonEntriesIn = commonEntriesInAL.collect {it.length > 1 ? it[1] : null} as Set<Integer>
+        println "pointMap w/o commons= ${(pointMap.keySet() - commonEntriesIn).size()}"
+    }
     @Override
     String toString() {
         return "StepFile{" +
