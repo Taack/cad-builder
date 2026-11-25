@@ -13,9 +13,11 @@
 #include <BRepCheck_Analyzer.hxx>
 #include <BRepBndLib.hxx>
 #include <Bnd_Box.hxx>
+#include <BRepOffsetAPI_DraftAngle.hxx>
 #include <BRepOffsetAPI_MakeOffset.hxx>
 #include <BRepAdaptor_CompCurve.hxx>
 #include <BRepAdaptor_Surface.hxx>
+#include <BRep_Tool.hxx>
 #include <BRepBuilderAPI_MakeEdge.hxx>
 #include <BRepBuilderAPI_MakeWire.hxx>
 #include <BRepBuilderAPI_MakeFace.hxx>
@@ -120,14 +122,59 @@ static TopoDS_Face planar_face(const gp_Pln &plane, const TopoDS_Wire &wire) {
     return face;
 }
 
-// The solid of LocOpe_DPrism for face, or a null shape when it fails
-static TopoDS_Shape dprism(const TopoDS_Face &face, double height, double angle) {
+// LocOpe_DPrism rounds each sharp corner of the contour moving outward by a cone of apex the corner: a degenerate face
+// that booleans lose, without an error (the common of the prism with a solid crossing it is empty, or all of it); the
+// walls of a molded part meet at a sharp edge there
+static bool has_corner_cone(const TopoDS_Shape &solid) {
+    for (TopExp_Explorer face(solid, TopAbs_FACE); face.More(); face.Next()) {
+        BRepAdaptor_Surface surface(TopoDS::Face(face.Current()), false);
+        if (surface.GetType() != GeomAbs_Cone) continue;
+        gp_Pnt apex = surface.Cone().Apex();
+        for (TopExp_Explorer vertex(face.Current(), TopAbs_VERTEX); vertex.More(); vertex.Next())
+            if (BRep_Tool::Pnt(TopoDS::Vertex(vertex.Current())).Distance(apex) < 1e-6) return true;
+    }
+    return false;
+}
+
+// The solid of LocOpe_DPrism for face, or a null shape when it fails or has corner cones, then kept in cornered if it
+// is still null
+static TopoDS_Shape dprism(const TopoDS_Face &face, double height, double angle, TopoDS_Shape *cornered = nullptr) {
     try {
         // its length is along the walls
         LocOpe_DPrism prism(face, height / std::cos(angle), angle);
         if (prism.IsDone()) {
             TopExp_Explorer solid(prism.Shape(), TopAbs_SOLID);
-            if (solid.More() && BRepCheck_Analyzer(solid.Current()).IsValid()) return solid.Current();
+            if (solid.More() && BRepCheck_Analyzer(solid.Current()).IsValid()) {
+                if (!has_corner_cone(solid.Current())) return solid.Current();
+                if (cornered && cornered->IsNull()) *cornered = solid.Current();
+            }
+        }
+    } catch (const Standard_Failure &) {
+    }
+    return TopoDS_Shape();
+}
+
+// The straight prism of face along the normal of plane, its side faces then leaning by angle around their edges in
+// plane (BRepOffsetAPI_DraftAngle), the sharp corners staying sharp; a null shape when it fails
+static TopoDS_Shape draft_angle(const gp_Pln &plane, const TopoDS_Face &face, double height, double angle) {
+    try {
+        gp_Dir normal = plane.Axis().Direction();
+        BRepPrimAPI_MakePrism prism(face, gp_Vec(normal) * height);
+        TopoDS_Shape bottom = prism.FirstShape(), top = prism.LastShape();
+        BRepOffsetAPI_DraftAngle draft(prism.Shape());
+        // angle is from the normal of the face, as LocOpe_DPrism takes it, the draft from the way the prism goes
+        gp_Dir pull = height > 0 ? normal : normal.Reversed();
+        for (TopExp_Explorer side(prism.Shape(), TopAbs_FACE); side.More(); side.Next()) {
+            if (side.Current().IsSame(bottom) || side.Current().IsSame(top)) continue;
+            draft.Add(TopoDS::Face(side.Current()), pull, height > 0 ? angle : -angle, plane);
+            if (!draft.AddDone()) return TopoDS_Shape();
+        }
+        draft.Build();
+        if (!draft.IsDone()) return TopoDS_Shape();
+        TopExp_Explorer solid(draft.Shape(), TopAbs_SOLID);
+        if (solid.More() && BRepCheck_Analyzer(solid.Current()).IsValid()) {
+            TRACE("a prism with a draft by BRepOffsetAPI_DraftAngle");
+            return solid.Current();
         }
     } catch (const Standard_Failure &) {
     }
@@ -136,10 +183,12 @@ static TopoDS_Shape dprism(const TopoDS_Face &face, double height, double angle)
 
 // The prism of the face of wire along the normal of plane, height long (backward when negative), narrowing by
 // height * tan(angle): by LocOpe_DPrism, which fails on some contours, then on the face turned a little around the
-// normal (and the solid turned back), else as a ruled loft from wire to its offset
+// normal (and the solid turned back), else by BRepOffsetAPI_DraftAngle, else as a ruled loft from wire to its offset,
+// else the solid of LocOpe_DPrism with corner cones
 static TopoDS_Shape drafted_solid(const gp_Pln &plane, const TopoDS_Wire &wire, double height, double angle) {
     TopoDS_Face face = planar_face(plane, wire);
-    TopoDS_Shape solid = dprism(face, height, angle);
+    TopoDS_Shape cornered;
+    TopoDS_Shape solid = dprism(face, height, angle, &cornered);
     for (double turn : {1e-5, -1e-5, 1e-4, -1e-4}) {
         if (!solid.IsNull()) return solid;
         gp_Trsf rotation;
@@ -148,8 +197,15 @@ static TopoDS_Shape drafted_solid(const gp_Pln &plane, const TopoDS_Wire &wire, 
         if (!turned.IsNull()) solid = BRepBuilderAPI_Transform(turned, rotation.Inverted(), true).Shape();
     }
     if (!solid.IsNull()) return solid;
+    solid = draft_angle(plane, face, height, angle);
+    if (!solid.IsNull()) return solid;
     BRepOffsetAPI_MakeOffset offset(face, GeomAbs_Intersection);
     offset.Perform(-height * std::tan(angle));
+    // the solid of LocOpe_DPrism, its corners cones, rather than none
+    if (!offset.IsDone() && !cornered.IsNull()) {
+        TRACE("a prism with a draft with corner cones");
+        return cornered;
+    }
     if (!offset.IsDone()) throw Standard_Failure("Cannot offset the contour of a prism with a draft");
     gp_Trsf move;
     move.SetTranslation(gp_Vec(plane.Axis().Direction()) * height);
@@ -158,6 +214,8 @@ static TopoDS_Shape drafted_solid(const gp_Pln &plane, const TopoDS_Wire &wire, 
     loft.AddWire(BRepTools::OuterWire(face));
     loft.AddWire(TopoDS::Wire(top.Current()));
     loft.Build();
+    TRACE(loft.IsDone() ? "a prism with a draft by a loft" : "a prism with a draft with corner cones");
+    if (!loft.IsDone() && !cornered.IsNull()) return cornered;
     if (!loft.IsDone()) throw Standard_Failure("Cannot make the prism with a draft");
     return loft.Shape();
 }
@@ -457,9 +515,10 @@ extern "C" TopoDS_Shape *new_TopoDS_Shape__brep_algoapi_fuse__s1_listrOfShape(co
     });
 }
 
-// The result of a boolean operation, or the errors of the algorithm as an exception instead of a broken shape
+// The result of a boolean operation, or the errors of the algorithm as an exception instead of a broken shape; warned
+// tells whether the algorithm left warnings
 template<class Operation>
-static TopoDS_Shape *boolean_result(const TopoDS_Shape &s1, const TopoDS_Shape &s2) {
+static TopoDS_Shape *boolean_result(const TopoDS_Shape &s1, const TopoDS_Shape &s2, double fuzzy = 0.0, bool *warned = nullptr) {
     TopTools_ListOfShape arguments, tools;
     arguments.Append(s1);
     tools.Append(s2);
@@ -467,12 +526,14 @@ static TopoDS_Shape *boolean_result(const TopoDS_Shape &s1, const TopoDS_Shape &
     operation.SetArguments(arguments);
     operation.SetTools(tools);
     operation.SetRunParallel(true);
+    if (fuzzy > 0.0) operation.SetFuzzyValue(fuzzy);
     operation.Build();
     if (operation.HasErrors()) {
         std::ostringstream errors;
         operation.DumpErrors(errors);
         throw std::runtime_error(errors.str());
     }
+    if (warned) *warned = operation.HasWarnings();
     return new TopoDS_Shape(operation.Shape());
 }
 
@@ -489,6 +550,19 @@ extern "C" TopoDS_Shape *new_TopoDS_Shape__brep_algoapi_fuse__s1_s2(const TopoDS
 extern "C" TopoDS_Shape *new_TopoDS_Shape__brep_algoapi_common__s1_s2(const TopoDS_Shape *s1, const TopoDS_Shape *s2) {
     TRACE("");
     return guard(__func__, [&] { return boolean_result<BRepAlgoAPI_Common>(*s1, *s2); });
+}
+
+extern "C" TopoDS_Shape *new_TopoDS_Shape__overlap__s1_s2_fuzzy(const TopoDS_Shape *s1, const TopoDS_Shape *s2, double fuzzy) {
+    TRACE("");
+    return guard(__func__, [&] {
+        bool warned = false;
+        TopoDS_Shape *exact = boolean_result<BRepAlgoAPI_Common>(*s1, *s2, 0.0, &warned);
+        if (!warned) return exact;
+        // e.g. BOPAlgo_AlertFaceBuilderUnusedEdges, an empty common of faces 0.0001 apart
+        TRACE("warnings: again with a fuzzy value");
+        delete exact;
+        return boolean_result<BRepAlgoAPI_Common>(*s1, *s2, fuzzy);
+    });
 }
 
 /*
@@ -527,8 +601,12 @@ extern "C" double *R12_shape_measures(const TopoDS_Shape *shape) {
 extern "C" double *R7_BRepExtrema_DistShapeShape__s1_s2(const TopoDS_Shape *Shape1, const TopoDS_Shape *Shape2) {
     TRACE("");
     double *res = guard(__func__, [&]() -> double * {
-        BRepExtrema_DistShapeShape dist(*Shape1, *Shape2, 0.01);
-        if (!dist.IsDone()) TRACE("NOT DONE");
+        // computed once: the constructor taking the shapes computes too
+        BRepExtrema_DistShapeShape dist;
+        dist.SetDeflection(0.01);
+        dist.SetMultiThread(true);
+        dist.LoadS1(*Shape1);
+        dist.LoadS2(*Shape2);
         if (!dist.Perform()) TRACE("NOT PERFORMED");
 
         int nbSol = dist.NbSolution();

@@ -2,6 +2,7 @@ package org.taack.cad.freecad
 
 import groovy.transform.CompileStatic
 import org.taack.cad.dsl.CadParams
+import org.taack.cad.dsl.Closest
 import org.taack.cad.dsl.DisplayOption
 import org.taack.cad.dsl.ICadDslVisitor
 import org.taack.cad.dsl.Measures
@@ -349,7 +350,11 @@ class FreeCadVisitor implements ICadDslVisitor {
     }
 
     @Override
-    double distance(ICadDslVisitor other) {
+    void visitTurnedCopies(int count) {
+    }
+
+    @Override
+    Closest closest(ICadDslVisitor other) {
         throw new UnsupportedOperationException('distance: only with the OCCT kernel')
     }
 

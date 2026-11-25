@@ -159,9 +159,16 @@ interface ICadDslVisitor {
     double overlapVolume(ICadDslVisitor other)
 
     /**
-     * @return Minimum distance between the current solid and the one of other, 0 when they touch or overlap
+     * @return Minimum distance between the current solid and the one of other, 0 when they touch or overlap, and its
+     * points
      */
-    double distance(ICadDslVisitor other)
+    Closest closest(ICadDslVisitor other)
+
+    /**
+     * The contour being drawn repeats count times the elements written once in the model, turned by the DSL
+     * ({@link org.taack.cad.dsl.geom.Outline#quarterTurns}): nothing to build, a hint for the contour checks
+     */
+    void visitTurnedCopies(int count)
 
     void visitCone(double r1, double r2, double height)
 

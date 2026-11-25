@@ -138,10 +138,18 @@ class CadDslSolid implements CadDslBase {
     }
 
     /**
-     * @return Minimum distance to other, 0 when they touch or overlap: the clearance between two parts
+     * @return Minimum distance to other, 0 when they touch or overlap: straight, through whatever stands between them,
+     * at most the clearance between two parts
      */
     double distance(CadDslSolid other) {
-        visitor.distance(other.visitor)
+        visitor.closest(other.visitor).distance
+    }
+
+    /**
+     * @return Minimum distance to other, as {@link #distance}, and its points on this solid and on other
+     */
+    Closest closest(CadDslSolid other) {
+        visitor.closest(other.visitor)
     }
 
     CadDslSolid note(String text, Number height, Vec pos) {

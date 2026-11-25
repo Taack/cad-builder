@@ -222,7 +222,7 @@ final class ContourCheck {
     }
 
     private static String sources(Collection<Shape> group) {
-        group.collect { Shape s -> s.contour.source }.unique().join(', ')
+        group.collect { Shape s -> s.contour.where }.unique().join(', ')
     }
 
     private static String mm(double v) { String.format(Locale.ROOT, '%.3g', Math.abs(v) < 1e-9d ? 0d : v) }
@@ -409,13 +409,13 @@ final class ContourCheck {
                     }
                 }
                 int repeats = (int) ((best + period) / period)
-                // a rounded rectangle repeats 2 elements 4 times
-                if (repeats < 3 || (repeats < 5 && period < 3) || best + period < 6) continue
+                // a rounded rectangle repeats 2 elements 4 times; the elements turned by the DSL are written once
+                if (repeats < 3 || (repeats < 5 && period < 3) || best + period < 6 || (period * s.contour.turns) % n == 0) continue
                 double[] step = s.steps[bestEnd]
                 if (period == 1 && s.kinds[bestEnd] == 'edge' && Math.abs(step[2]) < Math.toRadians(30d))
-                    found << "${s.contour.source}: ${best + 1} edges of ${mm(step[0])} mm turning by ${mm(Math.toDegrees(step[2]))}°, an arc or a circle drawn as edges".toString()
+                    found << "${s.contour.where}: ${best + 1} edges of ${mm(step[0])} mm turning by ${mm(Math.toDegrees(step[2]))}°, an arc or a circle drawn as edges".toString()
                 else if (period > 1 || s.kinds[bestEnd] != 'edge')
-                    found << "${s.contour.source}: ${repeats} times the same ${period} elements along a contour of $n, a loop".toString()
+                    found << "${s.contour.where}: ${repeats} times the same ${period} elements along a contour of $n, a loop".toString()
                 break
             }
         }

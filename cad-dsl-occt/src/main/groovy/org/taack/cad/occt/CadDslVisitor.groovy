@@ -6,6 +6,7 @@ import org.taack.cad.dsl.CadDisplay
 import org.taack.cad.dsl.CadImages
 import org.taack.cad.dsl.DisplayOption
 import org.taack.cad.dsl.ICadDslVisitor
+import org.taack.cad.dsl.Closest
 import org.taack.cad.dsl.Measures
 import org.taack.cad.dsl.PlateOptions
 import org.taack.cad.dsl.SvgOptions
@@ -46,6 +47,9 @@ class CadDslVisitor implements ICadDslVisitor, ICadDslFeatureShapes {
         }
     }
     private static final double THRU_SECTIONS_PRECISION = 1.0e-06d
+    // Faces closer than this are one when an overlap is computed again, OCCT warning that it went wrong: those of parts
+    // converted from STEP files, 0.0001 apart, overlap then
+    private static final double OVERLAP_FUZZY = 1.0e-3d
 
     // Owns every native object created for this model (see Natives)
     private final Arena nativeScope = Natives.openScope()
@@ -331,16 +335,20 @@ class CadDslVisitor implements ICadDslVisitor, ICadDslFeatureShapes {
 
     @Override
     double overlapVolume(ICadDslVisitor other) {
-        def common = booleanResult('overlap', new_TopoDS_Shape__brep_algoapi_common__s1_s2(shape, occt(other).shape))
+        def common = booleanResult('overlap', new_TopoDS_Shape__overlap__s1_s2_fuzzy(shape, occt(other).shape, OVERLAP_FUZZY))
         double[] m = Natives.doubles(R12_shape_measures(common), 12)
         m ? m[0] : 0d
     }
 
     @Override
-    double distance(ICadDslVisitor other) {
+    void visitTurnedCopies(int count) {
+    }
+
+    @Override
+    Closest closest(ICadDslVisitor other) {
         double[] m = Natives.doubles(R7_BRepExtrema_DistShapeShape__s1_s2(shape, occt(other).shape), 7)
         if (m == null || m[6] < 0) throw new IllegalStateException("distance: ${lastError()}")
-        m[6]
+        new Closest(m[6], new Vec(m[0], m[1], m[2]), new Vec(m[3], m[4], m[5]))
     }
 
     // The OCCT visitor behind other, recording the features or not
@@ -552,7 +560,8 @@ class CadDslVisitor implements ICadDslVisitor, ICadDslFeatureShapes {
     @Override
     void visitHelix(double radius, double pitch, double height, double endRadius) {
         helixAxis = unit(direction)
-        helixRadial = directionNormal ? unit(directionNormal) : unit(Math.abs(helixAxis.y) < 0.9 ? Vec.vY / helixAxis : Vec.vZ / helixAxis)
+        // the normal given with the direction, square to the axis
+        helixRadial = directionNormal ? unit(directionNormal - helixAxis * (directionNormal.x * helixAxis.x + directionNormal.y * helixAxis.y + directionNormal.z * helixAxis.z)) : unit(Math.abs(helixAxis.y) < 0.9 ? Vec.vY / helixAxis : Vec.vZ / helixAxis)
         helixStart = fromVec + helixRadial * radius
         def ax2 = own(new_gp_Ax2__gp_Pnt_gp_Dir_Normal(gpPnt(fromVec), gpDir(helixAxis), gpDir(helixRadial)), NativeLib::delete_gp_Ax2)
         helixSpine = own(new_TopoDS_Wire__HelixBRep_BuilderHelix__ax2_diam1_diam2_height_pitch(ax2, 2 * radius, 2 * endRadius, height, pitch), NativeLib::delete_TopoDS_Wire)
@@ -837,6 +846,7 @@ class CadDslVisitor implements ICadDslVisitor, ICadDslFeatureShapes {
         Tr.cur("visitFace $direction $position")
         double positionMax = position == null ? Double.NEGATIVE_INFINITY : Double.POSITIVE_INFINITY
         this.direction = direction
+        directionNormal = null
         Vec fromVecToPush = null
 
         for (def aFaceExplorer = own(new_TopExp_Explorer__TopoDS_Shape_ToFind_ToAvoid(shape, ShapeEnum.TopAbs_FACE.ordinal(), ShapeEnum.TopAbs_SHAPE.ordinal()), NativeLib::delete_TopExp_Explorer);
@@ -991,7 +1001,7 @@ class CadDslVisitor implements ICadDslVisitor, ICadDslFeatureShapes {
 
     @Override
     void visitText3d(String content, double size, TextOptions options) {
-        Vec pos = openShapeList ? openShapeList.last().to : fromVec
+        Vec pos = pen3d()
         addText(content, size, options, "at $pos") { MemorySegment text, MemorySegment font ->
             new_TopoDS_Shape__StdPrs_BRepTextBuilder__Perform__pen(gpPnt(pos), gpDir(options.normal), gpDir(options.direction),
                     text, font, size, options.bold ? 1 : 0, options.italic ? 1 : 0, options.align.ordinal(), options.valign.ordinal())
@@ -1009,7 +1019,7 @@ class CadDslVisitor implements ICadDslVisitor, ICadDslFeatureShapes {
 
     @Override
     void visitSvg3d(List<SvgContour> contours, SvgOptions options) {
-        Vec pos = openShapeList ? openShapeList.last().to : fromVec
+        Vec pos = pen3d()
         addSvg(contours, "at $pos") { MemorySegment data, int size ->
             new_TopoDS_Shape__BRepBuilderAPI_MakeWire__contours_pen(gpPnt(pos), gpDir(options.normal), gpDir(options.direction), data, size)
         }
@@ -1057,7 +1067,7 @@ class CadDslVisitor implements ICadDslVisitor, ICadDslFeatureShapes {
 
     @Override
     void visitMove(Vec to) {
-
+        startContour(pen3d() + to)
     }
 
     @Override
@@ -1068,8 +1078,21 @@ class CadDslVisitor implements ICadDslVisitor, ICadDslFeatureShapes {
 
     @Override
     void visitTo(Vec to) {
-        fromVecStack.pop()
-        fromVecStack.push(to)
+        startContour(to)
+    }
+
+    // The last position in a 3D wire: the end of what was drawn, else its start
+    private Vec pen3d() {
+        openShapeList ? openShapeList.last().to : fromVec
+    }
+
+    // The pen lifted to pos, leaving the contour drawn, if it goes elsewhere, for another one from pos
+    private void startContour(Vec pos) {
+        if (openShapeList && pos.distance(pen3d()) > 1e-9d) makeWires << makeWire3d()
+        if (!openShapeList) {
+            if (!fromVecStack.empty()) fromVecStack.pop()
+            fromVecStack.push(pos)
+        }
     }
 
     @Override
@@ -1230,6 +1253,7 @@ class CadDslVisitor implements ICadDslVisitor, ICadDslFeatureShapes {
     @Override
     void visitDirection(Vec axis, Vec normal) {
         direction = axis
+        directionNormal = normal
     }
 
 

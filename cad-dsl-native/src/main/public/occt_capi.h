@@ -658,6 +658,10 @@ OCCT_CAPI TopoDS_Shape *new_TopoDS_Shape__brep_algoapi_fuse__s1_s2(const TopoDS_
 
 OCCT_CAPI TopoDS_Shape *new_TopoDS_Shape__brep_algoapi_common__s1_s2(const TopoDS_Shape *s1, const TopoDS_Shape *s2);
 
+/* The common of two shapes to measure how they overlap: computed again with the fuzzy value when OCCT warns, as it
+   loses the common of faces nearly coincident, warning only. */
+OCCT_CAPI TopoDS_Shape *new_TopoDS_Shape__overlap__s1_s2_fuzzy(const TopoDS_Shape *s1, const TopoDS_Shape *s2, double fuzzy);
+
 OCCT_CAPI gp_Pnt *new_gp_Pnt__CentreOfMass__TopoDS_Shape(const TopoDS_Shape *myShape);
 
 /* {volume, area, center of mass x, y, z, box xmin, ymin, zmin, xmax, ymax, zmax, 1 when valid else 0}.
