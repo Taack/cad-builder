@@ -177,8 +177,8 @@ A script can check its model rather than an eye on the preview, with the OCCT ke
 warns while computing it, as it does for faces nearly coincident (parts converted from STEP files, 0.0001 apart), it
 is computed again with faces closer than 0.001 mm taken as one.
 * `distance(other)` is the shortest distance between them, straight, through whatever stands between them: at most
-the clearance of the air around the insulating parts. `closest(other)` gives it with its two points, `from` on this
-solid and `to` on the other.
+the clearance of the air around the insulating parts (see <<Clearances and Creepage Distances>>). `closest(other)`
+gives it with its two points, `from` on this solid and `to` on the other.
 
 .Equipment Fitting in a Part
 [source,groovy]
@@ -222,6 +222,43 @@ checkContours { Projector.assemble() }.each { println it }
 //   positions in a constant
 // Projector.groovy:2826, ...: 8 small contours side by side, 9.17 mm high, like text: draw it with text()
 ----
+
+=== Clearances and Creepage Distances
+
+`Insulation` measures the distances between the conductors of an assembly as IEC 60664-1 does, with the OCCT kernel:
+
+* `clearance(from, to)` is the shortest path through the air, around the insulating parts and the other conductors.
+* `creepage(from, to, groove)` is the shortest path along the surfaces of the insulating parts. It crosses through the
+air the grooves narrower than `groove`, the width X of the pollution degree (0.25 mm for 1, 1.0 mm for 2, 1.5 mm for
+3): a groove with parallel sides, or between faces at less than 80° where it is X wide (annex A), and the joints between
+two parts touching. At 80° and more, as at the foot of a wall, it follows the faces. It starts where the conductor
+touches an insulating part, or across such a groove.
+
+Both give a `Gap`: its `length` in mm, and its `path`, from a point of the first conductor to one of the other, through
+the points where it bends. Both take a `limit`, a length in mm beyond which the path is not searched: the gap is then
+not `found`, its `length` the limit it is longer than, infinite when no path at all joins the conductors. A conductor
+is a list of solids, those of a circuit touching each other. A floating conductor between two others adds the gaps on
+both sides: give it its own name, and sum the gaps to it.
+
+.Clearance and Creepage Distance Between Two Electrodes Over a Wall
+[source,groovy]
+----
+def left = cd().position(new Vec(0, 0, 0)) { box(1, 10, 10) }
+def right = cd().position(new Vec(3, 0, 0)) { box(1, 10, 10) }
+def wall = cd().position(new Vec(-10, -30, -5)) { box(24, 70, 5) }.fuse { position(new Vec(1.5d, -30, 0)) { box(1, 70, 15) } }
+def insulation = new Insulation([left: [left], right: [right]], [wall])
+println insulation.clearance('left', 'right')          // left to right: 11.050 mm, over the wall
+println insulation.creepage('left', 'right', 0.25d)    // left to right: 32.000 mm, along its sides
+println insulation.creepage('left', 'right', 1.0d)     // left to right: 11.268 mm, across the grooves 0.5 wide
+----
+
+The solids are meshed once, when the `Insulation` is made; each distance is then a search of a shortest path, from a
+few milliseconds to seconds on an assembly of a hundred parts. In an assembly whose parts close the space around the
+conductors, the search of a clearance takes longer the longer it is: a `limit` a little above the distance required
+keeps it short. The paths bend at points spaced along the edges of the meshes, then slide along the edges and inside
+the faces to the shortest path: they are found within a few hundredths of a millimeter on flat faces, within the
+deviation of the meshes from the curved ones (`deflection`, 0.02 mm by default). A smaller `step`, 0.5 mm by default,
+the spacing of those points, finds paths through narrower gaps.
 
 == Selectors
 
