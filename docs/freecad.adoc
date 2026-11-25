@@ -72,6 +72,10 @@ A parameter can also be set from outside the script: `-Dcad.param.thickness=12` 
 
 Both kernels build the same solids from the shared tests, within 1% for the conical helices and the lofts (B-spline
 approximations). FreeCAD is slower on large models: it recomputes the document at `display()`, and checks each boolean.
+Its booleans run without the fuzzy tolerance FreeCAD 1.1 gives them by default (`BooleanFuzzy`, about 1e-4 on a part
+100 long), as OCCT's do: it merged the edges of thin walls with a draft into self-intersecting solids. The prisms with
+a draft are lofts, ruled between the contour and its offset, the corners between lines and arcs moved where the offset
+curves meet: their faces on arcs are within 0.1% of the cones of OCCT at 3°.
 
 [[step-to-dsl]]
 == STEP to DSL

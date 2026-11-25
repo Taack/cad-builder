@@ -16,6 +16,13 @@ import traceback
 
 sys.path.insert(0, os.environ['CAD_DSL_LIB'])
 
+import FreeCAD
+
+# Booleans without fuzzy tolerance, as with OCCT: the features of FreeCAD 1.1 add BooleanFuzzy x 1e-7 x the diagonal of
+# their shapes, about 1e-4 on a part 100 long by default, which merges the edges of thin walls with a draft and leaves a
+# self-intersecting solid. Read when Part is loaded, hence set before; the preferences are not saved (see the end)
+FreeCAD.ParamGet('User parameter:BaseApp/Preferences/Mod/Part/Boolean').SetFloat('BooleanFuzzy', 0.0)
+
 # The GUI, off screen (QT_QPA_PLATFORM=offscreen): the documents get their view, colors and visibility; FreeCADCmd
 # alone when it cannot start, or with CAD_DSL_HEADLESS=true
 if os.environ.get('CAD_DSL_HEADLESS') != 'true':

@@ -64,4 +64,21 @@ class TaperedPrismTest {
 //
 //        visualize(res1)
     }
+
+    @Test
+    void "Drafts of contours whose arcs meet lines and arcs at corners"() {
+        // a rib ending by a quarter round, widening down to its foot, on a lens of two arcs narrowing downward
+        cd().wireFrom(new Vec(0, 0, 10)) {
+            edge(new Vec(5, 0, 10))
+            arc(new Vec(6, 1, 10), new Vec(5.707d, 0.293d, 10))
+            edge(new Vec(0, 1, 10))
+            edge(new Vec(0, 0, 10))
+        }.toFace().prism(new Vec(0, 0, -10), draft: -3)
+                .fuse {
+                    wireFrom(new Vec(-2, 0.5d, 0)) {
+                        arc(new Vec(8, 0.5d, 0), new Vec(3, -2.5d, 0))
+                        arc(new Vec(-2, 0.5d, 0), new Vec(3, 3.5d, 0))
+                    }.toFace().prism(new Vec(0, 0, -5), draft: 3)
+                }.display(image())
+    }
 }
