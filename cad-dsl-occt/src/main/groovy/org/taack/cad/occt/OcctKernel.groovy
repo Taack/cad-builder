@@ -7,6 +7,7 @@ import org.taack.cad.dsl.geom.IClosedShape2d
 import org.taack.cad.dsl.geom.ITrimmable2d
 import org.taack.cad.dsl.geom.Vec2d
 import org.taack.cad.dsl.kernel.CadKernel
+import org.taack.cad.dsl.kernel.InsulationPaths
 
 import java.lang.foreign.MemorySegment
 
@@ -63,5 +64,10 @@ class OcctKernel implements CadKernel {
             centers << vec2d(ref_gp_Pnt2d__gp_Ax22d__Location(ref_Position__gp_Circ2d__Position(circle)))
         }
         centers
+    }
+
+    @Override
+    InsulationPaths insulationPaths(List<ICadDslVisitor> solids, int[] groups, double deflection, double step) {
+        new OcctInsulationPaths(solids, groups, deflection, step)
     }
 }

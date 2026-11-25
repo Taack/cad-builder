@@ -658,6 +658,10 @@ OCCT_CAPI TopoDS_Shape *new_TopoDS_Shape__brep_algoapi_fuse__s1_s2(const TopoDS_
 
 OCCT_CAPI TopoDS_Shape *new_TopoDS_Shape__brep_algoapi_common__s1_s2(const TopoDS_Shape *s1, const TopoDS_Shape *s2);
 
+/* The common of two shapes to measure how they overlap: computed again with the fuzzy value when OCCT warns, as it
+   loses the common of faces nearly coincident, warning only. */
+OCCT_CAPI TopoDS_Shape *new_TopoDS_Shape__overlap__s1_s2_fuzzy(const TopoDS_Shape *s1, const TopoDS_Shape *s2, double fuzzy);
+
 OCCT_CAPI gp_Pnt *new_gp_Pnt__CentreOfMass__TopoDS_Shape(const TopoDS_Shape *myShape);
 
 /* {volume, area, center of mass x, y, z, box xmin, ymin, zmin, xmax, ymax, zmax, 1 when valid else 0}.
@@ -667,6 +671,26 @@ OCCT_CAPI double *R12_shape_measures(const TopoDS_Shape *shape);
 /* {p1x, p1y, p1z, p2x, p2y, p2z, distance}; distance is -20000000 when no solution.
    Release with occt_free_doubles. */
 OCCT_CAPI double *R7_BRepExtrema_DistShapeShape__s1_s2(const TopoDS_Shape *Shape1, const TopoDS_Shape *Shape2);
+
+/* Clearances and creepage distances between the conductors of an assembly, as IEC 60664-1 measures them, on meshes of
+   its parts (capi_insulation.cpp). shapes[i] is in groups[i]: the conductors of a circuit share a group, >= 0, the
+   insulating parts are in group -1. The meshes deviate from the faces by deflection at most, the paths bend at points
+   spaced by step at most along their edges, then slide along them to the shortest path. Release with
+   delete_InsulationPaths. */
+OCCT_DECLARE_OBJECT(InsulationPaths)
+OCCT_CAPI InsulationPaths *new_InsulationPaths__shapes_groups_deflection_step(const TopTools_ListOfShape *shapes, const int *groups, double deflection, double step);
+
+OCCT_CAPI void delete_InsulationPaths(InsulationPaths *paths);
+
+/* The shortest path through the air from the group from to the group to, around all the shapes:
+   {length, n, x1, y1, z1, ..., xn, yn, zn}, from a point of from to one of to. With no point, when no path is shorter
+   than limit (which may be infinite), the length is limit, or -1 when no path joins the groups. Release with
+   occt_free_doubles. */
+OCCT_CAPI double *R_InsulationPaths__clearance__from_to_limit(InsulationPaths *paths, int from, int to, double limit);
+
+/* The shortest path along the surfaces of the insulating parts from the group from to the group to, crossing the gaps
+   narrower than groove (the width X of IEC 60664-1) through the air, as R_InsulationPaths__clearance__from_to_limit. */
+OCCT_CAPI double *R_InsulationPaths__creepage__from_to_groove_limit(InsulationPaths *paths, int from, int to, double groove, double limit);
 
 /***********************************************************************************************************************
 

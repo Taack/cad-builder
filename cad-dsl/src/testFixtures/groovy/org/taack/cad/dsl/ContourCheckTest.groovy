@@ -2,7 +2,12 @@ package org.taack.cad.dsl
 
 import groovy.transform.CompileStatic
 import org.junit.jupiter.api.Test
+import org.taack.cad.dsl.geom.Arc2d
+import org.taack.cad.dsl.geom.Frame
+import org.taack.cad.dsl.geom.IOpenShape2d
+import org.taack.cad.dsl.geom.Outline
 import org.taack.cad.dsl.geom.Vec
+import org.taack.cad.dsl.geom.Vec2d
 
 import static org.junit.jupiter.api.Assertions.assertEquals
 import static org.junit.jupiter.api.Assertions.assertTrue
@@ -131,6 +136,25 @@ class ContourCheckTest {
             }
         }
         assertTrue(found.any { it.contains('like text') }, found.toString())
+    }
+
+    @Test
+    void "An outline written once and turned by quarterTurns is no loop to write"() {
+        Outline quarter = new Outline().line(10, 0, 0, 1).line(0, 3, 1, 0).line(11, 0, 0, 1).line(0, 5, -1, 0).line(10, 0, 0, 1)
+                .fillet(2).line(0, 10, -1, 0).line(5, 0, 0, 1).line(0, 11, -1, 0).line(3, 0, 0, -1)
+        Outline whole = quarter.quarterTurns()
+        assertEquals([], found { cd().face(Frame.xy(), whole).prism(new Vec(0, 0, 1)) })
+        // the same contour written out, as converted from a STEP file
+        Vec2d start = whole.start()
+        def written = found {
+            cd().wireFrom(new Vec(start.x, start.y, 0)) {
+                for (IOpenShape2d s in whole.path()) {
+                    if (s instanceof Arc2d) arc(new Vec(s.to.x, s.to.y, 0), new Vec(((Arc2d) s).via.x, ((Arc2d) s).via.y, 0))
+                    else edge(new Vec(s.to.x, s.to.y, 0))
+                }
+            }.toFace().prism(new Vec(0, 0, 1))
+        }
+        assertTrue(written.any { it.contains('4 times the same 10 elements') }, written.toString())
     }
 
     @Test

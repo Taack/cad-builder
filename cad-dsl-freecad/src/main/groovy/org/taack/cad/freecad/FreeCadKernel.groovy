@@ -7,6 +7,7 @@ import org.taack.cad.dsl.geom.IClosedShape2d
 import org.taack.cad.dsl.geom.ITrimmable2d
 import org.taack.cad.dsl.geom.Vec2d
 import org.taack.cad.dsl.kernel.CadKernel
+import org.taack.cad.dsl.kernel.InsulationPaths
 
 import static java.lang.Math.sqrt
 
@@ -54,6 +55,11 @@ class FreeCadKernel implements CadKernel {
         Vec2d middle = new Vec2d((p1.x + p2.x) / 2, (p1.y + p2.y) / 2)
         Vec2d left = new Vec2d(-dy / d * h, dx / d * h)
         [middle + left, middle - left]
+    }
+
+    @Override
+    InsulationPaths insulationPaths(List<ICadDslVisitor> solids, int[] groups, double deflection, double step) {
+        throw new UnsupportedOperationException('clearances and creepage distances: use the OCCT kernel')
     }
 
     private static Vec2d vec2d(Object xy) {

@@ -45,6 +45,7 @@ final class ContourRecorder implements CadKernel {
             final int wire
             double[] at
             Contour contour
+            int turns = 1
 
             Pen(boolean in3d, int wire, double[] at) {
                 this.in3d = in3d
@@ -67,17 +68,34 @@ final class ContourRecorder implements CadKernel {
             Pen pen = pens.peek()
             if (pen == null) return null
             if (pen.contour == null) {
-                CadFeatureFrame frame = CadFeatureFrame.current().with { it ? it.last() : null }
-                pen.contour = new Contour(frame ? "$frame.fileName:$frame.line" : '?', pen.in3d, model, pen.wire, pen.at)
+                List<CadFeatureFrame> frames = CadFeatureFrame.current()
+                CadFeatureFrame frame = frames ? frames.last() : null
+                pen.contour = new Contour(frame ? "$frame.fileName:$frame.line" : '?', callers(frames), pen.in3d, model, pen.wire, pen.at)
+                pen.contour.turns = pen.turns
             }
             pen.contour
         }
+
+        // The lines calling the method of the user drawing the contour, a helper drawing those of several lines: the
+        // innermost first, up to the first one out of a method, 3 at most
+        static String callers(List<CadFeatureFrame> frames) {
+            List<String> lines = []
+            for (int i = frames.size() - 1; i > 0 && lines.size() < MAX_CALLERS; i--) {
+                CadFeatureFrame drawing = frames[i], caller = frames[i - 1]
+                if (!drawing.method) break
+                if (!caller.sameMethod(drawing)) lines << "$caller.fileName:$caller.line".toString()
+            }
+            lines.join(', ')
+        }
+
+        private static final int MAX_CALLERS = 3
 
         private void lift(double[] at) {
             Pen pen = pens.peek()
             if (pen == null) return
             if (pen.contour?.elements) recorder.contours << pen.contour
             pen.contour = null
+            pen.turns = 1
             pen.at = at
         }
 
@@ -110,6 +128,13 @@ final class ContourRecorder implements CadKernel {
             lift(null)
             pens.poll()
             kernel.visitFromEnd(pos)
+        }
+
+        @Override
+        void visitTurnedCopies(int count) {
+            kernel.visitTurnedCopies(count)
+            Pen pen = pens.peek()
+            if (pen) pen.turns = count
         }
 
         @Override

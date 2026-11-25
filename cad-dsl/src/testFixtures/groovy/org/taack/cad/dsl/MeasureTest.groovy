@@ -4,6 +4,8 @@ import groovy.transform.CompileStatic
 import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
+import org.taack.cad.dsl.geom.Frame
+import org.taack.cad.dsl.geom.Outline
 import org.taack.cad.dsl.geom.Vec
 
 import static org.junit.jupiter.api.Assertions.assertEquals
@@ -45,6 +47,62 @@ class MeasureTest {
         assertEquals(0d, a.overlap(box(new Vec(12, 0, 0))), TOLERANCE)
         assertEquals(2d, a.distance(box(new Vec(12, 0, 0))), TOLERANCE)
         assertEquals(0d, a.distance(box(new Vec(5, 0, 0))), TOLERANCE)
+        def closest = a.closest(box(new Vec(12, 5, 0)))
+        assertEquals(2d, closest.distance, TOLERANCE)
+        assertEquals(10d, closest.from.x, TOLERANCE)
+        assertEquals(12d, closest.to.x, TOLERANCE)
+    }
+
+    // A plate 0.8 thick with a hole, as converted from a STEP file
+    private static CadDslSolid plate(double dx, double dy) {
+        cd().position(new Vec(dx, dy, 0)) { box(0.8d, 10, 10) }
+                .cut { position(new Vec(-1 + dx, 5 + dy, 5)) { direction(Vec.vX); cylinder(0.6d, 3) } }
+    }
+
+    @Test
+    void "Overlap of solids whose faces nearly coincide"() {
+        // OCCT finds no common, warning only, unless faces this close are one
+        assertEquals(80d - Math.PI * 0.36d * 0.8d, plate(0, 0).overlap(plate(0.000094d, 0.000116d)), 0.1d)
+    }
+
+    @Test
+    void "A prism widening by its draft keeps its sharp corners, and booleans find it"() {
+        double a = 1.002d, b = 51.64d, h = 30d, k = Math.tan(Math.toRadians(0.5d))
+        CadDsl prism = cd()
+        prism.face(new Frame(new Vec(60.426d, -4.157d, -20.3d), Vec.vX, Vec.vY), Outline.rectangle(a, b)).prism(new Vec(h, 0, 0), draft: -0.5d)
+        assertEquals(a * b * h + (a + b) * k * h * h + 4 * k * k * h * h * h / 3, prism.measure().volume, 1e-3d)
+        // LocOpe_DPrism made its corners cones of apex the corners, which a common lost
+        def cylinder = cd().position(new Vec(-147.554d, 35.643d, -48.2d)) { cylinder(229.0d, 56.0d) }
+        assertEquals(1049.1d, prism.overlap(cylinder), 0.1d)
+    }
+
+    @Test
+    void "The normal given with the direction turns the primitives and starts the helices"() {
+        // x along the normal y, y along z x y = -x
+        def box = cd().direction(Vec.vZ, Vec.vY).box(10, 20, 30).measure()
+        assertEquals(-20d, box.min.x, TOLERANCE)
+        assertEquals(10d, box.max.y, TOLERANCE)
+        // a quarter turn from (0, 5) to (-5, 0)
+        def helix = cd().direction(Vec.vZ, Vec.vY).helix(5, 1, 0.25).wire(0.2).measure()
+        assertEquals(-5.2d, helix.min.x, 0.01d)
+        assertEquals(5.2d, helix.max.y, 0.01d)
+    }
+
+    @Test
+    void "Move lifts the pen in a 3D wire, for a text or another contour"() {
+        def letters = cd().wireFrom(new Vec(0, 0, 0)) {
+            text('A', 5)
+            move(new Vec(10, 0, 0))
+            text('B', 5)
+        }.toFace().prism(new Vec(0, 0, 1)).measure()
+        assertEquals(13.1d, letters.max.x, 0.1d)    // B from x = 10.5 to 13.1, not over A
+        def squares = cd().wireFrom(new Vec(0, 0, 0)) {
+            edge(new Vec(2, 0, 0)); edge(new Vec(2, 2, 0)); edge(new Vec(0, 2, 0)); edge(new Vec(0, 0, 0))
+            move(new Vec(5, 0, 0))
+            edge(new Vec(7, 0, 0)); edge(new Vec(7, 2, 0)); edge(new Vec(5, 2, 0)); edge(new Vec(5, 0, 0))
+        }.toFace().prism(new Vec(0, 0, 1)).measure()
+        assertEquals(8d, squares.volume, TOLERANCE)
+        assertEquals(7d, squares.max.x, TOLERANCE)
     }
 
     @Test

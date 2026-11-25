@@ -12,15 +12,18 @@ class CadDslEdge extends CadDslEdge2d {
      */
     Vec at3d
     /**
-     * Displace new position on this face.
+     * Lift the pen by a displacement from the last position: a text, an SVG drawing or another contour starts there,
+     * the contour drawn so far is left as it is.
      * @param to    Move, starting from the old position
      */
     void move(Vec to) {
         visitor.visitMove(to)
+        at3d = at3d == null ? null : at3d + to
     }
 
     /**
-     * Move to new position on this face.
+     * Lift the pen to a new position: a text, an SVG drawing or another contour starts there, the contour drawn so far
+     * is left as it is.
      * @param to    New start positon
      */
     void to(Vec to) {

@@ -87,6 +87,8 @@ are called on, and their result takes its place: in a `cut`, `box(4, 4, 20).cut 
 then cut from the current solid; the solids of the inner closure leave the current solid alone.
 * *Position and direction.* `position(pos) { ... }` sets the origin of what is made in its closure. `direction(axis)`
 sets the axis of the next cylinders, cones and prisms, and stays set after the closure: set `direction(Vec.vZ)` back.
+`direction(axis, normal)` also sets the x direction of the next boxes and other primitives, and where a helix starts:
+the normal, made square to the axis.
 * *Faces shared by two solids.* A boolean operation between solids that share a face, or that end on the same curve,
 fails with the errors of OCCT, or makes a broken solid. Move one of them by a fraction of a millimeter, and call
 `check()` on each part (see <<Checking a Model>>).
@@ -171,8 +173,12 @@ A script can check its model rather than an eye on the preview, with the OCCT ke
 * `measure()` gives the `Measures` of the current solid: `volume` (mm³), `area` (mm²), `center` of mass, bounding box
 (`min`, `max`, `size`), `valid` as OCCT sees it, and `mass(density)` in g for a density in g/cm³.
 * `check(name)` fails when the solid is not valid or empty: a boolean operation went wrong.
-* `overlap(other)` is the volume shared with the solid of another model, 0 when they do not interfere, and
-`distance(other)` the clearance between them.
+* `overlap(other)` is the volume shared with the solid of another model, 0 when they do not interfere. When OCCT
+warns while computing it, as it does for faces nearly coincident (parts converted from STEP files, 0.0001 apart), it
+is computed again with faces closer than 0.001 mm taken as one.
+* `distance(other)` is the shortest distance between them, straight, through whatever stands between them: at most
+the clearance of the air around the insulating parts (see <<Clearances and Creepage Distances>>). `closest(other)`
+gives it with its two points, `from` on this solid and `to` on the other.
 
 .Equipment Fitting in a Part
 [source,groovy]
@@ -180,7 +186,8 @@ A script can check its model rather than an eye on the preview, with the OCCT ke
 CadDslSolid body = body(), battery = cd().position(new Vec(54, -17.5, -3)) { box(108, 35, 25.4) }
 println body.check('body').measure()          // volume 120312.4 mm³, area 95021.7 mm², center (...), box (...) .. (...)
 assert body.overlap(battery) == 0d
-println "${body.distance(battery)} mm of clearance"
+println "${body.distance(battery)} mm apart"
+println body.closest(battery)                 // 2.000 mm from (...) to (...)
 ----
 
 `check` and `overlap` take time on big solids, up to seconds: keep them in a verification of the model, out of its
@@ -198,6 +205,10 @@ drawn by the same line, in a loop or a method called for each side, are drawn on
 * elements repeating along a contour, or edges making an arc: a loop, an arc;
 * small contours side by side in a plane, of different shapes: letters, to draw with `text()`.
 
+The contours an `Outline` draws once and `quarterTurns()` repeats are not reported as elements to put in a loop. A
+contour drawn in a method of the model, a helper drawing those of several lines, is reported at its line followed by
+`called from` and the lines calling the method, up to 3.
+
 It is made for the models converted from STEP files, where most of the gain is. Its tolerance (1 mm by default, at most
 5 % of the size of the contours) is what nearly the same means.
 
@@ -211,6 +222,43 @@ checkContours { Projector.assemble() }.each { println it }
 //   positions in a constant
 // Projector.groovy:2826, ...: 8 small contours side by side, 9.17 mm high, like text: draw it with text()
 ----
+
+=== Clearances and Creepage Distances
+
+`Insulation` measures the distances between the conductors of an assembly as IEC 60664-1 does, with the OCCT kernel:
+
+* `clearance(from, to)` is the shortest path through the air, around the insulating parts and the other conductors.
+* `creepage(from, to, groove)` is the shortest path along the surfaces of the insulating parts. It crosses through the
+air the grooves narrower than `groove`, the width X of the pollution degree (0.25 mm for 1, 1.0 mm for 2, 1.5 mm for
+3): a groove with parallel sides, or between faces at less than 80° where it is X wide (annex A), and the joints between
+two parts touching. At 80° and more, as at the foot of a wall, it follows the faces. It starts where the conductor
+touches an insulating part, or across such a groove.
+
+Both give a `Gap`: its `length` in mm, and its `path`, from a point of the first conductor to one of the other, through
+the points where it bends. Both take a `limit`, a length in mm beyond which the path is not searched: the gap is then
+not `found`, its `length` the limit it is longer than, infinite when no path at all joins the conductors. A conductor
+is a list of solids, those of a circuit touching each other. A floating conductor between two others adds the gaps on
+both sides: give it its own name, and sum the gaps to it.
+
+.Clearance and Creepage Distance Between Two Electrodes Over a Wall
+[source,groovy]
+----
+def left = cd().position(new Vec(0, 0, 0)) { box(1, 10, 10) }
+def right = cd().position(new Vec(3, 0, 0)) { box(1, 10, 10) }
+def wall = cd().position(new Vec(-10, -30, -5)) { box(24, 70, 5) }.fuse { position(new Vec(1.5d, -30, 0)) { box(1, 70, 15) } }
+def insulation = new Insulation([left: [left], right: [right]], [wall])
+println insulation.clearance('left', 'right')          // left to right: 11.050 mm, over the wall
+println insulation.creepage('left', 'right', 0.25d)    // left to right: 32.000 mm, along its sides
+println insulation.creepage('left', 'right', 1.0d)     // left to right: 11.268 mm, across the grooves 0.5 wide
+----
+
+The solids are meshed once, when the `Insulation` is made; each distance is then a search of a shortest path, from a
+few milliseconds to seconds on an assembly of a hundred parts. In an assembly whose parts close the space around the
+conductors, the search of a clearance takes longer the longer it is: a `limit` a little above the distance required
+keeps it short. The paths bend at points spaced along the edges of the meshes, then slide along the edges and inside
+the faces to the shortest path: they are found within a few hundredths of a millimeter on flat faces, within the
+deviation of the meshes from the curved ones (`deflection`, 0.02 mm by default). A smaller `step`, 0.5 mm by default,
+the spacing of those points, finds paths through narrower gaps.
 
 == Selectors
 
@@ -264,6 +312,7 @@ image::images/cad-butz.png[]
 `prism(dir, draft: degrees)` and `hole(dir, draft: degrees)` make prisms whose side faces lean by the draft angle, as
 the walls of a molded part: the section narrows along `dir`, normal to the face (it widens for a negative draft), and
 the walls of the holes of the face lean the other way. A hole with a positive draft is a pocket narrower at its bottom.
+The walls are planes where the contour has lines, meeting at sharp edges, and cones where it has arcs.
 
 .Molded Tray
 [source,groovy]
@@ -625,7 +674,8 @@ in model units; the capitals are about 0.7 of it, depending on the font.
 * On a face (`topZ().wireFrom() { ... }`), the text runs along the u direction of the face and reads from outside it;
   `angle:` turns it, in degrees.
 * In a 3D wire (`wireFrom(new Vec(...)) { ... }`), it starts at the current point, in absolute coordinates:
-  `direction:` along the text (X by default), `normal:` the side it reads from (Z by default).
+  `direction:` along the text (X by default), `normal:` the side it reads from (Z by default). `move(vec)` and
+  `to(pos)` lift the pen, for the next text or contour, leaving the contour drawn as it is.
 
 Its other options: `font:` a font name, found among the fonts of the system (`sans-serif` by default, `serif`,
 `monospace`, or a family such as `'Liberation Serif'`), or the path of a font file; `bold:`, `italic:`; `align:` the

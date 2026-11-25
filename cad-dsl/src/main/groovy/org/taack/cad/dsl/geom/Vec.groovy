@@ -104,7 +104,6 @@ final class Vec extends Vec2d {
         Vec2d r = new Vec2d(
                  d.z * thisAdapted.x + d.x * thisAdapted.y + sx * d.y * thisAdapted.x,
                  d.z * thisAdapted.y - d.x * thisAdapted.z + sx * d.y * thisAdapted.z)
-        println "r: $r, direction: $direction, this: $this, paramsValue00: $paramsValue00, thisAdapted: $thisAdapted"
         r
     }
 

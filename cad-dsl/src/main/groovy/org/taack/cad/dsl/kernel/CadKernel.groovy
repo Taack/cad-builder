@@ -44,4 +44,11 @@ interface CadKernel {
      * @return Centers of the two circles of the given radius passing through p1 and p2
      */
     List<Vec2d> circleCenters(Vec2d p1, Vec2d p2, double radius)
+
+    /**
+     * @return The paths between the groups of solids, solids[i] in groups[i], on meshes of the solids deviating from
+     * their faces by deflection at most, bending at points spaced by step at most along the edges of the meshes, see
+     * {@link org.taack.cad.dsl.Insulation}
+     */
+    InsulationPaths insulationPaths(List<ICadDslVisitor> solids, int[] groups, double deflection, double step)
 }

@@ -74,6 +74,7 @@ class CadDsl extends CadDslSolid implements CadDslBase {
         for (Outline o in [outline] + holes.toList()) {
             Vec start = plane.at(o.start())
             visitor.visitFrom(start)
+            if (o.turns > 1) visitor.visitTurnedCopies(o.turns)
             for (IOpenShape2d s in o.path()) {
                 if (s instanceof Arc2d) visitor.visitArc(plane.at(s.to), plane.at(((Arc2d) s).via))
                 else visitor.visitEdge(plane.at(s.to))

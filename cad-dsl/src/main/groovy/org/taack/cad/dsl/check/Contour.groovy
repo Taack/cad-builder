@@ -28,6 +28,14 @@ final class Contour {
      * file:line of the code drawing it
      */
     final String source
+    /**
+     * file:line of the code calling the method of the user drawing it, innermost first, empty when not in a method
+     */
+    final String callers
+    /**
+     * How many times its elements repeat, written once in the model and turned by the DSL
+     */
+    int turns = 1
     final boolean in3d
     /**
      * Ids of the model (cd()) and of the wire (wireFrom, face) drawing it: the contours of a wire make a face with holes
@@ -36,12 +44,20 @@ final class Contour {
     final double[] start
     final List<Element> elements = []
 
-    Contour(String source, boolean in3d, int model, int wire, double[] start) {
+    Contour(String source, String callers = '', boolean in3d, int model, int wire, double[] start) {
         this.source = source
+        this.callers = callers
         this.in3d = in3d
         this.model = model
         this.wire = wire
         this.start = start
+    }
+
+    /**
+     * Where it is drawn, for a finding: its line, and the lines calling the helper drawing it
+     */
+    String getWhere() {
+        callers ? "$source called from $callers".toString() : source
     }
 
     double[] getEnd() {

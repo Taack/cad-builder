@@ -29,6 +29,13 @@ final class Outline {
 
     private final List<Element> elements = []
 
+    /**
+     * How many times its elements repeat, written once and turned by {@link #quarterTurns}: 1 when they do not
+     */
+    int getTurns() { turns }
+
+    private int turns = 1
+
     /** Rectangle centered on the origin */
     static Outline rectangle(double width, double length) {
         double u = width / 2, v = length / 2
@@ -108,6 +115,7 @@ final class Outline {
     Outline quarterTurns() {
         Outline o = new Outline()
         [0, 90, 180, 270].each { Integer a -> o.elements.addAll(rotate(a).elements) }
+        o.turns = 4 * turns
         o
     }
 
@@ -285,6 +293,7 @@ final class Outline {
     private Outline map(Closure<Element> f) {
         Outline o = new Outline()
         for (Element e in elements) o.elements << f.call(e)
+        o.turns = turns
         o
     }
 
@@ -297,6 +306,7 @@ final class Outline {
             o.elements << new Element(kind: e.kind, c: e.c == null ? null : f.call(e.c), p: e.p == null ? null : f.call(e.p),
                     d: e.d == null ? null : origin - f.call(e.d), r: e.r)
         }
+        o.turns = turns
         o
     }
 

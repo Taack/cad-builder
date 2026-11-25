@@ -828,6 +828,7 @@ class Model:
         self.from_stack = []
         self.from2d = (0.0, 0.0)
         self.direction = V(0, 0, 1)
+        self.direction_normal = None
         self.pt00 = None
         self.open2d = []
         self.open3d = []
@@ -860,7 +861,11 @@ class Model:
             self.bindings.append((obj, 'Placement.Base.' + c, getattr(pl.Base, c)))
 
     def ax2(self):
-        """Placement of gp_Ax2(fromVec, direction): its x direction is that of a plane of normal direction"""
+        """Placement of gp_Ax2(fromVec, direction[, normal]): its x direction the normal given with the direction, else
+        that of a plane of normal direction"""
+        x = self.direction_x()
+        if x is not None:
+            return placement(self.from_vec, x, unit(self.direction).cross(x))
         frame = frame_of(Part.Plane(V(0, 0, 0), self.direction))
         return App.Placement(self.from_vec, frame.Rotation)
 
@@ -1236,7 +1241,9 @@ class Model:
 
     def visitHelix(self, radius, pitch, height, end_radius):
         axis = unit(self.direction)
-        radial = unit(V(0, 1, 0).cross(axis) if abs(axis.y) < 0.9 else V(0, 0, 1).cross(axis))
+        radial = self.direction_x()
+        if radial is None:
+            radial = unit(V(0, 1, 0).cross(axis) if abs(axis.y) < 0.9 else V(0, 0, 1).cross(axis))
         o = self.add('Part::Helix', 'Helix')
         self.num(o, 'Pitch', abs(pitch))
         self.num(o, 'Height', height)
@@ -1416,6 +1423,7 @@ class Model:
         direction, position = vec(direction), vec(position)
         best = -math.inf if position is None else math.inf
         self.direction = direction
+        self.direction_normal = None
         shape = self.current_shape()
         for f in shape.Faces:
             surface = f.Surface
@@ -1457,9 +1465,21 @@ class Model:
         du = surface.value(u + 1, v) - p
         return ax3(p, normal, App.Rotation(normal, math.degrees(angle)).multVec(du))
 
+    def pen_position(self):
+        """The last position in a 3D wire: the end of what was drawn, else its start"""
+        return self.open3d[-1][1] if self.open3d else self.from_vec
+
+    def start_contour(self, pos):
+        """The pen lifted to pos, leaving the contour drawn, if it goes elsewhere, for another one from pos"""
+        if self.open3d and (pos - self.pen_position()).Length > 1e-9:
+            self.wire3d()
+        if not self.open3d:
+            if self.from_stack:
+                self.from_stack.pop()
+            self.from_stack.append(pos)
+
     def pen_3d(self, options):
-        pos = self.open3d[-1][1] if self.open3d else self.from_vec
-        return ax3(pos, vec(options['normal']), vec(options['direction']))
+        return ax3(self.pen_position(), vec(options['normal']), vec(options['direction']))
 
     def text(self, content, size, options, pen):
         import Draft
@@ -1512,15 +1532,13 @@ class Model:
         self.from2d = (self.from2d[0] + to[0], self.from2d[1] + to[1])
 
     def visitMove3d(self, to):
-        pass
+        self.start_contour(self.pen_position() + vec(to))
 
     def visitTo2d(self, to):
         self.from2d = pt(to)
 
     def visitTo3d(self, to):
-        if self.from_stack:
-            self.from_stack.pop()
-        self.from_stack.append(vec(to))
+        self.start_contour(vec(to))
 
     def visitEdge2d(self, to):
         self.open2d.append(Edge2d(pt(to)))
@@ -1658,6 +1676,14 @@ class Model:
 
     def visitDirection(self, axis, normal):
         self.direction = vec(axis)
+        self.direction_normal = vec(normal)
+
+    def direction_x(self):
+        """The normal given with the direction, square to it, None if none"""
+        if self.direction_normal is None:
+            return None
+        axis = unit(self.direction)
+        return unit(self.direction_normal - axis * self.direction_normal.dot(axis))
 
     # results
 
