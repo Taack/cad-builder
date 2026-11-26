@@ -149,6 +149,11 @@ data_item_serie_item
     | data_item_serie_item_representation_relationship
     | data_item_serie_item_representation_relationship_with_transformation
     | data_item_serie_item_shape_representation_relationship
+    | data_item_serie_item_bounded_surface
+    | data_item_serie_item_b_spline_surface
+    | data_item_serie_item_b_spline_surface_with_knots
+    | data_item_serie_item_rational_b_spline_surface
+    | data_item_serie_item_surface
     ;
 
  data_item_serie_item_length_unit
@@ -225,6 +230,26 @@ data_item_serie_item
 
   data_item_serie_item_solid_angle_unit
     : 'SOLID_ANGLE_UNIT' par
+    ;
+
+  data_item_serie_item_bounded_surface
+    : 'BOUNDED_SURFACE' par
+    ;
+
+  data_item_serie_item_b_spline_surface
+    : 'B_SPLINE_SURFACE' par
+    ;
+
+  data_item_serie_item_b_spline_surface_with_knots
+    : 'B_SPLINE_SURFACE_WITH_KNOTS' par
+    ;
+
+  data_item_serie_item_rational_b_spline_surface
+    : 'RATIONAL_B_SPLINE_SURFACE' par
+    ;
+
+  data_item_serie_item_surface
+    : 'SURFACE' par
     ;
 
 data_list
