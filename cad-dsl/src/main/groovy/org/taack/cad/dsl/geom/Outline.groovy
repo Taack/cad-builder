@@ -1,6 +1,7 @@
 package org.taack.cad.dsl.geom
 
 import groovy.transform.CompileStatic
+import org.taack.cad.dsl.feature.CadFeatureFrame
 
 import static java.lang.Math.*
 
@@ -25,16 +26,34 @@ final class Outline {
         Kind kind
         Vec2d c, p, d
         double r
+        // file:line of the code adding it, null out of a script
+        String source
+    }
+
+    private static String here() {
+        List<CadFeatureFrame> frames = CadFeatureFrame.current()
+        frames ? "${frames.last().fileName}:${frames.last().line}".toString() : null
     }
 
     private final List<Element> elements = []
 
     /**
-     * How many times its elements repeat, written once and turned by {@link #quarterTurns}: 1 when they do not
+     * How many times its elements repeat, written once: turned by {@link #quarterTurns}, or added by the same lines,
+     * in a loop; 1 when they do not
      */
-    int getTurns() { turns }
+    int getTurns() { Math.max(turns, repeatsBySource()) }
 
     private int turns = 1
+
+    // The number of times the lines adding the elements repeat, in turn, around the outline
+    private int repeatsBySource() {
+        int n = elements.size()
+        if (n < 2 || elements.any { Element e -> e.source == null }) return 1
+        for (int period = 1; period < n; period++) {
+            if (n % period == 0 && (0..<n).every { int i -> elements[i].source == elements[(i + period) % n].source }) return n.intdiv(period)
+        }
+        1
+    }
 
     /** Rectangle centered on the origin */
     static Outline rectangle(double width, double length) {
@@ -51,7 +70,7 @@ final class Outline {
 
     /** The circle of center (cu, cv) and radius r, &lt; 0 for a concave arc */
     Outline circle(double cu, double cv, double r) {
-        elements << new Element(kind: Kind.CIRCLE, c: new Vec2d(cu, cv), r: r)
+        elements << new Element(kind: Kind.CIRCLE, c: new Vec2d(cu, cv), r: r, source: here())
         this
     }
 
@@ -59,13 +78,13 @@ final class Outline {
     Outline line(double pu, double pv, double du, double dv) {
         double n = hypot(du, dv)
         if (n == 0) throw new IllegalArgumentException("Line through ($pu, $pv): null direction")
-        elements << new Element(kind: Kind.LINE, p: new Vec2d(pu, pv), d: new Vec2d(du / n, dv / n))
+        elements << new Element(kind: Kind.LINE, p: new Vec2d(pu, pv), d: new Vec2d(du / n, dv / n), source: here())
         this
     }
 
     /** A fillet of radius r (&gt; 0 when it is convex) between the previous element and the next one */
     Outline fillet(double r) {
-        elements << new Element(kind: Kind.FILLET, r: r)
+        elements << new Element(kind: Kind.FILLET, r: r, source: here())
         this
     }
 
@@ -145,7 +164,7 @@ final class Outline {
             }
             Element before = elements[(i - 1 + n) % n], after = elements[(i + 1) % n]
             if (before.kind == Kind.FILLET || after.kind == Kind.FILLET) throw new IllegalArgumentException("Two fillets in a row")
-            o.elements << new Element(kind: Kind.CIRCLE, c: filletCenter(before, after, e.r), r: e.r)
+            o.elements << new Element(kind: Kind.CIRCLE, c: filletCenter(before, after, e.r), r: e.r, source: e.source)
         }
         o
     }
@@ -292,7 +311,11 @@ final class Outline {
 
     private Outline map(Closure<Element> f) {
         Outline o = new Outline()
-        for (Element e in elements) o.elements << f.call(e)
+        for (Element e in elements) {
+            Element m = f.call(e)
+            m.source = e.source
+            o.elements << m
+        }
         o.turns = turns
         o
     }
@@ -304,7 +327,7 @@ final class Outline {
         for (int i = elements.size() - 1; i >= 0; i--) {
             Element e = elements[i]
             o.elements << new Element(kind: e.kind, c: e.c == null ? null : f.call(e.c), p: e.p == null ? null : f.call(e.p),
-                    d: e.d == null ? null : origin - f.call(e.d), r: e.r)
+                    d: e.d == null ? null : origin - f.call(e.d), r: e.r, source: e.source)
         }
         o.turns = turns
         o

@@ -41,6 +41,14 @@ class MeasureTest {
     }
 
     @Test
+    void "A prism and a hole drawn on a face are valid"() {
+        def boss = cd().box(20, 20, 2).topZ().wireFrom() { circle(5) }.toFace().prism(1).check('boss').measure()
+        assertEquals(800d + Math.PI * 25d, boss.volume, TOLERANCE)
+        def hole = cd().box(20, 20, 2).topZ().wireFrom() { circle(5) }.toFace().hole(-1).check('hole').measure()
+        assertEquals(800d - Math.PI * 25d, hole.volume, TOLERANCE)
+    }
+
+    @Test
     void "Overlap and distance of solids of two models"() {
         def a = box(new Vec(0, 0, 0))
         assertEquals(3000d, a.overlap(box(new Vec(5, 0, 0))), TOLERANCE)

@@ -157,6 +157,40 @@ class ContourCheckTest {
         assertTrue(written.any { it.contains('4 times the same 10 elements') }, written.toString())
     }
 
+    // The findings of a model written in a script: the lines of the script are known, unlike those of the DSL and its
+    // tests, in org.taack.cad
+    private static List<String> foundInScript(String model) {
+        String script = """
+            import org.taack.cad.dsl.geom.*
+            import static org.taack.cad.dsl.CadDsl.*
+            checkContours { $model }
+        """
+        List<String> found = (List<String>) new GroovyShell().evaluate(script, 'Model.groovy')
+        println found.join('\n')
+        found
+    }
+
+    @Test
+    void "An outline whose elements are added in a loop is no loop to write"() {
+        assertEquals([], foundInScript("""
+            Outline hexagon = new Outline()
+            (0..<6).each { int i -> double a = Math.toRadians(30 + 60 * i); hexagon.circle(10 * Math.cos(a), 10 * Math.sin(a), 3) }
+            cd().face(Frame.xy(), hexagon).prism(new Vec(0, 0, 4))
+        """))
+        // the same outline written out
+        def found = foundInScript("""
+            Outline hexagon = new Outline()
+            hexagon.circle(8.66, 5, 3)
+            hexagon.circle(0, 10, 3)
+            hexagon.circle(-8.66, 5, 3)
+            hexagon.circle(-8.66, -5, 3)
+            hexagon.circle(0, -10, 3)
+            hexagon.circle(8.66, -5, 3)
+            cd().face(Frame.xy(), hexagon).prism(new Vec(0, 0, 4))
+        """)
+        assertTrue(found.any { it.contains('6 times the same 2 elements') }, found.toString())
+    }
+
     @Test
     void "Nothing in different contours"() {
         def found = found {
