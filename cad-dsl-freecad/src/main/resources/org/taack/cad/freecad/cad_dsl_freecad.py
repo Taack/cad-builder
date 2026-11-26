@@ -128,10 +128,48 @@ def coplanar(pl, other):
     return abs(abs(n1.dot(n2)) - 1) < 1e-9 and abs((other.Base - pl.Base).dot(n1)) < 1e-7
 
 
+def corner_of_moved(c1, c2, normal, corner):
+    """Where two moved curves, ('line', point, direction) or ('circle', center, radius), meet, in the plane of normal:
+    the intersection nearest to the corner they moved from"""
+    # a few square microns of slack, as the curves of a corner nearly tangent may just miss each other
+    slack = 1e-6
+    if c1[0] == 'circle' and c2[0] == 'line':
+        c1, c2 = c2, c1
+    if c1[0] == 'line' and c2[0] == 'line':
+        (_, q1, u1), (_, q2, u2) = c1, c2
+        k = ((q2 - q1).cross(u2)).dot(normal) / (u1.cross(u2)).dot(normal)
+        return q1 + u1 * k
+    if c1[0] == 'line':
+        (_, q, u), (_, c, r) = c1, c2
+        u = unit(u)
+        w = q - c
+        b = u.dot(w)
+        disc = b * b - (w.dot(w) - r * r)
+        if disc < -slack:
+            raise ValueError('A prism with a draft of a contour whose line and arc moved do not meet at their corner')
+        h = math.sqrt(max(disc, 0.0))
+        points = [q + u * (-b - h), q + u * (-b + h)]
+    else:
+        (_, ca, ra), (_, cb, rb) = c1, c2
+        between = cb - ca
+        dist = between.Length
+        if dist < 1e-9:
+            raise ValueError('A prism with a draft of a contour with a corner between concentric arcs')
+        along = (ra * ra - rb * rb + dist * dist) / (2 * dist)
+        h2 = ra * ra - along * along
+        if h2 < -slack:
+            raise ValueError('A prism with a draft of a contour whose arcs moved do not meet at their corner')
+        h = math.sqrt(max(h2, 0.0))
+        base = ca + unit(between) * along
+        across = unit(normal.cross(between))
+        points = [base + across * h, base - across * h]
+    return min(points, key=lambda p: (p - corner).Length)
+
+
 def offset_wire(wire, normal, d):
     """The wire of lines and arcs, in a plane of normal, moved by d to the left of its edges, edge by edge: lines
     shifted, arcs of radius changed, their ends moved along their common normal (or to the intersection of the moved
-    lines at a corner)"""
+    curves at a corner)"""
     edges = []
     for e in wire.OrderedEdges:
         a, b = e.firstVertex().Point, e.lastVertex().Point
@@ -145,28 +183,30 @@ def offset_wire(wire, normal, d):
         edges.append((e, a, b, mid, ta, tb))
     def left(t):
         return unit(normal.cross(t))
-    def moved_line(a, t):
-        return a + left(t) * d, t
     # the ends of each edge once moved
     ends = []
     n = len(edges)
     for i in range(n):
         e, a, b, mid, ta, tb = edges[i]
         ends.append([a + left(ta) * d, b + left(tb) * d])
+
+    def moved(i, end, t):
+        e = edges[i][0]
+        if isinstance(e.Curve, Part.Line):
+            return 'line', end, t
+        if isinstance(e.Curve, Part.Circle):
+            return 'circle', e.Curve.Center, (end - e.Curve.Center).Length
+        raise ValueError('A prism with a draft of a contour with a corner at a curve other than a line or an arc')
+
     for i in range(n):
-        e1, _, b1, _, _, tb1 = edges[i]
-        e2, a2, _, _, ta2, _ = edges[(i + 1) % n]
+        j = (i + 1) % n
+        _, _, b1, _, _, tb1 = edges[i]
+        _, a2, _, _, ta2, _ = edges[j]
         if tb1.getAngle(ta2) > 1e-6:
-            # a corner: the moved curves meet away from the moved end (lines only)
-            if isinstance(e1.Curve, Part.Line) and isinstance(e2.Curve, Part.Line):
-                q1, u1 = moved_line(b1, tb1)
-                q2, u2 = moved_line(a2, ta2)
-                k = ((q2 - q1).cross(u2)).dot(normal) / (u1.cross(u2)).dot(normal)
-                x = q1 + u1 * k
-                ends[i][1] = x
-                ends[(i + 1) % n][0] = x
-            else:
-                raise ValueError('A prism with a draft of a contour with a corner between arcs')
+            # a corner: the moved curves meet away from their moved ends, the arcs lengthened or shortened
+            x = corner_of_moved(moved(i, ends[i][1], tb1), moved(j, ends[j][0], ta2), normal, b1)
+            ends[i][1] = x
+            ends[j][0] = x
     out = []
     for (e, a, b, mid, ta, tb), (a2, b2) in zip(edges, ends):
         if isinstance(e.Curve, Part.Circle):
